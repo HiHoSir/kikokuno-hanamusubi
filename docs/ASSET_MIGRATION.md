@@ -11,5 +11,10 @@
 新リポジトリは素材保管基盤であり、ゲームコードはまだない。従って新パスでの実描画・フィールド歩行・グリッド接続・公開・実機Safariは未検証。
 旧実装由来の素材は移行された正本**候補群**であり、移行後のゲーム表現まで自動的に承認したことは意味しない。
 
-## 鬼灯村
-次の移行では `js/hozuki-village-game.js` が使用する `assets/maps/hozuki-village-v1` と `js/settlement-map/catalog.js` 内で実際に配置されているチップを基準にする。比較用 `reference.png` 等は原則移さない。
+## 鬼灯村（第二段階）
+- 現行 `js/hozuki-village-game.js` が読み込む `assets/maps/hozuki-village-v1/layout.json`、`collision.json` と地面画像を移行。
+- 実配置JSONに現れる31テンプレート（合計678配置）をカタログから照合し、使用中のPNGのみ移行。全村エディタの素材や旧プレビューを一括移植していない。
+- PNG32件（地面1＋パーツ31）を原本と同一Blob SHAで移行。既存のフィールド画像36件を合わせ、採用素材台帳は**68件**。
+- 配置・判定JSONはバイトを変更せず `data/maps/hozuki-village/layout.json`、`collision.json` へ移し、画像と物理設定を分離。
+- 元の相対パスを参照する旧ランタイムはコピーしていない。新ランタイムでのパス解決・画像合成・歩行・描画順は未検証。
+- NPCキャラクター画像・室内素材・比較用 reference.png は今回の移行対象外。旧リポジトリは削除していない。

@@ -432,6 +432,452 @@
         "path": "assets/terrain/places-v1/torii.png"
       },
       "usage": "legacy-field-loader"
+    },
+    {
+      "id": "village-building-inn",
+      "type": "object",
+      "path": "assets/village/objects/building-inn.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/chips/building_inn.png"
+      },
+      "catalogTemplate": "building_inn",
+      "placedCount": 1,
+      "usage": "hozuki-village-layout"
+    },
+    {
+      "id": "village-building-shop",
+      "type": "object",
+      "path": "assets/village/objects/building-shop.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/chips/building_shop_inn.png"
+      },
+      "catalogTemplate": "building_shop",
+      "placedCount": 1,
+      "usage": "hozuki-village-layout"
+    },
+    {
+      "id": "village-building-west-home",
+      "type": "object",
+      "path": "assets/village/objects/building-west-home.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/chips/building_west_home.png"
+      },
+      "catalogTemplate": "building_west_home",
+      "placedCount": 1,
+      "usage": "hozuki-village-layout"
+    },
+    {
+      "id": "village-building-tea",
+      "type": "object",
+      "path": "assets/village/objects/building-tea.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/chips/building_tea.png"
+      },
+      "catalogTemplate": "building_tea",
+      "placedCount": 1,
+      "usage": "hozuki-village-layout"
+    },
+    {
+      "id": "village-building-southwest-home",
+      "type": "object",
+      "path": "assets/village/objects/building-southwest-home.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/chips/building_southwest_home.png"
+      },
+      "catalogTemplate": "building_southwest_home",
+      "placedCount": 1,
+      "usage": "hozuki-village-layout"
+    },
+    {
+      "id": "village-building-south-home",
+      "type": "object",
+      "path": "assets/village/objects/building-south-home.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/chips/building_south_home.png"
+      },
+      "catalogTemplate": "building_south_home",
+      "placedCount": 1,
+      "usage": "hozuki-village-layout"
+    },
+    {
+      "id": "village-tree-broadleaf",
+      "type": "object",
+      "path": "assets/village/objects/tree-broadleaf.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/chips/tree_broadleaf.png"
+      },
+      "catalogTemplate": "tree_broadleaf",
+      "placedCount": 43,
+      "usage": "hozuki-village-layout"
+    },
+    {
+      "id": "village-garden-crop",
+      "type": "map",
+      "path": "assets/village/terrain/garden-crop.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/terrain-v1/farm-source.png"
+      },
+      "catalogTemplate": "garden_crop",
+      "placedCount": 10,
+      "usage": "hozuki-village-layout"
+    },
+    {
+      "id": "village-ground-grass",
+      "type": "map",
+      "path": "assets/village/terrain/ground-grass.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/terrain-v1/grass-source.png"
+      },
+      "catalogTemplate": "ground_grass",
+      "placedCount": 377,
+      "usage": "hozuki-village-layout"
+    },
+    {
+      "id": "village-auto-road",
+      "type": "map",
+      "path": "assets/village/terrain/auto-road.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/terrain-v1/road-47.png"
+      },
+      "catalogTemplate": "auto_road",
+      "placedCount": 67,
+      "usage": "hozuki-village-layout"
+    },
+    {
+      "id": "village-auto-river",
+      "type": "map",
+      "path": "assets/village/terrain/auto-river.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/animation/fluid-v1/river-47.png"
+      },
+      "catalogTemplate": "auto_river",
+      "placedCount": 54,
+      "usage": "hozuki-village-layout"
+    },
+    {
+      "id": "village-flowers-white",
+      "type": "object",
+      "path": "assets/village/objects/flowers-white.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/chips/flowers_white.png"
+      },
+      "catalogTemplate": "flowers_white",
+      "placedCount": 4,
+      "usage": "hozuki-village-layout"
+    },
+    {
+      "id": "village-flowers-orange",
+      "type": "object",
+      "path": "assets/village/objects/flowers-orange.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/chips/flowers_orange.png"
+      },
+      "catalogTemplate": "flowers_orange",
+      "placedCount": 14,
+      "usage": "hozuki-village-layout"
+    },
+    {
+      "id": "village-crate",
+      "type": "object",
+      "path": "assets/village/objects/crate.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/chips/crate.png"
+      },
+      "catalogTemplate": "crate",
+      "placedCount": 3,
+      "usage": "hozuki-village-layout"
+    },
+    {
+      "id": "village-pot",
+      "type": "object",
+      "path": "assets/village/objects/pot.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/chips/pot.png"
+      },
+      "catalogTemplate": "pot",
+      "placedCount": 2,
+      "usage": "hozuki-village-layout"
+    },
+    {
+      "id": "village-well",
+      "type": "object",
+      "path": "assets/village/objects/well.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/chips/well.png"
+      },
+      "catalogTemplate": "well",
+      "placedCount": 2,
+      "usage": "hozuki-village-layout"
+    },
+    {
+      "id": "village-rocks",
+      "type": "object",
+      "path": "assets/village/objects/rocks.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/chips/rocks.png"
+      },
+      "catalogTemplate": "rocks",
+      "placedCount": 3,
+      "usage": "hozuki-village-layout"
+    },
+    {
+      "id": "village-grass-tuft",
+      "type": "map",
+      "path": "assets/village/terrain/grass-tuft.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/chips/grass_tuft.png"
+      },
+      "catalogTemplate": "grass_tuft",
+      "placedCount": 5,
+      "usage": "hozuki-village-layout"
+    },
+    {
+      "id": "village-shrub",
+      "type": "object",
+      "path": "assets/village/objects/shrub.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/chips/shrub.png"
+      },
+      "catalogTemplate": "shrub",
+      "placedCount": 21,
+      "usage": "hozuki-village-layout"
+    },
+    {
+      "id": "village-auto-bridge",
+      "type": "map",
+      "path": "assets/village/terrain/auto-bridge.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/terrain-v1/bridge-v2-17.png"
+      },
+      "catalogTemplate": "auto_bridge",
+      "placedCount": 1,
+      "usage": "hozuki-village-layout"
+    },
+    {
+      "id": "village-tree-conifer",
+      "type": "object",
+      "path": "assets/village/objects/tree-conifer.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/chips/tree_conifer.png"
+      },
+      "catalogTemplate": "tree_conifer",
+      "placedCount": 13,
+      "usage": "hozuki-village-layout"
+    },
+    {
+      "id": "village-decor-pebbles",
+      "type": "map",
+      "path": "assets/village/terrain/decor-pebbles.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/pack-v1/pebbles.png"
+      },
+      "catalogTemplate": "decor_pebbles",
+      "placedCount": 1,
+      "usage": "hozuki-village-layout"
+    },
+    {
+      "id": "village-auto-fence",
+      "type": "map",
+      "path": "assets/village/terrain/auto-fence.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/pack-v1/fence-16.png"
+      },
+      "catalogTemplate": "auto_fence",
+      "placedCount": 12,
+      "usage": "hozuki-village-layout"
+    },
+    {
+      "id": "village-barrel",
+      "type": "object",
+      "path": "assets/village/objects/barrel.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/pack-v1/barrel.png"
+      },
+      "catalogTemplate": "barrel",
+      "placedCount": 1,
+      "usage": "hozuki-village-layout"
+    },
+    {
+      "id": "village-stairs-stone",
+      "type": "map",
+      "path": "assets/village/terrain/stairs-stone.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/pack-v1/stairs.png"
+      },
+      "catalogTemplate": "stairs_stone",
+      "placedCount": 1,
+      "usage": "hozuki-village-layout"
+    },
+    {
+      "id": "village-rice-bale",
+      "type": "object",
+      "path": "assets/village/objects/rice-bale.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/pack-v1/rice_bale.png"
+      },
+      "catalogTemplate": "rice_bale",
+      "placedCount": 2,
+      "usage": "hozuki-village-layout"
+    },
+    {
+      "id": "village-building-belltower",
+      "type": "object",
+      "path": "assets/village/objects/building-belltower.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/religious-v1/building_belltower.png"
+      },
+      "catalogTemplate": "building_belltower",
+      "placedCount": 1,
+      "usage": "hozuki-village-layout"
+    },
+    {
+      "id": "village-ground-gravel",
+      "type": "map",
+      "path": "assets/village/terrain/ground-gravel.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/pack-v1/gravel-47.png"
+      },
+      "catalogTemplate": "ground_gravel",
+      "placedCount": 12,
+      "usage": "hozuki-village-layout"
+    },
+    {
+      "id": "village-ground-cobble",
+      "type": "map",
+      "path": "assets/village/terrain/ground-cobble.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/pack-v1/cobble-47.png"
+      },
+      "catalogTemplate": "ground_cobble",
+      "placedCount": 3,
+      "usage": "hozuki-village-layout"
+    },
+    {
+      "id": "village-basket",
+      "type": "object",
+      "path": "assets/village/objects/basket.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/pack-v1/basket.png"
+      },
+      "catalogTemplate": "basket",
+      "placedCount": 4,
+      "usage": "hozuki-village-layout"
+    },
+    {
+      "id": "village-tree-sakura-pale",
+      "type": "object",
+      "path": "assets/village/objects/tree-sakura-pale.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/seasonal-trees-v1/tree_sakura_pale.png"
+      },
+      "catalogTemplate": "tree_sakura_pale",
+      "placedCount": 16,
+      "usage": "hozuki-village-layout"
+    },
+    {
+      "id": "village-ground",
+      "type": "map",
+      "path": "assets/village/ground.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/maps/hozuki-village-v1/ground.png"
+      },
+      "usage": "hozuki-village-ground"
     }
   ]
 }

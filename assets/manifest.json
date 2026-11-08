@@ -26,9 +26,9 @@
       "usage": "legacy-field-loader"
     },
     {
-      "id": "field-new-village",
+      "id": "field-village",
       "type": "object",
-      "path": "assets/field/objects/new-village.png",
+      "path": "assets/field/objects/village.png",
       "status": "approved",
       "origin": {
         "repo": "HiHoSir/yaksha-hanamusubi",
@@ -38,9 +38,9 @@
       "usage": "legacy-field-loader"
     },
     {
-      "id": "field-new-house",
+      "id": "field-house",
       "type": "object",
-      "path": "assets/field/objects/new-house.png",
+      "path": "assets/field/objects/house.png",
       "status": "approved",
       "origin": {
         "repo": "HiHoSir/yaksha-hanamusubi",
@@ -50,9 +50,9 @@
       "usage": "legacy-field-loader"
     },
     {
-      "id": "field-new-torii",
+      "id": "field-torii",
       "type": "object",
-      "path": "assets/field/objects/new-torii.png",
+      "path": "assets/field/objects/torii.png",
       "status": "approved",
       "origin": {
         "repo": "HiHoSir/yaksha-hanamusubi",
@@ -62,9 +62,9 @@
       "usage": "legacy-field-loader"
     },
     {
-      "id": "field-new-cave-large",
+      "id": "field-cave-large",
       "type": "object",
-      "path": "assets/field/objects/new-cave-large.png",
+      "path": "assets/field/objects/cave-large.png",
       "status": "approved",
       "origin": {
         "repo": "HiHoSir/yaksha-hanamusubi",
@@ -74,9 +74,9 @@
       "usage": "legacy-field-loader"
     },
     {
-      "id": "field-new-fort",
+      "id": "field-fort",
       "type": "object",
-      "path": "assets/field/objects/new-fort.png",
+      "path": "assets/field/objects/fort.png",
       "status": "approved",
       "origin": {
         "repo": "HiHoSir/yaksha-hanamusubi",
@@ -86,9 +86,9 @@
       "usage": "legacy-field-loader"
     },
     {
-      "id": "field-new-pagoda",
+      "id": "field-pagoda",
       "type": "object",
-      "path": "assets/field/objects/new-pagoda.png",
+      "path": "assets/field/objects/pagoda.png",
       "status": "approved",
       "origin": {
         "repo": "HiHoSir/yaksha-hanamusubi",
@@ -98,9 +98,9 @@
       "usage": "legacy-field-loader"
     },
     {
-      "id": "field-new-trees",
+      "id": "field-trees",
       "type": "object",
-      "path": "assets/field/objects/new-trees.png",
+      "path": "assets/field/objects/trees.png",
       "status": "approved",
       "origin": {
         "repo": "HiHoSir/yaksha-hanamusubi",
@@ -110,9 +110,9 @@
       "usage": "legacy-field-loader"
     },
     {
-      "id": "field-new-mountain-small",
+      "id": "field-mountain-small",
       "type": "object",
-      "path": "assets/field/objects/new-mountain-small.png",
+      "path": "assets/field/objects/mountain-small.png",
       "status": "approved",
       "origin": {
         "repo": "HiHoSir/yaksha-hanamusubi",
@@ -122,9 +122,9 @@
       "usage": "legacy-field-loader"
     },
     {
-      "id": "field-new-mountain-large",
+      "id": "field-mountain-large",
       "type": "object",
-      "path": "assets/field/objects/new-mountain-large.png",
+      "path": "assets/field/objects/mountain-large.png",
       "status": "approved",
       "origin": {
         "repo": "HiHoSir/yaksha-hanamusubi",
@@ -362,18 +362,6 @@
       "usage": "legacy-field-loader"
     },
     {
-      "id": "field-village",
-      "type": "object",
-      "path": "assets/field/objects/village.png",
-      "status": "approved",
-      "origin": {
-        "repo": "HiHoSir/yaksha-hanamusubi",
-        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
-        "path": "assets/terrain/places-v1/village.png"
-      },
-      "usage": "legacy-field-loader"
-    },
-    {
       "id": "field-town",
       "type": "object",
       "path": "assets/field/objects/town.png",
@@ -406,30 +394,6 @@
         "repo": "HiHoSir/yaksha-hanamusubi",
         "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
         "path": "assets/terrain/places-v1/jizo.png"
-      },
-      "usage": "legacy-field-loader"
-    },
-    {
-      "id": "field-cave",
-      "type": "object",
-      "path": "assets/field/objects/cave.png",
-      "status": "approved",
-      "origin": {
-        "repo": "HiHoSir/yaksha-hanamusubi",
-        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
-        "path": "assets/terrain/places-v1/cave.png"
-      },
-      "usage": "legacy-field-loader"
-    },
-    {
-      "id": "field-torii",
-      "type": "object",
-      "path": "assets/field/objects/torii.png",
-      "status": "approved",
-      "origin": {
-        "repo": "HiHoSir/yaksha-hanamusubi",
-        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
-        "path": "assets/terrain/places-v1/torii.png"
       },
       "usage": "legacy-field-loader"
     },

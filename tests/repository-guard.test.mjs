@@ -48,3 +48,9 @@ test('壊れた素材パスを拒否', () => {
   const errors = validateInventory(base, manifest);
   assert.ok(errors.some(x => x.includes('素材パスが不正')));
 });
+
+test('採用素材にnew-の暫定ファイル名を残さない', () => {
+  const p = 'assets/field/objects/new-village.png';
+  const errors = validateInventory([...base, p], { schemaVersion: 1, assets: [entry('field-new-village', p)] });
+  assert.ok(errors.some(x => x.includes('new-接頭辞')));
+});

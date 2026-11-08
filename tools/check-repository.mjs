@@ -82,6 +82,42 @@ export function validateInventory(files, manifest, readBytes = () => Buffer.from
       }
     }
   }
+
+  // Design source files belong to the designated reference inventory; they
+  // are not falsely attributed as the binary origin of a game sprite.
+  if (manifest.designReferences !== undefined && !Array.isArray(manifest.designReferences)) {
+    errors.push('designReferences は配列にしてください');
+  } else {
+    for (const ref of manifest.designReferences ?? []) {
+      if (!ref || typeof ref !== 'object' || Array.isArray(ref)) {
+        errors.push('デザイン資料の登録内容が不正です');
+        continue;
+      }
+      if (typeof ref.id !== 'string' || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(ref.id) || ids.has(ref.id)) {
+        errors.push(`デザイン資料のIDが不正または重複: ${String(ref.id)}`);
+      }
+      ids.add(ref.id);
+      if (!validRelativePath(ref.path) || !ref.path.startsWith('source-assets/')) {
+        errors.push(`デザイン資料のパスが不正: ${String(ref.path)}`);
+        continue;
+      }
+      if (sourcePaths.has(ref.path)) errors.push(`デザイン資料のパスが重複: ${ref.path}`);
+      sourcePaths.add(ref.path);
+      if (!tracked.has(ref.path)) errors.push(`デザイン資料の原本が存在しません: ${ref.path}`);
+      if (ref.status !== 'approved') errors.push(`未承認のデザイン資料を登録不可: ${ref.id}`);
+      if (typeof ref.sha256 !== 'string' || !/^[0-9a-f]{64}$/.test(ref.sha256)) {
+        errors.push(`デザイン資料のSHA-256が不正: ${ref.id}`);
+      } else if (tracked.has(ref.path)) {
+        try {
+          const actual = createHash('sha256').update(readBytes(ref.path)).digest('hex');
+          if (actual !== ref.sha256) errors.push(`デザイン資料の原本SHA-256が不一致: ${ref.path}`);
+        } catch (e) {
+          errors.push(`デザイン資料の読込に失敗: ${ref.path} (${e.message})`);
+        }
+      }
+    }
+  }
+
   for (const p of files) {
     if (p.startsWith('assets/') && p !== 'assets/manifest.json' && !assetPaths.has(p)) {
       errors.push(`台帳未登録の採用素材: ${p}`);

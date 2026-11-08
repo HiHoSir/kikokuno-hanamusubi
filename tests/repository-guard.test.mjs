@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { validateInventory } from '../tools/check-repository.mjs';
 
 const base = [
@@ -53,4 +54,16 @@ test('採用素材にnew-の暫定ファイル名を残さない', () => {
   const p = 'assets/field/objects/new-village.png';
   const errors = validateInventory([...base, p], { schemaVersion: 1, assets: [entry('field-new-village', p)] });
   assert.ok(errors.some(x => x.includes('new-接頭辞')));
+});
+
+test('デザイン正本は一般の採用スプライトとは別に登録して保全する', () => {
+  const path = 'source-assets/characters/hizuki/character-design.jpg';
+  const bytes = Buffer.from('test JPEG bytes');
+  const sha256 = createHash('sha256').update(bytes).digest('hex');
+  const m = { schemaVersion: 1, assets: [],
+    designReferences: [{ id: 'hizuki-character-design', path, status: 'approved', sha256 }] };
+  assert.deepEqual(validateInventory([...base, path], m, () => bytes), []);
+  assert.ok(validateInventory([...base, path], empty, () => bytes).some(x => x.includes('紐づかない原本')));
+  const bad = {...m, designReferences: [{...m.designReferences[0], sha256: '0'.repeat(64)}]};
+  assert.ok(validateInventory([...base, path], bad, () => bytes).some(x => x.includes('SHA-256が不一致')));
 });

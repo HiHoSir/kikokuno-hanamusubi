@@ -49,6 +49,9 @@
 
 `sourcePath` は原本が必要で**実際に保存する場合だけ**付ける。任意に `origin`、`license`、`approvalNote` 等の追跡情報を追加できる。`path` は常にリポジトリ相対パス。
 
+## 正式デザイン原画
+正式な衣装・四面図などの**デザイン原本**はゲーム用の画像とは別に `source-assets/` に置き、`assets/manifest.json` の `designReferences` に原本パス・SHA-256・用途を登録する。派生画像を作っていないときはゲーム用画像の `sourcePath` に誤って紐づけない。原画像は無加工で保持し、Git blobと実バイトで照合する。
+
 ## 自動検査と限界
 `tools/check-repository.mjs` は、怪しい旧版/一時保管先、未登録素材、素材IDとパスの重複、ファイル不在、採用素材・原本の完全一致重複を検出する。**見た目の近似重複・画質・ライセンス・ゲーム動作・iPhone Safari**については別途検査する。
 

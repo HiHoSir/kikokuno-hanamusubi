@@ -870,5 +870,21 @@
       },
       "usage": "village-default;field-selectable"
     }
+  ],
+  "designReferences": [
+    {
+      "id": "hizuki-character-design",
+      "path": "source-assets/characters/hizuki/character-design.jpg",
+      "status": "approved",
+      "role": "character-appearance-reference",
+      "format": "JPEG",
+      "width": 1448,
+      "height": 1086,
+      "bytes": 965821,
+      "sha256": "d5060c5da9f1c049c74bc1ef181d55fa1a3867b41fbdf2f931d506dc15d7d232",
+      "gitBlobSha": "27e2ed96a7f3644fb09dad0fe79a213c1f666394",
+      "characterId": "hizuki",
+      "note": "User-provided official four-view character sheet. This is a reference image, not a game runtime sprite."
+    }
   ]
 }

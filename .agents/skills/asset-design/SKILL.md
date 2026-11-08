@@ -18,4 +18,10 @@ description: 鬼哭の花結び用のゲーム画像・タイル・キャラ・N
 - [独立オブジェクト/建築](templates/object.md)
 - [キャラクター/NPC](templates/character.md)
 
+## GitHubへの画像・原本バイナリの直接登録（成功実績あり）
+- バイナリファイルがChatGPTの作業環境にありGitHubツールから読めないときは、まずBase64テキスト化し、ChatGPTライブラリの一時フォルダにアップロードする。
+- `files.read` で**全行**を読み取って改行を除去し、GitHubの `create_blob({encoding:"base64",content:<実データ>})` に渡す。入力文字数・データ完整性・転送先Blob SHAを元ファイルと照合する。
+- 登録したBlob SHAを使って `create_tree` → `create_commit` → `update_ref(main,expected_sha=元HEAD,force=false)`、その後にGitHub上の実体を再取得して検証する。
+- 成功を確認したら一時ライブラリの `.b64` を削除する。**Canva等の無関係な外部サービスを無断の転送経路に使わない。**
+
 **禁止:** 未承認のものを完成品と呼ぶ、仮の市松画像を実透過PNGと呼ぶ、PNGの輪郭をそのまま通行判定にする、旧リポジトリの承認情報を無確認で引き継ぐ。

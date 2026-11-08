@@ -6,11 +6,11 @@
 
 **最優先参照:** 本会話でユーザーが直接添付した、表題「ヒヅキ / Hizuki」のキャラクター設定画。今回の依頼により、**緋月のキャラクター設定・色・服装を決めるデザイン画像の正本**とする。探索用の歩行スプライトや以前の生成設定画より優先。歩行アトラスの現行ピクセルを、黙って描き換える許可ではない。
 
-- **転送予定の正本パス:** `source-assets/characters/hizuki/character-design.jpg`
+- **GitHub登録済みの原本:** [character-design.jpg](../../source-assets/characters/hizuki/character-design.jpg) — `source-assets/characters/hizuki/character-design.jpg`
 - **ファイル実体:** ユーザー添付JPEG、1448×1086px、RGB、965,821 bytes。
 - **SHA-256:** `d5060c5da9f1c049c74bc1ef181d55fa1a3867b41fbdf2f931d506dc15d7d232`
 - **Git blob SHA-1:** `27e2ed96a7f3644fb09dad0fe79a213c1f666394`
-- **GitHub上の状態:** **未転送（pending）**。画像はこの会話の添付ファイルとして確認できるが、GitHubに同名の画像が存在するとは主張しない。連携で添付JPEGのバイナリを直接書き込む手段が未確立。ユーザーの原画像を加工・再生成して代用しない。転送後に元SHAと同一であることを検査して本行を更新する。
+- **GitHub上の状態:** **登録済（verified）**。ユーザー添付JPEGを無加工でGitHubへ送信し、Blob SHA-1を原本と照合した。`assets/manifest.json` の `designReferences` に素材の出典・画像寸法・SHA-256を登録。ゲーム用歩行画像とは別のデザイン資料である。
 
 ### 画像の内容と適用順位
 

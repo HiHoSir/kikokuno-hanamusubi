@@ -26,7 +26,7 @@ test('AGENTS and character production skill lead to a single current design cano
   assert.ok(canon.includes('1086×1448'));
   assert.ok(canon.includes('1448×1086px'));
   assert.ok(canon.includes('d5060c5da9f1c049c74bc1ef181d55fa1a3867b41fbdf2f931d506dc15d7d232'));
-  assert.ok(canon.includes('**未転送（pending）**'));
+  assert.ok(canon.includes('**登録済（verified）**'));
   assert.ok(skill.includes('character-design.jpg'));
 });
 
@@ -52,4 +52,21 @@ test('design rules preserve distinct cell metrics and no false game integration'
   assert.ok(skill.includes('ユーザーの意図した歩行上下動'));
   assert.ok(skill.includes('刀なし・両腕を開く'));
   assert.ok(canon.includes('この高解像度PNG自体は本GitHubリポジトリに転送できていない'));
+});
+
+test('directly transferred official character sheet is byte-for-byte identical to the approved original', () => {
+  const path = 'source-assets/characters/hizuki/character-design.jpg';
+  const bytes = data(path);
+  const expected = 'd5060c5da9f1c049c74bc1ef181d55fa1a3867b41fbdf2f931d506dc15d7d232';
+  assert.equal(bytes.length, 965821);
+  assert.equal(bytes[0], 0xff);
+  assert.equal(bytes[1], 0xd8);
+  assert.equal(bytes.at(-2), 0xff);
+  assert.equal(bytes.at(-1), 0xd9);
+  assert.equal(createHash('sha256').update(bytes).digest('hex'), expected);
+  assert.equal(gitBlobSHA(bytes), '27e2ed96a7f3644fb09dad0fe79a213c1f666394');
+  const ref = JSON.parse(textFile('assets/manifest.json')).designReferences.find(x => x.id === 'hizuki-character-design');
+  assert.equal(ref.path, path);
+  assert.equal(ref.sha256, expected);
+  assert.equal(ref.status, 'approved');
 });

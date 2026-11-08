@@ -1,4 +1,437 @@
 {
   "schemaVersion": 1,
-  "assets": []
+  "assets": [
+    {
+      "id": "field-water-motion",
+      "type": "effect",
+      "path": "assets/field/effects/water-motion.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/animation/fluid-v1/field-water.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-waterfall-motion",
+      "type": "effect",
+      "path": "assets/field/effects/waterfall-motion.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/animation/fluid-v1/waterfall.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-new-village",
+      "type": "object",
+      "path": "assets/field/objects/new-village.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/field-map-objects-v3/village.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-new-house",
+      "type": "object",
+      "path": "assets/field/objects/new-house.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/field-map-objects-v3/house.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-new-torii",
+      "type": "object",
+      "path": "assets/field/objects/new-torii.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/field-map-objects-v3/torii.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-new-cave-large",
+      "type": "object",
+      "path": "assets/field/objects/new-cave-large.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/field-map-objects-v3/cave-large.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-new-fort",
+      "type": "object",
+      "path": "assets/field/objects/new-fort.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/field-map-objects-v3/fort.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-new-pagoda",
+      "type": "object",
+      "path": "assets/field/objects/new-pagoda.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/field-map-objects-v3/pagoda.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-new-trees",
+      "type": "object",
+      "path": "assets/field/objects/new-trees.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/field-map-objects-v3/trees.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-new-mountain-small",
+      "type": "object",
+      "path": "assets/field/objects/new-mountain-small.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/field-map-objects-v3/mountain-small.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-new-mountain-large",
+      "type": "object",
+      "path": "assets/field/objects/new-mountain-large.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/field-map-objects-v3/mountain-large.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-bridge-ns",
+      "type": "object",
+      "path": "assets/field/objects/bridge-ns.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/quarter-v1/bridgeNS.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-castle",
+      "type": "object",
+      "path": "assets/field/objects/castle.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/field-map-objects-v3/castle.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-sacred-tree",
+      "type": "object",
+      "path": "assets/field/objects/sacred-tree.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/field-map-objects-v3/sacred-tree.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-stone-monument",
+      "type": "object",
+      "path": "assets/field/objects/stone-monument.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/field-map-objects-v3/stone-monument.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-waterfall",
+      "type": "object",
+      "path": "assets/field/objects/waterfall.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/quarter-v1/waterfall.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-horizon",
+      "type": "object",
+      "path": "assets/field/objects/horizon.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/quarter-v1/horizon.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-grass",
+      "type": "map",
+      "path": "assets/field/terrain/grass.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/grass-v1/grass.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-grass-cliff",
+      "type": "map",
+      "path": "assets/field/terrain/grass-cliff.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/cliffs-v1/grass-cliff-32.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-ladder",
+      "type": "object",
+      "path": "assets/field/objects/ladder.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/ladder-v1/wood-ladder-32x96.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-water",
+      "type": "map",
+      "path": "assets/field/terrain/water.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/landscape-v1/water.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-snow",
+      "type": "map",
+      "path": "assets/field/terrain/snow.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/landscape-v1/snow.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-barren",
+      "type": "map",
+      "path": "assets/field/terrain/barren.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/landscape-v1/barren.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-sand",
+      "type": "map",
+      "path": "assets/field/terrain/sand.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/landscape-v1/sand.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-shrine",
+      "type": "object",
+      "path": "assets/field/objects/shrine.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/field-map-objects-v3/shrine.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-lantern",
+      "type": "object",
+      "path": "assets/field/objects/lantern.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/landscape-v2/lantern.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-bridge",
+      "type": "object",
+      "path": "assets/field/objects/bridge.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/landscape-v2/bridge.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-flowers",
+      "type": "object",
+      "path": "assets/field/objects/flowers.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/landscape-v2/flowers.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-wildflowers",
+      "type": "object",
+      "path": "assets/field/objects/wildflowers.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlements/common-v1/wildflowers-4x4.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-road",
+      "type": "map",
+      "path": "assets/field/terrain/road.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/landscape-v3/road.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-village",
+      "type": "object",
+      "path": "assets/field/objects/village.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/places-v1/village.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-town",
+      "type": "object",
+      "path": "assets/field/objects/town.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/places-v1/town.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-hermit",
+      "type": "object",
+      "path": "assets/field/objects/hermit.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/places-v1/hermit.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-jizo",
+      "type": "object",
+      "path": "assets/field/objects/jizo.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/places-v1/jizo.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-cave",
+      "type": "object",
+      "path": "assets/field/objects/cave.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/places-v1/cave.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-torii",
+      "type": "object",
+      "path": "assets/field/objects/torii.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/places-v1/torii.png"
+      },
+      "usage": "legacy-field-loader"
+    }
+  ]
 }

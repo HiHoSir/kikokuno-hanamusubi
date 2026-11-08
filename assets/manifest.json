@@ -842,6 +842,33 @@
         "path": "assets/maps/hozuki-village-v1/ground.png"
       },
       "usage": "hozuki-village-ground"
+    },
+    {
+      "id": "hizuki-walk-sd",
+      "type": "character",
+      "path": "assets/characters/hizuki/walk-sd-32.png",
+      "status": "approved",
+      "sourcePath": "source-assets/characters/hizuki/walk-sd-editor.json",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/characters/hizuki/field-sd-v3/walk-atlas-32.png",
+        "gitBlobSha": "ca625f073cba37b1681a2633220b34f65848772e"
+      },
+      "usage": "field-default;village-selectable"
+    },
+    {
+      "id": "hizuki-walk-hana",
+      "type": "character",
+      "path": "assets/characters/hizuki/walk-hana-80x112.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/characters/hizuki/hana-20261107/walk/walk-atlas-80x112.png",
+        "gitBlobSha": "18e86aadeb3f4931828f1f2d91e3b0b24df463ba"
+      },
+      "usage": "village-default;field-selectable"
     }
   ]
 }

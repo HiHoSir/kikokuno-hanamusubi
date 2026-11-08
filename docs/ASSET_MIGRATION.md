@@ -23,3 +23,12 @@
 - 旧版 `village.png`、`torii.png`、`cave.png`（旧 `places-v1` 由来）を新リポジトリから削除。新版 `field-map-objects-v3` 由来を優先。
 - `new-` 付きの正式登録名9件を、`village.png`、`torii.png`、`cave-large.png`、`house.png`、`fort.png`、`pagoda.png`、`trees.png`、`mountain-small.png`、`mountain-large.png` に統一。各画像のGit blob SHAは不変。
 - ゲーム本体のコードは移行していないため、描画時には新版に統一された `assets/manifest.json` のパスを参照すること。
+
+## 2026-11-09 緋月のフィールド・村歩行アセット（正しい依頼対象）
+- フィールドの標準表示: SD 32px版 `assets/characters/hizuki/walk-sd-32.png`（旧 `field-sd-v3`）。12コマ、96×128px。
+- 鬼灯村の標準表示: Hana版 `assets/characters/hizuki/walk-hana-80x112.png`（旧 `hana-20261107`）。12コマ、240×448px。
+- エリア別のデフォルトと画像セル順、足元アンカーなどは `data/characters/hizuki-walk.json` に記録。両方ともエリアで選択できる異なる表示スタイルであり、新旧の置き換え関係ではない。
+- SDのユーザー編集原本を `source-assets/characters/hizuki/walk-sd-editor.json` に元バイトのまま保管。編集JSONの方向順は正面・背面・左・右、完成PNGの行順は正面・背面・右・左。混同しない。
+- 元の3ファイルと転送後のGit blob SHAを照合。PNG生成や画素変換は行わない。
+- **旧ゲームの描画コードは移植していない。** 画像と台帳の登録は完了したが、新ゲームの描画・歩行・足元位置・Safari表示は未検証。
+- この前に誤って移行したフィールド・村の地形／建物65件は今回変更していない。緋月2件と合わせ、登録は67件。これら65件の取扱いは別途判断が必要。

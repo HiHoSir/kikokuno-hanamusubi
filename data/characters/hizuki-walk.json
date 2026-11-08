@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "characterId": "hizuki",
+  "movementGridPx": 32,
+  "defaultForArea": {
+    "field": "sd",
+    "village": "hana"
+  },
+  "variants": {
+    "sd": {
+      "assetId": "hizuki-walk-sd",
+      "path": "assets/characters/hizuki/walk-sd-32.png",
+      "sourceOriginalPath": "assets/characters/hizuki/field-sd-v3/walk-atlas-32.png",
+      "gitBlobSha": "ca625f073cba37b1681a2633220b34f65848772e",
+      "editorPath": "source-assets/characters/hizuki/walk-sd-editor.json",
+      "editorGitBlobSha": "f6d228be64910c80ad4401349c75a33f36fda71e",
+      "atlasPx": [
+        96,
+        128
+      ],
+      "framePx": [
+        32,
+        32
+      ],
+      "rows": [
+        "front",
+        "back",
+        "right",
+        "left"
+      ],
+      "columns": [
+        "idle",
+        "stepA",
+        "stepB"
+      ],
+      "runtimeFrameToColumn": [
+        1,
+        0,
+        2
+      ],
+      "legacyRuntimeNote": "Field hero() uses stable row-specific visible bounds, 28px nominal silhouette and an independently calculated foot; village draws the same atlas with the map renderer. Do not infer collision from alpha.",
+      "editorRowOrder": [
+        "front",
+        "back",
+        "left",
+        "right"
+      ]
+    },
+    "hana": {
+      "assetId": "hizuki-walk-hana",
+      "path": "assets/characters/hizuki/walk-hana-80x112.png",
+      "sourceOriginalPath": "assets/characters/hizuki/hana-20261107/walk/walk-atlas-80x112.png",
+      "gitBlobSha": "18e86aadeb3f4931828f1f2d91e3b0b24df463ba",
+      "atlasPx": [
+        240,
+        448
+      ],
+      "framePx": [
+        80,
+        112
+      ],
+      "rows": [
+        "front",
+        "back",
+        "right",
+        "left"
+      ],
+      "columns": [
+        "idle",
+        "stepA",
+        "stepB"
+      ],
+      "runtimeFrameToColumn": [
+        1,
+        0,
+        2
+      ],
+      "footAnchorPx": [
+        40,
+        106
+      ],
+      "neutralVisibleHeightPxByRow": [
+        99,
+        100,
+        97,
+        97
+      ],
+      "nominalRenderedVisibleHeightPx": 48,
+      "legacyRuntimeNote": "Foot y=106 is the drawing origin one past last opaque y=105, not a 32px collision anchor; rendered size is independent of the 32px movement grid."
+    }
+  },
+  "sourceRepository": "HiHoSir/yaksha-hanamusubi",
+  "sourceCommit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+  "runtimeIntegration": "NOT_YET_MIGRATED",
+  "remark": "This describes two purposeful area-selectable sprite styles, not an obsolete/new pair. No game renderer was moved."
+}

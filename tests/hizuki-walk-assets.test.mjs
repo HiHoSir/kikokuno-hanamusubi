@@ -22,8 +22,8 @@ const imageInfo = path => {
 test('two explicit area-default styles with the same 32px movement grid', () => {
   assert.equal(spec.characterId, 'hizuki');
   assert.equal(spec.movementGridPx, 32);
-  assert.deepEqual(spec.defaultForArea, { field: 'sd', village: 'hana' });
-  assert.deepEqual(Object.keys(spec.variants).sort(), ['hana', 'sd']);
+  assert.deepEqual(spec.defaultForArea, { field: 'sd', village: '4dir-80x112' });
+  assert.deepEqual(Object.keys(spec.variants).sort(), ['4dir-80x112', 'sd']);
   assert.equal(spec.runtimeIntegration, 'NOT_YET_MIGRATED');
 });
 
@@ -75,9 +75,18 @@ test('SD editor preserves all 12 original 32px RGBA frames', () => {
   }
 });
 
-test('Hana anchor and display height remain separate from 32px collision', () => {
-  const v = spec.variants.hana;
+test('4-direction 80x112 anchor and display height remain separate from 32px collision', () => {
+  const v = spec.variants['4dir-80x112'];
   assert.deepEqual(v.footAnchorPx, [40, 106]);
   assert.deepEqual(v.neutralVisibleHeightPxByRow, [99, 100, 97, 97]);
   assert.equal(v.nominalRenderedVisibleHeightPx, 48);
+});
+
+test('new repository uses descriptive sprite identities, keeping old labels in provenance only', () => {
+  const v = spec.variants['4dir-80x112'];
+  assert.equal(v.assetId, 'hizuki-walk-4dir-80x112');
+  assert.equal(v.path, 'assets/characters/hizuki/walk-4dir-80x112.png');
+  assert.ok(!Object.keys(spec.variants).includes('hana'));
+  assert.ok(manifest.assets.every(a => !/hana/i.test(a.id) && !/hana/i.test(a.path)));
+  assert.ok(v.sourceOriginalPath.includes('/hana-20261107/'), 'original source naming stays only in provenance');
 });

@@ -858,9 +858,9 @@
       "usage": "field-default;village-selectable"
     },
     {
-      "id": "hizuki-walk-hana",
+      "id": "hizuki-walk-4dir-80x112",
       "type": "character",
-      "path": "assets/characters/hizuki/walk-hana-80x112.png",
+      "path": "assets/characters/hizuki/walk-4dir-80x112.png",
       "status": "approved",
       "origin": {
         "repo": "HiHoSir/yaksha-hanamusubi",

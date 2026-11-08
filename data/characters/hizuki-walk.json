@@ -4,7 +4,7 @@
   "movementGridPx": 32,
   "defaultForArea": {
     "field": "sd",
-    "village": "hana"
+    "village": "4dir-80x112"
   },
   "variants": {
     "sd": {
@@ -46,9 +46,9 @@
         "right"
       ]
     },
-    "hana": {
-      "assetId": "hizuki-walk-hana",
-      "path": "assets/characters/hizuki/walk-hana-80x112.png",
+    "4dir-80x112": {
+      "assetId": "hizuki-walk-4dir-80x112",
+      "path": "assets/characters/hizuki/walk-4dir-80x112.png",
       "sourceOriginalPath": "assets/characters/hizuki/hana-20261107/walk/walk-atlas-80x112.png",
       "gitBlobSha": "18e86aadeb3f4931828f1f2d91e3b0b24df463ba",
       "atlasPx": [

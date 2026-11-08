@@ -9,6 +9,7 @@
 ## スキルの唯一の保存先
 - 画像やアセットの生成・編集・変換: `.agents/skills/asset-design/SKILL.md`
 - 村・マップチップ・NPC・キャラクターのグラフィック: `.agents/skills/create-grid-map-art/SKILL.md`（asset-designも併用）
+- 緋月のキャラクターデザイン・立ち絵・歩行・戦闘ポーズ: `docs/characters/HIZUKI_CANON.md` と `.agents/skills/hizuki-character/SKILL.md`（asset-design併用、歩行・村表現にはcreate-grid-map-artも併用）
 - 新規スキル作成前に既存の役割を確認し、重複する場合は既存スキルを修正。新設時はこの一覧を更新。ルート直下に `skills/` を作らない。
 
 ## 命名の禁止事項

@@ -24,6 +24,10 @@ test('AGENTS and character production skill lead to a single current design cano
   assert.ok(skill.includes('../create-grid-map-art/SKILL.md'));
   assert.ok(canon.includes('未移行'));
   assert.ok(canon.includes('1086×1448'));
+  assert.ok(canon.includes('1448×1086px'));
+  assert.ok(canon.includes('d5060c5da9f1c049c74bc1ef181d55fa1a3867b41fbdf2f931d506dc15d7d232'));
+  assert.ok(canon.includes('**未転送（pending）**'));
+  assert.ok(skill.includes('character-design.jpg'));
 });
 
 test('design references are the actual registered contemporary game images, not older artwork', () => {

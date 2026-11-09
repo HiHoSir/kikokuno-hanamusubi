@@ -10,6 +10,8 @@ const allowedRoots = new Set([
   '.github', '.agents', 'docs', 'src', 'data', 'assets',
   'source-assets', 'tools', 'tests',
 ]);
+// One explicit, unapproved Pages review artifact; not a general previews/ allowance.
+const allowedPreviewFiles = new Set(['previews/cave-prototype/index.html']);
 const forbiddenDirectories = new Set([
   'old', 'archive', 'archives', 'backup', 'backups', 'experimental',
   'experiments', 'scratch', 'temp', 'tmp', 'work', 'output', 'outputs',
@@ -40,7 +42,7 @@ export function validateInventory(files, manifest, readBytes = () => Buffer.from
       continue;
     }
     const parts = p.split('/');
-    if (!allowedRoots.has(parts[0])) errors.push(`不許可の保存先: ${p}`);
+    if (!allowedRoots.has(parts[0]) && !allowedPreviewFiles.has(p)) errors.push(`不許可の保存先: ${p}`);
     if (parts.some(x => forbiddenDirectories.has(x.toLowerCase()))) errors.push(`旧版・一時ディレクトリは禁止: ${p}`);
     if (duplicateName.test(parts.at(-1))) errors.push(`複製・旧版風のファイル名は禁止: ${p}`);
     if (p.startsWith('assets/') && /^new[-_]/i.test(parts.at(-1))) errors.push(`採用素材にnew-接頭辞は禁止: ${p}`);

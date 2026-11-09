@@ -67,3 +67,25 @@ test('デザイン正本は一般の採用スプライトとは別に登録し�
   const bad = {...m, designReferences: [{...m.designReferences[0], sha256: '0'.repeat(64)}]};
   assert.ok(validateInventory([...base, path], bad, () => bytes).some(x => x.includes('SHA-256が不一致')));
 });
+
+
+test('公開検証用の限定ページのみ許可し、採用済みアセットとしては扱わない', () => {
+  const permitted = 'previews/cave-prototype/index.html';
+  assert.deepEqual(validateInventory([...base, permitted], empty), []);
+});
+
+test('previews の追加ファイル・別の試作・偽装パスは許可しない', () => {
+  const denied = [
+    'previews/cave-prototype/extra.html',
+    'previews/cave-prototype/assets/wall.png',
+    'previews/other/index.html',
+    'previews/cave-prototype/index.html.bak',
+    'previews/cave-prototype/../index.html',
+    'preview/cave-prototype/index.html',
+  ];
+  for (const path of denied) {
+    const errors = validateInventory([...base, path], empty);
+    assert.ok(errors.length > 0, `不許可ファイルを拒否する: ${path}`);
+    assert.ok(errors.some(e => e.includes('不許可の保存先') || e.includes('不正なパス')), `${path}: ${errors.join(', ')}`);
+  }
+});

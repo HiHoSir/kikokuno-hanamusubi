@@ -14,14 +14,15 @@ const gitBlobSHA = b => createHash('sha1').update('blob ' + b.length + '\0').upd
 
 test('AGENTS and character production skill lead to a single current design canon', () => {
   const agents = textFile('AGENTS.md');
-  const grid = textFile('.agents/skills/create-grid-map-art/SKILL.md');
+  const village = textFile('.agents/skills/build-hozuki-village/SKILL.md');
   const skill = textFile('.agents/skills/hizuki-character/SKILL.md');
   const canon = textFile('docs/characters/HIZUKI_CANON.md');
   assert.ok(agents.includes('.agents/skills/hizuki-character/SKILL.md'));
   assert.ok(agents.includes('docs/characters/HIZUKI_CANON.md'));
-  assert.ok(grid.includes('../hizuki-character/SKILL.md'));
+  assert.ok(agents.includes('.agents/skills/build-hozuki-village/SKILL.md'));
+  assert.ok(village.includes('../hizuki-character/SKILL.md'));
   assert.ok(skill.includes('../asset-design/SKILL.md'));
-  assert.ok(skill.includes('../create-grid-map-art/SKILL.md'));
+  assert.ok(skill.includes('../build-hozuki-village/SKILL.md'));
   assert.ok(canon.includes('未移行'));
   assert.ok(canon.includes('1086×1448'));
   assert.ok(canon.includes('1448×1086px'));

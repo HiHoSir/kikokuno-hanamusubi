@@ -6,7 +6,7 @@
 - [AGENTS.md](AGENTS.md) — AIの共通ルール
 - [docs/REPOSITORY_POLICY.md](docs/REPOSITORY_POLICY.md) — ディレクトリ、素材台帳、採用手順
 - [.agents/skills/asset-design/SKILL.md](.agents/skills/asset-design/SKILL.md) — 素材生成・加工
-- [.agents/skills/create-grid-map-art/SKILL.md](.agents/skills/create-grid-map-art/SKILL.md) — 村・マップチップ・NPC・キャラ制作
+- [鬼灯村の建物制作・歩行検査](.agents/skills/build-hozuki-village/SKILL.md) — 建物素材・配置・通行・遮蔽・iPhone検査
 - [assets/manifest.json](assets/manifest.json) — 採用素材の唯一の台帳（移行済み素材を登録）
 
 ## 将来の保存先

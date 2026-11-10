@@ -20,7 +20,7 @@ const required = [
   'AGENTS.md', 'README.md', '.gitignore', 'package.json',
   'docs/REPOSITORY_POLICY.md', 'assets/manifest.json',
   '.agents/skills/asset-design/SKILL.md',
-  '.agents/skills/create-grid-map-art/SKILL.md',
+  '.agents/skills/build-hozuki-village/SKILL.md',
   'tools/check-repository.mjs',
 ];
 const allowedTypes = new Set(['character', 'map', 'object', 'ui', 'audio', 'effect', 'other']);

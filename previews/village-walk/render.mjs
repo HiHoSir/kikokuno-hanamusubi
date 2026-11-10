@@ -1,4 +1,4 @@
-export function pixelViewport(cssWidth,cssHeight,dpr,desiredZoom=1.2) {
+export function pixelViewport(cssWidth,cssHeight,dpr,desiredZoom=1.0) {
   const ratio=Math.min(dpr||1,3);
   // Device density changes backing resolution, never the approved scene zoom.
   const step=ratio*desiredZoom;

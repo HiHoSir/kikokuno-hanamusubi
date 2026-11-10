@@ -1,5 +1,5 @@
 import { makeWalk } from './movement.mjs';
-import { pixelViewport } from './render.mjs';
+import { pixelViewport } from './render.mjs?v=camera-1.2';
 
 const scene = document.querySelector('#scene');
 const status = document.querySelector('#status');

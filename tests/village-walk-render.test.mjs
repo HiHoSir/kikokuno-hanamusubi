@@ -15,11 +15,13 @@ test('road corners retain subcell silhouettes instead of 16px stair steps',()=>{
  assert.equal(data.terrain.roadShape,'pixel-contour');
 });
 const {pixelViewport} = await import(local('render.mjs'));
-test('iPhone and desktop output have integral physical pixels and whole-pixel camera steps',()=>{
+test('approved 1.2 camera zoom stays 1.2 on every device, including iPhone DPR 3',()=>{
  for(const dpr of [1,1.25,2,2.75,3])for(const [w,h] of [[393,620],[852,290],[858,790]]){
   const p=pixelViewport(w,h,dpr);
-  assert.ok(Number.isInteger(p.step));
-  assert.equal(p.width%p.step,0);
-  assert.equal(p.height%p.step,0);
+  const ratio=Math.min(dpr||1,3);
+  const displayedBellHeight=229*p.step/ratio;
+  assert.ok(Math.abs(displayedBellHeight-229*1.2)<1e-9,
+    `DPR ${dpr}: belltower displayed at ${displayedBellHeight}px instead of ${229*1.2}px`);
+  assert.ok(Math.abs(p.step/ratio-1.2)<1e-12);
  }
 });

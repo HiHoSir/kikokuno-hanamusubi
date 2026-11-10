@@ -16,13 +16,14 @@ const buttons = [...document.querySelectorAll('[data-dir]')];
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 const zoom = 1.0;
 const speed = 152;
+const assetVersion = 'adult-layout';
 
 function image(name) {
   return new Promise((resolve,reject) => {
     const bitmap = new Image();
     bitmap.onload = () => resolve(bitmap);
     bitmap.onerror = () => reject(new Error(name));
-    bitmap.src = './map/'+name;
+    bitmap.src = './map/'+name+'?v='+assetVersion;
   });
 }
 
@@ -44,7 +45,7 @@ function clearInput() {
 }
 
 async function start() {
-  const response = await fetch('./map/scene.json');
+  const response = await fetch('./map/scene.json?v='+assetVersion);
   if (!response.ok) throw new Error('scene.json');
   const data = await response.json();
   const [worldX,worldY,width,height] = data.bounds;

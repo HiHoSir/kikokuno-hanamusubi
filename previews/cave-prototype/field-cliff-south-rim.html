@@ -10,6 +10,26 @@ const SOURCE={"floor_material_0_0":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUg
 // Isolated, generated cave-wall texture asset (not yet approved).
 SOURCE.cave_cliff_face='assets/rock-face-pixel-96x64.png';
 const T=48, W=META.cols, H=META.rows;
+const MAZE={
+  start:{x:4,y:12}, exit:{x:16,y:3},
+  rows:[
+    '####################',
+    '####################',
+    '###############...##',
+    '###....###........##',
+    '###....###........##',
+    '###....###..###...##',
+    '####..####..########',
+    '####..####..##...###',
+    '####.............###',
+    '####.............###',
+    '####..##..####...###',
+    '###...##..#####..###',
+    '###...#########..###',
+    '###...##############',
+    '####################',
+  ],
+};
 const cv=document.getElementById('map'),g=cv.getContext('2d',{willReadFrequently:true});
 const grid=document.getElementById('grid'), paint=document.getElementById('paint'), mode=document.getElementById('mode'), details=document.getElementById('details');
 const status=document.getElementById('status'),z=document.getElementById('zoom');
@@ -20,7 +40,18 @@ function mask(x,y){return (isFloor(x,y-1)?1:0)+(isFloor(x+1,y)?2:0)+(isFloor(x,y
 const dirs=[['N',0,-1],['E',1,0],['S',0,1],['W',-1,0]];
 function v08Portals(){
   const name=window.__v08?.current||'explore';
-  return (META.portals[name]||META.portals.explore).filter(p=>p.renderSprite!==false).map(p=>[p.id,p.x,p.y]);
+  return (META.portals[name]||[]).filter(p=>p.renderSprite!==false).map(p=>[p.id,p.x,p.y]);
+}
+
+function drawMazeExit(context){
+  const {x,y}=MAZE.exit;
+  if(!isFloor(x,y))return;
+  const cx=(x+.5)*T,cy=(y+.5)*T;
+  context.fillStyle='#222129';context.fillRect(cx-11,cy-9,22,18);
+  context.fillStyle='#af7c48';context.fillRect(cx-9,cy-7,18,14);
+  context.fillStyle='#603a2e';context.fillRect(cx-7,cy-5,14,10);
+  context.fillStyle='#ffd28b';context.fillRect(cx-4,cy-4,8,8);
+  context.fillStyle='#fff0bd';context.fillRect(cx-2,cy-2,4,4);
 }
 
 // v0.10: each portal is an independent drawn component: dark recess behind
@@ -751,6 +782,7 @@ function render(){
  g.fillStyle='#0c121b';g.fillRect(0,0,cv.width,cv.height);
  const layer=mode.value;
  if(layer==='all')g.drawImage(terrain.composite,0,0);
+ if(layer==='all'&&window.__v08?.current==='maze')drawMazeExit(g);
  if(layer==='structure_base'){g.drawImage(terrain.wall,0,0);g.drawImage(terrain.edge,0,0);}
  if(layer==='ground')g.drawImage(terrain.floor,0,0);
  if(layer==='ground_detail')g.drawImage(terrain.edge,0,0);
@@ -846,10 +878,12 @@ Promise.all(Object.entries(SOURCE).map(([key,data])=>new Promise((res,rej)=>{let
     <canvas id="walkScreen" width="512" height="416" aria-label="緋月で歩ける自然洞窟"></canvas>
     <div class="controls scene-layout-nav" role="group" aria-label="洞窟の検証モード">
       <button id="sceneExplore" aria-pressed="true" type="button">通常探索マップ</button>
+      <button id="sceneMaze" aria-pressed="false" type="button">洞窟の迷路</button>
       <button id="sceneOverlap" aria-pressed="false" type="button">岩棚・前後検証</button>
     </div>
     
 <p id="sceneMessage" class="muted">南向きは立体的な岩壁を置かず、床縁の下を暗い空間にします。北・東西は従来の岩壁のまま、床・衝突判定・階段は不変です。</p>
+    <p id="mazeClear" class="warn" role="status" hidden>迷路クリア！ 出口の灯りにたどり着きました。</p>
     <div id="exploreJump" class="controls">
       <button id="visitTerrain" type="button">高台用石段へ</button>
       <button id="visitUpstairs" type="button">上階への階段へ</button>
@@ -907,9 +941,11 @@ Promise.all(Object.entries(SOURCE).map(([key,data])=>new Promise((res,rej)=>{let
   const status = document.getElementById('walkStatus');
   const player = {x:7.5*T, y:7.5*T, facing:0, phase:0, distance:0};
   const held = new Set();
-  const V08_SCENES=Object.freeze({explore:META.layout_presets.explore.slice(),layer_test:META.layout_presets.layer_test.slice()});
+  const V08_SCENES=Object.freeze({...META.layout_presets,maze:MAZE.rows});
+  const sceneButtons={explore:'sceneExplore',maze:'sceneMaze',layer_test:'sceneOverlap'};
   let v08Current='explore';
-  const v08Edits={explore:V08_SCENES.explore.slice(),layer_test:V08_SCENES.layer_test.slice()};
+  let mazeReached=false;
+  const v08Edits={...V08_SCENES};
   function v08SetScene(name){
     if(!Object.prototype.hasOwnProperty.call(V08_SCENES,name))throw Error('Unknown scene');
     v08Edits[v08Current]=rows.map(r=>r.join(''));
@@ -919,21 +955,25 @@ Promise.all(Object.entries(SOURCE).map(([key,data])=>new Promise((res,rej)=>{let
     document.getElementById('ledgeVisible').checked=name==='layer_test';
     document.getElementById('occlusionReview').hidden=name!=='layer_test';
     document.getElementById('exploreJump').hidden=name!=='explore';
-    document.getElementById('sceneExplore').setAttribute('aria-pressed',String(name==='explore'));
-    document.getElementById('sceneOverlap').setAttribute('aria-pressed',String(name==='layer_test'));
+    for(const [scene,id] of Object.entries(sceneButtons))
+      document.getElementById(id).setAttribute('aria-pressed',String(name===scene));
     document.getElementById('sceneMessage').textContent=name==='explore'
       ?'通常探索：左側は横向きの7段が上階の入口へ続く階段、北は高台用石段、右は床穴式下り階段です。'
+      :name==='maze'?'左下の入口から、右上にある金色の出口の灯りを探してください。'
       :'前後検証：v0.7の地形と岩棚を保持した比較専用マップです。';
-    player.x=(name==='explore'?7.5:9.35)*T;
-    player.y=(name==='explore'?7.5:9.18)*T;
+    player.x=(name==='maze'?MAZE.start.x+.5:name==='explore'?7.5:9.35)*T;
+    player.y=(name==='maze'?MAZE.start.y+.5:name==='explore'?7.5:9.18)*T;
     player.phase=0;player.distance=0;player.facing=0;
+    mazeReached=false;
+    if(name==='maze')movementBlocks=0;
+    document.getElementById('mazeClear').hidden=true;
     held.clear(); cachedGrid=null; lowerLayer=null;upperLayer=null;layerCacheRow=-999;layerCacheLedgeState=null;
     V07.key=null;
     render();draw();
   }
   window.__v08={defaults:V08_SCENES,get current(){return v08Current},get edited(){return v08Edits},setScene:v08SetScene};
-  document.getElementById('sceneExplore').onclick=()=>v08SetScene('explore');
-  document.getElementById('sceneOverlap').onclick=()=>v08SetScene('layer_test');
+  for(const [scene,id] of Object.entries(sceneButtons))
+    document.getElementById(id).onclick=()=>v08SetScene(scene);
   // Geometry and visibility are independent: collision uses rows[][];
   // the following lists only define who draws over whom.
   let active = true, last = 0, cachedGrid = null, background = null;
@@ -1047,7 +1087,15 @@ Promise.all(Object.entries(SOURCE).map(([key,data])=>new Promise((res,rej)=>{let
     for(const d of buttonNames)if(held.has(d))return d;
     return null;
   }
+  function atMazeCell(cell){
+    return Math.floor(player.x/T)===cell.x&&Math.floor(player.y/T)===cell.y;
+  }
   function detailName(){
+    if(v08Current==='maze'){
+      if(mazeReached)return '出口に到着！';
+      if(atMazeCell(MAZE.start))return '迷路の入口';
+      return '迷路を探索中';
+    }
     for(const p of META.portals[v08Current]){
       if(Math.hypot((p.x+(p.widthCells||1)/2)*T-player.x,(p.y+(p.heightCells||1)/2)*T-player.y)<70)return p.name+'付近（遷移は未実装）';
     }
@@ -1065,6 +1113,7 @@ Promise.all(Object.entries(SOURCE).map(([key,data])=>new Promise((res,rej)=>{let
     background=makeTransparencyCanvas();
     const b=background.getContext('2d');
     b.drawImage(terrain.composite,0,0);
+    if(v08Current==='maze')drawMazeExit(b);
     overhangPieces=[];wallOccluders=[];
     for(let y=0;y<H;y++)for(let x=0;x<W;x++){
       if(!isFloor(x,y)&&mask(x,y)!==0){
@@ -1100,6 +1149,10 @@ Promise.all(Object.entries(SOURCE).map(([key,data])=>new Promise((res,rej)=>{let
     const w=screen.width,h=screen.height;
     context.clearRect(0,0,w,h);context.fillStyle='#080b13';context.fillRect(0,0,w,h);
     if(!isReady){status.textContent='地形部品を読み込み中…';return;}
+    if(v08Current==='maze'&&!mazeReached&&atMazeCell(MAZE.exit)&&walkable(player.x,player.y)){
+      mazeReached=true;
+      document.getElementById('mazeClear').hidden=false;
+    }
     if(cachedGrid!==rows.map(r=>r.join('')).join('\n')||!background)rebuildScene();
     let left=Math.max(0,Math.min(W*T-w,Math.round(player.x-w/2)));
     let top=Math.max(0,Math.min(H*T-h,Math.round(player.y-h*.60)));
@@ -1133,6 +1186,9 @@ Promise.all(Object.entries(SOURCE).map(([key,data])=>new Promise((res,rej)=>{let
     requestAnimationFrame(tick);
   }
   document.getElementById('walkReset').onclick=()=>{
+    if(v08Current==='maze'){
+      v08SetScene('maze');return;
+    }
     player.x=7.5*T;player.y=7.5*T;player.phase=0;player.facing=0;player.distance=0;movementBlocks=0;draw();
   };
   function setLedgeTestPoint(side){
@@ -1237,7 +1293,7 @@ Promise.all(Object.entries(SOURCE).map(([key,data])=>new Promise((res,rej)=>{let
     get status(){return status.textContent},
     get ledgeInfo(){return {anchorFeetY:ledge.anchorFeetY,behindY:ledge.behindY,frontY:ledge.frontY,demoX:ledge.demoX,front:isLedgeInFront(),enabled:ledgeEnabled()};},
     switchMode};
-  v08SetScene('explore');
+  v08SetScene(new URLSearchParams(window.location.search).get('maze')==='1'?'maze':'explore');
   requestAnimationFrame(tick);
 })();
 

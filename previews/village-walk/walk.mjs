@@ -1,5 +1,5 @@
 import { makeWalk } from './movement.mjs';
-import { pixelViewport } from './render.mjs?v=camera-1.0';
+import { pixelViewport } from './render.mjs?v=bell-and-soil';
 
 const scene = document.querySelector('#scene');
 const status = document.querySelector('#status');
@@ -103,7 +103,7 @@ async function start() {
   const [frameWidth,frameHeight] = data.hero.frame;
   const [footX,footY] = data.hero.feet;
   const scale = data.hero.scale;
-  let [x,y] = data.spawn;
+  let [x,y] = new URL(location.href).searchParams.get('focus')==='belltower' ? [800,426] : data.spawn;
   let face = 1, distance = 0, time = 0, lastFrame = 0;
   let viewportWidth,viewportHeight,pixelStep;
   let renderedX,renderedY;

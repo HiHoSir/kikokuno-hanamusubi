@@ -25,3 +25,12 @@ test('approved 1.0 camera zoom stays 1.0 on every device, including iPhone DPR 3
   assert.ok(Math.abs(p.step/ratio-1.0)<1e-12);
  }
 });
+test('the generated belltower includes its foundation and connected stairs as one sprite',()=>{
+ const bell=data.sprites.find(s=>s.id==='belltower');
+ assert.ok(bell,'new belltower is actually referenced by the live scene');
+ const png=readFileSync(local('map/'+bell.file));
+ assert.equal(png.readUInt32BE(16),300,'width follows the reference relative to the houses');
+ assert.ok(!data.terrain.layers.some(l=>['bell-platform','bell-stairs'].includes(l.name)),
+   'detached legacy stone platform and stairs must not remain underneath the new sprite');
+ assert.deepEqual(bell.feet,[800,480],'the stairs keep their ground connection');
+});

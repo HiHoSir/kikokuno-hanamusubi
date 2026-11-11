@@ -6,6 +6,11 @@ export function touchedEntrance(markers,x,y,nx,ny,radius) {
     nx>=left && nx<left+width && y>=top+height && ny>=top && ny-radius<=top+height);
 }
 
+export function crossesSouthExit(marker, x, y, nx, ny) {
+  const [left, threshold, width] = marker.southExit;
+  return x === nx && nx >= left && nx < left + width && y < threshold && ny >= threshold;
+}
+
 export function makeWalk(width, height, blocked, radius) {
   const samples = [];
   for (let y = -radius; y <= radius; y++) {

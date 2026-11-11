@@ -1,4 +1,4 @@
-import { HIZUKI_WALK_SPEED, makeWalk, touchedEntrance } from './movement.mjs?v=indoor-residents';
+import { HIZUKI_WALK_SPEED, makeWalk, touchedEntrance, crossesSouthExit } from './movement.mjs?v=field-connection';
 import { villageRooms } from '../village-interiors/rooms.mjs?v=indoor-residents';
 import { pixelViewport, DEFAULT_CAMERA_ZOOM, canopyOpacity, riverRipples, paintRiverRipples } from './render.mjs?v=camera-0.5';
 import { advanceResident, drawCharacter, makeResident, residentInFront, RESIDENT_RADIUS } from './residents.mjs?v=indoor-residents';
@@ -18,7 +18,7 @@ const input = new Map();
 const buttons = [...document.querySelectorAll('[data-dir]')];
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 const zoom = DEFAULT_CAMERA_ZOOM;
-const assetVersion = 'village-tree-clearance';
+const assetVersion = 'field-connection';
 
 function image(name,url='./map/'+name+'?v='+assetVersion) {
   return new Promise((resolve,reject) => {
@@ -64,6 +64,7 @@ async function start() {
     for(const npc of residents) npc.moving=false;
   });
   const entrances=data.markers.filter(marker=>marker.entrance && Object.hasOwn(villageRooms,marker.id));
+  const fieldExit=data.markers.find(marker=>marker.southExit);
   const paths = new Set(data.sprites.flatMap(p => [p.file,p.eave,p.sway].filter(Boolean)));
   const art = new Map(await Promise.all([...paths].map(async name => [name,await image(name)])));
   const canopyFiles=new Set(data.sprites.filter(s=>s.vegetation && s.vegetation!=='shrub').map(s=>s.file));
@@ -228,12 +229,16 @@ async function start() {
     dialogue.update(residentInFront(x,y,face,residents),x,y);
     if(showDebug){
       context.drawImage(overlay,0,0);
-      for(const {point:[mx,my],entrance} of data.markers){
+      for(const {point:[mx,my],entrance,southExit} of data.markers){
         context.fillStyle='#f1d96f';
         context.fillRect(mx-2,my-2,4,4);
         if(entrance){
           context.strokeStyle='#f1d96f';
           context.strokeRect(...entrance);
+        }
+        if(southExit){
+          const [left,top,width]=southExit;
+          context.fillRect(left,top,width,2);
         }
       }
       context.strokeStyle='#f1d96f';
@@ -274,6 +279,11 @@ async function start() {
       face=row;
       const step=HIZUKI_WALK_SPEED*elapsed/1000;
       const [nx,ny]=walk.move(x,y,dx*step,dy*step,occupied);
+      if(crossesSouthExit(fieldExit,x,y,nx,ny)){
+        clearInput();
+        location.assign('../field-walk/?from=village&v=field-connection');
+        return;
+      }
       const entrance=touchedEntrance(entrances,x,y,nx,ny,data.radius);
       if(entrance){
         clearInput();

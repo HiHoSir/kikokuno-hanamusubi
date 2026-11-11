@@ -80,7 +80,7 @@ async function start() {
   function resize() {
     const parent = scene.parentElement;
     const ratio = Math.min(devicePixelRatio || 1, 3);
-    const viewport = pixelViewport(parent.clientWidth,parent.clientHeight,ratio,1.75);
+    const viewport = pixelViewport(parent.clientWidth,parent.clientHeight,ratio,1);
     scene.width = viewport.width;
     scene.height = viewport.height;
     scene.style.width = scene.width/ratio+'px';

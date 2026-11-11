@@ -110,11 +110,11 @@ def export(source, target):
     sprites = {sprite['file']: sprite for sprite in scene['sprites']}
     copyfile(source / 'hizuki.png', target / 'hizuki.png')
     for name, sprite in sprites.items():
-        if sprite.get('eave') or sprite['id'] == 'belltower':
+        if sprite.get('eave'):
             copyfile(source / name, target / name)
             continue
         with Image.open(source / name) as original:
-            paint = coarse_dots(original)
+            paint = coarse_dots(original, keep_mask=sprite['id'] == 'belltower')
         paint.save(target / name, optimize=True)
         if sprite.get('sway'):
             physalis_sway(paint, sprite['frames']).save(target / sprite['sway'], optimize=True)

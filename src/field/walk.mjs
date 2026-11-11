@@ -8,6 +8,7 @@ const directions = {up: [0, -1, 1], down: [0, 1, 0], left: [-1, 0, 3], right: [1
 const keys = {ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right', w: 'up', s: 'down', a: 'left', d: 'right'};
 const inputs = new Map();
 const stride = [0, 1, 0, 2];
+let pendingInput = null;
 
 function updateButtons() {
   const active = [...inputs.values()].at(-1);
@@ -15,13 +16,17 @@ function updateButtons() {
 }
 
 function setInput(id, direction) {
-  if (direction) inputs.set(id, direction);
-  else inputs.delete(id);
+  if (direction) {
+    inputs.set(id, direction);
+    // A full tap can land between two paints on a slow frame.
+    pendingInput = {id, direction};
+  } else inputs.delete(id);
   updateButtons();
 }
 
 function clearInput() {
   inputs.clear();
+  pendingInput = null;
   updateButtons();
 }
 
@@ -55,8 +60,9 @@ async function start() {
         return;
       }
     }
-    const direction = [...inputs.values()].at(-1);
+    const direction = pendingInput?.direction ?? [...inputs.values()].at(-1);
     if (direction && !state.motion) {
+      pendingInput = null;
       const [dx, dy, row] = directions[direction];
       dirty ||= state.row !== row;
       state.row = row;
@@ -84,9 +90,13 @@ async function start() {
       button.setPointerCapture(event.pointerId);
       setInput(event.pointerId, button.dataset.dir);
     });
-    for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) {
+    for (const type of ['pointerup', 'lostpointercapture']) {
       button.addEventListener(type, event => setInput(event.pointerId));
     }
+    button.addEventListener('pointercancel', event => {
+      if (pendingInput?.id === event.pointerId) pendingInput = null;
+      setInput(event.pointerId);
+    });
     button.addEventListener('contextmenu', event => event.preventDefault());
   }
   addEventListener('keydown', event => {

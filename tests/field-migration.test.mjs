@@ -86,3 +86,41 @@ test('village arrival and entry use the copied map contact cells and 32px moveme
     delete globalThis.window;
   }
 });
+
+test('a direction tap between animation frames still moves one cell', async () => {
+  const listeners = new Map();
+  const button = {dataset: {dir: 'up'}, classList: {toggle() {}}, setPointerCapture() {},
+    addEventListener: (type, listener) => listeners.set(type, listener)};
+  const scene = {dataset: {}, getContext() {}};
+  const loading = {hidden: false};
+  const status = {};
+  const frames = [];
+  const controller = source('src/field/walk.mjs').replace(/^import .*;\n/, '')
+    .replace('import.meta.url', '"https://example.test/src/field/walk.mjs"');
+  const context = createContext({
+    document: {querySelector: selector => ({'#scene': scene, '#load': loading, '#status': status}[selector]),
+      querySelectorAll: () => [button], addEventListener() {}},
+    location: {search: ''}, URL, URLSearchParams, console, performance: {now: () => 0},
+    addEventListener() {}, requestAnimationFrame: frame => frames.push(frame),
+    contact: () => null, createFieldRenderer: () => () => {}, loadFieldArt: async () => ({}),
+    villageArrival: () => [1200, 2256], world: {tileSize: 32, near: () => null},
+    fieldStep: ({x, y}, dx, dy, at) => ({x: x + dx * 32, y: y + dy * 32, motion: {x, y, at, duration: 192}}),
+  });
+  runInContext(controller, context);
+  await new Promise(setImmediate);
+  assert.equal(loading.hidden, true);
+  const tap = {button: 0, pointerId: 1, preventDefault() {}};
+  listeners.get('pointerdown')(tap);
+  listeners.get('pointerup')(tap);
+  listeners.get('lostpointercapture')(tap);
+  frames.shift()(100);
+  frames.shift()(300);
+  assert.deepEqual(scene.dataset, {x: '37', y: '69'});
+  frames.shift()(600);
+  assert.equal(scene.dataset.y, '69');
+  listeners.get('pointerdown')(tap);
+  listeners.get('pointercancel')(tap);
+  frames.shift()(700);
+  frames.shift()(1000);
+  assert.equal(scene.dataset.y, '69');
+});

@@ -32,8 +32,11 @@ test('house physalis placements follow local anchors beside their own building',
   const pw=png.readUInt32BE(16),ph=png.readUInt32BE(20);
   assert.ok(plant.point[0]>=0 && plant.point[1]>=0 && plant.point[0]+pw<=data.bounds[2] && plant.point[1]+ph<=data.bounds[3],
    'anchored plants must fit inside the map');
-  assert.ok(plant.point[0]+pw<=house.point[0]+24 || plant.point[0]>=house.point[0]+house.size[0]-24,
-   'plant stays beside the wall, not across its doorway');
+  const left=plant.id.endsWith('-left');
+  const wall=house.point[0]+(left ? 0 : house.size[0]);
+  assert.ok(Math.abs(plant.point[0]+pw/2-wall)<=pw/2+8,'plant stays beside its facade corner');
+  assert.ok(left ? plant.point[0]+pw<=house.door[0]-72 : plant.point[0]>=house.door[0]+72,
+   'plant leaves a clear doorway approach');
   assert.ok(Math.abs(plant.point[1]+ph-house.feet[1])<=24,'plant roots meet the building base');
  }
 });
@@ -93,6 +96,42 @@ test('mature trees have native sprite heights proportional to adult Hizuki',()=>
 test('roads use only horizontal and vertical straight segments',()=>{
  for(const {points} of data.roads)for(let i=1;i<points.length;i++) {
   assert.ok(points[i][0]===points[i-1][0] || points[i][1]===points[i-1][1],JSON.stringify(points));
+ }
+});
+
+test('the main road continues at the bridge clear width',()=>{
+ const [left,top,width,height]=data.river.walkway;
+ const x=left+width/2;
+ const crossings=data.roads.filter(({points})=>points.some(([px,y],i)=>
+  i>0 && px===x && points[i-1][0]===x &&
+  Math.min(y,points[i-1][1])<top+height && Math.max(y,points[i-1][1])>top));
+ assert.equal(crossings.length,1);
+ assert.equal(crossings[0].width,width);
+ assert.ok(crossings[0].points[0][1]<top-width && crossings[0].points.at(-1)[1]>top+height+width);
+});
+
+test('all physalis and the central tree canopies leave the road clear',()=>{
+ const roadAreas=data.roads.flatMap(({width,points})=>points.slice(1).map(([x,y],i)=>{
+  const [px,py]=points[i],r=width/2;
+  return [Math.min(x,px)-r,Math.min(y,py)-r,Math.max(x,px)+r,Math.max(y,py)+r];
+ }));
+ for(const sprite of data.sprites.filter(s=>s.sway || s.vegetation)) {
+  const [x,y]=sprite.point,[w,h]=sprite.size;
+  const areas=sprite.sway ? roadAreas : roadAreas.slice(0,1);
+  assert.ok(!areas.some(([l,t,r,b])=>x<r && x+w>l && y<b && y+h>t),
+   `${sprite.id} overlaps the road`);
+ }
+});
+
+test('the shrub uses native ground-hugging foliage with its root at the base',()=>{
+ const png=readFileSync(local('map/sprite-36.png'));
+ const size=[png.readUInt32BE(16),png.readUInt32BE(20)];
+ assert.ok(size[1]<=data.metrics.heroVisibleHeight*0.4 && size[0]>size[1]);
+ const shrubs=data.sprites.filter(s=>s.vegetation==='shrub');
+ assert.ok(shrubs.length>0);
+ for(const shrub of shrubs) {
+  assert.deepEqual(shrub.size,size);
+  assert.equal(shrub.feet[1],shrub.point[1]+size[1]-3);
  }
 });
 

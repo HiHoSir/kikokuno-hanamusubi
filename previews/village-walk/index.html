@@ -12,7 +12,7 @@ body{margin:0;overscroll-behavior:none}
 main{width:min(100%,880px);height:100vh;height:100dvh;margin:auto;padding:max(8px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));display:grid;grid-template-rows:auto minmax(0,1fr) auto;gap:8px}
 header{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0}
 h1{font-size:17px;line-height:1.25;margin:0}
-#status{font-size:12px;color:#dbdec6;text-align:right;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#status{-webkit-user-select:none;user-select:none;font-size:12px;color:#dbdec6;text-align:right;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .viewport{position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;border:1px solid #73785c;border-radius:8px;background:#243322}
 canvas{display:block;image-rendering:pixelated;touch-action:none}
 .controls{display:flex;align-items:center;justify-content:space-between;gap:8px}
@@ -52,6 +52,6 @@ button:active,button.held,button[aria-pressed=true]{background:#e8cc8b;color:#27
 </div>
 </section>
 </main>
-<script type="module" src="./walk.mjs?v=hizuki-props"></script>
+<script type="module" src="./walk.mjs?v=hizuki-layout"></script>
 </body>
 </html>

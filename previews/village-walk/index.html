@@ -28,8 +28,12 @@ button:active,button.held,button[aria-pressed=true]{background:#e8cc8b;color:#27
 .actions button{font-size:13px}
 #load{position:absolute;inset:0;display:grid;place-items:center;margin:0;background:#243322;text-align:center;padding:10px}
 #load[hidden]{display:none}
-#enter{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);background:#314337;color:inherit;border:1px solid #a6aa8a;border-radius:8px;min-height:42px;padding:9px 18px;text-decoration:none;touch-action:manipulation}
-#enter[hidden]{display:none}
+#enter,#talk{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);background:#314337;color:inherit;border:1px solid #a6aa8a;border-radius:8px;min-height:44px;padding:9px 18px;text-decoration:none;touch-action:manipulation}
+#dialogue{position:absolute;inset:auto 10px 10px;padding:12px;background:#19251e;border:1px solid #b8aa81;border-radius:8px;display:grid;gap:6px}
+#dialogue[hidden]{display:none}
+#speaker{color:#e8cc8b;font-size:14px}
+#line{margin:0;font-size:15px;line-height:1.55}
+#next{justify-self:end;min-height:44px;min-width:72px;padding:0 12px;touch-action:manipulation}
 @media(orientation:landscape) and (max-height:520px){
  main{grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto minmax(0,1fr)}
  header{grid-column:1/-1}
@@ -40,7 +44,13 @@ button:active,button.held,button[aria-pressed=true]{background:#e8cc8b;color:#27
 <body>
 <main>
 <header><h1>鬼灯村の歩行検査</h1><output id="status">読み込み中</output></header>
-<section class="viewport" aria-label="鬼灯村"><canvas id="scene"></canvas><p id="load">鬼灯村を読み込んでいます</p><a id="enter" hidden>中に入る</a></section>
+<section class="viewport" aria-label="鬼灯村">
+<canvas id="scene"></canvas><p id="load">鬼灯村を読み込んでいます</p>
+<a id="enter" hidden>中に入る</a><button id="talk" type="button" hidden>話す</button>
+<section id="dialogue" aria-labelledby="speaker" hidden>
+<strong id="speaker"></strong><p id="line" aria-live="polite"></p><button id="next" type="button">次へ</button>
+</section>
+</section>
 <section class="controls" aria-label="検査操作">
 <div class="dpad" aria-label="方向ボタン">
 <button type="button" data-dir="up" aria-label="上"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M12 5 22 20H2Z"/></svg></button>
@@ -54,6 +64,6 @@ button:active,button.held,button[aria-pressed=true]{background:#e8cc8b;color:#27
 </div>
 </section>
 </main>
-<script type="module" src="./walk.mjs?v=village-interior-entrances"></script>
+<script type="module" src="./walk.mjs?v=village-residents"></script>
 </body>
 </html>

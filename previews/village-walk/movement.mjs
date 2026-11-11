@@ -12,11 +12,11 @@ export function makeWalk(width, height, blocked, radius) {
     return samples.every(([dx,dy]) => !blocked[(iy+dy)*width+ix+dx]);
   }
 
-  function move(x,y,dx,dy) {
+  function move(x,y,dx,dy,occupied) {
     const steps = Math.max(1,Math.ceil(Math.hypot(dx,dy)));
     const sx = dx/steps, sy = dy/steps;
     for (let i=0; i<steps; i++) {
-      if (!canStand(x+sx,y+sy)) break;
+      if (!canStand(x+sx,y+sy) || occupied?.(x+sx,y+sy)) break;
       x += sx;
       y += sy;
     }

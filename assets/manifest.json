@@ -869,6 +869,45 @@
         "gitBlobSha": "18e86aadeb3f4931828f1f2d91e3b0b24df463ba"
       },
       "usage": "village-default;field-selectable"
+    },
+    {
+      "id": "chief-walk-4dir-80x112",
+      "type": "character",
+      "path": "assets/characters/npc/chief-walk-4dir-80x112.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "commit": "a5e62b83cf875be37c3560d10c07ee546cd26b72",
+        "path": "docs/characters/hozuki-npc/sprites/npc-chief-walk.png",
+        "gitBlobSha": "e451380c8fd91da9c7102cb67b47d1348ffcc029"
+      },
+      "usage": "hozuki-village-npc"
+    },
+    {
+      "id": "satoko-walk-4dir-80x112",
+      "type": "character",
+      "path": "assets/characters/npc/satoko-walk-4dir-80x112.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "commit": "a5e62b83cf875be37c3560d10c07ee546cd26b72",
+        "path": "docs/characters/hozuki-npc/sprites/npc-satoko-walk.png",
+        "gitBlobSha": "2b258944be5f8f94d42d81a8045ef4a275b45ed3"
+      },
+      "usage": "hozuki-village-npc"
+    },
+    {
+      "id": "osumi-walk-4dir-80x112",
+      "type": "character",
+      "path": "assets/characters/npc/osumi-walk-4dir-80x112.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "commit": "a5e62b83cf875be37c3560d10c07ee546cd26b72",
+        "path": "docs/characters/hozuki-npc/sprites/npc-osumi-walk.png",
+        "gitBlobSha": "9dfec7fd16a270dc8e12c9084dc7f62226c931cb"
+      },
+      "usage": "hozuki-village-npc"
     }
   ],
   "designReferences": [

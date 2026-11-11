@@ -1,12 +1,18 @@
-import { makeWalk } from './movement.mjs';
+import { makeWalk } from './movement.mjs?v=village-residents';
 import { villageRooms } from '../village-interiors/rooms.mjs?v=village-interiors';
 import { pixelViewport, DEFAULT_CAMERA_ZOOM, canopyOpacity, riverRipples, paintRiverRipples } from './render.mjs?v=camera-0.5';
+import { advanceResident, faceToward, makeResident, residentInFront, RESIDENT_RADIUS } from './residents.mjs';
 
 const scene = document.querySelector('#scene');
 const status = document.querySelector('#status');
 const load = document.querySelector('#load');
 const debug = document.querySelector('#debug');
 const enter = document.querySelector('#enter');
+const talk = document.querySelector('#talk');
+const dialogue = document.querySelector('#dialogue');
+const speaker = document.querySelector('#speaker');
+const line = document.querySelector('#line');
+const next = document.querySelector('#next');
 const context = scene.getContext('2d', {alpha:false});
 const directions = {
   down:[0,1,0], up:[0,-1,1], right:[1,0,2], left:[-1,0,3],
@@ -19,13 +25,14 @@ const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 const zoom = DEFAULT_CAMERA_ZOOM;
 const speed = 152;
 const assetVersion = 'village-tree-clearance';
+const stride = [1,0,2,0];
 
-function image(name) {
+function image(name,url='./map/'+name+'?v='+assetVersion) {
   return new Promise((resolve,reject) => {
     const bitmap = new Image();
     bitmap.onload = () => resolve(bitmap);
     bitmap.onerror = () => reject(new Error(name));
-    bitmap.src = './map/'+name+'?v='+assetVersion;
+    bitmap.src = url;
   });
 }
 
@@ -47,11 +54,18 @@ function clearInput() {
 }
 
 async function start() {
-  const response = await fetch('./map/scene.json?v='+assetVersion);
-  if (!response.ok) throw new Error('scene.json');
-  const data = await response.json();
+  const [data,residentConfigs] = await Promise.all([
+    './map/scene.json?v='+assetVersion, './map/residents.json?v=village-residents',
+  ].map(async url=>{
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(url);
+    return response.json();
+  }));
   const [worldX,worldY,width,height] = data.bounds;
-  const [tiles,collision,hizuki,decor] = await Promise.all([data.terrain.atlas,'collision.png','hizuki.png','ground-decor.png'].map(image));
+  const [tiles,collision,hizuki,decor] = await Promise.all([data.terrain.atlas,'collision.png','hizuki.png','ground-decor.png'].map(name=>image(name)));
+  const residents = await Promise.all(residentConfigs.map(async config=>({
+    ...makeResident(config), bitmap:await image(config.asset,'../../'+config.asset+'?v=village-residents'),
+  })));
   const paths = new Set(data.sprites.flatMap(p => [p.file,p.eave,p.sway].filter(Boolean)));
   const art = new Map(await Promise.all([...paths].map(async name => [name,await image(name)])));
   const canopyFiles=new Set(data.sprites.filter(s=>s.vegetation && s.vegetation!=='shrub').map(s=>s.file));
@@ -143,10 +157,16 @@ async function start() {
   const [frameWidth,frameHeight] = data.hero.frame;
   const [footX,footY] = data.hero.feet;
   const focus=new URL(location.href).searchParams.get('focus');
-  let [x,y] = data.markers.find(marker=>marker.id===focus)?.point ?? data.spawn;
+  const focusedResident = residents.find(npc=>npc.id===focus);
+  let [x,y] = focusedResident ? [focusedResident.x,focusedResident.y+52]
+    : data.markers.find(marker=>marker.id===focus)?.point ?? data.spawn;
   let face = 1, distance = 0, time = 0, lastFrame = 0;
   let viewportWidth,viewportHeight,pixelStep;
   let renderedX,renderedY,entranceId;
+  let talkTarget, conversation, lineIndex;
+  const contactRadius = data.radius+RESIDENT_RADIUS;
+  const occupied = (px,py)=>residents.some(npc=>Math.hypot(px-npc.x,py-npc.y)<contactRadius);
+  const heroOccupied = (px,py)=>Math.hypot(px-x,py-y)<contactRadius;
 
   function resize() {
     const {step,width,height}=pixelViewport(scene.parentElement.clientWidth,scene.parentElement.clientHeight,devicePixelRatio,zoom);
@@ -160,8 +180,9 @@ async function start() {
     viewportHeight=height/step;
   }
 
-  function drawHero(column) {
-    context.drawImage(hizuki,frameWidth*column,frameHeight*face,frameWidth,frameHeight,
+  function drawCharacter({bitmap,x,y,face,distance,moving}) {
+    const column=moving?stride[Math.floor(distance/14)%stride.length]:0;
+    context.drawImage(bitmap,frameWidth*column,frameHeight*face,frameWidth,frameHeight,
       Math.round(x-footX),Math.round(y-footY),frameWidth,frameHeight);
   }
 
@@ -196,13 +217,11 @@ async function start() {
       paintRiverRipples(context, ripples, width, riverTop, left, right, reducedMotion.matches ? 0 : time);
       context.drawImage(riverCover, 0, riverTop);
     }
-    const stride=[1,0,2,0];
-    const column=moving?stride[Math.floor(distance/14)%stride.length]:0;
-    let drewHero=false;
+    const characters=[{bitmap:hizuki,x,y,face,distance,moving},...residents].sort((a,b)=>a.y-b.y);
+    let drawn=0;
     for(const sprite of data.sprites){
-      if(!drewHero && sprite.depth>y){
-        drawHero(column);
-        drewHero=true;
+      while(drawn<characters.length && characters[drawn].y<sprite.depth){
+        drawCharacter(characters[drawn++]);
       }
       const [sx,sy]=sprite.point;
       const bitmap=art.get(sprite.file);
@@ -212,7 +231,7 @@ async function start() {
         context.globalAlpha=1;
       }
     }
-    if(!drewHero) drawHero(column);
+    while(drawn<characters.length) drawCharacter(characters[drawn++]);
     const eave = houses.find(house => rectangleContains(house.eaveZone,x,y));
     if(eave) context.drawImage(art.get(eave.eave),...eave.eaveRect,...eave.eavePoint,eave.eaveRect[2],eave.eaveRect[3]);
     const showDebug=debug.getAttribute('aria-pressed')==='true';
@@ -221,9 +240,11 @@ async function start() {
       Object.hasOwn(villageRooms,id) && Math.abs(mx-x)<34 && Math.abs(my-y)<44)?.id;
     if (entrance!==entranceId) {
       entranceId = entrance;
-      enter.hidden = !entrance;
       if (entrance) enter.href = '../village-interiors/?building='+encodeURIComponent(entrance);
     }
+    talkTarget=conversation ? undefined : residentInFront(x,y,face,residents);
+    talk.hidden=!talkTarget;
+    enter.hidden=!entrance || !!conversation || !!talkTarget;
     if(showDebug){
       context.drawImage(overlay,0,0);
       for(const {point:[mx,my],entrance} of data.markers){
@@ -233,6 +254,12 @@ async function start() {
           context.strokeStyle='#f1d96f';
           context.strokeRect(...entrance);
         }
+      }
+      context.strokeStyle='#f1d96f';
+      for(const npc of residents){
+        context.beginPath();
+        context.arc(npc.x,npc.y,RESIDENT_RADIUS,0,Math.PI*2);
+        context.stroke();
       }
       context.strokeStyle='#fff';
       context.lineWidth=1.5;
@@ -261,23 +288,58 @@ async function start() {
     time+=elapsed;
     const direction=[...input.values()].pop();
     let moving=false;
-    if(direction){
+    if(direction && !conversation){
       const [dx,dy,row]=directions[direction];
       face=row;
-      const [nx,ny]=walk.move(x,y,dx*speed*elapsed/1000,dy*speed*elapsed/1000);
+      const [nx,ny]=walk.move(x,y,dx*speed*elapsed/1000,dy*speed*elapsed/1000,occupied);
       const travel=Math.hypot(nx-x,ny-y);
       moving=travel>0;
       distance+=travel;
       x=nx;
       y=ny;
     }
+    if(!conversation) for(const npc of residents) advanceResident(npc,elapsed,walk,heroOccupied);
     draw(moving);
     requestAnimationFrame(frame);
   }
 
+  function showLine() {
+    line.textContent=conversation.lines[lineIndex];
+    next.textContent=lineIndex+1<conversation.lines.length?'次へ':'閉じる';
+  }
+
+  function beginConversation() {
+    if(!talkTarget || conversation) return;
+    clearInput();
+    conversation=talkTarget;
+    conversation.face=faceToward(x-conversation.x,y-conversation.y);
+    for(const npc of residents) npc.moving=false;
+    lineIndex=0;
+    speaker.textContent=conversation.name;
+    showLine();
+    dialogue.hidden=false;
+    talk.hidden=true;
+    next.focus({preventScroll:true});
+  }
+
+  function closeConversation() {
+    conversation=undefined;
+    dialogue.hidden=true;
+    talkTarget=residentInFront(x,y,face,residents);
+    talk.hidden=!talkTarget;
+    if(talkTarget) talk.focus({preventScroll:true});
+  }
+
+  talk.addEventListener('click',beginConversation);
+  next.addEventListener('click',()=>{
+    if(!conversation) return;
+    if(++lineIndex<conversation.lines.length) showLine();
+    else closeConversation();
+  });
+
   for(const button of buttons){
     button.addEventListener('pointerdown',event=>{
-      if(event.button!==0) return;
+      if(event.button!==0 || conversation) return;
       event.preventDefault();
       button.setPointerCapture(event.pointerId);
       setInput(event.pointerId,button.dataset.dir);
@@ -288,8 +350,13 @@ async function start() {
     button.addEventListener('contextmenu',event=>event.preventDefault());
   }
   addEventListener('keydown',event=>{
-    if (event.key==='Enter' && event.target===document.body && entranceId) {
-      location.assign(enter.href);
+    if(conversation){
+      if(event.key==='Escape') closeConversation();
+      return;
+    }
+    if (event.key==='Enter' && event.target===document.body) {
+      if(talkTarget) beginConversation();
+      else if(entranceId) location.assign(enter.href);
       return;
     }
     const direction=keys[event.key];
@@ -307,6 +374,7 @@ async function start() {
   });
   document.querySelector('#reset').addEventListener('click',()=>{
     clearInput();
+    if(conversation) closeConversation();
     [x,y]=data.spawn;
     face=1;
     distance=0;

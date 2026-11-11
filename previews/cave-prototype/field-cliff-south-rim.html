@@ -214,7 +214,7 @@ function drawUpperStairsSymbol(c,x,y){
   c.drawImage(I.stairs_up_side,x*T+r.x,y*T+r.y);c.restore();
 }
 // Lighting pass: existing art and collision stay independent of ground shadows.
-const CAVE_LIGHT={color:'#080f1b',castX:.34,castY:.22,actorFootInsetPx:6};
+const CAVE_LIGHT={color:'#080f1b',castX:.34,castY:.28,actorFootInsetPx:6};
 const CAVE_SHADOW_MASKS=new WeakMap();
 let caveShadowCache=null,actorShadowSurface=null,actorShadowSprite=null;
 const actorShadowFrames=new Map();
@@ -260,7 +260,7 @@ function caveGroundShadows(terrain){
   const up=META.portals.explore.find(p=>p.id==='stairs_up'),ur=up.visualBoundsPx;
   const ux=up.x*T+ur.x,ub=up.y*T+ur.y+ur.height;
   castGroundShadow(c,I.stairs_up_side,ux,ub,.24);
-  groundContactShadow(c,ux+19,ub-1,24,7,.36);
+  groundContactShadow(c,ux+19,ub-1,28,9,.36);
   const down=META.portals.explore.find(p=>p.id==='stairs_down'),dr=down.visualBoundsPx;
   // A floor opening gets only a shallow rim shadow, never a raised-object cast.
   c.save();c.globalAlpha=.16;
@@ -269,7 +269,7 @@ function caveGroundShadows(terrain){
   const relief=shadowCanvas(128,148),rc=relief.getContext('2d');rc.translate(12,36);
   v014DrawRise(rc,0,0,'back');v014DrawRise(rc,0,0,'front');
   castGroundShadow(c,relief,rise.x*T-12,rise.y*T+112,.17);
-  groundContactShadow(c,(rise.x+1)*T,rise.y*T+104,42,8,.24);
+  groundContactShadow(c,(rise.x+1)*T,rise.y*T+104,46,10,.24);
  }
  // Shadows cannot darken the cliff face or spill into the south void.
  c.globalCompositeOperation='destination-in';c.drawImage(terrain.floor,0,0);
@@ -294,11 +294,11 @@ function drawActorGroundShadow(c,sheet,facing,phase,x,y,floor,cameraX=0,cameraY=
  if(sheet){
   sc.save();sc.globalAlpha=.22;sc.translate(64,foot-1);
   // Compress the silhouette onto the floor; its head projects down and right.
-  sc.transform(.65,.08,-CAVE_LIGHT.castX,-CAVE_LIGHT.castY,0,0);
+  sc.transform(.78,.08,-CAVE_LIGHT.castX,-CAVE_LIGHT.castY,0,0);
   sc.drawImage(actorShadowMask(sheet,facing,phase),-40,-(112-CAVE_LIGHT.actorFootInsetPx));sc.restore();
  }
- groundContactShadow(sc,65,foot,22,8,.40);
- groundContactShadow(sc,64,foot-1,13,4,.32);
+ groundContactShadow(sc,65,foot,26,10,.40);
+ groundContactShadow(sc,64,foot-1,15,5,.32);
  sc.globalCompositeOperation='destination-in';
  sc.drawImage(floor,left,top,160,96,0,0,160,96);
  sc.globalCompositeOperation='source-over';

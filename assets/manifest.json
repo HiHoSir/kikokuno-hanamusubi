@@ -26,6 +26,17 @@
       "usage": "legacy-field-loader"
     },
     {
+      "id": "field-cloud-sky",
+      "type": "effect",
+      "path": "assets/field/effects/cloud-sky.png",
+      "status": "approved",
+      "origin": {
+        "path": "assets/field/objects/horizon.png",
+        "gitBlobSha": "3dd94be0382a85ea67143cf487d34e07117f3de5"
+      },
+      "usage": "field-sky-overlay"
+    },
+    {
       "id": "field-village",
       "type": "object",
       "path": "assets/field/objects/village.png",

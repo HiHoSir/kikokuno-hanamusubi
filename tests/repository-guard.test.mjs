@@ -25,6 +25,14 @@ test('台帳にないアセットは拒否', () => {
   const errors = validateInventory([...base, 'assets/characters/hizuki/idle.png'], empty);
   assert.ok(errors.some(x => x.includes('台帳未登録')));
 });
+test('BGM候補の音源・MIDI・同梱READMEだけを指定の場所で許可する', () => {
+  const folder = 'review/audio/bgm-pack/';
+  const candidates = ['title_bgm_v1.ogg', 'title_bgm_v1.mid', 'README.md'].map(name => folder + name);
+  assert.deepEqual(validateInventory([...base, ...candidates], empty), []);
+  for (const path of [folder + 'notes.txt', folder + 'other/track.ogg', 'review/other/track.ogg']) {
+    assert.ok(validateInventory([...base, path], empty).some(error => error.includes('不許可の保存先')));
+  }
+});
 test('台帳の重複IDと実ファイル不足を拒否', () => {
   const manifest = { schemaVersion: 1, assets: [
     entry('hizuki-idle', 'assets/characters/hizuki/idle.png'),

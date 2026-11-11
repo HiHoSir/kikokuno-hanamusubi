@@ -1,104 +1,96 @@
-"""Export the village's placed art at its existing size, with a consistent pixel pitch."""
+"""Apply the village's shared scenery palette without altering art geometry."""
 import argparse
 import json
+from collections import Counter
+from functools import lru_cache
 from pathlib import Path
-from random import Random
 
-from PIL import Image, ImageEnhance
+from PIL import Image, ImageColor
 
-OBJECT_COLORS = {
-    'house-tile.png': 56,
-    'house-thatch.png': 56,
-    'teahouse.png': 64,
-    'inn.png': 64,
-    'belltower.png': 56,
-    'sprite-08.png': 38,
-    'sprite-46.png': 32,
-    'sprite-36.png': 12,
-    'sprite-60.png': 12,
-}
-PHYSALIS_FILES = (
-    ('sprite-53.png', 'sprite-54.png'),
-    ('sprite-55.png', 'sprite-56.png'),
-    ('sprite-57.png', 'sprite-58.png'),
+# Shared inks and ramps for the whole scene. Adjacent materials reuse these colors.
+SCENE_COLORS = (
+    '#2b2732', '#3c333e', '#514650', '#685962', '#847078', '#a48d8c',
+    '#292f38', '#343f55', '#43536d', '#52617c', '#61718b', '#76839b', '#8e9caf', '#b0bac5',
+    '#34303e', '#463b50', '#594a64', '#6d5c78', '#847189', '#a28a9c',
+    '#44352f', '#594235', '#75533d', '#906747', '#9d6d49', '#ad7950',
+    '#bc8759', '#c49764',
+    '#cfa26f', '#d4a773', '#d8ac79', '#ddaf7e', '#e1b482', '#e6b98a',
+    '#e9c69c', '#edd7b3', '#f1e0c6',
+    '#4a4444', '#5e5551', '#756a62', '#8b7e72', '#a49685',
+    '#bfb09b', '#d5c6af', '#e4d6c0',
+    '#2d372b', '#34433a', '#41564a', '#4f6653', '#627a5c',
+    '#394a2d', '#4d5b34', '#5c6939', '#687840', '#738543',
+    '#7a9247', '#819648', '#869849', '#8a9b4b', '#8e9e4d',
+    '#99a55a', '#a9af65', '#bbba76',
+    '#663a3f', '#813f38', '#a14c3d', '#b85c41', '#c66538', '#d8763b', '#e5904b', '#e9aa6c',
+    '#794656', '#985568', '#b46c7d', '#cf8793', '#e2a5aa', '#efbfbd', '#f5d7ce',
+    '#294761', '#305977', '#275f97', '#286ba7', '#2c76b2',
+    '#3584ba', '#4393c1', '#58a1c5', '#6ab1ca',
 )
 
 
-def paint_pixels(source, pitch):
-    """Average covered pixels in each cell, excluding transparent RGB."""
-    source = source.convert('RGBA')
-    w, h = source.size
-    pixels = source.load()
-    samples = Image.new('RGB', ((w + pitch - 1) // pitch, (h + pitch - 1) // pitch))
-    sample_pixels = samples.load()
-    covered = []
-    for top in range(0, h, pitch):
-        for left in range(0, w, pitch):
-            visible = [
-                pixels[x, y]
-                for y in range(top, min(top + pitch, h))
-                for x in range(left, min(left + pitch, w))
-                if pixels[x, y][3] >= 128
-            ]
-            if visible:
-                color = tuple(round(sum(p[i] for p in visible) / len(visible)) for i in range(3))
-                sample_pixels[left // pitch, top // pitch] = color
-                covered.append(color)
-    return samples, covered
+def srgb_linear(channel):
+    channel /= 255
+    return channel / 12.92 if channel <= .04045 else ((channel + .055) / 1.055) ** 2.4
 
 
-def pixel_palette(colors, count):
-    swatch = Image.new('RGB', (len(colors), 1))
-    swatch.putdata(colors)
-    return swatch.quantize(count, method=Image.Quantize.MEDIANCUT)
+def perceptual_color(rgb):
+    red, green, blue = map(srgb_linear, rgb)
+    l = (.4122214708 * red + .5363325363 * green + .0514459929 * blue) ** (1 / 3)
+    m = (.2119034982 * red + .6806995451 * green + .1073969566 * blue) ** (1 / 3)
+    s = (.0883024619 * red + .2817188376 * green + .6299787005 * blue) ** (1 / 3)
+    return (
+        .2104542553 * l + .7936177850 * m - .0040720468 * s,
+        1.9779984951 * l - 2.4285922050 * m + .4505937099 * s,
+        .0259040371 * l + .7827717662 * m - .8086757660 * s,
+    )
 
 
-def export_frame(source, colors, *, pitch=2, saturation=1, palette=None):
-    """Use flat color cells with the original silhouette and no dithering."""
-    source = source.convert('RGBA')
-    alpha = source.getchannel('A').point(lambda a: 255 if a >= 128 else 0)
-    if not alpha.getbbox():
-        return Image.new('RGBA', source.size)
-    if saturation != 1:
-        source = ImageEnhance.Color(source).enhance(saturation)
-    samples, covered = paint_pixels(source, pitch)
-    if palette is None:
-        palette = pixel_palette(covered, colors)
-    paint = samples.quantize(palette=palette, dither=Image.Dither.NONE).convert('RGB')
-    image = paint.resize((paint.width * pitch, paint.height * pitch), Image.Resampling.NEAREST)
-    image = image.crop((0, 0, source.width, source.height)).convert('RGBA')
-    image.putalpha(alpha)
+PALETTE = tuple(ImageColor.getrgb(color) for color in SCENE_COLORS)
+PALETTE_LAB = tuple((perceptual_color(color), color) for color in PALETTE)
+
+
+@lru_cache(maxsize=65536)
+def scene_color(red, green, blue):
+    light, a, b = perceptual_color((red, green, blue))
+    # Reserve the strongest dark-to-light range for Hizuki, the moving focus.
+    light = .92 * light + .042
+    a *= .94
+    b *= .96
+    return min(PALETTE_LAB, key=lambda p: (
+        (p[0][0] - light) ** 2 + 1.45 * (p[0][1] - a) ** 2 + 1.45 * (p[0][2] - b) ** 2
+    ))[1]
+
+
+def style(image):
+    image = image.convert('RGBA')
+    image.putdata([
+        (*scene_color(red, green, blue), alpha) if alpha else (0, 0, 0, 0)
+        for red, green, blue, alpha in image.get_flattened_data()
+    ])
     return image
 
 
-def road_texture(size):
-    """Draw sparse flat dirt marks on the same two-pixel pitch as the scenery."""
-    w, h = (n // 2 for n in size)
-    dirt = Image.new('RGB', (w, h), '#d9ab76')
-    pixels = dirt.load()
-    random = Random(104)
-    shapes = (
-        ((0, 0), (1, 0)),
-        ((0, 0), (1, 0), (1, 1)),
-        ((0, 0), (1, 0), (2, 0), (0, 1), (1, 1)),
-        ((0, 0), (1, 0), (2, 0), (1, 1), (2, 1), (3, 1)),
-    )
-    colors = ((209, 161, 110), (212, 165, 113), (223, 177, 126), (228, 185, 134))
-    for _ in range(w * h // 18):
-        x, y = random.randrange(w), random.randrange(h)
-        color = random.choice(colors)
-        for dx, dy in random.choice(shapes):
-            pixels[(x + dx) % w, (y + dy) % h] = color
-    for _ in range(w * h // 350):
-        x, y = random.randrange(w), random.randrange(h)
-        pixels[x, y] = (237, 195, 143)
-        pixels[(x + 1) % w, y] = (231, 186, 134)
-        pixels[(x + 1) % w, (y + 1) % h] = (192, 145, 96)
-    return dirt.resize(size, Image.Resampling.NEAREST)
+def flatten_shading(image):
+    """Join isolated neighboring shade cells while preserving edges and accents."""
+    cells = image.load()
+    output = image.copy()
+    out = output.load()
+    for y in range(2, image.height - 3, 2):
+        for x in range(2, image.width - 3, 2):
+            center = cells[x, y]
+            if center[3] != 255 or any(cells[x+dx, y+dy] != center for dx, dy in ((1, 0), (0, 1), (1, 1))):
+                continue
+            neighbors = Counter(cells[x+dx, y+dy] for dx, dy in ((-2, 0), (2, 0), (0, -2), (0, 2)))
+            shade, votes = neighbors.most_common(1)[0]
+            if votes < 3 or shade[3] != 255 or max(abs(a-b) for a, b in zip(center[:3], shade[:3])) > 28:
+                continue
+            for dx, dy in ((0, 0), (1, 0), (0, 1), (1, 1)):
+                out[x+dx, y+dy] = shade
+    return output
 
 
 def physalis_sway(plant):
-    """Move whole color cells from the standing plant and hold the root still."""
     width, height = plant.size
     _, top, _, bottom = plant.getchannel('A').getbbox()
     sheet = Image.new('RGBA', (width * 8, height))
@@ -107,102 +99,30 @@ def physalis_sway(plant):
         for y in range(0, height, 2):
             strength = max(0, min(1, (bottom - 4 - y) / (bottom - 4 - top)))
             offset = round(bend * strength / 2) * 2
-            band = plant.crop((0, y, width, y + 2))
-            pose.paste(band, (offset, y))
+            pose.paste(plant.crop((0, y, width, y + 2)), (offset, y))
         sheet.paste(pose, (frame * width, 0))
     return sheet
-
-
-def foliage_colors(chip):
-    colors = chip.convert('RGBA')
-    pixels = colors.load()
-    for y in range(colors.height):
-        for x in range(colors.width):
-            red, green, blue, alpha = pixels[x, y]
-            if green > max(red, blue):
-                pixels[x, y] = (round(red + .25 * (green - red)), round(green * .94), blue, alpha)
-    return colors
-
-
-def join_water_edges(chip):
-    """Blend the repeating sides before picking the shared river colors."""
-    pixels = chip.load()
-    right = chip.width - 2
-    for y in range(chip.height):
-        edge = [pixels[x, y] for x in (0, 1, right, right + 1)]
-        if all(a >= 128 for _, _, _, a in edge):
-            color = tuple(round(sum(p[i] for p in edge) / 4) for i in range(3))
-            for x in (0, 1, right, right + 1):
-                pixels[x, y] = (*color, pixels[x, y][3])
 
 
 def export(source, target):
     if source.resolve() == target.resolve():
         raise ValueError('Use an unchanged source directory for the export')
-    for filename, colors in OBJECT_COLORS.items():
-        with Image.open(source / filename) as original:
-            artwork = export_frame(original, colors, saturation=.92)
-            if filename == 'belltower.png':
-                # The small bronze bell needs its own ramp beside the wood and blue roof.
-                bell = (170, 150, 262, 256)
-                artwork.paste(export_frame(original.crop(bell), 12, saturation=.92), bell[:2])
-            artwork.save(target / filename, optimize=True)
-
-    fruit_colors = 32
-    fruit_samples = []
-    for pair in PHYSALIS_FILES:
-        for filename in pair:
-            with Image.open(source / filename) as original:
-                fruit_samples.extend(paint_pixels(ImageEnhance.Color(original.convert('RGBA')).enhance(.88), 2)[1])
-    fruit_palette = pixel_palette(fruit_samples, fruit_colors)
-    for still, sway in PHYSALIS_FILES:
-        with Image.open(source / still) as original:
-            plant = export_frame(original, fruit_colors, saturation=.88, palette=fruit_palette)
-        plant.save(target / still, optimize=True)
-        physalis_sway(plant).save(target / sway, optimize=True)
-
-    with Image.open(source / 'ground-decor.png') as original:
-        decor = Image.new('RGBA', original.size)
-        for top in range(0, original.height, 32):
-            for left in range(0, original.width, 32):
-                chip = original.crop((left, top, left+32, top+32))
-                index = top // 32 * (original.width // 32) + left // 32
-                if index < 58:
-                    chip = foliage_colors(chip)
-                pitch = 2 if 58 <= index < 65 else 1
-                decor.paste(export_frame(chip, 14, pitch=pitch, saturation=.88), (left, top))
-        decor.save(target / 'ground-decor.png', optimize=True)
-
-    with Image.open(source / 'path-soil.png') as original:
-        road_texture(original.size).save(target / 'path-soil.png', optimize=True)
-
     scene = json.loads((source / 'scene.json').read_text())
-    terrain = scene['terrain']
-    with Image.open(source / terrain['atlas']) as original:
-        atlas = original.convert('RGBA')
-    tiles = terrain['tiles']
-    palettes = {'grass': 10, 'field': 20, 'river': 12, 'bridge': 18}
-    saturation = {'grass': .9, 'field': .92, 'river': .82, 'bridge': .92}
-    for name, colors in palettes.items():
-        ids = {
-            tile
-            for layer in terrain['layers'] if layer['name'] == name
-            for tile in layer['cells'] if 0 <= tile < terrain['baseTileCount']
-        }
-        chips = {}
-        samples = []
-        for tile in sorted(ids):
-            left, top, size = tiles[tile]
-            chip = atlas.crop((left, top, left+size, top+size))
-            if name == 'river':
-                join_water_edges(chip)
-            chips[tile] = chip
-            samples.extend(paint_pixels(ImageEnhance.Color(chip).enhance(saturation[name]), 2)[1])
-        palette = pixel_palette(samples, colors)
-        for tile, chip in chips.items():
-            atlas.paste(export_frame(chip, colors, saturation=saturation[name], palette=palette),
-                        tuple(tiles[tile][:2]))
-    atlas.save(target / terrain['atlas'], optimize=True)
+    objects = {
+        sprite[key]
+        for sprite in scene['sprites']
+        for key in ('file', 'eave')
+        if key in sprite
+    }
+    sway = {sprite['file']: sprite['sway'] for sprite in scene['sprites'] if 'sway' in sprite}
+    for filename in sorted(objects | {scene['terrain']['atlas'], 'ground-decor.png', 'path-soil.png'}):
+        with Image.open(source / filename) as original:
+            artwork = style(original)
+        if filename in objects:
+            artwork = flatten_shading(artwork)
+        artwork.save(target / filename, optimize=True)
+        if filename in sway:
+            physalis_sway(artwork).save(target / sway[filename], optimize=True)
 
 
 if __name__ == '__main__':

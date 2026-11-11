@@ -36,7 +36,7 @@ def build(root=ROOT/'previews/village-walk'):
  s['sprites'].sort(key=lambda p:p['depth'])
  original=Image.open(root/'map/terrain.png').convert('RGBA');atlas=Image.new('RGBA',(512,416));atlas.alpha_composite(original.crop((0,0,256,416)))
  tiles=s['terrain']['tiles'][:baseCount]
- # Mirror the first plank span so the center meets the side's last column.
+ # Keep the plank color connected from both side pieces through the center.
  bridgeTiles=river['bridgeTiles'];centers=[]
  for row in range(3):
   sx,sy,*_=tiles[bridgeTiles[row*2]]
@@ -44,6 +44,8 @@ def build(root=ROOT/'previews/village-walk'):
   tile=Image.new('RGBA',(32,32))
   tile.alpha_composite(piece.transpose(Image.Transpose.FLIP_LEFT_RIGHT),(0,0))
   tile.alpha_composite(piece,(16,0))
+  right_x,right_y,*_=tiles[bridgeTiles[row*2+1]]
+  atlas.paste(piece.crop((14,0,16,32)),(right_x,right_y))
   x=256+row*32
   atlas.alpha_composite(tile,(x,0));centers.append(len(tiles));tiles.append([x,0,32])
  fields=[l for l in s['terrain']['layers'] if l['name']=='field'];grass=next(l for l in s['terrain']['layers'] if l['name']=='grass')

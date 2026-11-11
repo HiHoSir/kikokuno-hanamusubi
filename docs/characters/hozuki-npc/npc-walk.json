@@ -1,0 +1,60 @@
+{
+  "frameSize": [
+    80,
+    112
+  ],
+  "footAnchor": [
+    40,
+    106
+  ],
+  "pixelSize": 2,
+  "rows": {
+    "down": 0,
+    "up": 1,
+    "right": 2,
+    "left": 3
+  },
+  "columns": {
+    "idle": 0,
+    "stepA": 1,
+    "stepB": 2
+  },
+  "walkCycle": [
+    1,
+    0,
+    2,
+    0
+  ],
+  "sprites": {
+    "shop-clerk": {
+      "name": "共通店員",
+      "path": "sprites/npc-shop-clerk-walk.png"
+    },
+    "farm-worker": {
+      "name": "畑仕事の村人",
+      "path": "sprites/npc-farm-worker-walk.png"
+    },
+    "villager": {
+      "name": "村人",
+      "path": "sprites/npc-villager-walk.png"
+    },
+    "elder": {
+      "name": "年配の村人",
+      "path": "sprites/npc-elder-walk.png"
+    },
+    "child": {
+      "name": "子ども",
+      "path": "sprites/npc-child-walk.png"
+    },
+    "bell-keeper": {
+      "name": "鐘守",
+      "path": "sprites/npc-bell-keeper-walk.png"
+    }
+  },
+  "roomStaff": {
+    "teahouse": "shop-clerk",
+    "shop": "shop-clerk",
+    "inn": "shop-clerk",
+    "armory": "shop-clerk"
+  }
+}

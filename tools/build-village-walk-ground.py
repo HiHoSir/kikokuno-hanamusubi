@@ -2,12 +2,20 @@
 from pathlib import Path
 from collections import Counter
 import argparse,json,math
-import numpy as np
 from PIL import Image,ImageDraw
 
 ROOT=Path(__file__).resolve().parents[1]
 def build(root=ROOT/'previews/village-walk'):
  s=json.loads((root/'map/scene.json').read_text());width,height=s['bounds'][2:];river=s['river'];baseCount=s['terrain']['baseTileCount']
+ # Resolve house-side vegetation from its building, using native pixel offsets.
+ buildings={p['id']:p for p in s['sprites'] if p.get('eave')}
+ for p in s['sprites']:
+  anchor=p.get('anchor')
+  if anchor and anchor['kind']=='building':
+   house=buildings[anchor['id']]
+   p['point']=[house['point'][i]+anchor['offset'][i] for i in range(2)]
+   p['depth']=p['point'][1]+Image.open(root/'map'/p['file']).height-2
+ s['sprites'].sort(key=lambda p:p['depth'])
  original=Image.open(root/'map/terrain.png').convert('RGBA');atlas=Image.new('RGBA',(512,416));atlas.alpha_composite(original.crop((0,0,256,416)))
  tiles=s['terrain']['tiles'][:baseCount]
  # Add an unscaled central plank column between existing bridge side rails.
@@ -26,13 +34,6 @@ def build(root=ROOT/'previews/village-walk'):
  for y in range(0,height,soil.height):
   for x in range(0,width,soil.width):road.paste(soil,(x,y))
  road.putalpha(mask)
- # Native tiny grass fragments break the material edge without bending the lane.
- tuft=Image.open(ROOT/'assets/village/terrain/grass-tuft.png').convert('RGBA').resize((12,12),Image.Resampling.NEAREST)
- a=np.array(mask)>0;rng=np.random.default_rng(63)
- for y in range(5,height-5,18):
-  for x in range(5,width-5,18):
-   patch=a[y-2:y+3,x-2:x+3]
-   if patch.any() and not patch.all() and rng.random()<.6:road.alpha_composite(tuft,(x-6,y-8))
  new=[];cells=[];unique={};first=len(tiles)
  for y in range(0,height,32):
   for x in range(0,width,32):

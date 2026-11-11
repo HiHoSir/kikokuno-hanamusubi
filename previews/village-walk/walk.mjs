@@ -16,7 +16,7 @@ const buttons = [...document.querySelectorAll('[data-dir]')];
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 const zoom = 1.0;
 const speed = 152;
-const assetVersion = 'adult-layout';
+const assetVersion = 'native-size';
 
 function image(name) {
   return new Promise((resolve,reject) => {
@@ -52,18 +52,6 @@ async function start() {
   const [tiles,collision,hizuki,decor] = await Promise.all([data.terrain.atlas,'collision.png','hizuki.png','ground-decor.png'].map(image));
   const paths = new Set(data.sprites.flatMap(p => [p.file,p.eave,p.sway].filter(Boolean)));
   const art = new Map(await Promise.all([...paths].map(async name => [name,await image(name)])));
-  // Resize each original once. The same bitmap serves every instance and its eave.
-  for(const sprite of data.sprites.filter(sprite=>sprite.scale)) {
-    const original=art.get(sprite.file);
-    if(original instanceof HTMLCanvasElement) continue;
-    const bitmap=document.createElement('canvas');
-    [bitmap.width,bitmap.height]=sprite.size;
-    const ctx=bitmap.getContext('2d');
-    ctx.imageSmoothingEnabled=false;
-    ctx.scale(sprite.scale,sprite.scale);
-    ctx.drawImage(original,0,0);
-    art.set(sprite.file,bitmap);
-  }
   const ground = document.createElement('canvas');
   ground.width = width;
   ground.height = height;
@@ -103,7 +91,6 @@ async function start() {
   const walk = makeWalk(width,height,blocked,data.radius);
   const [frameWidth,frameHeight] = data.hero.frame;
   const [footX,footY] = data.hero.feet;
-  const scale = data.hero.scale;
   const focus=new URL(location.href).searchParams.get('focus');
   let [x,y] = data.markers.find(marker=>marker.id===focus)?.point ?? data.spawn;
   let face = 1, distance = 0, time = 0, lastFrame = 0;
@@ -124,7 +111,7 @@ async function start() {
 
   function drawHero(column) {
     context.drawImage(hizuki,frameWidth*column,frameHeight*face,frameWidth,frameHeight,
-      Math.round(x-footX*scale),Math.round(y-footY*scale),frameWidth*scale,frameHeight*scale);
+      Math.round(x-footX),Math.round(y-footY),frameWidth,frameHeight);
   }
 
   function drawSprite(sprite) {

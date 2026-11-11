@@ -1,35 +1,14 @@
-# 鬼灯村の緋月基準配置 Implementation Plan
+# 鬼灯村の原寸描画と配置修正
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
+ユーザー指定: 建物を含む素材の拡大縮小を行わず、家と鬼灯の位置関係も直す。俯瞰イラストは雰囲気の参考。道路は水平・垂直、カメラ1.0。
 
-**Goal:** 承認された俯瞰イラストの雰囲気を、緋月の大きさ・直線の道・歩ける村へ反映する。
-**Architecture:** 既存の独立PNGを使い、配置と足元判定をscene.jsonに記録する。土道・川・橋は地面タイルに再構築する。画像の構図や村の外周寸法を固定条件にはしない。
-**Tech Stack:** Canvas/ES modules, Python/Pillow/NumPy/SciPy, Node tests, GitHub Pages.
-**Spec:** ユーザー承認済み「桜咲く鬼灯村と川辺の鐘楼」の全景イラストと、このチャットの指示。`docs/VILLAGE_WALK_REVIEW.md`。
+- [x] 旧0.625倍の建物と、所属棟を持たない鬼灯の配置が回帰検査で失敗することを確認。
+- [x] 建物の縮小Canvasとsprite.scale、緋月の0.5倍描画を撤去。既存PNGは無加工で原寸描画。
+- [x] 原寸の建物・軒・入口・衝突範囲と左右の通路を取り直す。
+- [x] 各家左右の鬼灯を所属棟と原寸相対位置で管理し、地面構築時に解決。
+- [x] 原寸の寸法で直線道路・畑・木・川を配置し、地面と衝突PNGを再構築。
+- [x] 半径8pxで全18目印の到達、道路中心線、全68株の範囲内配置を確認。
+- [x] 原寸の全12コマと軒・裏側、ブラウザ表示を確認。
+- [x] 最新gh-pagesのツリーへ村の変更だけを反映し、Pages実体を照合。
 
-## Global Constraints
-- 画面倍率1.0。緋月は80×112コマを0.5倍、足元(40,106)のまま。
-- 道は水平・垂直の直線。村の必要面積は建物と畑・通路から決める。
-- 入口と裏回り、屋根と軒の既存方式を維持し、縮尺変更後に再検査。
-- 本編素材の採用とは別の公開歩行検査。変更範囲は村用プレビューとその仕様・検査・再構築ツール。
-
-## Review Focus
-- 大きくした屋根が裏の緋月を全コマで消さないこと。
-- 家の入口・畑へ実際の衝突半径で到達できること。
-- 橋の両岸に引っかからず、橋の脇から水へ入らないこと。
-- 木や柵が直線の道と建物の入口を塞がないこと。
-- 同時に進む洞窟の更新を上書きしないこと。
-
-### Task 1: 縮尺・配置・地面を揃える
-Files: `previews/village-walk/map/scene.json`, `map/terrain.png`, `map/collision.png`, `tools/build-village-walk-ground.py`, `tests/village-walk-render.test.mjs`.
-- [x] 扉55px以上と縦横道の回帰検査を追加し、旧配置で失敗を確認。
-- [x] 原画から0.625倍で戸口を調整し、緋月を基準に配置を再構成。
-- [x] 道・川・橋・地面と足元判定を、同じ配置から再構築。
-- [x] 全入口・畑・橋・鐘撞堂への到達、裏側の頭、川岸の停止を検査。
-
-### Task 2: 配信と目視確認
-Files: `previews/village-walk/walk.mjs`, `index.html`, `docs/VILLAGE_WALK_REVIEW.md`.
-- [x] 場所の目印を使った確認用フォーカスを新座標へ追従させる。
-- [x] ブラウザで縮尺・道・植栽・重なりを確認し、観察した不具合を直す。
-- [x] 最新gh-pagesの木へ村の差分だけを反映。公開したsceneと画像を照合。
-- [x] iPhone実機未確認の範囲と、今回の確認結果を報告。
+現行仕様と検査の限界は `docs/VILLAGE_WALK_REVIEW.md` に記録する。iPhone実機Safariは未確認。

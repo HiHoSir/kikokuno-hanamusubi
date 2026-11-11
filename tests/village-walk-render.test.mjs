@@ -8,10 +8,31 @@ test('same sakura species uses one native image, without per-instance resizes',(
  const files=new Set(data.sprites.filter(s=>/^sprite-(0[8-9]|[12][0-9]|3[0-2])\.png$/.test(s.file)).map(s=>s.file));
  assert.equal(files.size,1,`${files.size} independently resized versions of one tree`);
 });
-test('every entrance has adult clearance above the unchanged Hizuki sprite',()=>{
- for(const house of data.sprites.filter(s=>s.eave)) {
-  assert.ok(house.doorVisibleHeight*house.scale>=55,
-    `${house.name}: entrance needs at least 55 world pixels for the approximately 50px adult`);
+test('scenery is drawn at native PNG size without per-object scale',()=>{
+ assert.equal(data.hero.scale,undefined,'Hizuki must also use its native frame dimensions');
+ for(const sprite of data.sprites) {
+  assert.equal(sprite.scale,undefined,`${sprite.id??sprite.file} still rescales its PNG`);
+  if(sprite.eave) {
+   const png=readFileSync(local('map/'+sprite.file));
+   assert.deepEqual(sprite.size,[png.readUInt32BE(16),png.readUInt32BE(20)]);
+  }
+ }
+ const runtime=readFileSync(local('walk.mjs'),'utf8');
+ assert.ok(!runtime.includes('ctx.scale(sprite.scale'),'runtime must not construct resized scenery canvases');
+ assert.ok(!runtime.includes('frameWidth*scale'),'Hizuki frames must not be resampled');
+});
+test('house physalis placements follow local anchors beside their own building',()=>{
+ const plants=data.sprites.filter(s=>s.anchor?.kind==='building');
+ assert.equal(plants.length,18,'two explicit side placements for each of nine houses');
+ for(const plant of plants) {
+  const house=data.sprites.find(s=>s.id===plant.anchor.id);
+  assert.ok(house);
+  assert.deepEqual(plant.point,plant.anchor.offset.map((n,i)=>house.point[i]+n));
+  const png=readFileSync(local('map/'+plant.file));
+  const pw=png.readUInt32BE(16),ph=png.readUInt32BE(20);
+  assert.ok(plant.point[0]+pw<=house.point[0]+24 || plant.point[0]>=house.point[0]+house.size[0]-24,
+   'plant stays beside the wall, not across its doorway');
+  assert.ok(Math.abs(plant.point[1]+ph-house.feet[1])<=24,'plant roots meet the building base');
  }
 });
 test('road corners retain subcell silhouettes instead of 16px stair steps',()=>{

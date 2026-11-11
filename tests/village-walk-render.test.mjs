@@ -135,6 +135,28 @@ test('the shrub uses native ground-hugging foliage with its root at the base',()
  }
 });
 
+test('the road between the southeast thatched house and inn leaves both silhouettes clear',()=>{
+ const house=data.sprites.find(s=>s.id==='house-southeast-thatch');
+ const inn=data.sprites.find(s=>s.id==='inn-southeast');
+ const street=data.roads.find(({points})=>points.at(-1).every((value,i)=>value===house.door[i]));
+ assert.ok(street);
+ const y=street.points[0][1];
+ assert.ok(y-street.width/2>=house.point[1]+house.size[1]);
+ assert.ok(y+street.width/2<inn.point[1]);
+});
+
+test('the fences span the field widths and keep the posts off the crops',()=>{
+ const fields=data.terrain.layers.filter(layer=>layer.name==='field');
+ for(const [index,field] of fields.entries()) {
+  const [x,y]=field.origin;
+  const posts=data.sprites.filter(sprite=>sprite.id.startsWith(`field-${index}-fence-`));
+  assert.equal(posts.length,field.columns);
+  assert.deepEqual(posts.map(post=>post.point[0]).sort((a,b)=>a-b),
+   Array.from({length:field.columns},(_,column)=>x+column*field.cellPx));
+  assert.ok(posts.every(post=>post.point[1]+post.size[1]<y));
+ }
+});
+
 test('bridge tiles span the full bridge and keep the walkway on the boards', () => {
  const {bridge, walkway, bridgeTiles} = data.river;
  const layer = data.terrain.layers.find(layer => layer.name === 'bridge');

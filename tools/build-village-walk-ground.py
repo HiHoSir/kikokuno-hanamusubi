@@ -5,6 +5,24 @@ import argparse,json,math
 from PIL import Image,ImageDraw
 
 ROOT=Path(__file__).resolve().parents[1]
+
+def road_mask(size, roads):
+ mask=Image.new('L',size)
+ draw=ImageDraw.Draw(mask)
+ for road in roads:
+  points=road['points']
+  half=road['width']//2
+  for (x1,y1),(x2,y2) in zip(points,points[1:]):
+   if x1==x2:
+    draw.rectangle((x1-half,min(y1,y2),x1+half-1,max(y1,y2)),fill=255)
+   elif y1==y2:
+    draw.rectangle((min(x1,x2),y1-half,max(x1,x2),y1+half-1),fill=255)
+   else:
+    raise ValueError('Roads must be horizontal or vertical')
+  for x,y in points[1:-1]:
+   draw.rectangle((x-half,y-half,x+half-1,y+half-1),fill=255)
+ return mask
+
 def build(root=ROOT/'previews/village-walk'):
  s=json.loads((root/'map/scene.json').read_text());width,height=s['bounds'][2:];river=s['river'];baseCount=s['terrain']['baseTileCount']
  # Resolve house-side vegetation from its building, using native pixel offsets.
@@ -24,12 +42,12 @@ def build(root=ROOT/'previews/village-walk'):
   sx,sy,*_=tiles[bridgeTiles[row*2]];piece=original.crop((sx+16,sy,sx+32,sy+32));tile=Image.new('RGBA',(32,32));tile.alpha_composite(piece,(0,0));tile.alpha_composite(piece,(16,0));x=256+row*32
   atlas.alpha_composite(tile,(x,0));centers.append(len(tiles));tiles.append([x,0,32])
  fields=[l for l in s['terrain']['layers'] if l['name']=='field'];grass=next(l for l in s['terrain']['layers'] if l['name']=='grass')
- mask=Image.new('L',(width,height));d=ImageDraw.Draw(mask)
- for path in s['roads']:
-  w=path['width']
-  for (x1,y1),(x2,y2) in zip(path['points'],path['points'][1:]):
-   if x1!=x2 and y1!=y2:raise ValueError('Roads must be horizontal or vertical')
-   d.rectangle((min(x1,x2)-w//2,min(y1,y2)-w//2,max(x1,x2)+w//2-1,max(y1,y2)+w//2-1),fill=255)
+ mask=road_mask((width,height),s['roads'])
+ for field in fields:
+  x,y=field['origin']
+  box=(x,y,x+field['columns']*32,y+field['rows']*32)
+  if mask.crop(box).getbbox():
+   raise ValueError(f'Road overlaps field at {field["origin"]}')
  road=Image.new('RGBA',(width,height));soil=Image.open(root/'map/path-soil.png').convert('RGBA')
  for y in range(0,height,soil.height):
   for x in range(0,width,soil.width):road.paste(soil,(x,y))

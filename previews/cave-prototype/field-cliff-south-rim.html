@@ -984,6 +984,7 @@ Promise.all(Object.entries(SOURCE).map(([key,data])=>new Promise((res,rej)=>{let
   const context = screen.getContext('2d', {alpha:false});
   context.imageSmoothingEnabled = false;
   const status = document.getElementById('walkStatus');
+  const upperStair = META.portals.explore.find(portal=>portal.id==='stairs_up');
   const player = {x:7.5*T, y:7.5*T, facing:0, phase:0, distance:0};
   const held = new Set();
   const V08_SCENES=Object.freeze({...META.layout_presets,maze:MAZE.rows});
@@ -1133,6 +1134,12 @@ Promise.all(Object.entries(SOURCE).map(([key,data])=>new Promise((res,rej)=>{let
   function atMazeCell(cell){
     return Math.floor(player.x/T)===cell.x&&Math.floor(player.y/T)===cell.y;
   }
+  function atPortalInteraction(portal,x,y){
+    const bounds=portal.interactionBoundsPx;
+    if(!bounds)return false;
+    const left=portal.x*T+bounds.x,top=portal.y*T+bounds.y;
+    return x>=left&&x<left+bounds.width&&y>=top&&y<top+bounds.height;
+  }
   function detailName(){
     if(v08Current==='maze'){
       if(mazeReached)return '出口に到着！';
@@ -1142,9 +1149,7 @@ Promise.all(Object.entries(SOURCE).map(([key,data])=>new Promise((res,rej)=>{let
     for(const p of META.portals[v08Current]){
       const isUpper=p.id==='stairs_up';
       const isStair=isUpper||p.id==='stairs_down';
-      const r=p.interactionBoundsPx;
-      if(r&&player.x>=p.x*T+r.x&&player.x<p.x*T+r.x+r.width
-        &&player.y>=p.y*T+r.y&&player.y<p.y*T+r.y+r.height)
+      if(atPortalInteraction(p,player.x,player.y))
         return (isUpper?'上階への階段':'下階への階段')+'（遷移は未実装）';
       const x=p.x*T+(isStair?UPPER_STAIR_APPROACH.x:(p.widthCells||1)*T/2);
       const y=p.y*T+(isStair?UPPER_STAIR_APPROACH.y:(p.heightCells||1)*T/2);
@@ -1158,6 +1163,39 @@ Promise.all(Object.entries(SOURCE).map(([key,data])=>new Promise((res,rej)=>{let
     return '通常床';
   }
   function tile(c, name, x,y) {if(I[name])c.drawImage(I[name],x*T,y*T)}
+  let stairDepthEdge;
+  function drawUpperStairPass(c,x,y,localFootY,foreground){
+    const image=I.stairs_up_side;
+    const {width,height}=image;
+    if(localFootY>=height||localFootY<=0){
+      if(foreground===(localFootY<=0))c.drawImage(image,x,y);
+      return;
+    }
+    if(!stairDepthEdge){
+      // The projected edge rises across the sprite. Cache it for rendering only.
+      const mask=shadowCanvas(width,height).getContext('2d');
+      mask.drawImage(image,0,0);
+      const pixels=mask.getImageData(0,0,width,height).data;
+      stairDepthEdge=new Uint16Array(width);
+      for(let col=0;col<width;col++){
+        let row=height-1;
+        while(row>=0&&!pixels[(row*width+col)*4+3])row--;
+        stairDepthEdge[col]=row+1;
+      }
+    }
+    // Draw consecutive columns together. Each source pixel is painted once.
+    let start=-1;
+    for(let col=0;col<=width;col++){
+      const inPass=col<width&&(localFootY<stairDepthEdge[col])===foreground;
+      if(inPass){
+        if(start<0)start=col;
+      }else if(start>=0){
+        const span=col-start;
+        c.drawImage(image,start,0,span,height,x+start,y,span,height);
+        start=-1;
+      }
+    }
+  }
   function rebuildScene() {
     cachedGrid=rows.map(r=>r.join('')).join('\n');
     const terrain=v07CreateTerrain();
@@ -1181,12 +1219,9 @@ Promise.all(Object.entries(SOURCE).map(([key,data])=>new Promise((res,rej)=>{let
       }
       if(v08Current==='explore'){
         const pit=META.portals.explore.find(p=>p.id==='stairs_down');
-        const transfer=META.portals.explore.find(p=>p.id==='stairs_up');
         const raised=META.terrain_features.explore.find(p=>p.id==='terrain_rise');
         v014DrawRise(b,raised.x,raised.y,'back');
         v014DrawRise(b,raised.x,raised.y,'front');
-        drawUpperStairsSymbol(b,transfer.x,transfer.y);
-        
         v013DrawPit(b,pit.x,pit.y,'back');
         v013DrawPit(b,pit.x,pit.y,'front');
       }
@@ -1212,6 +1247,12 @@ Promise.all(Object.entries(SOURCE).map(([key,data])=>new Promise((res,rej)=>{let
     rebuildDepthLayers();
     drawActorGroundShadow(context,sprite,player.facing,player.phase,player.x,player.y,v07CreateTerrain().floor,left,top);
     context.drawImage(lowerLayer,-left,-top);
+    const showUpperStair=v08Current==='explore'&&document.getElementById('objects').checked;
+    const stairX=upperStair.x*T+upperStair.visualBoundsPx.x;
+    const stairY=upperStair.y*T+upperStair.visualBoundsPx.y;
+    const sortStair=document.getElementById('depthLayer').checked&&!atPortalInteraction(upperStair,player.x,player.y);
+    const stairFootY=sortStair?Math.round(player.y)-CAVE_LIGHT.actorFootInsetPx-stairY:Infinity;
+    if(showUpperStair)drawUpperStairPass(context,stairX-left,stairY-top,stairFootY,false);
     if(sprite){
       const dx=Math.round(player.x-40-left),dy=Math.round(player.y-112-top);
       context.drawImage(sprite,player.phase*80,player.facing*112,80,112,dx,dy,80,112);
@@ -1219,6 +1260,7 @@ Promise.all(Object.entries(SOURCE).map(([key,data])=>new Promise((res,rej)=>{let
       context.strokeStyle='#e5b66b';context.lineWidth=2;context.strokeRect(player.x-40-left,player.y-112-top,80,112);
       context.fillStyle='#ecd8b2';context.font='12px sans-serif';context.fillText('緋月の枠',player.x-35-left,player.y-14-top);
     }
+    if(showUpperStair)drawUpperStairPass(context,stairX-left,stairY-top,stairFootY,true);
     context.drawImage(upperLayer,-left,-top);
     if(document.getElementById('walkGrid').checked){
       context.lineWidth=1;context.strokeStyle='rgba(255,200,80,.18)';context.beginPath();

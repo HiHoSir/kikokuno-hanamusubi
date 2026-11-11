@@ -16,7 +16,7 @@ const buttons = [...document.querySelectorAll('[data-dir]')];
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 const zoom = 1.0;
 const speed = 152;
-const assetVersion = 'native-size';
+const assetVersion = 'native-size-2';
 
 function image(name) {
   return new Promise((resolve,reject) => {

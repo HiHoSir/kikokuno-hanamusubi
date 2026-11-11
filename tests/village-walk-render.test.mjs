@@ -30,9 +30,20 @@ test('house physalis placements follow local anchors beside their own building',
   assert.deepEqual(plant.point,plant.anchor.offset.map((n,i)=>house.point[i]+n));
   const png=readFileSync(local('map/'+plant.file));
   const pw=png.readUInt32BE(16),ph=png.readUInt32BE(20);
+  assert.ok(plant.point[0]>=0 && plant.point[1]>=0 && plant.point[0]+pw<=data.bounds[2] && plant.point[1]+ph<=data.bounds[3],
+   'anchored plants must fit inside the map');
   assert.ok(plant.point[0]+pw<=house.point[0]+24 || plant.point[0]>=house.point[0]+house.size[0]-24,
    'plant stays beside the wall, not across its doorway');
   assert.ok(Math.abs(plant.point[1]+ph-house.feet[1])<=24,'plant roots meet the building base');
+ }
+});
+test('native tree canopies leave the house entrances and their approach clear',()=>{
+ const zones=data.sprites.filter(s=>s.eave).map(s=>[s.feet[0]-72,s.feet[1]-130,s.feet[0]+72,s.feet[1]+80]);
+ for(const tree of data.sprites.filter(s=>s.footprint)) {
+  const png=readFileSync(local('map/'+tree.file));
+  const [x,y]=tree.point,w=png.readUInt32BE(16),h=png.readUInt32BE(20);
+  assert.ok(!zones.some(([l,t,r,b])=>x<r && x+w>l && y<b && y+h>t),
+   `${tree.id}: canopy hides a door approach`);
  }
 });
 test('road corners retain subcell silhouettes instead of 16px stair steps',()=>{

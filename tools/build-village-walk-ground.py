@@ -69,5 +69,5 @@ def build(root=ROOT/'previews/village-walk'):
   if p['file']=='sprite-60.png':
    x,y=p['point'];c.rectangle((x,p['depth']-3,x+27,p['depth']),fill=255)
  collision.convert('RGB').save(root/'map/collision.png');(root/'map/scene.json').write_text(json.dumps(s,ensure_ascii=False,separators=(',',':')))
- print(f'Built {width}x{height}; {len(new)} road tiles; 80px clear bridge; 1.0 camera zoom')
+ print(f'Built {width}x{height}; {len(new)} road tiles; 80px clear bridge')
 if __name__=='__main__':build()

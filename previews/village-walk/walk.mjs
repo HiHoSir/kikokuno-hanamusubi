@@ -1,5 +1,5 @@
 import { makeWalk } from './movement.mjs';
-import { pixelViewport } from './render.mjs?v=adult-layout';
+import { pixelViewport, DEFAULT_CAMERA_ZOOM } from './render.mjs?v=camera-wide';
 
 const scene = document.querySelector('#scene');
 const status = document.querySelector('#status');
@@ -14,7 +14,7 @@ const keys = {ArrowDown:'down',ArrowUp:'up',ArrowRight:'right',ArrowLeft:'left',
 const input = new Map();
 const buttons = [...document.querySelectorAll('[data-dir]')];
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
-const zoom = 1.0;
+const zoom = DEFAULT_CAMERA_ZOOM;
 const speed = 152;
 const assetVersion = 'native-size-2';
 

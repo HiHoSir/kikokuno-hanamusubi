@@ -1,7 +1,7 @@
 import {makeWalk} from '../village-walk/movement.mjs';
 import {DEFAULT_CAMERA_ZOOM, pixelViewport} from '../village-walk/render.mjs?v=camera-0.5';
 import {rooms, resolveInterior, prepareInterior} from './rooms.mjs?v=village-interiors';
-import {paintRoom, paintPartition} from './room-art.mjs?v=village-interiors';
+import {paintRoom, paintPartition, paintContactShadow} from './room-art.mjs?v=interior-woodwork';
 
 const scene = document.querySelector('#scene');
 const context = scene.getContext('2d', {alpha:false});
@@ -67,6 +67,9 @@ async function start() {
     floor.width = overlay.width = room.width;
     floor.height = overlay.height = room.height;
     paintRoom(floorContext,room);
+    for (const {footprint} of plan.depthSorted) {
+      if (footprint) paintContactShadow(floorContext,footprint);
+    }
     const rgba = overlayContext.createImageData(room.width,room.height);
     for (let i=0;i<plan.blocked.length;i++) {
       const p = i*4;

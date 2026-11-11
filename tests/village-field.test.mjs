@@ -15,12 +15,9 @@ test('south road switches to the field only when walking across its exit', () =>
   assert.equal(movement.crossesSouthExit(exit, ...exit.point, ...exit.point), false);
 });
 
-test('field approach has a walkable arrival cell before its village entrance', async () => {
-  const { arrival, villageCell, canEnterCell } = await import('../previews/field-walk/map.mjs');
-  assert.deepEqual(arrival, [10, 8]);
-  assert.deepEqual(villageCell, [10, 7]);
-  assert.equal(canEnterCell(...arrival), true);
-  assert.equal(canEnterCell(...villageCell), true);
-  assert.equal(canEnterCell(0, 0), false);
-  assert.equal(canEnterCell(11, 6), false);
+test('the published field entry preserves the village arrival query', () => {
+  const entry = readFileSync(new URL('../previews/field-walk/index.html', import.meta.url), 'utf8');
+  const village = readFileSync(new URL('../previews/village-walk/walk.mjs', import.meta.url), 'utf8');
+  assert.ok(entry.includes("'../../src/field/' + location.search"));
+  assert.ok(village.includes('../field-walk/?from=village'));
 });

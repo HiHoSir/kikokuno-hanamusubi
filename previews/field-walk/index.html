@@ -2,48 +2,9 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#19251e">
-<title>花霞野の歩行検査｜鬼哭の花結び</title>
-<style>
-:root{color-scheme:dark;background:#19251e;color:#f7efdb;font:16px system-ui,sans-serif}
-*{box-sizing:border-box}
-body{margin:0;overscroll-behavior:none}
-main{width:min(100%,880px);height:100vh;height:100dvh;margin:auto;padding:max(8px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));display:grid;grid-template-rows:auto minmax(0,1fr) auto;gap:8px}
-header{display:flex;align-items:center;justify-content:space-between;gap:8px}
-h1{font-size:17px;margin:0}
-output{font-size:12px;color:#dbdec6;text-align:right}
-.viewport{position:relative;display:grid;place-items:center;overflow:hidden;border:1px solid #73785c;border-radius:8px;background:#243322}
-canvas{display:block;image-rendering:pixelated;touch-action:none}
-.dpad{display:grid;grid-template-columns:repeat(3,47px);grid-template-rows:repeat(2,42px);gap:3px;justify-self:center}
-button{border:1px solid #777d62;border-radius:8px;background:#314337;color:inherit;font:19px system-ui;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
-button.held{background:#e8cc8b;color:#272d22}
-[data-dir=up]{grid-column:2}
-[data-dir=left]{grid-column:1;grid-row:2}
-[data-dir=down]{grid-column:2;grid-row:2}
-[data-dir=right]{grid-column:3;grid-row:2}
-#load{position:absolute;inset:0;display:grid;place-items:center;margin:0;background:#243322;text-align:center}
-#load[hidden]{display:none}
-@media(orientation:landscape) and (max-height:520px){
- main{grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto minmax(0,1fr)}
- header{grid-column:1/-1}
- .dpad{align-self:center}
-}
-</style>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>フィールドの歩行検査｜鬼哭の花結び</title>
+<script>location.replace(new URL('../../src/field/' + location.search, location.href));</script>
 </head>
-<body>
-<main>
-<header><h1>花霞野の歩行検査</h1><output id="status">鬼灯村の南口</output></header>
-<section class="viewport" aria-label="花霞野">
-<canvas id="scene"></canvas><p id="load">フィールドを読み込んでいます</p>
-</section>
-<section class="dpad" aria-label="方向ボタン">
-<button type="button" data-dir="up" aria-label="上">▲</button>
-<button type="button" data-dir="left" aria-label="左">◀</button>
-<button type="button" data-dir="down" aria-label="下">▼</button>
-<button type="button" data-dir="right" aria-label="右">▶</button>
-</section>
-</main>
-<script type="module" src="./walk.mjs?v=field-camera"></script>
-</body>
+<body><a href="../../src/field/">フィールドを開く</a></body>
 </html>

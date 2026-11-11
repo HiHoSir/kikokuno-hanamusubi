@@ -213,6 +213,97 @@ function drawUpperStairsSymbol(c,x,y){
   const p=META.portals.explore.find(p=>p.id==='stairs_up'),r=p.visualBoundsPx;
   c.drawImage(I.stairs_up_side,x*T+r.x,y*T+r.y);c.restore();
 }
+// Lighting pass: existing art and collision stay independent of ground shadows.
+const CAVE_LIGHT={color:'#080f1b',castX:.34,castY:.22};
+const CAVE_SHADOW_MASKS=new WeakMap();
+let caveShadowCache=null,actorShadowSurface=null,actorShadowSprite=null;
+const actorShadowFrames=new Map();
+function caveShadowsEnabled(){return document.getElementById('sceneShadows')?.checked!==false;}
+function shadowCanvas(width,height){
+ const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;
+ canvas.getContext('2d').imageSmoothingEnabled=false;return canvas;
+}
+function shadowSilhouette(image){
+ if(CAVE_SHADOW_MASKS.has(image))return CAVE_SHADOW_MASKS.get(image);
+ const canvas=shadowCanvas(image.width,image.height),c=canvas.getContext('2d');
+ c.drawImage(image,0,0);c.globalCompositeOperation='source-in';
+ c.fillStyle=CAVE_LIGHT.color;c.fillRect(0,0,canvas.width,canvas.height);
+ c.globalCompositeOperation='source-over';CAVE_SHADOW_MASKS.set(image,canvas);return canvas;
+}
+function groundContactShadow(c,x,y,rx,ry,opacity){
+ c.save();c.translate(x,y);c.scale(rx,ry);
+ const gradient=c.createRadialGradient(0,0,0,0,0,1);
+ gradient.addColorStop(0,'rgba(4,9,17,'+opacity+')');
+ gradient.addColorStop(.48,'rgba(4,9,17,'+(opacity*.67)+')');
+ gradient.addColorStop(1,'rgba(4,9,17,0)');
+ c.fillStyle=gradient;c.fillRect(-1,-1,2,2);c.restore();
+}
+function castGroundShadow(c,image,x,baseline,opacity){
+ c.save();c.globalAlpha=opacity;c.translate(x,baseline);
+ c.transform(1,0,-CAVE_LIGHT.castX,-CAVE_LIGHT.castY,0,0);
+ c.drawImage(shadowSilhouette(image),0,-image.height);c.restore();
+}
+function caveGroundShadows(terrain){
+ const objects=document.getElementById('objects').checked;
+ const scene=window.__v08?.current||'explore';
+ if(caveShadowCache?.floor===terrain.floor&&caveShadowCache.objects===objects&&caveShadowCache.scene===scene)return caveShadowCache.layer;
+ const w=W*T,h=H*T,layer=shadowCanvas(w,h),c=layer.getContext('2d');
+ // Offset the actual continuous rock/floor boundary, not the square grid.
+ const rockMask=shadowCanvas(w,h),r=rockMask.getContext('2d');
+ r.fillStyle=CAVE_LIGHT.color;r.fillRect(0,0,w,h);
+ r.globalCompositeOperation='destination-out';r.drawImage(terrain.floor,0,0);
+ for(const [x,y,opacity] of [[3,2,.10],[7,5,.10],[11,8,.055]]){
+  c.globalAlpha=opacity;c.drawImage(rockMask,x,y);
+ }
+ c.globalAlpha=1;
+ if(objects&&scene==='explore'){
+  const up=META.portals.explore.find(p=>p.id==='stairs_up'),ur=up.visualBoundsPx;
+  const ux=up.x*T+ur.x,ub=up.y*T+ur.y+ur.height;
+  castGroundShadow(c,I.stairs_up_side,ux,ub,.24);
+  groundContactShadow(c,ux+19,ub-1,24,7,.36);
+  const down=META.portals.explore.find(p=>p.id==='stairs_down'),dr=down.visualBoundsPx;
+  // A floor opening gets only a shallow rim shadow, never a raised-object cast.
+  c.save();c.globalAlpha=.16;
+  c.drawImage(shadowSilhouette(I.stairs_down_side),down.x*T+dr.x+2,down.y*T+dr.y+2);c.restore();
+  const rise=META.terrain_features.explore.find(p=>p.id==='terrain_rise');
+  const relief=shadowCanvas(128,148),rc=relief.getContext('2d');rc.translate(12,36);
+  v014DrawRise(rc,0,0,'back');v014DrawRise(rc,0,0,'front');
+  castGroundShadow(c,relief,rise.x*T-12,rise.y*T+112,.17);
+  groundContactShadow(c,(rise.x+1)*T,rise.y*T+104,42,8,.24);
+ }
+ // Shadows cannot darken the cliff face or spill into the south void.
+ c.globalCompositeOperation='destination-in';c.drawImage(terrain.floor,0,0);
+ c.globalCompositeOperation='source-over';
+ caveShadowCache={floor:terrain.floor,objects,scene,layer};return layer;
+}
+function actorShadowMask(sheet,facing,phase){
+ if(actorShadowSprite!==sheet){actorShadowSprite=sheet;actorShadowFrames.clear();}
+ const key=facing+','+phase;
+ if(actorShadowFrames.has(key))return actorShadowFrames.get(key);
+ const canvas=shadowCanvas(80,112),c=canvas.getContext('2d');
+ c.drawImage(sheet,phase*80,facing*112,80,112,0,0,80,112);
+ c.globalCompositeOperation='source-in';c.fillStyle=CAVE_LIGHT.color;c.fillRect(0,0,80,112);
+ c.globalCompositeOperation='source-over';actorShadowFrames.set(key,canvas);return canvas;
+}
+function drawActorGroundShadow(c,sheet,facing,phase,x,y,floor,cameraX=0,cameraY=0){
+ if(!caveShadowsEnabled())return;
+ if(!actorShadowSurface)actorShadowSurface=shadowCanvas(160,96);
+ const sc=actorShadowSurface.getContext('2d'),left=Math.round(x)-64,top=Math.round(y)-16;
+ sc.clearRect(0,0,160,96);
+ if(sheet){
+  sc.save();sc.globalAlpha=.22;sc.translate(64,15);
+  // Compress the silhouette onto the floor; its head projects down and right.
+  sc.transform(.65,.08,-CAVE_LIGHT.castX,-CAVE_LIGHT.castY,0,0);
+  sc.drawImage(actorShadowMask(sheet,facing,phase),-40,-112);sc.restore();
+ }
+ groundContactShadow(sc,65,16,22,8,.40);
+ groundContactShadow(sc,64,15,13,4,.32);
+ sc.globalCompositeOperation='destination-in';
+ sc.drawImage(floor,left,top,160,96,0,0,160,96);
+ sc.globalCompositeOperation='source-over';
+ c.drawImage(actorShadowSurface,left-cameraX,top-cameraY);
+}
+
 function image(name,x,y){if(I[name])g.drawImage(I[name],x*T,y*T);}
 // v0.7 organic contours: procedural 3x3-neighbor autotile mask over 48px material parts.
 // Collision and actor occlusion are separate. No full-map drawing is stored as an asset.
@@ -730,7 +821,9 @@ function render(){
  g.clearRect(0,0,cv.width,cv.height);
  g.fillStyle='#0c121b';g.fillRect(0,0,cv.width,cv.height);
  const layer=mode.value;
- if(layer==='all')g.drawImage(terrain.composite,0,0);
+ if(layer==='all'){g.drawImage(terrain.composite,0,0);
+   if(caveShadowsEnabled())g.drawImage(caveGroundShadows(terrain),0,0);
+ }
  if(layer==='all'&&window.__v08?.current==='maze')drawMazeExit(g);
  if(layer==='structure_base'){g.drawImage(terrain.wall,0,0);g.drawImage(terrain.edge,0,0);}
  if(layer==='ground')g.drawImage(terrain.floor,0,0);
@@ -756,6 +849,7 @@ function render(){
  }
  if(layer==='all'){
    if(sprite){const x=META.hizuki.placement_feet.x_px,y=META.hizuki.placement_feet.y_px;
+     drawActorGroundShadow(g,sprite,frame[0],frame[1],x,y,terrain.floor);
      g.drawImage(sprite,frame[1]*80,frame[0]*112,80,112,x-40,y-112,80,112);
    } else if(document.getElementById('scale').checked){
      const x=META.hizuki.placement_feet.x_px,y=META.hizuki.placement_feet.y_px;
@@ -824,6 +918,7 @@ Promise.all(Object.entries(SOURCE).map(([key,data])=>new Promise((res,rej)=>{let
 </div>
 <p class="muted">⑥では東西・斜めの側壁を南の細い縁へ徐々につなぎます。⑤で変更前の見え方と比較できます。</p>
 <p class="muted" id="outerHeightQA" role="status">地形を読み込み中…</p>
+    <div class="controls"><label><input id="sceneShadows" type="checkbox" checked>影を表示</label></div>
     <canvas id="walkScreen" width="512" height="416" aria-label="緋月で歩ける自然洞窟"></canvas>
     <div class="controls scene-layout-nav" role="group" aria-label="洞窟の検証モード">
       <button id="sceneExplore" aria-pressed="true" type="button">通常探索マップ</button>
@@ -1058,6 +1153,7 @@ Promise.all(Object.entries(SOURCE).map(([key,data])=>new Promise((res,rej)=>{let
     background=makeTransparencyCanvas();
     const b=background.getContext('2d');
     b.drawImage(terrain.composite,0,0);
+    if(caveShadowsEnabled())b.drawImage(caveGroundShadows(terrain),0,0);
     if(v08Current==='maze')drawMazeExit(b);
     overhangPieces=[];wallOccluders=[];
     for(let y=0;y<H;y++)for(let x=0;x<W;x++){
@@ -1103,6 +1199,7 @@ Promise.all(Object.entries(SOURCE).map(([key,data])=>new Promise((res,rej)=>{let
     let top=Math.max(0,Math.min(H*T-h,Math.round(player.y-h*.60)));
     context.drawImage(background,-left,-top);
     rebuildDepthLayers();
+    drawActorGroundShadow(context,sprite,player.facing,player.phase,player.x,player.y,v07CreateTerrain().floor,left,top);
     context.drawImage(lowerLayer,-left,-top);
     if(sprite){
       const dx=Math.round(player.x-40-left),dy=Math.round(player.y-112-top);
@@ -1188,6 +1285,7 @@ Promise.all(Object.entries(SOURCE).map(([key,data])=>new Promise((res,rej)=>{let
   document.getElementById('ledgeVisible').onchange=()=>{cachedGrid=null; layerCacheLedgeState=null;draw()};
   document.getElementById('depthLayer').onchange=()=>{layerCacheRow=-999;draw()};
   document.getElementById('walkGrid').onchange=draw;
+  document.getElementById('sceneShadows').onchange=()=>{cachedGrid=null;render();draw()};
   const wallOption=document.getElementById('outerWallHeight');
   const wallDebug=document.getElementById('outerWallDebug');
   const wallModes=[['wallOld','old'],['wallNew','new'],['wallAll','legacy'],['wallVoid','void'],['wallReproduce','reproduce'],['wallPolished','polished']];

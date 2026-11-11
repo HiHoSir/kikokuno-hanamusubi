@@ -214,7 +214,7 @@ function drawUpperStairsSymbol(c,x,y){
   c.drawImage(I.stairs_up_side,x*T+r.x,y*T+r.y);c.restore();
 }
 // Lighting pass: existing art and collision stay independent of ground shadows.
-const CAVE_LIGHT={color:'#080f1b',castX:.34,castY:.22};
+const CAVE_LIGHT={color:'#080f1b',castX:.34,castY:.22,actorFootInsetPx:6};
 const CAVE_SHADOW_MASKS=new WeakMap();
 let caveShadowCache=null,actorShadowSurface=null,actorShadowSprite=null;
 const actorShadowFrames=new Map();
@@ -289,15 +289,16 @@ function drawActorGroundShadow(c,sheet,facing,phase,x,y,floor,cameraX=0,cameraY=
  if(!caveShadowsEnabled())return;
  if(!actorShadowSurface)actorShadowSurface=shadowCanvas(160,96);
  const sc=actorShadowSurface.getContext('2d'),left=Math.round(x)-64,top=Math.round(y)-16;
+ const foot=16-CAVE_LIGHT.actorFootInsetPx; // Six transparent rows below this atlas's visible soles.
  sc.clearRect(0,0,160,96);
  if(sheet){
-  sc.save();sc.globalAlpha=.22;sc.translate(64,15);
+  sc.save();sc.globalAlpha=.22;sc.translate(64,foot-1);
   // Compress the silhouette onto the floor; its head projects down and right.
   sc.transform(.65,.08,-CAVE_LIGHT.castX,-CAVE_LIGHT.castY,0,0);
-  sc.drawImage(actorShadowMask(sheet,facing,phase),-40,-112);sc.restore();
+  sc.drawImage(actorShadowMask(sheet,facing,phase),-40,-(112-CAVE_LIGHT.actorFootInsetPx));sc.restore();
  }
- groundContactShadow(sc,65,16,22,8,.40);
- groundContactShadow(sc,64,15,13,4,.32);
+ groundContactShadow(sc,65,foot,22,8,.40);
+ groundContactShadow(sc,64,foot-1,13,4,.32);
  sc.globalCompositeOperation='destination-in';
  sc.drawImage(floor,left,top,160,96,0,0,160,96);
  sc.globalCompositeOperation='source-over';

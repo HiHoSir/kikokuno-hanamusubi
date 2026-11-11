@@ -1,4 +1,4 @@
-export const DEFAULT_CAMERA_ZOOM = 0.75;
+export const DEFAULT_CAMERA_ZOOM = 0.5;
 const RIVER_DOT = 4;
 const RIPPLE_MARGIN = 32;
 const RIPPLE_COLORS = ['#2168b7', '#2c85cf', '#3490d4', '#409ada'];

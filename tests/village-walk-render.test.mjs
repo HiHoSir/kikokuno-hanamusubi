@@ -83,11 +83,11 @@ test('an opaque canopy lets Hizuki remain visible when walking behind it',()=>{
  assert.equal(canopyOpacity(tree,105,250,mask),1,'transparent gap stays undimmed');
  assert.equal(canopyOpacity(tree,104,450,mask),1,'tree behind Hizuki stays undimmed');
 });
-test('wider 0.75 camera stays consistent across devices and permits other zoom values',()=>{
+test('the default camera shows the same wider area across device pixel ratios',()=>{
  for(const dpr of [1,1.05,2,2.75,3])for(const [w,h] of [[393,620],[852,290],[858,790]]){
   const p=pixelViewport(w,h,dpr);
   const ratio=Math.min(dpr||1,3);
-  assert.ok(Math.abs(p.step/ratio-0.75)<1e-12,'default camera must show a wider area');
+  assert.ok(Math.abs(p.step/ratio-0.5)<1e-12,'default camera must show twice the area width at 1x');
   for(const zoom of [0.5,0.75,1.0]){
    assert.ok(Math.abs(pixelViewport(w,h,dpr,zoom).step/ratio-zoom)<1e-12,
     `DPR ${dpr}: camera must preserve requested ${zoom} zoom`);

@@ -1,5 +1,5 @@
 import { makeWalk } from './movement.mjs';
-import { pixelViewport, DEFAULT_CAMERA_ZOOM, canopyOpacity, riverRipples, paintRiverRipples } from './render.mjs?v=village-river-flow';
+import { pixelViewport, DEFAULT_CAMERA_ZOOM, canopyOpacity, riverRipples, paintRiverRipples } from './render.mjs?v=camera-0.5';
 
 const scene = document.querySelector('#scene');
 const status = document.querySelector('#status');

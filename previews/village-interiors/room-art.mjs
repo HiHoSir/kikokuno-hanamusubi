@@ -4,8 +4,8 @@ const wood = {
   light:'#aa7646', grain:'#966434',
 };
 const floors = {
-  cedar:{boards:['#946a46','#9b704b','#a07750','#98704e'], seam:'#775039', grain:['#8a5d3c','#ac8056']},
-  walnut:{boards:['#75513b','#80583e','#855c41','#795640'], seam:'#604030', grain:['#6e4a34','#916547']},
+  cedar:{boards:['#946a46','#9b704b','#9e7550','#98704e'], seam:'#866044', grain:['#8d6344','#a77a52']},
+  walnut:{boards:['#75513b','#80583e','#835a40','#795640'], seam:'#6a4836', grain:['#704c37','#8c6246']},
 };
 
 function painter(context) {
@@ -92,17 +92,14 @@ export function paintRoom(context, room) {
   }
 
   for (const [x,y,w,h] of room.earth ?? []) {
-    fill(wood.edge,x,y,w,h);
-    fill('#887453',x,y,w-4,h-4);
-    texture(fill,[x+4,y+4,w-12,h-12],['#796747','#9c8560','#907b57'],12,13);
-    fill(wood.light,x+w-8,y,4,h);
-    fill(wood.shade,x,y+h-8,w,4);
+    fill('#887453',x,y,w,h);
+    texture(fill,[x+4,y+4,w-8,h-8],['#7d6a4a','#96805b','#907b57'],12,13);
   }
 
   for (const [x,y,w,h] of room.tatami ?? []) {
-    fill('#4b412b',x-4,y-4,w+8,h+8);
     const columns=Math.ceil(w/128), rows=Math.ceil(h/172);
-    const matColors=['#9c8956','#9a8754','#a18d59'];
+    const matColors=['#968454','#948252','#998757'];
+    const binding='#79734f';
     for (let row=0;row<rows;row++) {
       const top=y+Math.floor(h*row/rows/4)*4;
       const bottom=y+Math.floor(h*(row+1)/rows/4)*4;
@@ -112,19 +109,29 @@ export function paintRoom(context, room) {
         fill(matColors[(row+column*2)%3],left,top,right-left,bottom-top);
         for (let yy=top+8;yy<bottom-4;yy+=8) {
           const weave=(yy-top)/8+column;
-          const color=weave%2===0?'#a7925d':'#948053';
+          const color=weave%2===0?'#a08c5b':'#8e7e52';
           for (let xx=left+8+4*(weave%3);xx<right-8;xx+=24) {
             fill(color,xx,yy,Math.min(12,right-4-xx),4);
           }
         }
-        fill('#57583d',left,top,4,bottom-top);
-        fill('#656447',left,top,right-left,4);
+        if (column>0) fill(binding,left,top,4,bottom-top);
+        if (row>0) fill(binding,left,top,right-left,4);
       }
     }
-    fill('#56583b',x+w-4,y,4,h);
-    fill('#56583b',x,y+h-4,w,4);
+    // The bindings stay within the mat, at the same level as the floorboards.
+    const edge='#867b52';
+    fill(edge,x,y,w,4);
+    fill(edge,x,y+h-4,w,4);
+    fill(edge,x,y+4,4,h-8);
+    fill(edge,x+w-4,y+4,4,h-8);
   }
 
+  // Continue the wall's contact shade across wood, earth and tatami alike.
+  fill('#35221c45',40,140,width-80,4);
+  fill('#35221c2a',40,144,width-80,4);
+  fill('#35221c14',40,148,width-80,4);
+  fill('#35221c24',40,152,4,height-188);
+  fill('#35221c24',width-44,152,4,height-188);
   fill('#9b7f58',28,40,width-56,84);
   fill('#bda275',36,48,width-72,64);
   fill('#ccb183',40,56,width-84,32);
@@ -148,7 +155,6 @@ export function paintRoom(context, room) {
   }
   beam(fill,16,28,width-32,24,4);
   beam(fill,24,124,width-48,16,7);
-  fill('#35221c36',32,140,width-64,4);
   for (const x of windows) shoji(fill,x);
   for (const x of [24,width-40]) post(fill,x,44,16,height-80,3);
 

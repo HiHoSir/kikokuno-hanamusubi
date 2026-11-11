@@ -881,6 +881,84 @@
       "usage": "village-default;field-selectable"
     },
     {
+      "id": "hizuki-battle-idle",
+      "type": "character",
+      "path": "assets/characters/hizuki/battle/idle.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/characters/hizuki/hana-20261107/battle/battle-idle-512.png",
+        "gitBlobSha": "62d18d12c3ae7d6d2478d93a766ffb7d0c1d4a3f"
+      },
+      "usage": "battle-hero"
+    },
+    {
+      "id": "hizuki-battle-attack",
+      "type": "character",
+      "path": "assets/characters/hizuki/battle/attack.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/characters/hizuki/hana-20261107/battle/battle-attack-512.png",
+        "gitBlobSha": "0fc9054cb922588ea22d25a55ab437c6c308dd22"
+      },
+      "usage": "battle-hero"
+    },
+    {
+      "id": "hizuki-battle-skill",
+      "type": "character",
+      "path": "assets/characters/hizuki/battle/skill.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/characters/hizuki/hana-20261107/battle/battle-skill-512.png",
+        "gitBlobSha": "043e439ae0909cfa14bce4a05fda0c3c7e6eb1ff"
+      },
+      "usage": "battle-hero"
+    },
+    {
+      "id": "hizuki-battle-hit",
+      "type": "character",
+      "path": "assets/characters/hizuki/battle/hit.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/characters/hizuki/hana-20261107/battle/battle-hit-512.png",
+        "gitBlobSha": "df720210159a9e9fccb479198cf588be0648e555"
+      },
+      "usage": "battle-hero"
+    },
+    {
+      "id": "hizuki-battle-guard",
+      "type": "character",
+      "path": "assets/characters/hizuki/battle/guard.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/characters/hizuki/hana-20261107/battle/battle-guard-512.png",
+        "gitBlobSha": "0bfbdb72c3023b264ca784f6f1abde02d630609c"
+      },
+      "usage": "battle-hero"
+    },
+    {
+      "id": "hizuki-battle-victory",
+      "type": "character",
+      "path": "assets/characters/hizuki/battle/victory.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/characters/hizuki/hana-20261107/battle/battle-victory-512.png",
+        "gitBlobSha": "b0b1c05561ba6bae132ba481938227e7b19b52f6"
+      },
+      "usage": "battle-hero"
+    },
+    {
       "id": "chief-walk-4dir-80x112",
       "type": "character",
       "path": "assets/characters/npc/chief-walk-4dir-80x112.png",

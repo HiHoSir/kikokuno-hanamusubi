@@ -1,3 +1,11 @@
+export const HIZUKI_WALK_SPEED = 176;
+
+export function touchedEntrance(markers,x,y,nx,ny,radius) {
+  if(ny>=y || x!==nx) return;
+  return markers.find(({entrance:[left,top,width,height]})=>
+    nx>=left && nx<left+width && y>=top+height && ny>=top && ny-radius<=top+height);
+}
+
 export function makeWalk(width, height, blocked, radius) {
   const samples = [];
   for (let y = -radius; y <= radius; y++) {

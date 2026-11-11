@@ -1,18 +1,13 @@
-import { makeWalk } from './movement.mjs?v=village-residents';
-import { villageRooms } from '../village-interiors/rooms.mjs?v=village-interiors';
+import { HIZUKI_WALK_SPEED, makeWalk, touchedEntrance } from './movement.mjs?v=indoor-residents';
+import { villageRooms } from '../village-interiors/rooms.mjs?v=indoor-residents';
 import { pixelViewport, DEFAULT_CAMERA_ZOOM, canopyOpacity, riverRipples, paintRiverRipples } from './render.mjs?v=camera-0.5';
-import { advanceResident, faceToward, makeResident, residentInFront, RESIDENT_RADIUS } from './residents.mjs';
+import { advanceResident, drawCharacter, makeResident, residentInFront, RESIDENT_RADIUS } from './residents.mjs?v=indoor-residents';
+import { bindDialogue } from './dialogue.mjs?v=indoor-residents';
 
 const scene = document.querySelector('#scene');
 const status = document.querySelector('#status');
 const load = document.querySelector('#load');
 const debug = document.querySelector('#debug');
-const enter = document.querySelector('#enter');
-const talk = document.querySelector('#talk');
-const dialogue = document.querySelector('#dialogue');
-const speaker = document.querySelector('#speaker');
-const line = document.querySelector('#line');
-const next = document.querySelector('#next');
 const context = scene.getContext('2d', {alpha:false});
 const directions = {
   down:[0,1,0], up:[0,-1,1], right:[1,0,2], left:[-1,0,3],
@@ -23,9 +18,7 @@ const input = new Map();
 const buttons = [...document.querySelectorAll('[data-dir]')];
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 const zoom = DEFAULT_CAMERA_ZOOM;
-const speed = 152;
 const assetVersion = 'village-tree-clearance';
-const stride = [1,0,2,0];
 
 function image(name,url='./map/'+name+'?v='+assetVersion) {
   return new Promise((resolve,reject) => {
@@ -66,6 +59,11 @@ async function start() {
   const residents = await Promise.all(residentConfigs.map(async config=>({
     ...makeResident(config), bitmap:await image(config.asset,'../../'+config.asset+'?v=village-residents'),
   })));
+  const dialogue=bindDialogue(()=>{
+    clearInput();
+    for(const npc of residents) npc.moving=false;
+  });
+  const entrances=data.markers.filter(marker=>marker.entrance && Object.hasOwn(villageRooms,marker.id));
   const paths = new Set(data.sprites.flatMap(p => [p.file,p.eave,p.sway].filter(Boolean)));
   const art = new Map(await Promise.all([...paths].map(async name => [name,await image(name)])));
   const canopyFiles=new Set(data.sprites.filter(s=>s.vegetation && s.vegetation!=='shrub').map(s=>s.file));
@@ -154,16 +152,13 @@ async function start() {
   }
   overlayContext.putImageData(rgba,0,0);
   const walk = makeWalk(width,height,blocked,data.radius);
-  const [frameWidth,frameHeight] = data.hero.frame;
-  const [footX,footY] = data.hero.feet;
   const focus=new URL(location.href).searchParams.get('focus');
   const focusedResident = residents.find(npc=>npc.id===focus);
   let [x,y] = focusedResident ? [focusedResident.x,focusedResident.y+52]
     : data.markers.find(marker=>marker.id===focus)?.point ?? data.spawn;
   let face = 1, distance = 0, time = 0, lastFrame = 0;
   let viewportWidth,viewportHeight,pixelStep;
-  let renderedX,renderedY,entranceId;
-  let talkTarget, conversation, lineIndex;
+  let renderedX,renderedY;
   const contactRadius = data.radius+RESIDENT_RADIUS;
   const occupied = (px,py)=>residents.some(npc=>Math.hypot(px-npc.x,py-npc.y)<contactRadius);
   const heroOccupied = (px,py)=>Math.hypot(px-x,py-y)<contactRadius;
@@ -178,12 +173,6 @@ async function start() {
     scene.style.height=(height/ratio)+'px';
     viewportWidth=width/step;
     viewportHeight=height/step;
-  }
-
-  function drawCharacter({bitmap,x,y,face,distance,moving}) {
-    const column=moving?stride[Math.floor(distance/14)%stride.length]:0;
-    context.drawImage(bitmap,frameWidth*column,frameHeight*face,frameWidth,frameHeight,
-      Math.round(x-footX),Math.round(y-footY),frameWidth,frameHeight);
   }
 
   function drawSprite(sprite) {
@@ -221,7 +210,7 @@ async function start() {
     let drawn=0;
     for(const sprite of data.sprites){
       while(drawn<characters.length && characters[drawn].y<sprite.depth){
-        drawCharacter(characters[drawn++]);
+        drawCharacter(context,characters[drawn++],data.hero.frame,data.hero.feet);
       }
       const [sx,sy]=sprite.point;
       const bitmap=art.get(sprite.file);
@@ -231,20 +220,12 @@ async function start() {
         context.globalAlpha=1;
       }
     }
-    while(drawn<characters.length) drawCharacter(characters[drawn++]);
+    while(drawn<characters.length) drawCharacter(context,characters[drawn++],data.hero.frame,data.hero.feet);
     const eave = houses.find(house => rectangleContains(house.eaveZone,x,y));
     if(eave) context.drawImage(art.get(eave.eave),...eave.eaveRect,...eave.eavePoint,eave.eaveRect[2],eave.eaveRect[3]);
     const showDebug=debug.getAttribute('aria-pressed')==='true';
     const marker=data.markers.find(({point:[mx,my]})=>Math.hypot(mx-x,my-y)<22);
-    const entrance = data.markers.find(({id,point:[mx,my]})=>
-      Object.hasOwn(villageRooms,id) && Math.abs(mx-x)<34 && Math.abs(my-y)<44)?.id;
-    if (entrance!==entranceId) {
-      entranceId = entrance;
-      if (entrance) enter.href = '../village-interiors/?building='+encodeURIComponent(entrance);
-    }
-    talkTarget=conversation ? undefined : residentInFront(x,y,face,residents);
-    talk.hidden=!talkTarget;
-    enter.hidden=!entrance || !!conversation || !!talkTarget;
+    dialogue.update(residentInFront(x,y,face,residents),x,y);
     if(showDebug){
       context.drawImage(overlay,0,0);
       for(const {point:[mx,my],entrance} of data.markers){
@@ -288,58 +269,31 @@ async function start() {
     time+=elapsed;
     const direction=[...input.values()].pop();
     let moving=false;
-    if(direction && !conversation){
+    if(direction && !dialogue.active){
       const [dx,dy,row]=directions[direction];
       face=row;
-      const [nx,ny]=walk.move(x,y,dx*speed*elapsed/1000,dy*speed*elapsed/1000,occupied);
+      const step=HIZUKI_WALK_SPEED*elapsed/1000;
+      const [nx,ny]=walk.move(x,y,dx*step,dy*step,occupied);
+      const entrance=touchedEntrance(entrances,x,y,nx,ny,data.radius);
+      if(entrance){
+        clearInput();
+        location.assign('../village-interiors/?v=indoor-residents&building='+encodeURIComponent(entrance.id));
+        return;
+      }
       const travel=Math.hypot(nx-x,ny-y);
       moving=travel>0;
       distance+=travel;
       x=nx;
       y=ny;
     }
-    if(!conversation) for(const npc of residents) advanceResident(npc,elapsed,walk,heroOccupied);
+    if(!dialogue.active) for(const npc of residents) advanceResident(npc,elapsed,walk,heroOccupied);
     draw(moving);
     requestAnimationFrame(frame);
   }
 
-  function showLine() {
-    line.textContent=conversation.lines[lineIndex];
-    next.textContent=lineIndex+1<conversation.lines.length?'次へ':'閉じる';
-  }
-
-  function beginConversation() {
-    if(!talkTarget || conversation) return;
-    clearInput();
-    conversation=talkTarget;
-    conversation.face=faceToward(x-conversation.x,y-conversation.y);
-    for(const npc of residents) npc.moving=false;
-    lineIndex=0;
-    speaker.textContent=conversation.name;
-    showLine();
-    dialogue.hidden=false;
-    talk.hidden=true;
-    next.focus({preventScroll:true});
-  }
-
-  function closeConversation() {
-    conversation=undefined;
-    dialogue.hidden=true;
-    talkTarget=residentInFront(x,y,face,residents);
-    talk.hidden=!talkTarget;
-    if(talkTarget) talk.focus({preventScroll:true});
-  }
-
-  talk.addEventListener('click',beginConversation);
-  next.addEventListener('click',()=>{
-    if(!conversation) return;
-    if(++lineIndex<conversation.lines.length) showLine();
-    else closeConversation();
-  });
-
   for(const button of buttons){
     button.addEventListener('pointerdown',event=>{
-      if(event.button!==0 || conversation) return;
+      if(event.button!==0 || dialogue.active) return;
       event.preventDefault();
       button.setPointerCapture(event.pointerId);
       setInput(event.pointerId,button.dataset.dir);
@@ -350,13 +304,12 @@ async function start() {
     button.addEventListener('contextmenu',event=>event.preventDefault());
   }
   addEventListener('keydown',event=>{
-    if(conversation){
-      if(event.key==='Escape') closeConversation();
+    if(dialogue.active){
+      if(event.key==='Escape') dialogue.close(true);
       return;
     }
     if (event.key==='Enter' && event.target===document.body) {
-      if(talkTarget) beginConversation();
-      else if(entranceId) location.assign(enter.href);
+      dialogue.open();
       return;
     }
     const direction=keys[event.key];
@@ -374,7 +327,7 @@ async function start() {
   });
   document.querySelector('#reset').addEventListener('click',()=>{
     clearInput();
-    if(conversation) closeConversation();
+    dialogue.close();
     [x,y]=data.spawn;
     face=1;
     distance=0;

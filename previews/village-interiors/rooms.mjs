@@ -1,3 +1,5 @@
+import {RESIDENT_RADIUS} from '../village-walk/residents.mjs?v=indoor-residents';
+
 // Atlas rectangles and floor footprints use the same world pixels as the village.
 const furniture = {
   teaCounter:    {sprite:[0,0,240,124],     foot:[4,46,232,74]},
@@ -45,6 +47,7 @@ export const rooms = {
       ['teaTable',108,328], ['teaTable',488,328],
     ],
     destinations:[[388,276],[188,480],[568,480]],
+    resident:{asset:'shop-clerk',name:'茶店の店番',counter:'teaCounter',lines:['いらっしゃい。歩き疲れたら、お茶を飲んでいってね。']},
   },
   shop: {
     name:'物販店', width:704, height:544, floor:'cedar', windows:[294],
@@ -53,6 +56,7 @@ export const rooms = {
       ['shopCounter',240,224], ['supplies',76,340], ['tansu',508,340],
     ],
     destinations:[[352,376],[180,268],[528,292]],
+    resident:{asset:'shop-clerk',name:'物販店の店番',counter:'shopCounter',lines:['旅支度なら、うちの品を見ていってくださいな。']},
   },
   inn: {
     name:'宿', width:832, height:672, floor:'cedar', windows:[144,352,560],
@@ -64,6 +68,7 @@ export const rooms = {
       ['innCounter',72,426], ['cushion',496,490], ['cushion',572,490], ['shoeRack',548,564],
     ],
     destinations:[[176,592],[168,380],[664,380],[240,320],[416,320],[640,320]],
+    resident:{asset:'shop-clerk',name:'宿の店番',counter:'innCounter',lines:['お疲れさまです。客間は奥にございます。']},
   },
   armory: {
     name:'兵具屋', width:736, height:544, floor:'walnut', windows:[312],
@@ -72,6 +77,7 @@ export const rooms = {
       ['weaponCounter',256,224], ['supplies',80,350], ['supplies',548,350],
     ],
     destinations:[[368,400],[156,272],[584,272]],
+    resident:{asset:'shop-clerk',name:'兵具屋の店番',counter:'weaponCounter',lines:['遠出するなら、道具の手入れを忘れずにね。']},
   },
   'house-farm': {
     name:'農家', width:640, height:512, floor:'walnut', windows:[240],
@@ -82,6 +88,7 @@ export const rooms = {
       ['hearth',264,204], ['cushion',212,316], ['cushion',412,316],
     ],
     destinations:[[132,408],[336,376],[516,276]],
+    resident:{asset:'farm-worker',name:'農家の住人',at:[470,292],lines:['朝摘みの野菜をしまったところだよ。畑は家の外にあるよ。']},
   },
   'house-family': {
     name:'家族の民家', width:672, height:528, floor:'cedar', windows:[112,410],
@@ -91,6 +98,7 @@ export const rooms = {
       ['teaTable',140,292], ['cushion',368,324],
     ],
     destinations:[[220,452],[480,300],[584,300]],
+    resident:{asset:'villager',name:'民家の住人',at:[448,330],lines:['緋月さま、いらっしゃい。どうぞ上がっていって。']},
   },
   'house-craft': {
     name:'仕事場のある民家', width:672, height:528, floor:'cedar', windows:[288,476],
@@ -100,6 +108,7 @@ export const rooms = {
       ['blueFuton',504,144], ['tansu',364,136], ['cushion',472,364],
     ],
     destinations:[[192,436],[420,300],[540,316],[272,272]],
+    resident:{asset:'elder',name:'職人',at:[264,306],lines:['道具は使ったあとが肝心じゃ。手入れをすれば長くもつぞ。']},
   },
 };
 
@@ -140,13 +149,23 @@ export function prepareInterior(room) {
     const {sprite,foot} = furniture[asset];
     const footprint = foot && [x+foot[0],y+foot[1],foot[2],foot[3]];
     if (footprint) fill(footprint,1);
-    return {sprite,x,y,footprint,depth:footprint ? footprint[1]+footprint[3] : y+sprite[3]};
+    return {asset,sprite,x,y,footprint,depth:footprint ? footprint[1]+footprint[3] : y+sprite[3]};
   });
   const partitions = (room.partitions ?? []).map(([x,y,w])=>{
     const footprint = [x,y-8,w,16];
     fill(footprint,1);
     return {x,y,w,footprint,depth:y+8};
   });
-  const depthSorted = [...objects,...partitions].sort((a,b)=>a.depth-b.depth);
-  return {blocked,doorway,spawn,exitY,depthSorted,destinations:room.destinations};
+  const config = room.resident;
+  const counter = objects.find(object=>object.asset===config.counter)?.footprint;
+  const [x,y] = counter ? [counter[0]+counter[2]/2,counter[1]-14] : config.at;
+  const resident = {...config,x,y,face:0,depth:y};
+  if(counter) resident.talkPoint=[x,counter[1]+counter[3]-4];
+  for(let dy=-RESIDENT_RADIUS;dy<=RESIDENT_RADIUS;dy++){
+    for(let dx=-RESIDENT_RADIUS;dx<=RESIDENT_RADIUS;dx++){
+      if(dx*dx+dy*dy<=RESIDENT_RADIUS*RESIDENT_RADIUS) blocked[(y+dy)*width+x+dx]=1;
+    }
+  }
+  const depthSorted = [...objects,...partitions,resident].sort((a,b)=>a.depth-b.depth);
+  return {blocked,doorway,spawn,exitY,depthSorted,resident,destinations:room.destinations};
 }

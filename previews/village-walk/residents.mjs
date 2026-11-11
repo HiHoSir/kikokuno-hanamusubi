@@ -1,5 +1,12 @@
 const facingVectors = [[0,1],[0,-1],[1,0],[-1,0]];
+const stride = [1,0,2,0];
 export const RESIDENT_RADIUS = 11;
+
+export function drawCharacter(context,{bitmap,x,y,face,distance,moving},[width,height]=[80,112],[footX,footY]=[40,106]) {
+  const column=moving ? stride[Math.floor(distance/14)%stride.length] : 0;
+  context.drawImage(bitmap,width*column,height*face,width,height,
+    Math.round(x-footX),Math.round(y-footY),width,height);
+}
 
 export function faceToward(dx,dy) {
   return Math.abs(dx)>Math.abs(dy) ? (dx>0 ? 2 : 3) : (dy>0 ? 0 : 1);
@@ -15,7 +22,9 @@ export function residentInFront(x,y,face,residents) {
   let nearest;
   let distance = 65;
   for(const npc of residents){
-    const nx = npc.x-x, ny = npc.y-y;
+    if(npc.talkPoint && face!==1) continue;
+    const [targetX,targetY]=npc.talkPoint ?? [npc.x,npc.y];
+    const nx = targetX-x, ny = targetY-y;
     if(nx*dx+ny*dy<=0 || Math.abs(nx*dy-ny*dx)>28) continue;
     const length = Math.hypot(nx,ny);
     if(length<distance){

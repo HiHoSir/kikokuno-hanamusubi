@@ -36,11 +36,18 @@ button:active,button.held,button[aria-pressed=true]{background:#e8cc8b;color:#27
  .controls{flex-direction:column;justify-content:center}
 }
 </style>
+<link rel="stylesheet" href="../village-walk/dialogue.css?v=indoor-residents">
 </head>
 <body>
 <main>
 <header><h1>鬼灯村の室内検査</h1><select id="room" aria-label="間取りを選ぶ"></select></header>
-<section class="viewport" aria-label="室内"><canvas id="scene"></canvas><p id="load">室内を読み込んでいます</p></section>
+<section class="viewport" aria-label="室内">
+<canvas id="scene"></canvas><p id="load">室内を読み込んでいます</p>
+<button id="talk" type="button" hidden>話す</button>
+<section id="dialogue" aria-labelledby="speaker" hidden>
+<strong id="speaker"></strong><p id="line" aria-live="polite"></p><button id="next" type="button">次へ</button>
+</section>
+</section>
 <section class="controls" aria-label="検査操作">
 <div class="dpad" aria-label="方向ボタン">
 <button type="button" data-dir="up" aria-label="上">▲</button>
@@ -51,6 +58,6 @@ button:active,button.held,button[aria-pressed=true]{background:#e8cc8b;color:#27
 <div class="actions"><button id="debug" type="button" aria-pressed="false">判定を表示</button><a id="exit" href="../village-walk/">外へ出る</a></div>
 </section>
 </main>
-<script type="module" src="./walk.mjs?v=interior-mats"></script>
+<script type="module" src="./walk.mjs?v=indoor-residents"></script>
 </body>
 </html>

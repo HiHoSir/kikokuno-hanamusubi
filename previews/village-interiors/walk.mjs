@@ -1,6 +1,8 @@
-import {makeWalk} from '../village-walk/movement.mjs';
+import {HIZUKI_WALK_SPEED, makeWalk} from '../village-walk/movement.mjs?v=indoor-residents';
 import {DEFAULT_CAMERA_ZOOM, pixelViewport} from '../village-walk/render.mjs?v=camera-0.5';
-import {rooms, resolveInterior, prepareInterior} from './rooms.mjs?v=interior-mats';
+import {drawCharacter, RESIDENT_RADIUS, residentInFront} from '../village-walk/residents.mjs?v=indoor-residents';
+import {bindDialogue} from '../village-walk/dialogue.mjs?v=indoor-residents';
+import {rooms, resolveInterior, prepareInterior} from './rooms.mjs?v=indoor-residents';
 import {paintRoom, paintPartition, paintContactShadow} from './room-art.mjs?v=interior-mats';
 
 const scene = document.querySelector('#scene');
@@ -13,7 +15,6 @@ const buttons = [...document.querySelectorAll('[data-dir]')];
 const directions = {down:[0,1,0],up:[0,-1,1],right:[1,0,2],left:[-1,0,3]};
 const keys = {ArrowDown:'down',ArrowUp:'up',ArrowRight:'right',ArrowLeft:'left',
               s:'down',w:'up',d:'right',a:'left'};
-const speed = 152;
 const input = new Map();
 
 function loadImage(path) {
@@ -38,13 +39,17 @@ function clearInput() {
 }
 
 async function start() {
-  const [furniture, hizuki] = await Promise.all([
+  const assets = new Set(Object.values(rooms).map(room=>room.resident.asset));
+  const [furniture, hizuki, portraits] = await Promise.all([
     loadImage('./furniture.png?v=village-interiors'),
     loadImage('../village-walk/map/hizuki.png?v=village-tree-clearance'),
+    Promise.all([...assets].map(async asset=>[asset,await loadImage('../../assets/characters/npc/'+asset+'-walk-4dir-80x112.png?v=indoor-residents')])),
   ]);
+  const residentArt = new Map(portraits);
+  const dialogue = bindDialogue(clearInput);
   const params = new URLSearchParams(location.search);
   const initial = resolveInterior(params);
-  const outdoor = new URL('../village-walk/?v=village-interior-entrances',location.href);
+  const outdoor = new URL('../village-walk/?v=indoor-residents',location.href);
   if (initial.returnFocus) outdoor.searchParams.set('focus',initial.returnFocus);
   exit.href = outdoor.href;
   const floor = document.createElement('canvas');
@@ -56,8 +61,10 @@ async function start() {
 
   function setRoom(nextRoom, selected) {
     clearInput();
+    dialogue.close();
     room = nextRoom;
     plan = prepareInterior(room);
+    plan.resident.bitmap=residentArt.get(plan.resident.asset);
     walk = makeWalk(room.width,room.height,plan.blocked,8);
     [x,y] = plan.spawn;
     face = 1;
@@ -107,16 +114,16 @@ async function start() {
     context.setTransform(step,0,0,step,-Math.floor(left)*step,-Math.floor(top)*step);
     context.imageSmoothingEnabled=false;
     context.drawImage(floor,0,0);
-    const column = moving ? [1,0,2,0][Math.floor(distance/14)%4] : 0;
-    const drawHero = ()=>context.drawImage(hizuki,80*column,112*face,80,112,
-      Math.round(x-40),Math.round(y-106),80,112);
+    const drawHero = ()=>drawCharacter(context,{bitmap:hizuki,x,y,face,distance,moving});
     let drewHero = false;
     for (const object of plan.depthSorted) {
       if (!drewHero && object.depth>y) {
         drawHero();
         drewHero = true;
       }
-      if (object.sprite) {
+      if (object===plan.resident) {
+        drawCharacter(context,object);
+      } else if (object.sprite) {
         const [, , w, h] = object.sprite;
         context.drawImage(furniture,...object.sprite,object.x,object.y,w,h);
       } else {
@@ -124,10 +131,19 @@ async function start() {
       }
     }
     if (!drewHero) drawHero();
+    dialogue.update(residentInFront(x,y,face,[plan.resident]),x,y);
     if (debug.getAttribute('aria-pressed')==='true') {
       context.drawImage(overlay,0,0);
       context.fillStyle='#f8dc80';
       context.fillRect(plan.doorway-4,plan.exitY-4,8,8);
+      if(plan.resident.talkPoint){
+        const [tx,ty]=plan.resident.talkPoint;
+        context.fillRect(tx-3,ty-3,6,6);
+      }
+      context.strokeStyle='#f8dc80';
+      context.beginPath();
+      context.arc(plan.resident.x,plan.resident.y,RESIDENT_RADIUS,0,2*Math.PI);
+      context.stroke();
       context.strokeStyle='#fff';
       context.lineWidth=2;
       context.beginPath();
@@ -144,10 +160,11 @@ async function start() {
     lastFrame = now;
     const direction = [...input.values()].at(-1);
     let moving = false;
-    if (direction) {
+    if (direction && !dialogue.active) {
       const [dx,dy,row] = directions[direction];
       face = row;
-      const [nx,ny] = walk.move(x,y,dx*speed*elapsed/1000,dy*speed*elapsed/1000);
+      const step=HIZUKI_WALK_SPEED*elapsed/1000;
+      const [nx,ny] = walk.move(x,y,dx*step,dy*step);
       const travel = Math.hypot(nx-x,ny-y);
       moving = travel>0;
       distance += travel;
@@ -171,7 +188,7 @@ async function start() {
   });
   for (const button of buttons) {
     button.addEventListener('pointerdown',event=>{
-      if (event.button!==0) return;
+      if (event.button!==0 || dialogue.active) return;
       event.preventDefault();
       button.setPointerCapture(event.pointerId);
       setInput(event.pointerId,button.dataset.dir);
@@ -182,6 +199,14 @@ async function start() {
     button.addEventListener('contextmenu',event=>event.preventDefault());
   }
   addEventListener('keydown',event=>{
+    if(dialogue.active){
+      if(event.key==='Escape') dialogue.close(true);
+      return;
+    }
+    if(event.key==='Enter' && event.target===document.body){
+      dialogue.open();
+      return;
+    }
     if (!keys[event.key] || event.metaKey || event.ctrlKey || event.altKey || event.target===selector) return;
     event.preventDefault();
     if (!event.repeat) setInput(event.key,keys[event.key]);

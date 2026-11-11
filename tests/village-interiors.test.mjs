@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {test} from 'node:test';
-import {makeWalk} from '../previews/village-walk/movement.mjs';
+import {HIZUKI_WALK_SPEED, makeWalk, touchedEntrance} from '../previews/village-walk/movement.mjs';
+import {residentInFront} from '../previews/village-walk/residents.mjs';
 
 const preview = new URL('../previews/village-interiors/', import.meta.url);
 
@@ -9,7 +10,7 @@ test('each interior has a walkable entrance, exit and path to every room destina
   const {rooms, prepareInterior} = await import(new URL('rooms.mjs', preview));
   assert.equal(Object.keys(rooms).length, 7);
   for (const room of Object.values(rooms)) {
-    const {blocked, spawn, exitY, doorway, destinations} = prepareInterior(room);
+    const {blocked, spawn, exitY, doorway, destinations, resident} = prepareInterior(room);
     const walk = makeWalk(room.width, room.height, blocked, 8);
     assert.equal(walk.canStand(...spawn), true, room.name);
     assert.equal(walk.canStand(doorway, exitY), true, room.name);
@@ -28,7 +29,32 @@ test('each interior has a walkable entrance, exit and path to every room destina
     }
     assert.ok(seen.has([doorway, exitY].join(',')), room.name+' exit');
     for (const point of destinations) assert.ok(seen.has(point.join(',')), room.name+' '+point);
+    assert.ok(resident?.lines.length, room.name);
+    assert.equal(walk.canStand(resident.x,resident.y),false,room.name+' resident footprint');
+    assert.ok(queue.some(([x,y])=>[0,1,2,3].some(face=>residentInFront(x,y,face,[resident]))),room.name+' reachable resident');
   }
+});
+
+test('the four commercial rooms share one clerk and face the public side of the counter', async () => {
+  const {rooms,prepareInterior}=await import(new URL('rooms.mjs',preview));
+  const clerks=['teahouse','shop','inn','armory'].map(id=>prepareInterior(rooms[id]).resident);
+  assert.deepEqual(new Set(clerks.map(npc=>npc.asset)),new Set(['shop-clerk']));
+  for(const npc of clerks){
+    const [x,y]=npc.talkPoint;
+    assert.equal(residentInFront(x,y+22,1,[npc]),npc);
+    assert.equal(residentInFront(x,y-22,0,[npc]),undefined);
+    assert.ok(npc.y<y);
+  }
+});
+
+test('walking reaches a door only on contact from the front at the shared faster speed', () => {
+  assert.equal(HIZUKI_WALK_SPEED,176);
+  const door={id:'tea',entrance:[100,200,48,8]};
+  assert.equal(touchedEntrance([door],124,234,124,229,8),undefined);
+  assert.equal(touchedEntrance([door],124,221,124,215,8),door);
+  assert.equal(touchedEntrance([door],124,215,124,221,8),undefined);
+  assert.equal(touchedEntrance([door],99,214,103,214,8),undefined);
+  assert.equal(touchedEntrance([door],96,221,96,215,8),undefined);
 });
 
 test('village entrances reuse interior plans and return to their own entrance marker', async () => {

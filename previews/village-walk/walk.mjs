@@ -16,7 +16,7 @@ const buttons = [...document.querySelectorAll('[data-dir]')];
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 const zoom = DEFAULT_CAMERA_ZOOM;
 const speed = 152;
-const assetVersion = 'village-pixel-art';
+const assetVersion = 'village-art-audit';
 
 function image(name) {
   return new Promise((resolve,reject) => {

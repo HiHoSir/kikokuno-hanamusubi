@@ -97,6 +97,45 @@ def road_texture(size):
     return dirt.resize(size, Image.Resampling.NEAREST)
 
 
+def physalis_sway(plant):
+    """Move whole color cells from the standing plant and hold the root still."""
+    width, height = plant.size
+    _, top, _, bottom = plant.getchannel('A').getbbox()
+    sheet = Image.new('RGBA', (width * 8, height))
+    for frame, bend in enumerate((0, 2, 3, 2, 0, -2, -3, -2)):
+        pose = Image.new('RGBA', plant.size)
+        for y in range(0, height, 2):
+            strength = max(0, min(1, (bottom - 4 - y) / (bottom - 4 - top)))
+            offset = round(bend * strength / 2) * 2
+            band = plant.crop((0, y, width, y + 2))
+            pose.paste(band, (offset, y))
+        sheet.paste(pose, (frame * width, 0))
+    return sheet
+
+
+def foliage_colors(chip):
+    colors = chip.convert('RGBA')
+    pixels = colors.load()
+    for y in range(colors.height):
+        for x in range(colors.width):
+            red, green, blue, alpha = pixels[x, y]
+            if green > max(red, blue):
+                pixels[x, y] = (round(red + .25 * (green - red)), round(green * .94), blue, alpha)
+    return colors
+
+
+def join_water_edges(chip):
+    """Blend the repeating sides before picking the shared river colors."""
+    pixels = chip.load()
+    right = chip.width - 2
+    for y in range(chip.height):
+        edge = [pixels[x, y] for x in (0, 1, right, right + 1)]
+        if all(a >= 128 for _, _, _, a in edge):
+            color = tuple(round(sum(p[i] for p in edge) / 4) for i in range(3))
+            for x in (0, 1, right, right + 1):
+                pixels[x, y] = (*color, pixels[x, y][3])
+
+
 def export(source, target):
     if source.resolve() == target.resolve():
         raise ValueError('Use an unchanged source directory for the export')
@@ -116,19 +155,22 @@ def export(source, target):
             with Image.open(source / filename) as original:
                 fruit_samples.extend(paint_pixels(ImageEnhance.Color(original.convert('RGBA')).enhance(.88), 2)[1])
     fruit_palette = pixel_palette(fruit_samples, fruit_colors)
-    for pair in PHYSALIS_FILES:
-        for filename in pair:
-            with Image.open(source / filename) as original:
-                # All frame widths are even, so the two-pixel cells stay inside their own frames.
-                export_frame(original, fruit_colors, saturation=.88, palette=fruit_palette).save(
-                    target / filename, optimize=True)
+    for still, sway in PHYSALIS_FILES:
+        with Image.open(source / still) as original:
+            plant = export_frame(original, fruit_colors, saturation=.88, palette=fruit_palette)
+        plant.save(target / still, optimize=True)
+        physalis_sway(plant).save(target / sway, optimize=True)
 
     with Image.open(source / 'ground-decor.png') as original:
         decor = Image.new('RGBA', original.size)
         for top in range(0, original.height, 32):
             for left in range(0, original.width, 32):
                 chip = original.crop((left, top, left+32, top+32))
-                decor.paste(export_frame(chip, 14, pitch=1, saturation=.88), (left, top))
+                index = top // 32 * (original.width // 32) + left // 32
+                if index < 58:
+                    chip = foliage_colors(chip)
+                pitch = 2 if 58 <= index < 65 else 1
+                decor.paste(export_frame(chip, 14, pitch=pitch, saturation=.88), (left, top))
         decor.save(target / 'ground-decor.png', optimize=True)
 
     with Image.open(source / 'path-soil.png') as original:
@@ -152,6 +194,8 @@ def export(source, target):
         for tile in sorted(ids):
             left, top, size = tiles[tile]
             chip = atlas.crop((left, top, left+size, top+size))
+            if name == 'river':
+                join_water_edges(chip)
             chips[tile] = chip
             samples.extend(paint_pixels(ImageEnhance.Color(chip).enhance(saturation[name]), 2)[1])
         palette = pixel_palette(samples, colors)

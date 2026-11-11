@@ -36,10 +36,15 @@ def build(root=ROOT/'previews/village-walk'):
  s['sprites'].sort(key=lambda p:p['depth'])
  original=Image.open(root/'map/terrain.png').convert('RGBA');atlas=Image.new('RGBA',(512,416));atlas.alpha_composite(original.crop((0,0,256,416)))
  tiles=s['terrain']['tiles'][:baseCount]
- # Repeat native plank tiles between the existing side pieces.
+ # Mirror the first plank span so the center meets the side's last column.
  bridgeTiles=river['bridgeTiles'];centers=[]
  for row in range(3):
-  sx,sy,*_=tiles[bridgeTiles[row*2]];piece=original.crop((sx+16,sy,sx+32,sy+32));tile=Image.new('RGBA',(32,32));tile.alpha_composite(piece,(0,0));tile.alpha_composite(piece,(16,0));x=256+row*32
+  sx,sy,*_=tiles[bridgeTiles[row*2]]
+  piece=original.crop((sx+16,sy,sx+32,sy+32))
+  tile=Image.new('RGBA',(32,32))
+  tile.alpha_composite(piece.transpose(Image.Transpose.FLIP_LEFT_RIGHT),(0,0))
+  tile.alpha_composite(piece,(16,0))
+  x=256+row*32
   atlas.alpha_composite(tile,(x,0));centers.append(len(tiles));tiles.append([x,0,32])
  fields=[l for l in s['terrain']['layers'] if l['name']=='field'];grass=next(l for l in s['terrain']['layers'] if l['name']=='grass')
  mask=road_mask((width,height),s['roads'])

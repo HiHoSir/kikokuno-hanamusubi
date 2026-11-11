@@ -18,10 +18,28 @@ const furniture = {
   shoeRack:      {sprite:[744,528,96,60],   foot:[4,24,88,32]},
 };
 
+const TATAMI_SHORT_SIDE=80;
+
+// Each letter identifies one mat. A single cell denotes a half mat.
+export function tatamiMats({origin:[left,top], rows}) {
+  const mats=[];
+  for (const [y,row] of rows.entries()) {
+    for (let x=0;x<row.length;x++) {
+      const id=row[x];
+      if (row[x-1]===id || rows[y-1]?.[x]===id) continue;
+      const width=row[x+1]===id?2:1;
+      const height=rows[y+1]?.[x]===id?2:1;
+      mats.push([left+x*TATAMI_SHORT_SIDE,top+y*TATAMI_SHORT_SIDE,
+        width*TATAMI_SHORT_SIDE,height*TATAMI_SHORT_SIDE]);
+    }
+  }
+  return mats;
+}
+
 export const rooms = {
   teahouse: {
     name:'茶店', width:768, height:576, floor:'cedar', windows:[176,480],
-    tatami:[[68,292,632,176]],
+    tatami:{origin:[64,300],rows:['AABCCDEF','GGBIIDEF']},
     furniture:[
       ['merchantShelf',76,100], ['teaCounter',276,132], ['kitchen',540,124],
       ['teaTable',108,328], ['teaTable',488,328],
@@ -38,7 +56,7 @@ export const rooms = {
   },
   inn: {
     name:'宿', width:832, height:672, floor:'cedar', windows:[144,352,560],
-    tatami:[[52,132,728,244]],
+    tatami:{origin:[56,140],rows:['ABCCDEEFH','ABGIDJJFK','LLGIMMNNK']},
     partitions:[[32,380,88],[216,380,400],[712,380,88]],
     furniture:[
       ['blueFuton',192,150], ['redFuton',368,150], ['blueFuton',592,150],
@@ -57,17 +75,17 @@ export const rooms = {
   },
   'house-farm': {
     name:'農家', width:640, height:512, floor:'walnut', windows:[240],
-    earth:[[36,136,172,284]],
-    tatami:[[212,132,380,252]],
+    earth:[[36,136,164,284]],
+    tatami:{origin:[200,140],rows:['ABCCH','ABDEE','FFDGG']},
     furniture:[
-      ['supplies',56,136], ['kitchen',56,284], ['tansu',436,128],
+      ['supplies',56,136], ['kitchen',48,284], ['tansu',436,128],
       ['hearth',264,204], ['cushion',212,316], ['cushion',412,316],
     ],
     destinations:[[132,408],[336,376],[516,276]],
   },
   'house-family': {
     name:'家族の民家', width:672, height:528, floor:'cedar', windows:[112,410],
-    tatami:[[64,128,560,320]],
+    tatami:{origin:[64,140],rows:['AABBCDD','EFFGCIJ','EKKGLIJ','MMNNLOO']},
     furniture:[
       ['tansu',74,124], ['redFuton',412,140], ['blueFuton',524,140],
       ['teaTable',140,292], ['cushion',368,324],
@@ -76,10 +94,10 @@ export const rooms = {
   },
   'house-craft': {
     name:'仕事場のある民家', width:672, height:528, floor:'cedar', windows:[288,476],
-    tatami:[[356,136,268,316]],
+    tatami:{origin:[364,140],rows:['AAB','CDB','CDE','FFE']},
     furniture:[
       ['workbench',64,144], ['merchantShelf',76,276], ['supplies',238,136],
-      ['blueFuton',504,144], ['tansu',356,136], ['cushion',472,364],
+      ['blueFuton',504,144], ['tansu',364,136], ['cushion',472,364],
     ],
     destinations:[[192,436],[420,300],[540,316],[272,272]],
   },

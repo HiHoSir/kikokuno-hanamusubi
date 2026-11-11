@@ -1,7 +1,7 @@
 import {makeWalk} from '../village-walk/movement.mjs';
 import {DEFAULT_CAMERA_ZOOM, pixelViewport} from '../village-walk/render.mjs?v=camera-0.5';
-import {rooms, resolveInterior, prepareInterior} from './rooms.mjs?v=village-interiors';
-import {paintRoom, paintPartition, paintContactShadow} from './room-art.mjs?v=interior-floor-joins';
+import {rooms, resolveInterior, prepareInterior} from './rooms.mjs?v=interior-mats';
+import {paintRoom, paintPartition, paintContactShadow} from './room-art.mjs?v=interior-mats';
 
 const scene = document.querySelector('#scene');
 const context = scene.getContext('2d', {alpha:false});

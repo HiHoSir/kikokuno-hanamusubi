@@ -1,3 +1,5 @@
+import {tatamiMats} from './rooms.mjs?v=interior-mats';
+
 // Match the four-world-pixel pitch and warm wood shades of the furniture atlas.
 const wood = {
   ink:'#35221c', edge:'#573526', shade:'#6d462b', face:'#8c5932',
@@ -40,6 +42,56 @@ function boardGrain(fill, x,y,w,h,shades,seed) {
   }
 }
 
+const boardLengths=[96,112,128,148,168,192];
+const boardWidths=[20,24,24,28,24,28,20];
+
+export function floorboardJoints(left,right,rows,seed) {
+  const courses=[];
+  for (let row=0;row<rows;row++) {
+    const ends=[];
+    let x=left;
+    while (x<right) {
+      const index=ends.length;
+      const choice=(seed+row*17+index*index*11+row*index*7)%boardLengths.length;
+      const length=index===0 ? 56+4*((seed+row*29+row*row*7)%23) : boardLengths[choice];
+      let end=x+length;
+      if (courses[row-1]?.some(joint=>Math.abs(joint-end)<=12)) end+=28;
+      if (right-end<44) end=right;
+      ends.push(end);
+      x=end;
+    }
+    courses.push(ends);
+  }
+  return courses;
+}
+
+function paintMat(fill, [x,y,w,h]) {
+  const horizontal=w>=h;
+  fill(horizontal?'#988655':'#938152',x,y,w,h);
+  const along=horizontal?h:w;
+  const across=horizontal?w:h;
+  for (let row=8;row<across-4;row+=8) {
+    const weave=row/8;
+    const color=weave%2===0?'#a08c5b':'#8e7e52';
+    for (let run=8+4*(weave%3);run<along-8;run+=24) {
+      const length=Math.min(12,along-4-run);
+      if (horizontal) fill(color,x+row,y+run,4,length);
+      else fill(color,x+run,y+row,length,4);
+    }
+  }
+  // Cloth bindings run along each mat's long sides, within the floor surface.
+  const binding='#7b714a';
+  if (horizontal) {
+    fill('#796d464d',x+w-4,y,4,h);
+    fill(binding,x,y,w,4);
+    fill(binding,x,y+h-4,w,4);
+  } else {
+    fill('#796d464d',x,y+h-4,w,4);
+    fill(binding,x,y,4,h);
+    fill(binding,x+w-4,y,4,h);
+  }
+}
+
 function beam(fill, x,y,w,h,seed) {
   fill(wood.ink,x,y,w,h);
   fill(wood.face,x+4,y+4,w-8,h-8);
@@ -78,17 +130,28 @@ export function paintRoom(context, room) {
   const floorBottom=height-32;
 
   fill('#241a17',16,28,width-32,height-40);
-  for (let y=128;y<floorBottom;y+=24) {
-    const row=(y-128)/24;
-    const h=Math.min(24,floorBottom-y);
+  const courseWidths=[];
+  for (let remaining=floorBottom-128;remaining>0;) {
+    const row=courseWidths.length;
+    const index=(width/4+row*11+Math.floor(row/3)*3)%boardWidths.length;
+    const next=boardWidths[index];
+    const h=remaining-next<16?remaining:next;
+    courseWidths.push(h);
+    remaining-=h;
+  }
+  const courses=floorboardJoints(28,width-28,courseWidths.length,(width+height)/4);
+  let y=128;
+  for (const [row,joints] of courses.entries()) {
+    const h=courseWidths[row];
     fill(timber.seam,28,y,width-56,h);
-    for (let x=28-((row*44)%132), col=0;x<width-28;x+=132,col++) {
-      const left=Math.max(28,x), right=Math.min(width-28,x+128);
-      if (right<=left) continue;
-      const variation=(row*11+col*17+Math.floor(row*col/7))%4;
-      fill(timber.boards[variation],left,y,right-left,h-4);
-      boardGrain(fill,left,y+4,right-left,h-8,timber.grain,row+col*11);
+    let left=28;
+    for (const [column,right] of joints.entries()) {
+      const variation=(row*11+column*17+Math.floor(row*column/7))%4;
+      fill(timber.boards[variation],left,y,right-left-4,h-4);
+      boardGrain(fill,left,y+4,right-left-4,h-8,timber.grain,row+column*11);
+      left=right;
     }
+    y+=h;
   }
 
   for (const [x,y,w,h] of room.earth ?? []) {
@@ -96,34 +159,8 @@ export function paintRoom(context, room) {
     texture(fill,[x+4,y+4,w-8,h-8],['#7d6a4a','#96805b','#907b57'],12,13);
   }
 
-  for (const [x,y,w,h] of room.tatami ?? []) {
-    const columns=Math.ceil(w/128), rows=Math.ceil(h/172);
-    const matColors=['#968454','#948252','#998757'];
-    const binding='#79734f';
-    for (let row=0;row<rows;row++) {
-      const top=y+Math.floor(h*row/rows/4)*4;
-      const bottom=y+Math.floor(h*(row+1)/rows/4)*4;
-      for (let column=0;column<columns;column++) {
-        const left=x+Math.floor(w*column/columns/4)*4;
-        const right=x+Math.floor(w*(column+1)/columns/4)*4;
-        fill(matColors[(row+column*2)%3],left,top,right-left,bottom-top);
-        for (let yy=top+8;yy<bottom-4;yy+=8) {
-          const weave=(yy-top)/8+column;
-          const color=weave%2===0?'#a08c5b':'#8e7e52';
-          for (let xx=left+8+4*(weave%3);xx<right-8;xx+=24) {
-            fill(color,xx,yy,Math.min(12,right-4-xx),4);
-          }
-        }
-        if (column>0) fill(binding,left,top,4,bottom-top);
-        if (row>0) fill(binding,left,top,right-left,4);
-      }
-    }
-    // The bindings stay within the mat, at the same level as the floorboards.
-    const edge='#867b52';
-    fill(edge,x,y,w,4);
-    fill(edge,x,y+h-4,w,4);
-    fill(edge,x,y+4,4,h-8);
-    fill(edge,x+w-4,y+4,4,h-8);
+  if (room.tatami) {
+    for (const mat of tatamiMats(room.tatami)) paintMat(fill,mat);
   }
 
   // Continue the wall's contact shade across wood, earth and tatami alike.

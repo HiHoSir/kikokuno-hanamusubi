@@ -45,3 +45,43 @@ test('village entrances reuse interior plans and return to their own entrance ma
   assert.equal(resolveInterior(new URLSearchParams('building=unknown&room=armory')).room, rooms.armory);
   assert.equal(resolveInterior(new URLSearchParams('room=__proto__')).room, rooms.teahouse);
 });
+
+test('tatami plans use full or half mats with no junction of four corners', async () => {
+  const {rooms, tatamiMats} = await import(new URL('rooms.mjs', preview));
+  for (const room of Object.values(rooms).filter(room=>room.tatami)) {
+    const {rows,origin:[left,top]} = room.tatami;
+    const mats=tatamiMats(room.tatami);
+    assert.equal(mats.length,new Set(rows.join('')).size,room.name);
+    assert.ok(mats.some(([, ,w,h])=>w>h) && mats.some(([, ,w,h])=>h>w),room.name);
+    for (const [x,y,w,h] of mats) {
+      assert.ok([w,h].includes(80) && [80,160].includes(Math.max(w,h)),room.name);
+      assert.ok(x>=40 && y>=140 && x+w<=room.width-40 && y+h<=room.height-36,room.name);
+    }
+    for (const [y,row] of rows.entries()) {
+      assert.equal(row.length,rows[0].length,room.name);
+      for (let x=0;x<row.length;x++) {
+        const px=left+80*x+40, py=top+80*y+40;
+        assert.equal(mats.filter(([l,t,w,h])=>px>=l && px<l+w && py>=t && py<t+h).length,1,room.name);
+        if (x>0 && y>0) {
+          const junction=[row[x-1],row[x],rows[y-1][x-1],rows[y-1][x]];
+          assert.notEqual(new Set(junction).size,4,room.name);
+        }
+      }
+    }
+  }
+});
+
+test('floorboards vary in length and stagger their joints between adjacent rows', async () => {
+  const {floorboardJoints} = await import(new URL('room-art.mjs', preview));
+  const courses=floorboardJoints(28,740,18,336);
+  assert.deepEqual(courses,floorboardJoints(28,740,18,336));
+  assert.ok(new Set(courses.map(row=>row.join(','))).size>14);
+  for (const [row, joints] of courses.entries()) {
+    assert.equal(joints.at(-1),740);
+    const lengths=joints.map((end,i)=>end-(joints[i-1]??28));
+    assert.ok(lengths.every(length=>length>=44 && length%4===0));
+    if (row>0) for (const end of joints.slice(0,-1)) {
+      assert.ok(courses[row-1].slice(0,-1).every(previous=>Math.abs(previous-end)>12));
+    }
+  }
+});

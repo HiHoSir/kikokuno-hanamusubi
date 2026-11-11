@@ -2,6 +2,24 @@
   "schemaVersion": 1,
   "assets": [
     {
+      "id": "title-logo",
+      "type": "ui",
+      "path": "assets/ui/title/logo.webp",
+      "status": "approved"
+    },
+    {
+      "id": "title-village",
+      "type": "ui",
+      "path": "assets/ui/title/village.webp",
+      "status": "approved"
+    },
+    {
+      "id": "title-field",
+      "type": "ui",
+      "path": "assets/ui/title/field.webp",
+      "status": "approved"
+    },
+    {
       "id": "field-water-motion",
       "type": "effect",
       "path": "assets/field/effects/water-motion.png",

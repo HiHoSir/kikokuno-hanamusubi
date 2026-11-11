@@ -1,10 +1,12 @@
 import { makeWalk } from './movement.mjs';
+import { villageRooms } from '../village-interiors/rooms.mjs?v=village-interiors';
 import { pixelViewport, DEFAULT_CAMERA_ZOOM, canopyOpacity, riverRipples, paintRiverRipples } from './render.mjs?v=camera-0.5';
 
 const scene = document.querySelector('#scene');
 const status = document.querySelector('#status');
 const load = document.querySelector('#load');
 const debug = document.querySelector('#debug');
+const enter = document.querySelector('#enter');
 const context = scene.getContext('2d', {alpha:false});
 const directions = {
   down:[0,1,0], up:[0,-1,1], right:[1,0,2], left:[-1,0,3],
@@ -144,7 +146,7 @@ async function start() {
   let [x,y] = data.markers.find(marker=>marker.id===focus)?.point ?? data.spawn;
   let face = 1, distance = 0, time = 0, lastFrame = 0;
   let viewportWidth,viewportHeight,pixelStep;
-  let renderedX,renderedY;
+  let renderedX,renderedY,entranceId;
 
   function resize() {
     const {step,width,height}=pixelViewport(scene.parentElement.clientWidth,scene.parentElement.clientHeight,devicePixelRatio,zoom);
@@ -215,6 +217,13 @@ async function start() {
     if(eave) context.drawImage(art.get(eave.eave),...eave.eaveRect,...eave.eavePoint,eave.eaveRect[2],eave.eaveRect[3]);
     const showDebug=debug.getAttribute('aria-pressed')==='true';
     const marker=data.markers.find(({point:[mx,my]})=>Math.hypot(mx-x,my-y)<22);
+    const entrance = data.markers.find(({id,point:[mx,my]})=>
+      Object.hasOwn(villageRooms,id) && Math.abs(mx-x)<34 && Math.abs(my-y)<44)?.id;
+    if (entrance!==entranceId) {
+      entranceId = entrance;
+      enter.hidden = !entrance;
+      if (entrance) enter.href = '../village-interiors/?building='+encodeURIComponent(entrance);
+    }
     if(showDebug){
       context.drawImage(overlay,0,0);
       for(const {point:[mx,my],entrance} of data.markers){
@@ -279,6 +288,10 @@ async function start() {
     button.addEventListener('contextmenu',event=>event.preventDefault());
   }
   addEventListener('keydown',event=>{
+    if (event.key==='Enter' && event.target===document.body && entranceId) {
+      location.assign(enter.href);
+      return;
+    }
     const direction=keys[event.key];
     if(!direction || event.metaKey || event.ctrlKey || event.altKey) return;
     event.preventDefault();

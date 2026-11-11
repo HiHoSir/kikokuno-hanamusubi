@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#19251e">
+<title>鬼灯村の室内検査｜鬼哭の花結び</title>
+<style>
+:root{color-scheme:dark;background:#19251e;color:#f7efdb;font:16px system-ui,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;overscroll-behavior:none}
+main{width:min(100%,880px);height:100vh;height:100dvh;margin:auto;padding:max(8px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));display:grid;grid-template-rows:auto minmax(0,1fr) auto;gap:8px}
+header{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0}
+h1{font-size:17px;line-height:1.25;margin:0}
+select,button,a{min-height:42px;border:1px solid #777d62;border-radius:8px;background:#314337;color:inherit;font:inherit}
+select{max-width:55%;font-size:13px;padding:6px}
+.viewport{position:relative;display:grid;place-items:center;overflow:hidden;border:1px solid #73785c;border-radius:8px;background:#191714}
+canvas{display:block;image-rendering:pixelated;touch-action:none}
+#load{position:absolute;inset:0;display:grid;place-items:center;margin:0;background:#191714;text-align:center;padding:10px}
+#load[hidden]{display:none}
+.controls{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.dpad{display:grid;grid-template-columns:repeat(3,47px);grid-template-rows:repeat(2,42px);gap:3px}
+button,a{touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;cursor:pointer}
+button:active,button.held,button[aria-pressed=true]{background:#e8cc8b;color:#272d22}
+.dpad button{font-size:19px}
+[data-dir=up]{grid-column:2}
+[data-dir=left]{grid-column:1;grid-row:2}
+[data-dir=down]{grid-column:2;grid-row:2}
+[data-dir=right]{grid-column:3;grid-row:2}
+.actions{display:grid;gap:5px;width:min(100%,150px)}
+.actions button,.actions a{font-size:13px}
+.actions a{display:grid;place-items:center;text-decoration:none}
+@media(orientation:landscape) and (max-height:520px){
+ main{grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto minmax(0,1fr)}
+ header{grid-column:1/-1}
+ .controls{flex-direction:column;justify-content:center}
+}
+</style>
+</head>
+<body>
+<main>
+<header><h1>鬼灯村の室内検査</h1><select id="room" aria-label="間取りを選ぶ"></select></header>
+<section class="viewport" aria-label="室内"><canvas id="scene"></canvas><p id="load">室内を読み込んでいます</p></section>
+<section class="controls" aria-label="検査操作">
+<div class="dpad" aria-label="方向ボタン">
+<button type="button" data-dir="up" aria-label="上">▲</button>
+<button type="button" data-dir="left" aria-label="左">◀</button>
+<button type="button" data-dir="down" aria-label="下">▼</button>
+<button type="button" data-dir="right" aria-label="右">▶</button>
+</div>
+<div class="actions"><button id="debug" type="button" aria-pressed="false">判定を表示</button><a id="exit" href="../village-walk/">外へ出る</a></div>
+</section>
+</main>
+<script type="module" src="./walk.mjs?v=village-interiors"></script>
+</body>
+</html>

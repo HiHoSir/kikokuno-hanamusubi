@@ -49,7 +49,15 @@ test('native tree canopies leave the house entrances and their approach clear',(
 test('road corners retain subcell silhouettes instead of 16px stair steps',()=>{
  assert.equal(data.terrain.roadShape,'pixel-contour');
 });
-const {pixelViewport} = await import(local('render.mjs'));
+const {pixelViewport,canopyOpacity} = await import(local('render.mjs'));
+test('an opaque canopy lets Hizuki remain visible when walking behind it',()=>{
+ const tree={point:[100,150],depth:440};
+ const mask={width:8,height:100,data:new Uint8ClampedArray(8*100*4)};
+ mask.data[(20*8+4)*4+3]=255;
+ assert.ok(canopyOpacity(tree,104,250,mask)<1);
+ assert.equal(canopyOpacity(tree,105,250,mask),1,'transparent gap stays undimmed');
+ assert.equal(canopyOpacity(tree,104,450,mask),1,'tree behind Hizuki stays undimmed');
+});
 test('wider 0.75 camera stays consistent across devices and permits other zoom values',()=>{
  for(const dpr of [1,1.05,2,2.75,3])for(const [w,h] of [[393,620],[852,290],[858,790]]){
   const p=pixelViewport(w,h,dpr);
@@ -65,10 +73,21 @@ test('the generated belltower includes its foundation and connected stairs as on
  const bell=data.sprites.find(s=>s.id==='belltower');
  assert.ok(bell,'new belltower is actually referenced by the live scene');
  const png=readFileSync(local('map/'+bell.file));
- assert.equal(png.readUInt32BE(16),300,'width follows the reference relative to the houses');
+ assert.ok(png.readUInt32BE(16)>=380 && png.readUInt32BE(20)>=420,
+   'the adult-scale pavilion needs a larger open bay and foundation');
  assert.ok(!data.terrain.layers.some(l=>['bell-platform','bell-stairs'].includes(l.name)),
    'detached legacy stone platform and stairs must not remain underneath the new sprite');
  assert.deepEqual([bell.point[0]+png.readUInt32BE(16)/2,bell.point[1]+png.readUInt32BE(20)],bell.feet,'the stairs keep their ground connection');
+});
+
+test('mature trees have native sprite heights proportional to adult Hizuki',()=>{
+ assert.deepEqual(data.hero.frame,[80,112]);
+ assert.deepEqual(data.hero.feet,[40,106]);
+ for(const [file,min,max] of [['sprite-08.png',275,305],['sprite-46.png',260,290]]){
+  const png=readFileSync(local('map/'+file));
+  const height=png.readUInt32BE(20);
+  assert.ok(height>=min && height<=max,`${file}: native height ${height}px must be ${min}–${max}px`);
+ }
 });
 
 test('roads use only horizontal and vertical straight segments',()=>{
@@ -84,6 +103,7 @@ test('the belltower rear contact keeps Hizuki above its roof edge',()=>{
  assert.ok(Math.min(...rear.map(b=>b[1]))-bell.point[1]<=48,
   'the rear blocker must stop feet before the entire 50px hero enters the opaque roof');
  const roof=rear.find(b=>b[1]<=bell.point[1]+48);
- assert.ok(roof[0]<=bell.point[0] && roof[0]+roof[2]>=bell.point[0]+300,
+ const width=readFileSync(local('map/'+bell.file)).readUInt32BE(16);
+ assert.ok(roof[0]<=bell.point[0] && roof[0]+roof[2]>=bell.point[0]+width,
   'side contact must also stop outside the roof overhang');
 });

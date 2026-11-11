@@ -1,5 +1,5 @@
 import { makeWalk } from './movement.mjs';
-import { pixelViewport, DEFAULT_CAMERA_ZOOM } from './render.mjs?v=camera-wide';
+import { pixelViewport, DEFAULT_CAMERA_ZOOM, canopyOpacity } from './render.mjs?v=hizuki-scale';
 
 const scene = document.querySelector('#scene');
 const status = document.querySelector('#status');
@@ -16,7 +16,7 @@ const buttons = [...document.querySelectorAll('[data-dir]')];
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 const zoom = DEFAULT_CAMERA_ZOOM;
 const speed = 152;
-const assetVersion = 'native-size-2';
+const assetVersion = 'hizuki-scale';
 
 function image(name) {
   return new Promise((resolve,reject) => {
@@ -52,6 +52,15 @@ async function start() {
   const [tiles,collision,hizuki,decor] = await Promise.all([data.terrain.atlas,'collision.png','hizuki.png','ground-decor.png'].map(image));
   const paths = new Set(data.sprites.flatMap(p => [p.file,p.eave,p.sway].filter(Boolean)));
   const art = new Map(await Promise.all([...paths].map(async name => [name,await image(name)])));
+  const canopyFiles=new Set(data.sprites.filter(s=>s.vegetation && s.vegetation!=='shrub').map(s=>s.file));
+  const canopies=new Map([...canopyFiles].map(file=>{
+    const bitmap=art.get(file);
+    const canvas=document.createElement('canvas');
+    canvas.width=bitmap.width;canvas.height=bitmap.height;
+    const maskContext=canvas.getContext('2d',{willReadFrequently:true});
+    maskContext.drawImage(bitmap,0,0);
+    return [file,maskContext.getImageData(0,0,bitmap.width,bitmap.height)];
+  }));
   const ground = document.createElement('canvas');
   ground.width = width;
   ground.height = height;
@@ -152,7 +161,9 @@ async function start() {
       const [sx,sy]=sprite.point;
       const bitmap=art.get(sprite.file);
       if(sx<right && sx+bitmap.width>left && sy<bottom && sy+bitmap.height>top){
+        context.globalAlpha=canopyOpacity(sprite,x,y,canopies.get(sprite.file));
         drawSprite(sprite);
+        context.globalAlpha=1;
       }
     }
     if(!drewHero) drawHero(column);

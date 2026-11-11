@@ -959,6 +959,160 @@
       "usage": "battle-hero"
     },
     {
+      "id": "enemy-field-oni",
+      "type": "character",
+      "path": "assets/enemies/field-oni.png",
+      "status": "approved",
+      "name": "野の小鬼",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/enemies/redesign-v1/001-field-oni/oni-intact-512.png",
+        "gitBlobSha": "980fc23db59acf497110470fb28b40dd0d90c919"
+      },
+      "usage": "battle-enemy"
+    },
+    {
+      "id": "enemy-tanuki",
+      "type": "character",
+      "path": "assets/enemies/tanuki.png",
+      "status": "approved",
+      "name": "化け狸",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/enemies/redesign-v1/002-tanuki/tanuki-intact-512.png",
+        "gitBlobSha": "ce363f68b69670c89ea3d5ba859c061b0d470724"
+      },
+      "usage": "battle-enemy"
+    },
+    {
+      "id": "enemy-onibi",
+      "type": "character",
+      "path": "assets/enemies/onibi.png",
+      "status": "approved",
+      "name": "鬼火",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/enemies/redesign-v1/003-onibi/onibi-intact-512.png",
+        "gitBlobSha": "066267f52023d06620e09dc4e7d599f2efda091b"
+      },
+      "usage": "battle-enemy"
+    },
+    {
+      "id": "enemy-isoy",
+      "type": "character",
+      "path": "assets/enemies/isoy.png",
+      "status": "approved",
+      "name": "磯妖",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/enemies/redesign-v1/004-isoy/isoy-intact-512.png",
+        "gitBlobSha": "363707b431de540588f7f52000f25b9236264dfb"
+      },
+      "usage": "battle-enemy"
+    },
+    {
+      "id": "enemy-awakurage",
+      "type": "character",
+      "path": "assets/enemies/awakurage.png",
+      "status": "approved",
+      "name": "泡くらげ",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/enemies/redesign-v1/005-awakurage/awakurage-intact-512.png",
+        "gitBlobSha": "d5d6fe72cd7e0850462cec7f9df36a49da2a4b30"
+      },
+      "usage": "battle-enemy"
+    },
+    {
+      "id": "enemy-kodama",
+      "type": "character",
+      "path": "assets/enemies/kodama.png",
+      "status": "approved",
+      "name": "木霊",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/enemies/redesign-v1/006-kodama/kodama-intact-512.png",
+        "gitBlobSha": "397ed4a0b85bfdbb96f2a404545e54b1c7fc56af"
+      },
+      "usage": "battle-enemy"
+    },
+    {
+      "id": "enemy-mayoi-gumo",
+      "type": "character",
+      "path": "assets/enemies/mayoi-gumo.png",
+      "status": "approved",
+      "name": "迷い蜘蛛",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/enemies/redesign-v1/007-mayoi-gumo/mayoi-gumo-intact-512.png",
+        "gitBlobSha": "c4fa5edc4cf9943c7703c3be7ff1cf66939fb26f"
+      },
+      "usage": "battle-enemy"
+    },
+    {
+      "id": "enemy-mizuhebi",
+      "type": "character",
+      "path": "assets/enemies/mizuhebi.png",
+      "status": "approved",
+      "name": "水蛇",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/enemies/redesign-v1/008-mizuhebi/mizuhebi-intact-512.png",
+        "gitBlobSha": "865daf6e1a16d32be388575d47cded0a2bafea90"
+      },
+      "usage": "battle-enemy"
+    },
+    {
+      "id": "enemy-takiwarashi",
+      "type": "character",
+      "path": "assets/enemies/takiwarashi.png",
+      "status": "approved",
+      "name": "滝童",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/enemies/redesign-v1/009-takiwarashi/takiwarashi-intact-512.png",
+        "gitBlobSha": "96ba1c2f19d243257d09669246981a59aa91a171"
+      },
+      "usage": "battle-enemy"
+    },
+    {
+      "id": "enemy-youko",
+      "type": "character",
+      "path": "assets/enemies/youko.png",
+      "status": "approved",
+      "name": "妖狐",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/enemies/redesign-v1/010-youko/youko-intact-512.png",
+        "gitBlobSha": "737fe6c1d326b21f31de69651b27abad85744a32"
+      },
+      "usage": "battle-enemy"
+    },
+    {
+      "id": "enemy-kagekyubi",
+      "type": "character",
+      "path": "assets/enemies/kagekyubi.png",
+      "status": "approved",
+      "name": "影九尾",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/enemies/redesign-v1/011-kagekyubi/kagekyubi-intact-512.png",
+        "gitBlobSha": "b68e670c88f6923a6772b0d3993f091d88cd85db"
+      },
+      "usage": "battle-enemy"
+    },
+    {
       "id": "chief-walk-4dir-80x112",
       "type": "character",
       "path": "assets/characters/npc/chief-walk-4dir-80x112.png",

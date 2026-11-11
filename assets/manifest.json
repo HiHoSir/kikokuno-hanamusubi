@@ -960,6 +960,174 @@
         "gitBlobSha": "efb23065c62f9d9526fd9ffcd8a0ed452fd8c358"
       },
       "usage": "hozuki-village-interior-npc"
+    },
+    {
+      "id": "field-forest-crown-64",
+      "type": "object",
+      "path": "assets/field/objects/forest-crown-64.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/forest-crown-v3.png"
+      },
+      "usage": "field-renderer"
+    },
+    {
+      "id": "field-forest-core",
+      "type": "map",
+      "path": "assets/field/terrain/forest-core.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/original-32-v2/forest_core.png"
+      },
+      "usage": "field-renderer"
+    },
+    {
+      "id": "field-forest-corner-bl",
+      "type": "map",
+      "path": "assets/field/terrain/forest-corner-bl.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/original-32-v2/forest_corner_bl.png"
+      },
+      "usage": "field-renderer"
+    },
+    {
+      "id": "field-forest-corner-br",
+      "type": "map",
+      "path": "assets/field/terrain/forest-corner-br.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/original-32-v2/forest_corner_br.png"
+      },
+      "usage": "field-renderer"
+    },
+    {
+      "id": "field-forest-corner-tl",
+      "type": "map",
+      "path": "assets/field/terrain/forest-corner-tl.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/original-32-v2/forest_corner_tl.png"
+      },
+      "usage": "field-renderer"
+    },
+    {
+      "id": "field-forest-corner-tr",
+      "type": "map",
+      "path": "assets/field/terrain/forest-corner-tr.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/original-32-v2/forest_corner_tr.png"
+      },
+      "usage": "field-renderer"
+    },
+    {
+      "id": "field-forest-edge-bottom",
+      "type": "map",
+      "path": "assets/field/terrain/forest-edge-bottom.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/original-32-v2/forest_edge_bottom.png"
+      },
+      "usage": "field-renderer"
+    },
+    {
+      "id": "field-forest-edge-left",
+      "type": "map",
+      "path": "assets/field/terrain/forest-edge-left.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/original-32-v2/forest_edge_left.png"
+      },
+      "usage": "field-renderer"
+    },
+    {
+      "id": "field-forest-edge-right",
+      "type": "map",
+      "path": "assets/field/terrain/forest-edge-right.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/original-32-v2/forest_edge_right.png"
+      },
+      "usage": "field-renderer"
+    },
+    {
+      "id": "field-forest-edge-top",
+      "type": "map",
+      "path": "assets/field/terrain/forest-edge-top.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/original-32-v2/forest_edge_top.png"
+      },
+      "usage": "field-renderer"
+    },
+    {
+      "id": "field-grass-base",
+      "type": "map",
+      "path": "assets/field/terrain/grass-base.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/original-32-v2/grass_base.png"
+      },
+      "usage": "field-renderer"
+    },
+    {
+      "id": "field-cave-entrance-80x64",
+      "type": "object",
+      "path": "assets/field/objects/cave-entrance-80x64.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/places-v1/cave.png"
+      },
+      "usage": "field-renderer"
+    },
+    {
+      "id": "field-torii-64x64",
+      "type": "object",
+      "path": "assets/field/objects/torii-64x64.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/places-v1/torii.png"
+      },
+      "usage": "field-renderer"
+    },
+    {
+      "id": "field-village-112x80",
+      "type": "object",
+      "path": "assets/field/objects/village-112x80.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/places-v1/village.png"
+      },
+      "usage": "field-renderer"
     }
   ],
   "designReferences": [

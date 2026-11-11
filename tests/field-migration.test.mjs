@@ -36,17 +36,19 @@ function loadField() {
 
 const digest = value => createHash('sha256').update(JSON.stringify(value)).digest('hex');
 
-test('the field sky overlay resolves a registered image from the deployed entry', () => {
+test('the field foreground clouds and shadows share a registered moving layer', () => {
   const html = source(entry);
-  assert.match(html, /class="sky-clouds" aria-hidden="true"/);
-  const image = html.match(/url\(["']?([^"'()]*cloud-sky\.png)(?:\?[^"'()]*)?["']?\)/)?.[1];
-  assert.ok(image, 'sky overlay image URL');
+  assert.match(html, /class="field-weather" aria-hidden="true"/);
+  assert.match(html, /class="cloud-track"[^>]*>\s*<div class="cloud-shadows"[^>]*><\/div>\s*<div class="foreground-clouds"[^>]*><\/div>/);
+  const image = html.match(/url\(["']?([^"'()]*cloud-overlay\.png)(?:\?[^"'()]*)?["']?\)/)?.[1];
+  assert.ok(image, 'foreground cloud texture URL');
   const url = new URL(image, entry);
   const path = url.pathname.slice(root.pathname.length);
   const manifest = JSON.parse(source('assets/manifest.json'));
   assert.ok(manifest.assets.some(asset => asset.path === path && asset.type === 'effect'));
   const png = readFileSync(url);
-  assert.deepEqual([png.readUInt32BE(16), png.readUInt32BE(20)], [640, 136]);
+  assert.deepEqual([png.readUInt32BE(16), png.readUInt32BE(20)], [640, 240]);
+  assert.equal(png[25], 6, 'RGBA texture supplies the shadow alpha mask');
 });
 
 test('the field entry loads the original authored map and elevation data', () => {

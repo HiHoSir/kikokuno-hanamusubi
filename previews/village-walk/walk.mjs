@@ -1,5 +1,5 @@
 import { makeWalk } from './movement.mjs';
-import { pixelViewport, DEFAULT_CAMERA_ZOOM, canopyOpacity } from './render.mjs?v=hizuki-scale';
+import { pixelViewport, DEFAULT_CAMERA_ZOOM, canopyOpacity, riverRipples, paintRiverRipples } from './render.mjs?v=village-river-flow';
 
 const scene = document.querySelector('#scene');
 const status = document.querySelector('#status');
@@ -66,7 +66,7 @@ async function start() {
   ground.height = height;
   const tileContext = ground.getContext('2d', {alpha:false});
   tileContext.imageSmoothingEnabled=false;
-  for(const layer of data.terrain.layers){
+  function drawTerrainLayer(target, layer, offsetY=0) {
     const [left,top] = layer.origin;
     const {columns,cellPx} = layer;
     layer.cells.forEach((tile,index)=>{
@@ -74,13 +74,53 @@ async function start() {
       const [sx,sy] = data.terrain.tiles[tile];
       const x = left + index%columns*cellPx;
       const y = top + Math.floor(index/columns)*cellPx;
-      tileContext.drawImage(tiles,sx,sy,cellPx,cellPx,x,y,cellPx,cellPx);
+      target.drawImage(tiles,sx,sy,cellPx,cellPx,x,y+offsetY,cellPx,cellPx);
     });
   }
-  const houses = data.sprites.filter(sprite => sprite.eave);
-  for(const [index,x,y,w,h] of data.groundDecor){
-    tileContext.drawImage(decor,index%8*32,Math.floor(index/8)*32,w,h,x,y,w,h);
+
+  const {top:riverTop,height:riverHeight} = data.river;
+  const riverBottom = riverTop + riverHeight;
+  const riverLayer = data.terrain.layers.find(layer => layer.name === 'river');
+  const bridgeLayer = data.terrain.layers.find(layer => layer.name === 'bridge');
+  const ripples = riverRipples(width, riverHeight, riverLayer.cellPx);
+  const riverCover = document.createElement('canvas');
+  riverCover.width = width;
+  riverCover.height = riverHeight;
+  const riverContext = riverCover.getContext('2d');
+  riverContext.imageSmoothingEnabled = false;
+
+  for(const layer of data.terrain.layers){
+    if(layer !== riverLayer && layer !== bridgeLayer) drawTerrainLayer(tileContext, layer);
   }
+  // Reuse the river tile alpha for its shoreline, and replace its repeated surface pattern.
+  drawTerrainLayer(riverContext, riverLayer, -riverTop);
+  riverContext.globalCompositeOperation = 'source-in';
+  riverContext.fillStyle = '#1c73ca';
+  riverContext.fillRect(0, 0, width, riverHeight);
+  riverContext.globalCompositeOperation = 'source-atop';
+  riverContext.fillStyle = '#1e77cd';
+  riverContext.fillRect(0, riverLayer.cellPx, width, riverHeight - 2 * riverLayer.cellPx);
+  tileContext.drawImage(riverCover, 0, riverTop);
+  riverContext.globalCompositeOperation = 'source-over';
+  riverContext.clearRect(0, 0, width, riverHeight);
+
+  function drawGroundDetails(target, offsetY=0) {
+    drawTerrainLayer(target, bridgeLayer, offsetY);
+    for(const [index,x,y,w,h] of data.groundDecor){
+      target.drawImage(decor,index%8*32,Math.floor(index/8)*32,w,h,x,y+offsetY,w,h);
+    }
+  }
+  // The bridge and shore details render above the water, including any parts within the band.
+  tileContext.save();
+  tileContext.beginPath();
+  tileContext.rect(0, 0, width, riverTop);
+  tileContext.rect(0, riverBottom, width, height - riverBottom);
+  tileContext.clip();
+  drawGroundDetails(tileContext);
+  tileContext.restore();
+  drawGroundDetails(riverContext, -riverTop);
+
+  const houses = data.sprites.filter(sprite => sprite.eave);
   const overlay = document.createElement('canvas');
   overlay.width = width;
   overlay.height = height;
@@ -150,6 +190,10 @@ async function start() {
     context.drawImage(ground,0,0);
     const right=left+viewportWidth;
     const bottom=top+viewportHeight;
+    if(top < riverBottom && bottom > riverTop) {
+      paintRiverRipples(context, ripples, width, riverTop, left, right, reducedMotion.matches ? 0 : time);
+      context.drawImage(riverCover, 0, riverTop);
+    }
     const stride=[1,0,2,0];
     const column=moving?stride[Math.floor(distance/14)%stride.length]:0;
     let drewHero=false;

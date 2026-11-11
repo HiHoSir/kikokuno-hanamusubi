@@ -52,7 +52,29 @@ test('native tree canopies leave the house entrances and their approach clear',(
 test('road corners retain subcell silhouettes instead of 16px stair steps',()=>{
  assert.equal(data.terrain.roadShape,'pixel-contour');
 });
-const {pixelViewport,canopyOpacity} = await import(local('render.mjs'));
+const {pixelViewport,canopyOpacity,riverRipples,riverRippleX,paintRiverRipples} = await import(local('render.mjs'));
+test('river ripples move downstream at different speeds on a four-pixel pitch', () => {
+ const width=data.bounds[2], {top,height}=data.river;
+ const margin=data.terrain.layers.find(layer=>layer.name==='river').cellPx;
+ const ripples=riverRipples(width,height,margin);
+ assert.deepEqual(ripples,riverRipples(width,height,margin));
+ assert.ok(new Set(ripples.map(ripple=>ripple.speed)).size>1);
+ assert.ok(new Set(ripples.map(ripple=>ripple.length)).size>1);
+ const ripple=ripples.find(candidate=>candidate.x<width-100);
+ const start=riverRippleX(ripple,width,0);
+ assert.equal(start,ripple.x);
+ assert.ok(riverRippleX(ripple,width,1000)>start);
+ assert.equal(riverRippleX({...ripple,x:width+28,speed:16},width,250),-32);
+ const rects=[];
+ const context={fillRect(...rect){rects.push(rect);}};
+ paintRiverRipples(context,ripples,width,top,0,width,1000);
+ assert.ok(rects.length>0);
+ for(const [x,y,w,h] of rects) {
+  assert.ok(x%4===0 && (y-top)%4===0 && w%4===0);
+  assert.equal(h,4);
+  assert.ok(y>=top+margin && y+h<=top+height-margin);
+ }
+});
 test('an opaque canopy lets Hizuki remain visible when walking behind it',()=>{
  const tree={point:[100,150],depth:440};
  const mask={width:8,height:100,data:new Uint8ClampedArray(8*100*4)};

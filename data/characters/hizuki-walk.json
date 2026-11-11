@@ -10,10 +10,10 @@
     "sd": {
       "assetId": "hizuki-walk-sd",
       "path": "assets/characters/hizuki/walk-sd-32.png",
-      "sourceOriginalPath": "assets/characters/hizuki/field-sd-v3/walk-atlas-32.png",
-      "gitBlobSha": "ca625f073cba37b1681a2633220b34f65848772e",
+      "sourceOriginalPath": "hizuki-field-walk-32.png",
+      "gitBlobSha": "e044a0a70e44b0cd682ddc2b39c779b0e60ba777",
       "editorPath": "source-assets/characters/hizuki/walk-sd-editor.json",
-      "editorGitBlobSha": "f6d228be64910c80ad4401349c75a33f36fda71e",
+      "editorGitBlobSha": "96edaf10aec0edc89c13d52f2387f02a78161180",
       "atlasPx": [
         96,
         128
@@ -38,12 +38,21 @@
         0,
         2
       ],
-      "legacyRuntimeNote": "Field hero() uses stable row-specific visible bounds, 28px nominal silhouette and an independently calculated foot; village draws the same atlas with the map renderer. Do not infer collision from alpha.",
       "editorRowOrder": [
         "front",
         "back",
         "left",
         "right"
+      ],
+      "footAnchorPx": [
+        16,
+        30
+      ],
+      "neutralVisibleHeightPxByRow": [
+        24,
+        24,
+        23,
+        23
       ]
     },
     "4dir-80x112": {
@@ -91,6 +100,6 @@
   },
   "sourceRepository": "HiHoSir/yaksha-hanamusubi",
   "sourceCommit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
-  "runtimeIntegration": "NOT_YET_MIGRATED",
-  "remark": "This describes two purposeful area-selectable sprite styles, not an obsolete/new pair. No game renderer was moved."
+  "runtimeIntegration": "FIELD",
+  "remark": "The field renderer loads the SD atlas from its registered path. The 80×112 atlas is the village default in this specification."
 }

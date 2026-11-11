@@ -1,4 +1,4 @@
-import {contact, createFieldRenderer, fieldStep, loadFieldArt, villageArrival, world} from './runtime.mjs?v=26136fe';
+import {contact, createFieldRenderer, fieldStep, loadFieldArt, villageArrival, world} from './runtime.mjs?v=e044a0a';
 
 const scene = document.querySelector('#scene');
 const load = document.querySelector('#load');

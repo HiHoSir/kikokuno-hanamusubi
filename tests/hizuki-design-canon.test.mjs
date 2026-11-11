@@ -42,12 +42,12 @@ test('design references are the actual registered contemporary game images, not 
   assert.deepEqual(spec.defaultForArea, {field:'sd', village:'4dir-80x112'});
 });
 
-test('design rules preserve distinct cell metrics and no false game integration', () => {
+test('design rules preserve distinct cell metrics and identify field integration', () => {
   const canon = textFile('docs/characters/HIZUKI_CANON.md');
   const skill = textFile('.agents/skills/hizuki-character/SKILL.md');
   assert.equal(spec.movementGridPx, 32);
   assert.deepEqual(spec.variants['4dir-80x112'].footAnchorPx, [40,106]);
-  assert.equal(spec.runtimeIntegration, 'NOT_YET_MIGRATED');
+  assert.equal(spec.runtimeIntegration, 'FIELD');
   assert.ok(canon.includes('意図的'));
   assert.ok(skill.includes('ユーザーの意図した歩行上下動'));
   assert.ok(skill.includes('刀なし・両腕を開く'));

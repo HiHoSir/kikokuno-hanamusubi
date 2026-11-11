@@ -24,7 +24,7 @@ test('two explicit area-default styles with the same 32px movement grid', () => 
   assert.equal(spec.movementGridPx, 32);
   assert.deepEqual(spec.defaultForArea, { field: 'sd', village: '4dir-80x112' });
   assert.deepEqual(Object.keys(spec.variants).sort(), ['4dir-80x112', 'sd']);
-  assert.equal(spec.runtimeIntegration, 'NOT_YET_MIGRATED');
+  assert.equal(spec.runtimeIntegration, 'FIELD');
 });
 
 test('manifest links both production sprites without duplicate IDs or paths', () => {
@@ -45,7 +45,7 @@ test('manifest links both production sprites without duplicate IDs or paths', ()
   assert.equal(manifest.assets.find(item => item.id === spec.variants.sd.assetId).sourcePath, spec.variants.sd.editorPath);
 });
 
-test('imported RGBA atlases are unchanged bytes with exactly 3 columns and 4 rows', () => {
+test('registered RGBA atlases match their recorded bytes with exactly 3 columns and 4 rows', () => {
   for (const variant of Object.values(spec.variants)) {
     const img = imageInfo(variant.path);
     assert.deepEqual([img.width, img.height], variant.atlasPx);
@@ -60,7 +60,7 @@ test('imported RGBA atlases are unchanged bytes with exactly 3 columns and 4 row
   }
 });
 
-test('SD editor preserves all 12 original 32px RGBA frames', () => {
+test('SD editor holds all 12 current 32px RGBA frames', () => {
   const v = spec.variants.sd;
   const raw = bytes(v.editorPath);
   assert.equal(gitSha(raw), v.editorGitBlobSha);

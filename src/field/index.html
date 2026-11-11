@@ -15,6 +15,27 @@ h1{font-size:17px;margin:0}
 output{font-size:12px;color:#dbdec6;text-align:right}
 .viewport{position:relative;display:grid;place-items:center;overflow:hidden;border:1px solid #73785c;border-radius:8px;background:#243322}
 canvas{display:block;width:100%;height:100%;object-fit:contain;image-rendering:pixelated;touch-action:none}
+.sky-clouds{display:none}
+@supports (width:1cqw) and (mask-image:linear-gradient(black,transparent)){
+ .viewport{container-type:size}
+ /* The square canvas is centered with object-fit:contain. Its sky starts at 32/768
+    and spans 136×1.2/768 of the fitted square, including the fade into the horizon. */
+ .sky-clouds{
+  --scene-size:min(100cqw,100cqh);
+  display:block;position:absolute;pointer-events:none;overflow:hidden;
+  left:50%;top:calc(50% - var(--scene-size) * .4583333333);
+  width:var(--scene-size);height:calc(var(--scene-size) * .2125);
+  transform:translateX(-50%);
+  mask-image:linear-gradient(black 76%,transparent);
+ }
+ .sky-clouds::before{
+  content:"";position:absolute;inset:0 auto 0 0;width:200%;image-rendering:pixelated;
+  background:url("../../assets/field/effects/cloud-sky.png?v=e64806a") repeat-x 0 0 / 50% 100%;
+  animation:cloud-drift 58s linear infinite;
+ }
+ @keyframes cloud-drift{to{transform:translateX(-50%)}}
+ @media(prefers-reduced-motion:reduce){.sky-clouds::before{animation:none}}
+}
 .dpad{display:grid;grid-template-columns:repeat(3,47px);grid-template-rows:repeat(2,42px);gap:3px;justify-self:center}
 button{border:1px solid #777d62;border-radius:8px;background:#314337;color:inherit;font:19px system-ui;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 button.held{background:#e8cc8b;color:#272d22}
@@ -35,7 +56,9 @@ button.held{background:#e8cc8b;color:#272d22}
 <main>
 <header><h1>フィールドの歩行検査</h1><output id="status">鬼灯村の南口</output></header>
 <section class="viewport" aria-label="フィールド">
-<canvas id="scene" width="768" height="768"></canvas><p id="load">フィールドを読み込んでいます</p>
+<canvas id="scene" width="768" height="768"></canvas>
+<div class="sky-clouds" aria-hidden="true"></div>
+<p id="load">フィールドを読み込んでいます</p>
 </section>
 <section class="dpad" aria-label="方向ボタン">
 <button type="button" data-dir="up" aria-label="上">▲</button>

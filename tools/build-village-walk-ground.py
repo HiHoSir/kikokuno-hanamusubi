@@ -45,7 +45,7 @@ def build(root=ROOT/'previews/village-walk'):
   tile.alpha_composite(piece.transpose(Image.Transpose.FLIP_LEFT_RIGHT),(0,0))
   tile.alpha_composite(piece,(16,0))
   right_x,right_y,*_=tiles[bridgeTiles[row*2+1]]
-  atlas.paste(piece.crop((14,0,16,32)),(right_x,right_y))
+  atlas.paste(piece.crop((12,0,16,32)),(right_x,right_y))
   x=256+row*32
   atlas.alpha_composite(tile,(x,0));centers.append(len(tiles));tiles.append([x,0,32])
  fields=[l for l in s['terrain']['layers'] if l['name']=='field'];grass=next(l for l in s['terrain']['layers'] if l['name']=='grass')

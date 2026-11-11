@@ -908,6 +908,58 @@
         "gitBlobSha": "9dfec7fd16a270dc8e12c9084dc7f62226c931cb"
       },
       "usage": "hozuki-village-npc"
+    },
+    {
+      "id": "shop-clerk-walk-4dir-80x112",
+      "type": "character",
+      "path": "assets/characters/npc/shop-clerk-walk-4dir-80x112.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "commit": "a5e62b83cf875be37c3560d10c07ee546cd26b72",
+        "path": "docs/characters/hozuki-npc/sprites/npc-shop-clerk-walk.png",
+        "gitBlobSha": "664cb123199078be3314774aacdf5d146d191222"
+      },
+      "usage": "hozuki-village-interior-npc"
+    },
+    {
+      "id": "farm-worker-walk-4dir-80x112",
+      "type": "character",
+      "path": "assets/characters/npc/farm-worker-walk-4dir-80x112.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "commit": "a5e62b83cf875be37c3560d10c07ee546cd26b72",
+        "path": "docs/characters/hozuki-npc/sprites/npc-farm-worker-walk.png",
+        "gitBlobSha": "022fa6057a19a69aa38603e44a44b2e497bd876d"
+      },
+      "usage": "hozuki-village-interior-npc"
+    },
+    {
+      "id": "villager-walk-4dir-80x112",
+      "type": "character",
+      "path": "assets/characters/npc/villager-walk-4dir-80x112.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "commit": "a5e62b83cf875be37c3560d10c07ee546cd26b72",
+        "path": "docs/characters/hozuki-npc/sprites/npc-villager-walk.png",
+        "gitBlobSha": "5bf33dd8e55496134cff809ff4059f3a9f27e19f"
+      },
+      "usage": "hozuki-village-interior-npc"
+    },
+    {
+      "id": "elder-walk-4dir-80x112",
+      "type": "character",
+      "path": "assets/characters/npc/elder-walk-4dir-80x112.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "commit": "a5e62b83cf875be37c3560d10c07ee546cd26b72",
+        "path": "docs/characters/hozuki-npc/sprites/npc-elder-walk.png",
+        "gitBlobSha": "efb23065c62f9d9526fd9ffcd8a0ed452fd8c358"
+      },
+      "usage": "hozuki-village-interior-npc"
     }
   ],
   "designReferences": [

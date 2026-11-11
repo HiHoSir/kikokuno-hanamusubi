@@ -1,11 +1,13 @@
-# 鬼灯村のマップ制作・歩行検査で得た知見
+# 鬼灯村の制作手順と再現方法
 
-第1作『鬼哭の花結び』の屋外・室内プレビューをもとに、次の村や建物で使う判断基準をまとめる。建物単体の透過素材・軒下・裏回りは[鬼灯村の建物制作・歩行検査](../.agents/skills/build-hozuki-village/SKILL.md)に従う。
+第1作『鬼哭の花結び』の鬼灯村を、素材・配置データ・歩行検査ページごと再現する手順。建物単体の透過素材、軒下、裏回りは[鬼灯村の制作・歩行検査](../.agents/skills/build-hozuki-village/SKILL.md)を参照する。
+
+[NPCの制作と採用](#npcの制作と採用) · [室内のNPCと小物](#室内のnpcと小物) · [歩行と入退場](#歩行と入退場) · [固定版を再現する](#固定版を再現する)
 
 ## 着手前に揃えるもの
 
 1. 参照絵から使う要素を明記する。俯瞰図は全体像と雰囲気、実ゲームの画面は視点・絵柄の基準として使う。寸法は採用中の歩行キャラを実寸で並べ、入口・段差・家具など、人が使う箇所から決める。
-2. ワールドでの物の寸法、ドットの粒、移動・配置の格子、カメラ倍率を分けて記録する。鬼灯村の検査例では緋月のコマは80×112pxで、足元はコマ内の (40, 106)、可視高は約100px。絵柄合わせはおおむねワールド4pxの粒、カメラは0.5倍。これらはこの試作で確認した値。新規マップでは現行の移動方式と採用キャラで決める。
+2. ワールドでの物の寸法、ドットの粒、移動・配置の格子、カメラ倍率を分けて記録する。鬼灯村の検査版では緋月のコマは80×112px、足元はコマ内の (40, 106)、可視高は約100px。家具・床・建具はワールド4px単位を基準とし、NPCシートの書き出しは2px単位、カメラは0.5倍。新しいマップの値は移動方式と採用キャラに合わせて決める。
 3. 道の接続、入口と退出先、家具や幹の接地面、手前に重ねる絵を先に定義する。素材は原寸で描き、縮尺が合わない素材は入出力寸法を見直す。見える範囲はシーン全体のカメラで調整する。
 
 ## 屋外で手戻りを減らす
@@ -27,26 +29,68 @@
 - 床板は板幅と長さを変え、隣の列と継ぎ目をずらす。部屋ごとの模様を再描画のたびに変えず、同じ位置で前後比較できるようにする。茶店の客席、宿の帳場と客間、農家の土間と畳の境を並べると、床面の違和感を見つけやすい。
 - 屋外の入口から入り、家具の前後や仕切りを回って、入った棟の前へ戻る。単独の室内検査で開く部屋と屋外に対応する建物がある部屋を区別し、建物IDが異なる場合もそれぞれの入口へ復帰することを確かめる。
 
+## NPCの制作と採用
+
+1. 既存の歩行シートと採用台帳から使える役柄を探す。里長・さとこ・お澄の外見は旧オープニングと旧版の人物資料から確認し、髪型・衣装・色を引き継いで村の絵柄で描き直す。頭身、輪郭の濃さ、顔と服のドットの粒を緋月や既存NPCと同じ画面で比較する。旧版イラストの縮小と輪郭調整だけでは、鬼灯村のNPCと描き込みが揃わなかった。
+2. 透過RGBAのシートは240×448px、1コマは80×112px。行は上から下向き・上向き・右向き・左向き、列は左から待機・歩行A・歩行B。全12コマの足元アンカーを (40, 106) に揃える。歩行では実移動14ワールドpxごとに列 `1 → 0 → 2 → 0` を繰り返し、停止時は列0に戻す。各向きで足が交互に出るか、絵が枠に接触していないかを確認する。
+3. 完成したシートを採用するときは `assets/characters/npc/<役柄>-walk-4dir-80x112.png` に配置し、`assets/manifest.json` にID・用途・承認状態・出典のコミットとBlob SHAを記録する。レビュー版と採用版の画像はGit Blob SHAで照合する。
+
+| 素材ID | 固定版での配置 |
+| --- | --- |
+| `chief` | 里長。鐘撞堂へ向かう道の脇で待機 |
+| `satoko` | さとこ。短い四角形のルートを巡回 |
+| `osumi` | お澄。民家側の道沿いを往復 |
+| `shop-clerk` | 茶店・物販店・宿・兵具屋の共通店番 |
+| `farm-worker`、`villager`、`elder` | 農家・家族の民家・仕事場のある民家の住人に順に使用 |
+| `child`、`bell-keeper` | レビュー用シートまで作成。歩行検査版への配置待ち |
+
+屋外のNPCの足元、巡回点、速さ、会話は `map/residents.json` に置く。巡回路は水平・垂直の短い区間でつなぎ、各区間を歩行可能な範囲に置く。足元を描画順の基準とし、衝突は緋月8px・NPC11pxの半径で判定する。会話中は移動を止め、相手を緋月の方へ向ける。
+
+旧オープニング映像はそのまま使う方針。人物の外見資料、映像本体、映像後の里長イベントと音声クレジットは[NPCレビュー版の参照先](https://github.com/HiHoSir/kikokuno-hanamusubi/blob/a5e62b83cf875be37c3560d10c07ee546cd26b72/docs/characters/hozuki-npc/README.md#オープニングに合わせる人物)に記録済み。歩行検査版は会話の表示まで実装済みで、映像再生や物語進行への接続は今後の実装。
+
+## 室内のNPCと小物
+
+- `rooms.mjs` で間取りに住人を割り当てる。4施設は `shop-clerk` の絵を共有し、名前と台詞を施設ごとに定義する。店番はカウンターの接地矩形の奥側に立たせ、客側に会話地点を置く。会話地点の正面に立つと「話す」が出る。物販店と兵具屋は室内検査の間取りメニューで確認する。
+- 家具の絵と床の占有矩形をそれぞれ持ち、NPCや緋月の足元のY座標と家具の接地面で描画順を決める。NPCの追加後に、入口から家具の間を通って会話地点・目的地点・出口まで行けるかを検査する。
+- 宿帳の修正では、`furniture.png` 内の `innCounter` セル（左上248, 528、幅228、高さ140）の天板上で、開いた紙面の幅を88pxから44pxへ調整した。紙面の背後を天板の木色と奥の縁で埋め、元の4pxのドットに合わせて帳面を収めた。修正した範囲はアトラス上で左上 (264, 556)、幅108、高さ44。前後のRGBAを比較し、範囲外が一致することを確認した。再調整時も、カウンターの接地・会話地点と、緋月・店番を並べた見え方を確認する。
+
+## 歩行と入退場
+
+- 緋月の歩行速度は屋外・室内共通で176ワールドpx/秒。変更時は屋外・室内で同じ定数を参照し、歩行コマは実移動距離で進める。衝突時に歩行コマが進み続けないことを確認する。
+- 屋外では `scene.json` の建物ごとに入口矩形 `entrance` と復帰点 `point` を置く。南側から入口幅の内側をまっすぐ歩き、移動後の足元円の先端が入口矩形の手前辺に触れたとき、建物IDを `building` に渡して入場する。横切る、離れる、入口幅の外から歩く場合も試す。
+- `villageRooms` で建物IDから間取りを選ぶ。室内の開始位置は間取り下端から76pxの中央、歩いて出る判定は下端から12pxの戸口。退室時は元の建物IDを `focus` に渡し、入口矩形の手前にある `point` に戻す。外へ戻った位置で停止でき、上を押して再入場できることを確認する。
+
+## 固定版を再現する
+
+| 用途 | 固定コミット |
+| --- | --- |
+| 採用素材と台帳 | [`30bbb82` の `main`](https://github.com/HiHoSir/kikokuno-hanamusubi/tree/30bbb8295708a84c144d2b1b720ba12c2382af14/assets/characters/npc) |
+| NPCの全9種のレビュー素材・歩行仕様 | [`a5e62b8` のレビュー版](https://github.com/HiHoSir/kikokuno-hanamusubi/tree/a5e62b83cf875be37c3560d10c07ee546cd26b72/docs/characters/hozuki-npc) |
+| NPC配置、接触入場、歩行速度、宿帳修正を含む検査版 | [`0dcb937` の `gh-pages`](https://github.com/HiHoSir/kikokuno-hanamusubi/tree/0dcb9372b8538a358324e1131c1ebc1ecaf81a8f/previews) |
+
+再利用時は固定版に含まれるPNGを取り出す。配信URLの `v` は読み込み更新用の値で、内容の固定にはGitのコミットSHAを使う。既存の公開版を変更する場合は、作業開始時に `gh-pages` の先端を確認する。
+
+固定版を別の作業ディレクトリに展開して、Node.js 20以降でテストを実行する。ブラウザー検査は同じディレクトリをHTTPで配信し、リンクを開いて行う。
+
+```sh
+git fetch origin main gh-pages review/hozuki-npc
+git worktree add --detach ../hozuki-replay 0dcb9372b8538a358324e1131c1ebc1ecaf81a8f
+cd ../hozuki-replay
+node --test tests/*.test.mjs
+python3 -m http.server 8000 --bind 127.0.0.1
+```
+
+- [茶店前から始める](http://127.0.0.1:8000/previews/village-walk/?focus=teahouse-northeast) · [宿の室内を開く](http://127.0.0.1:8000/previews/village-interiors/?room=inn)
+- [屋外の配置・入口](https://github.com/HiHoSir/kikokuno-hanamusubi/blob/0dcb9372b8538a358324e1131c1ebc1ecaf81a8f/previews/village-walk/map/scene.json) · [屋外NPCデータ](https://github.com/HiHoSir/kikokuno-hanamusubi/blob/0dcb9372b8538a358324e1131c1ebc1ecaf81a8f/previews/village-walk/map/residents.json) · [間取り・室内NPC](https://github.com/HiHoSir/kikokuno-hanamusubi/blob/0dcb9372b8538a358324e1131c1ebc1ecaf81a8f/previews/village-interiors/rooms.mjs)
+- [地面と衝突PNGを再構築するコード](https://github.com/HiHoSir/kikokuno-hanamusubi/blob/0dcb9372b8538a358324e1131c1ebc1ecaf81a8f/tools/build-village-walk-ground.py) · [屋外素材の寸法と書き出し手順](https://github.com/HiHoSir/kikokuno-hanamusubi/blob/0dcb9372b8538a358324e1131c1ebc1ecaf81a8f/docs/VILLAGE_WALK_REVIEW.md)
+
 ## 検査と引き継ぎ
 
 | 確認すること | 方法 |
-|---|---|
-| 見た目と縮尺 | 同じカメラで変更前後を比較する。全景、緋月と入口が並ぶ画面、画面の狭い縦持ちで確認する。 |
-| 通行・遮蔽 | 判定表示で足元と衝突の境を見て、屋外の全入口・裏道・橋・階段、全室の出口・家具脇・目的地点を検査する。自動検査に加えて前後の見え方を歩いて確認する。 |
-| 配信と実機 | 対象コミットとPagesのHTML・モジュール・変更した素材を照合し、実際に開いて表示・操作を確認する。iPhone Safariでは縦持ちの構図、方向ボタンの長押しと解除、屋内外の往復を確認する。自動検査、公開版ブラウザー、実機、素材採用の結果を個別に記録する。 |
+| --- | --- |
+| 見た目と縮尺 | 同じカメラで緋月・NPC・入口・家具を並べ、全景と縦持ちの構図で確認する。小物の修正は室内全体で比較する。 |
+| 通行・遮蔽 | 判定表示を使い、橋・階段・軒下・裏道・畑の周囲、全入口と全室の出口、家具脇の通路を確認する。正面から入場し、入った棟の前へ戻る。 |
+| NPCと会話 | 屋外で里長・さとこ・お澄、室内で店番と住人に話す。移動停止と再開、家具越しの会話、NPCの脇の通行を確認する。 |
+| 配信と実機 | 公開版のHTML・モジュール・変更素材をコミットの実ファイルと照合する。iPhone Safariでは縦持ち、方向ボタンの長押し・解除、入退場と会話を確認する。 |
 
-### 再現に使える固定版
-
-鬼灯村の屋外と室内が揃った固定版は `5ab767b26de0fdd01958b2ac314d31344daef445`。以下はその検査版のデータと実装へのリンク。
-
-- [歩行検査の寸法・素材の由来・書き出し手順](https://github.com/HiHoSir/kikokuno-hanamusubi/blob/5ab767b26de0fdd01958b2ac314d31344daef445/docs/VILLAGE_WALK_REVIEW.md)
-- [屋外の配置・入口・遮蔽データ](https://github.com/HiHoSir/kikokuno-hanamusubi/blob/5ab767b26de0fdd01958b2ac314d31344daef445/previews/village-walk/map/scene.json) · [地面と衝突PNGの再構築](https://github.com/HiHoSir/kikokuno-hanamusubi/blob/5ab767b26de0fdd01958b2ac314d31344daef445/tools/build-village-walk-ground.py)
-- [室内の間取り・畳・家具・入口対応](https://github.com/HiHoSir/kikokuno-hanamusubi/blob/5ab767b26de0fdd01958b2ac314d31344daef445/previews/village-interiors/rooms.mjs) · [床と建具の描画](https://github.com/HiHoSir/kikokuno-hanamusubi/blob/5ab767b26de0fdd01958b2ac314d31344daef445/previews/village-interiors/room-art.mjs)
-
-固定版の作業ディレクトリで実行する。
-
-```sh
-node --test tests/village-walk-render.test.mjs tests/village-interiors.test.mjs
-```
-
-固定版のNodeテストは全体で41件通過した。続いて走るリポジトリ検査では、配信用の `previews/` の保存先規則でエラーが出た。今回の室内版は試作として確認済みで、本編への素材採用は採用台帳で確認する。
+固定版のNodeテスト46件は通過。採用台帳の検査は `main` で `npm test` を実行する。公開版Chromeでは屋外の3人との会話、茶店と民家の接触入場、茶店から屋外への復帰、茶店・民家での会話、縮小後の宿帳を確認済み。iPhone Safariでの修正後の宿帳と、入退場・会話の実機再検査は確認待ち。

@@ -6,8 +6,8 @@
 - [AGENTS.md](AGENTS.md) — AIの共通ルール
 - [docs/REPOSITORY_POLICY.md](docs/REPOSITORY_POLICY.md) — ディレクトリ、素材台帳、採用手順
 - [.agents/skills/asset-design/SKILL.md](.agents/skills/asset-design/SKILL.md) — 素材生成・加工
-- [鬼灯村の建物制作・歩行検査](.agents/skills/build-hozuki-village/SKILL.md) — 建物素材・配置・通行・遮蔽・iPhone検査
-- [鬼灯村のマップ制作・歩行検査で得た知見](docs/VILLAGE_MAP_WORKFLOW.md) — 屋外と室内の制作判断・再現方法
+- [鬼灯村の制作・歩行検査](.agents/skills/build-hozuki-village/SKILL.md) — 建物・室内・NPC・会話・入退場・iPhone検査
+- [鬼灯村の制作手順と再現方法](docs/VILLAGE_MAP_WORKFLOW.md) — 屋外と室内の実装、素材の規格、固定版と確認手順
 - [assets/manifest.json](assets/manifest.json) — 採用素材の唯一の台帳（移行済み素材を登録）
 
 ## 将来の保存先

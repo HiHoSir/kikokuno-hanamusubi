@@ -8,7 +8,7 @@
 
 ## スキルの唯一の保存先
 - 画像やアセットの生成・編集・変換: `.agents/skills/asset-design/SKILL.md`
-- 鬼灯村の建物・配置・通行・遮蔽・iPhone検査: `.agents/skills/build-hozuki-village/SKILL.md`。この作業の制作手順はリポジトリ内の正本に従い、リポジトリ外のマップ制作スキルを参照しない。
+- 鬼灯村の建物・室内・NPC配置・会話・入退場・iPhone検査: `.agents/skills/build-hozuki-village/SKILL.md`。この作業の制作手順はリポジトリ内の正本に従い、リポジトリ外のマップ制作スキルを参照しない。
 - 地形タイル・小物・NPCの画像制作は `.agents/skills/asset-design/SKILL.md` の該当テンプレートを使う。
 - 緋月のキャラクターデザイン・立ち絵・歩行・戦闘ポーズ: `docs/characters/HIZUKI_CANON.md` と `.agents/skills/hizuki-character/SKILL.md`（asset-design併用）
 - 新規スキル作成前に既存の役割を確認し、重複する場合は既存スキルを修正。新設時はこの一覧を更新。ルート直下に `skills/` を作らない。

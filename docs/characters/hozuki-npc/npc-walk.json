@@ -57,7 +57,8 @@
         "repository": "HiHoSir/yaksha-hanamusubi",
         "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
         "path": "assets/characters/npc-v3/elder.png",
-        "gitBlob": "fffc4d31d3170689e7b40b478d38e7f3464e9f52"
+        "gitBlob": "fffc4d31d3170689e7b40b478d38e7f3464e9f52",
+        "use": "appearance-reference"
       }
     },
     "satoko": {
@@ -67,7 +68,8 @@
         "repository": "HiHoSir/yaksha-hanamusubi",
         "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
         "path": "assets/characters/npc-v3/satoko.png",
-        "gitBlob": "44b1e8af6e978175ef5d6ddbe5b84b4e91a67385"
+        "gitBlob": "44b1e8af6e978175ef5d6ddbe5b84b4e91a67385",
+        "use": "appearance-reference"
       }
     },
     "osumi": {
@@ -77,7 +79,8 @@
         "repository": "HiHoSir/yaksha-hanamusubi",
         "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
         "path": "assets/characters/npc-v3/osumi.png",
-        "gitBlob": "32835d1a357087bb7b03fa4bbf8ca8b891cd7c30"
+        "gitBlob": "32835d1a357087bb7b03fa4bbf8ca8b891cd7c30",
+        "use": "appearance-reference"
       }
     }
   },

@@ -96,6 +96,19 @@ test('roads use only horizontal and vertical straight segments',()=>{
  }
 });
 
+test('bridge tiles span the full bridge and keep the walkway on the boards', () => {
+ const {bridge, walkway, bridgeTiles} = data.river;
+ const layer = data.terrain.layers.find(layer => layer.name === 'bridge');
+ assert.deepEqual(layer.origin, bridge.slice(0, 2));
+ assert.deepEqual([layer.columns * layer.cellPx, layer.rows * layer.cellPx], bridge.slice(2));
+ assert.equal(layer.cells.length, layer.columns * layer.rows);
+ assert.deepEqual(walkway, [bridge[0] + 12, bridge[1], bridge[2] - 24, bridge[3]]);
+ for (const [row, side] of [0, 1, 1, 2].entries()) {
+  assert.equal(layer.cells[row * layer.columns], bridgeTiles[side * 2]);
+  assert.equal(layer.cells[(row + 1) * layer.columns - 1], bridgeTiles[side * 2 + 1]);
+ }
+});
+
 test('the belltower rear contact keeps Hizuki above its roof edge',()=>{
  const bell=data.sprites.find(s=>s.id==='belltower');
  const center=bell.feet[0];

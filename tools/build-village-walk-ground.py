@@ -18,7 +18,7 @@ def build(root=ROOT/'previews/village-walk'):
  s['sprites'].sort(key=lambda p:p['depth'])
  original=Image.open(root/'map/terrain.png').convert('RGBA');atlas=Image.new('RGBA',(512,416));atlas.alpha_composite(original.crop((0,0,256,416)))
  tiles=s['terrain']['tiles'][:baseCount]
- # Add an unscaled central plank column between existing bridge side rails.
+ # Repeat native plank tiles between the existing side pieces.
  bridgeTiles=river['bridgeTiles'];centers=[]
  for row in range(3):
   sx,sy,*_=tiles[bridgeTiles[row*2]];piece=original.crop((sx+16,sy,sx+32,sy+32));tile=Image.new('RGBA',(32,32));tile.alpha_composite(piece,(0,0));tile.alpha_composite(piece,(16,0));x=256+row*32
@@ -52,9 +52,11 @@ def build(root=ROOT/'previews/village-walk'):
   source=0 if row==0 else 5 if row==rows-1 else 1+(row-1)%4
   water.extend([modes[source]]*columns)
  waterLayer={'name':'river','origin':[0,river['top']],'cellPx':16,'columns':columns,'rows':rows,'cells':water}
+ bridgeColumns=river['bridge'][2]//32
  bridge=[]
- for row in [0,1,1,2]:bridge.extend([bridgeTiles[row*2],centers[row],bridgeTiles[row*2+1]])
- bridgeLayer={'name':'bridge','origin':river['bridge'][:2],'cellPx':32,'columns':3,'rows':4,'cells':bridge}
+ for row in [0,1,1,2]:
+  bridge.extend([bridgeTiles[row*2]]+[centers[row]]*(bridgeColumns-2)+[bridgeTiles[row*2+1]])
+ bridgeLayer={'name':'bridge','origin':river['bridge'][:2],'cellPx':32,'columns':bridgeColumns,'rows':4,'cells':bridge}
  s['terrain']['layers']=[grass,roadLayer]+fields+[waterLayer,bridgeLayer]
  collision=Image.new('L',(width,height));c=ImageDraw.Draw(collision)
  c.rectangle((0,0,width-1,height-1),outline=255,width=20)
@@ -66,8 +68,8 @@ def build(root=ROOT/'previews/village-walk'):
   for x,y,w,h in p.get('blockers',[]):c.rectangle((x,y,x+w-1,y+h-1),fill=255)
   if p.get('footprint'):
    x,y,r=p['footprint'];c.ellipse((x-r,y-r,x+r,y+r),fill=255)
-  if p['file']=='sprite-60.png':
+  if p['file']=='sprite-60.png' and not p.get('blockers'):
    x,y=p['point'];c.rectangle((x,p['depth']-3,x+27,p['depth']),fill=255)
  collision.convert('RGB').save(root/'map/collision.png');(root/'map/scene.json').write_text(json.dumps(s,ensure_ascii=False,separators=(',',':')))
- print(f'Built {width}x{height}; {len(new)} road tiles; 80px clear bridge')
+ print(f"Built {width}x{height}; {len(new)} road tiles; {river['walkway'][2]}px clear bridge")
 if __name__=='__main__':build()

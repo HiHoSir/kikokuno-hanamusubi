@@ -3,6 +3,7 @@
 window.YK_ELEVATION_VIEW=(()=>{
  const E=window.YK_ELEVATION;
  const paths=YK_FIELD_ASSETS.landscape;
+ const [heroAnchorX,heroAnchorY]=YK_FIELD_ASSETS.heroFootAnchorPx;
  const sources={grass:paths.grass,sand:paths.sand,snow:paths.snow,rock:paths.barren,grassCliff:paths.grassCliff,sea:paths.water,road:paths.road,horizon:paths.horizon,trees:paths.newTrees,shrine:paths.shrine,hero:YK_FIELD_ASSETS.hero,ladder:paths.ladder};
  async function load(){const pairs=await Promise.all(Object.entries(sources).map(([k,src])=>new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve([k,im]);im.onerror=()=>reject(Error(src));im.src=YK_FIELD_ASSETS.url(src);})));return Object.fromEntries(pairs);}
  const padded=new WeakMap();
@@ -353,8 +354,7 @@ window.YK_ELEVATION_VIEW=(()=>{
    const row={d:0,u:1,r:2,l:3}[actor.dir||'d'],col=row>=2?Math.min(1,actor.frame||0):actor.frame||0;
    // Approved 32px field atlas, one shared projection/foot anchor.
    c.fillStyle='rgba(0,0,0,.24)';c.beginPath();c.ellipse(p.x,p.y,9*p.scale,3*p.scale,0,0,Math.PI*2);c.fill();
-   const bounds=heroBounds(art.hero,row,col),scale=28/bounds.height*p.scale;
-   c.drawImage(art.hero,col*32,row*32,32,32,p.x-(bounds.left+bounds.width/2)*scale,p.y-(bounds.bottom+1)*scale,32*scale,32*scale);
+   c.drawImage(art.hero,col*32,row*32,32,32,p.x-heroAnchorX*p.scale,p.y-heroAnchorY*p.scale,32*p.scale,32*p.scale);
   }});
   items.sort((a,b)=>a.depth-b.depth||a.order-b.order);for(const item of items)item.draw();
   // Diagnostic only: draw projected face polygons AFTER all depth sorting.
@@ -378,14 +378,6 @@ window.YK_ELEVATION_VIEW=(()=>{
    const p=E.outline(m,tx,ty).polygon.map(([u,v])=>point(tx*32+u,ty*32+v,E.level(m,tx,ty,u/32,v/32)));if(!p.every(Boolean))continue;
    c.strokeStyle='rgba(255,255,255,.25)';c.beginPath();p.forEach((v,i)=>i?c.lineTo(v.x,v.y):c.moveTo(v.x,v.y));c.closePath();c.stroke();
   }}c.restore();return {point};
- }
- const heroCache=new WeakMap();
- function heroBounds(im,row,col){
-  if(!heroCache.has(im))heroCache.set(im,new Map());const cache=heroCache.get(im),key=row+','+col;if(cache.has(key))return cache.get(key);
-  const tile=document.createElement('canvas');tile.width=tile.height=32;const q=tile.getContext('2d');q.drawImage(im,col*32,row*32,32,32,0,0,32,32);
-  const data=q.getImageData(0,0,32,32).data;let left=31,right=0,top=31,bottom=0;
-  for(let y=0;y<32;y++)for(let x=0;x<32;x++)if(data[(y*32+x)*4+3]>20){left=Math.min(left,x);right=Math.max(right,x);top=Math.min(top,y);bottom=Math.max(bottom,y);}
-  const bounds={left,bottom,width:right-left+1,height:bottom-top+1};cache.set(key,bounds);return bounds;
  }
  return {load,render,sources};
 })();

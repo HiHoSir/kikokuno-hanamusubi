@@ -850,12 +850,11 @@
       "status": "approved",
       "sourcePath": "source-assets/characters/hizuki/walk-sd-editor.json",
       "origin": {
-        "repo": "HiHoSir/yaksha-hanamusubi",
-        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
-        "path": "assets/characters/hizuki/field-sd-v3/walk-atlas-32.png",
-        "gitBlobSha": "ca625f073cba37b1681a2633220b34f65848772e"
+        "path": "hizuki-field-walk-32.png",
+        "libraryFileId": "libfile_ae69516025c08191b2c39619a036d019",
+        "gitBlobSha": "e044a0a70e44b0cd682ddc2b39c779b0e60ba777"
       },
-      "usage": "field-default;village-selectable"
+      "usage": "field-default"
     },
     {
       "id": "hizuki-walk-4dir-80x112",

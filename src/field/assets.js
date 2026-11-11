@@ -58,5 +58,9 @@ window.YK_FIELD_ASSETS = (() => {
   forest_corner_br: 'assets/field/terrain/forest-corner-br.png',
   crown: 'assets/field/objects/forest-crown-64.png',
  };
- return {url, landscape, autotile, hero: 'assets/characters/hizuki/walk-sd-32.png'};
+ return {
+  url, landscape, autotile,
+  hero: 'assets/characters/hizuki/walk-sd-32.png',
+  heroFootAnchorPx: [16, 30],
+ };
 })();

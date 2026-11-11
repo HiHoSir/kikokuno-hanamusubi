@@ -57,30 +57,11 @@ export function fieldStep(state, dx, dy, at) {
 }
 
 export function createFieldRenderer(context, hero) {
-  const boundsCanvas = document.createElement('canvas');
-  boundsCanvas.width = boundsCanvas.height = 32;
-  const boundsContext = boundsCanvas.getContext('2d', {willReadFrequently: true});
-  // Source game.js uses the neutral frame's opaque bounds for every step in that direction.
-  const bounds = Array.from({length: 4}, (_, row) => {
-    boundsContext.clearRect(0, 0, 32, 32);
-    boundsContext.drawImage(hero, 0, row * 32, 32, 32, 0, 0, 32, 32);
-    const {data} = boundsContext.getImageData(0, 0, 32, 32);
-    let left = 32, right = -1, top = 32, bottom = -1;
-    for (let y = 0; y < 32; y++) for (let x = 0; x < 32; x++) {
-      if (data[(y * 32 + x) * 4 + 3] < 32) continue;
-      left = Math.min(left, x);
-      right = Math.max(right, x);
-      top = Math.min(top, y);
-      bottom = Math.max(bottom, y);
-    }
-    return {left, width: right - left + 1, bottom, height: bottom - top + 1};
-  });
+  const [anchorX, anchorY] = assets.heroFootAnchorPx;
 
   function drawHero(px, py, projection, row, column) {
-    const neutral = bounds[row];
     const z = .56 * projection;
     const foot = py + (14 - 9 * .56) * projection + 9 * z;
-    const scale = (28 / neutral.height) * (z / .56);
     context.save();
     context.imageSmoothingEnabled = false;
     context.save();
@@ -91,7 +72,7 @@ export function createFieldRenderer(context, hero) {
     context.fill();
     context.restore();
     context.drawImage(hero, column * 32, row * 32, 32, 32,
-      px - (neutral.left + neutral.width / 2) * scale, foot - (neutral.bottom + 1) * scale, 32 * scale, 32 * scale);
+      px - anchorX * projection, foot - anchorY * projection, 32 * projection, 32 * projection);
     context.restore();
   }
 

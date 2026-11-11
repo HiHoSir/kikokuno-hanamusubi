@@ -65,11 +65,11 @@ test('the field projection and image loader retain the original perspective and 
   assert.equal(camera.position({x: x + 32, y}, {x, y, at: 1000, duration: 192}, 1096).x, x + 16);
 });
 
-test('village arrival and entry use the copied map contact cells and 32px movement', async () => {
+test('field movement retains the 32px grid and projects the SD from its foot anchor', async () => {
   const context = loadField();
   globalThis.window = context;
   try {
-    const {contact, fieldStep, villageArrival, world} = await import('../src/field/runtime.mjs');
+    const {contact, createFieldRenderer, fieldStep, villageArrival, world} = await import('../src/field/runtime.mjs');
     const [x, y] = villageArrival();
     assert.equal(x % 32, 16);
     assert.equal(y % 32, 16);
@@ -82,6 +82,21 @@ test('village arrival and entry use the copied map contact cells and 32px moveme
     assert.equal(Math.abs(entry.x - x) + Math.abs(entry.y - y), 32);
     assert.equal(entry.motion.duration, 192);
     assert.equal(fieldStep({x: 16, y: 16}, -1, 0, 1000), null);
+    const spec = JSON.parse(source('data/characters/hizuki-walk.json'));
+    const sprite = spec.variants[spec.defaultForArea.field];
+    assert.equal(context.YK_FIELD_ASSETS.hero, sprite.path);
+    assert.deepEqual([...context.YK_FIELD_ASSETS.heroFootAnchorPx], sprite.footAnchorPx);
+
+    const hero = {};
+    const draws = [];
+    const canvas = {
+      save() {}, restore() {}, clearRect() {}, fillRect() {}, translate() {}, scale() {},
+      beginPath() {}, ellipse() {}, fill() {}, drawImage: (...args) => draws.push(args),
+    };
+    context.YK_LANDSCAPE.drawQuarter = (_canvas, _map, actor) => actor.draw(100, 200, 0.75);
+    createFieldRenderer(canvas, hero)({x, y, row: 2, column: 1}, 0);
+    assert.deepEqual(draws, [[hero, 32, 64, 32, 32, 88, 188, 24, 24]]);
+
   } finally {
     delete globalThis.window;
   }

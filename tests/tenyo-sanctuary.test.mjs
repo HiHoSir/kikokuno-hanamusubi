@@ -162,7 +162,7 @@ test('Shirotae and both shrine guards share village-scale transparent atlas conv
     assert.equal(bytes.readUInt32BE(16),240,'3 frames each 80 pixels wide');
     assert.equal(bytes.readUInt32BE(20),448,'4 directions each 112 pixels tall');
     assert.ok(bytes.indexOf(Buffer.from('tRNS'))!==-1,'must have transparent PNG palette');
-    const gitSha=createHash('sha1').update('blob '+bytes.length+'\\0').update(bytes).digest('hex');
+    const gitSha=createHash('sha1').update('blob '+bytes.length).update(Buffer.from([0])).update(bytes).digest('hex');
     assert.equal(gitSha,record.gitBlobSha,'manifest must identify exactly the approved PNG');
   }
   assert.equal(C.byId.sanctuary_npc_shirotae.src,white);

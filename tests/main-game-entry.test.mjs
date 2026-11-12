@@ -94,3 +94,28 @@ test('immersive gameplay fills the viewport and prevents game text selection',()
  assert.equal(webmanifest.start_url,'../../');
  assert.equal(webmanifest.scope,'../../');
 });
+
+test('village entry evaluates the quest objective before loading map assets',()=>{
+ // Syntax checks alone cannot detect an unbound story helper used at module
+ // top level. Exercise actual ESM linking/evaluation with a minimal DOM.
+ const script = `
+   const objective={textContent:''};
+   const nodes={
+     '#scene':{getContext(){return {};}},
+     '#status':{textContent:''},
+     '#load':{hidden:false,textContent:''},
+     '#objective':objective,
+   };
+   globalThis.document={
+     querySelector: selector=>nodes[selector]??null,
+     querySelectorAll: ()=>[],
+   };
+   globalThis.matchMedia=()=>({matches:false});
+   globalThis.localStorage={getItem:()=>null,setItem:()=>{}};
+   globalThis.fetch=()=>new Promise(()=>{});
+   await import('./src/game/village/walk.mjs');
+   if(objective.textContent!=='里長の話を聞こう')
+     throw new Error('村の初期目標が設定されませんでした: '+objective.textContent);
+ `;
+ execFileSync(process.execPath,['--input-type=module','-e',script],{timeout:10000,stdio:'pipe'});
+});

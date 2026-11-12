@@ -86,7 +86,7 @@ async function start() {
   document.querySelector('#action-a').addEventListener('click',()=>{
     if(contact(state.x,state.y)==='village') {
       clearInput();
-      location.assign(new URL('../game/village/?focus=field-exit',import.meta.url));
+      location.assign(new URL('../game/village/?focus=field-exit',location.href));
     }
   });
   document.querySelector('#action-b').disabled=true;

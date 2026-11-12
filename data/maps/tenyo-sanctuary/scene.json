@@ -5202,7 +5202,7 @@
       ],
       "destination": "field"
     },
-    "hero": "assets/characters/hizuki/walk-sd-32.png",
+    "hero": "assets/characters/hizuki/walk-4dir-80x112.png",
     "residents": [
       {
         "id": "shirotae",
@@ -5212,7 +5212,7 @@
           8
         ],
         "face": 0,
-        "asset": "assets/characters/npc/shirotae-walk-4dir-32.png",
+        "asset": "assets/characters/npc/shirotae-walk-4dir-80x112.png",
         "dialogue": {
           "chief": [
             "白妙「村の里長から結び札を預かってきてください。その糸を見れば、何かわかるかもしれません。」"
@@ -5237,7 +5237,7 @@
           7
         ],
         "face": 0,
-        "asset": "assets/characters/npc/shrine-guardian-walk-4dir-32.png",
+        "asset": "assets/characters/npc/shrine-guardian-walk-4dir-80x112.png",
         "lines": [
           "社守「参道をまっすぐ進めば、白妙様に会えます。」"
         ]
@@ -5250,7 +5250,7 @@
           7
         ],
         "face": 0,
-        "asset": "assets/characters/npc/shrine-guardian-walk-4dir-32.png",
+        "asset": "assets/characters/npc/shrine-guardian-walk-4dir-80x112.png",
         "lines": [
           "社守「この先は天妖の社。水辺と森には足を踏み入れぬように。」"
         ]

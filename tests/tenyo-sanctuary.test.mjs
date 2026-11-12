@@ -118,10 +118,27 @@ test('the production game loads original water render, common controller and fie
   assert.ok(code.includes('exitReached'));
   assert.ok(code.includes('../../field/?from=shrine'));
   assert.ok(field.includes('../game/tenyo/'));
-  assert.ok(field.includes('../game/tenyo/'));
+  assert.ok(field.includes('shrineReturnPosition'));
   assert.ok(village.includes("advanceStoryStage('shrine')"));
   for(const path of ['src/game/tenyo/walk.mjs','src/game/story/chapter-one.mjs',
     'src/field/walk.mjs','src/game/village/walk.mjs']){
     execFileSync(process.execPath,['--check',path]);
   }
+});
+
+test('production sanctuary ESM entry links and begins loading its canonical map',()=>{
+  const boot=`
+    globalThis.document={
+      querySelector:sel=>({
+        '#scene':{getContext:()=>({})},
+        '#status':{textContent:''}, '#objective':{textContent:''},'#load':{hidden:false}
+      }[sel]||null),
+      querySelectorAll:()=>[],
+    };
+    globalThis.SMModel={parse(){}};
+    globalThis.SMRender={draw(){}};
+    globalThis.fetch=()=>new Promise(()=>{});
+    await import('./src/game/tenyo/walk.mjs');
+  `;
+  execFileSync(process.execPath,['--input-type=module','-e',boot],{timeout:10000,stdio:'pipe'});
 });

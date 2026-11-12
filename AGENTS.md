@@ -4,12 +4,13 @@
 - 正本は `HiHoSir/kikokuno-hanamusubi` の `main`。これは第1作『鬼哭の花結び』用の新規制作環境。
 - 旧 `HiHoSir/yaksha-hanamusubi` と続編 `HiHoSir/kikokuno-hanachigiri` の実装・アセット・採用状態を無断移植しない。
 - 制作前に本書、関連する `.agents/skills/<name>/SKILL.md`、`docs/REPOSITORY_POLICY.md`、`assets/manifest.json` と実ファイルを確認。読めない規則・未確認の承認状態を推測しない。
-- 新規初期状態では採用ゲーム素材や動作するゲームはまだ存在しない。
+- ゲームの現行入口は `index.html`。村・室内・フィールド・天妖の社の本編実装は `src/` と `data/` を正本とし、採用素材は `assets/manifest.json` と一致させる。天妖の社の接続仕様は `docs/TENYO_SHRINE.md`。
 
 ## スキルの唯一の保存先
 - 画像やアセットの生成・編集・変換: `.agents/skills/asset-design/SKILL.md`
-- 村・マップチップ・NPC・キャラクターのグラフィック: `.agents/skills/create-grid-map-art/SKILL.md`（asset-designも併用）
-- 緋月のキャラクターデザイン・立ち絵・歩行・戦闘ポーズ: `docs/characters/HIZUKI_CANON.md` と `.agents/skills/hizuki-character/SKILL.md`（asset-design併用、歩行・村表現にはcreate-grid-map-artも併用）
+- 鬼灯村の建物・室内・NPC配置・会話・入退場・iPhone検査: `.agents/skills/build-hozuki-village/SKILL.md`。この作業の制作手順はリポジトリ内の正本に従い、リポジトリ外のマップ制作スキルを参照しない。
+- 地形タイル・小物・NPCの画像制作は `.agents/skills/asset-design/SKILL.md` の該当テンプレートを使う。
+- 緋月のキャラクターデザイン・立ち絵・歩行・戦闘ポーズ: `docs/characters/HIZUKI_CANON.md` と `.agents/skills/hizuki-character/SKILL.md`（asset-design併用）
 - 新規スキル作成前に既存の役割を確認し、重複する場合は既存スキルを修正。新設時はこの一覧を更新。ルート直下に `skills/` を作らない。
 
 ## 命名の禁止事項
@@ -20,6 +21,7 @@
 ## 保存先とバージョン管理
 - `assets/` は採用済みの実ゲーム素材だけ。**全てのファイル**を `assets/manifest.json` に登録する。IDとパスは一意にする。
 - 生成途中・未承認・比較・デバッグ出力はGit管理対象外の `work/` に置く。`old/`・`backup/`・`experimental/`を置き場にしない。履歴保存はGitと元のリポジトリを利用する。
+- ユーザーが保存を依頼したBGM候補パックは `review/audio/bgm-pack/` に保管する。対象はOGG、MIDI、同梱README。
 - 採用ファイルを `-final2` や `-copy` として増やさない。同一の安定パスを更新し、過去版はGit履歴から取り出す。
 - `new-` 等の暫定版名を採用素材に残さない。新旧が同用途なら新版のみを正式名で1件保存し、旧画像はリポジトリに残さない（Git履歴または元リポジトリで復元）。異なるサイズ・役割の素材は個別用途を確認して区別する。
 - 再編集に必要な原本のみ `source-assets/` に保存し、台帳の `sourcePath` で紐づける。完成画像の複製を原本として保管しない。

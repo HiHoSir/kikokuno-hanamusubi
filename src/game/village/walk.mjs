@@ -10,17 +10,13 @@ const load = document.querySelector('#load');
 
 const context = scene.getContext('2d', {alpha:false});
 const objective = document.querySelector('#objective');
-const QUEST_KEY = 'kikokuno-hanamusubi-chapter-one';
-function storyStage() {
-  try { return localStorage.getItem(QUEST_KEY) === 'shrine' ? 'shrine' : 'chief'; }
-  catch { return 'chief'; }
-}
 function completeStoryDialogue(npc) {
   if (npc.id !== 'chief') return;
-  try { localStorage.setItem(QUEST_KEY, 'shrine'); } catch {}
-  objective.textContent = '結び札を手に入れた。天妖の社へ向かおう';
+  // Never reset a later sanctuary event when the player revisits the village.
+  advanceStoryStage('shrine');
+  objective.textContent = objectiveForStage(readStoryStage());
 }
-objective.textContent = storyStage()==='chief' ? '里長の話を聞こう' : '結び札を手に入れた。天妖の社へ向かおう';
+objective.textContent = objectiveForStage(readStoryStage());
 
 const directions = {
   down:[0,1,0], up:[0,-1,1], right:[1,0,2], left:[-1,0,3],

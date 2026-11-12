@@ -5,11 +5,13 @@ const {YK_WORLD: world, YK_LANDSCAPE: landscape, YK_AUTOTILE: autotile,
 export {world};
 export const contact = (x, y) => transitions.contact(world, x, y);
 
-export function villageArrival() {
-  const queue = [world.places.village.point];
+export function placeArrival(placeId) {
+  const place=world.places[placeId];
+  if(!place)throw new Error('不明なフィールド地点: '+placeId);
+  const queue = [place.point];
   const seen = new Set(queue.map(point => point.join(',')));
   for (const [x, y] of queue) {
-    if (contact(x, y) !== 'village' && world.walkable(x, y)) return [x, y];
+    if (contact(x, y) !== placeId && world.walkable(x, y)) return [x, y];
     for (const [dx, dy] of [[0, 32], [32, 0], [-32, 0], [0, -32]]) {
       const next = [x + dx, y + dy];
       const key = next.join(',');
@@ -19,8 +21,10 @@ export function villageArrival() {
       }
     }
   }
-  throw new Error('鬼灯村からフィールドに戻れるセルがありません');
+  throw new Error(placeId+'からフィールドに戻れるセルがありません');
 }
+
+export function villageArrival(){return placeArrival('village');}
 
 export async function loadFieldArt() {
   const hero = new Image();

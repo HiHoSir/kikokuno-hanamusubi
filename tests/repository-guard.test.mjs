@@ -7,7 +7,7 @@ const base = [
   'AGENTS.md', 'README.md', '.gitignore', 'package.json',
   'docs/REPOSITORY_POLICY.md', 'assets/manifest.json',
   '.agents/skills/asset-design/SKILL.md',
-  '.agents/skills/create-grid-map-art/SKILL.md',
+  '.agents/skills/build-hozuki-village/SKILL.md',
   'tools/check-repository.mjs',
 ];
 const empty = { schemaVersion: 1, assets: [] };
@@ -24,6 +24,14 @@ test('旧版フォルダ・名前違いコピーは禁止', () => {
 test('台帳にないアセットは拒否', () => {
   const errors = validateInventory([...base, 'assets/characters/hizuki/idle.png'], empty);
   assert.ok(errors.some(x => x.includes('台帳未登録')));
+});
+test('BGM候補の音源・MIDI・同梱READMEだけを指定の場所で許可する', () => {
+  const folder = 'review/audio/bgm-pack/';
+  const candidates = ['title_bgm_v1.ogg', 'title_bgm_v1.mid', 'README.md'].map(name => folder + name);
+  assert.deepEqual(validateInventory([...base, ...candidates], empty), []);
+  for (const path of [folder + 'notes.txt', folder + 'other/track.ogg', 'review/other/track.ogg']) {
+    assert.ok(validateInventory([...base, path], empty).some(error => error.includes('不許可の保存先')));
+  }
 });
 test('台帳の重複IDと実ファイル不足を拒否', () => {
   const manifest = { schemaVersion: 1, assets: [
@@ -66,4 +74,26 @@ test('デザイン正本は一般の採用スプライトとは別に登録し�
   assert.ok(validateInventory([...base, path], empty, () => bytes).some(x => x.includes('紐づかない原本')));
   const bad = {...m, designReferences: [{...m.designReferences[0], sha256: '0'.repeat(64)}]};
   assert.ok(validateInventory([...base, path], bad, () => bytes).some(x => x.includes('SHA-256が不一致')));
+});
+
+
+test('公開検証用の限定ページのみ許可し、採用済みアセットとしては扱わない', () => {
+  const permitted = 'previews/cave-prototype/index.html';
+  assert.deepEqual(validateInventory([...base, permitted], empty), []);
+});
+
+test('previews の追加ファイル・別の試作・偽装パスは許可しない', () => {
+  const denied = [
+    'previews/cave-prototype/extra.html',
+    'previews/cave-prototype/assets/wall.png',
+    'previews/other/index.html',
+    'previews/cave-prototype/index.html.bak',
+    'previews/cave-prototype/../index.html',
+    'preview/cave-prototype/index.html',
+  ];
+  for (const path of denied) {
+    const errors = validateInventory([...base, path], empty);
+    assert.ok(errors.length > 0, `不許可ファイルを拒否する: ${path}`);
+    assert.ok(errors.some(e => e.includes('不許可の保存先') || e.includes('不正なパス')), `${path}: ${errors.join(', ')}`);
+  }
 });

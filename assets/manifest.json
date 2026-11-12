@@ -1699,6 +1699,78 @@
         "path": "review/audio/bgm-pack/battle_se_v2.ogg"
       },
       "usage": "se-battle-encounter"
+    },
+    {
+      "id": "tenyo-background",
+      "type": "map",
+      "path": "assets/tenyo/background.webp",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/maps/tenyo/layer-background.webp"
+      },
+      "usage": "tenyo-sanctuary-production"
+    },
+    {
+      "id": "tenyo-shrine",
+      "type": "map",
+      "path": "assets/tenyo/shrine.webp",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/maps/tenyo/layer-shrine.webp"
+      },
+      "usage": "tenyo-sanctuary-production"
+    },
+    {
+      "id": "tenyo-torii",
+      "type": "map",
+      "path": "assets/tenyo/torii.webp",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/maps/tenyo/layer-torii.webp"
+      },
+      "usage": "tenyo-sanctuary-production"
+    },
+    {
+      "id": "tenyo-forest",
+      "type": "map",
+      "path": "assets/tenyo/forest.webp",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/maps/tenyo/layer-trees.webp"
+      },
+      "usage": "tenyo-sanctuary-production"
+    },
+    {
+      "id": "tenyo-shirotae",
+      "type": "character",
+      "path": "assets/characters/npc/shirotae-walk-4dir-32.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/characters/tenyo-npc-v3/shirotae-walk-96x128.png"
+      },
+      "usage": "tenyo-sanctuary-production"
+    },
+    {
+      "id": "tenyo-guardian",
+      "type": "character",
+      "path": "assets/characters/npc/shrine-guardian-walk-4dir-32.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/characters/tenyo-guardian-sd-v1/walk-atlas-32.png"
+      },
+      "usage": "tenyo-sanctuary-production"
     }
   ],
   "designReferences": [

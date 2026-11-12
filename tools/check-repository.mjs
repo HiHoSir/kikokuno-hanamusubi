@@ -10,6 +10,9 @@ const allowedRoots = new Set([
   '.github', '.agents', 'docs', 'src', 'data', 'assets',
   'source-assets', 'tools', 'tests',
 ]);
+// One explicit, unapproved Pages review artifact; not a general previews/ allowance.
+const allowedPreviewFiles = new Set(['previews/cave-prototype/index.html']);
+const bgmReviewFile = /^review\/audio\/bgm-pack\/(?:README\.md|[a-z0-9_]+\.(?:ogg|mid))$/;
 const forbiddenDirectories = new Set([
   'old', 'archive', 'archives', 'backup', 'backups', 'experimental',
   'experiments', 'scratch', 'temp', 'tmp', 'work', 'output', 'outputs',
@@ -18,7 +21,7 @@ const required = [
   'AGENTS.md', 'README.md', '.gitignore', 'package.json',
   'docs/REPOSITORY_POLICY.md', 'assets/manifest.json',
   '.agents/skills/asset-design/SKILL.md',
-  '.agents/skills/create-grid-map-art/SKILL.md',
+  '.agents/skills/build-hozuki-village/SKILL.md',
   'tools/check-repository.mjs',
 ];
 const allowedTypes = new Set(['character', 'map', 'object', 'ui', 'audio', 'effect', 'other']);
@@ -40,7 +43,9 @@ export function validateInventory(files, manifest, readBytes = () => Buffer.from
       continue;
     }
     const parts = p.split('/');
-    if (!allowedRoots.has(parts[0])) errors.push(`不許可の保存先: ${p}`);
+    if (p !== 'index.html' && !allowedRoots.has(parts[0]) && !allowedPreviewFiles.has(p) && !bgmReviewFile.test(p)) {
+      errors.push(`不許可の保存先: ${p}`);
+    }
     if (parts.some(x => forbiddenDirectories.has(x.toLowerCase()))) errors.push(`旧版・一時ディレクトリは禁止: ${p}`);
     if (duplicateName.test(parts.at(-1))) errors.push(`複製・旧版風のファイル名は禁止: ${p}`);
     if (p.startsWith('assets/') && /^new[-_]/i.test(parts.at(-1))) errors.push(`採用素材にnew-接頭辞は禁止: ${p}`);

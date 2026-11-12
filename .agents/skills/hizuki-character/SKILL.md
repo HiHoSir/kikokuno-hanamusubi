@@ -7,7 +7,7 @@ description: 第1作『鬼哭の花結び』の緋月の最新採用外見を維
 
 ## 必須の正本確認（制作前）
 1. 対象は `HiHoSir/kikokuno-hanamusubi`。まず `AGENTS.md`、[緋月のデザイン正本](../../../docs/characters/HIZUKI_CANON.md)、[共通画像制作](../asset-design/SKILL.md)、`assets/manifest.json`、`data/characters/hizuki-walk.json`、実PNGを**実際に読む**。
-2. 村やフィールドの歩行・NPCとの比較・格子表示には [create-grid-map-art](../create-grid-map-art/SKILL.md) も使う。
+2. 鬼灯村の建物と組み合わせた通行・遮蔽の検査には[鬼灯村の建物制作・歩行検査](../build-hozuki-village/SKILL.md)を使う。
 3. GitHubに存在しない高解像度原画を「移行済み」「確認済みのPNG実体」と報告しない。ChatGPTライブラリの元データを取得できる場合はバイト・SHA-256を検証して使用。旧画像や別作品のデザイン画を無断で代用しない。
 
 ## 採用デザインを凍結する

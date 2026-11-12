@@ -84,7 +84,7 @@ test('field movement retains the 32px grid and projects the SD from its foot anc
   const context = loadField();
   globalThis.window = context;
   try {
-    const {contact, createFieldRenderer, fieldStep, villageArrival, world} = await import('../src/field/runtime.mjs');
+    const {contact, createFieldRenderer, fieldStep, villageArrival, placeArrival, world} = await import('../src/field/runtime.mjs');
     const [x, y] = villageArrival();
     assert.equal(x % 32, 16);
     assert.equal(y % 32, 16);
@@ -94,6 +94,25 @@ test('field movement retains the 32px grid and projects the SD from its foot anc
     const entry = neighbors.map(([dx, dy]) => fieldStep({x, y}, dx, dy, 1000))
       .find(step => step && contact(step.x, step.y) === 'village');
     assert.ok(entry, 'the village entrance is one legal step from the field arrival');
+    // Confirm the new destination is actually reachable using the authored
+    // field collision and elevation, not just wired by an unwalkable URL.
+    const shrineStart=placeArrival('shrine');
+    assert.ok(world.walkable(...shrineStart),'safe arrival beside shrine');
+    assert.notEqual(contact(...shrineStart),'shrine','return does not immediately re-enter shrine');
+    const todo=[shrineStart],seen=new Set([shrineStart.join(',')]);
+    let reachableShrine=false;
+    for(let i=0;i<todo.length&&!reachableShrine;i++){
+      const [px,py]=todo[i];
+      for(const [dx,dy] of [[0,32],[0,-32],[32,0],[-32,0]]){
+        const nx=px+dx,ny=py+dy,key=nx+','+ny;
+        if(!seen.has(key)&&world.canMove(px,py,nx,ny)){
+          if(contact(nx,ny)==='shrine'){reachableShrine=true;break;}
+          seen.add(key);todo.push([nx,ny]);
+        }
+      }
+    }
+    assert.ok(reachableShrine,'shrine contact is reachable after returning to field');
+
     assert.equal(Math.abs(entry.x - x) + Math.abs(entry.y - y), 32);
     assert.equal(entry.motion.duration, 192);
     assert.equal(fieldStep({x: 16, y: 16}, -1, 0, 1000), null);
@@ -126,7 +145,7 @@ test('a direction tap between animation frames still moves one cell', async () =
   const status = {};
   const frames = [];
   const controller = source('src/field/walk.mjs').replace(/^import .*;\n/, '')
-    .replace('import.meta.url', '"https://example.test/src/field/walk.mjs"');
+    .replaceAll('import.meta.url', '"https://example.test/src/field/walk.mjs"');
   const context = createContext({
     document: {querySelector: selector => ({'#scene': scene, '#load': loading, '#status': status}[selector]),
       querySelectorAll: () => [button], addEventListener() {}},

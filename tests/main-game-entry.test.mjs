@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync,existsSync} from 'node:fs';
+import {execFileSync} from 'node:child_process';
 test('opening enters a real village game, not the review preview',()=>{
  const opening=readFileSync('src/opening/opening.js','utf8');
  assert.match(opening,/\.\.\/game\/village\//);
@@ -28,4 +29,14 @@ test('all authored village art and NPC files exist',()=>{
  for(const npc of residents)assert.ok(existsSync(npc.asset),npc.name);
  assert.ok(existsSync('assets/village/interiors/furniture.png'));
  assert.ok(residents.find(n=>n.id==='chief').lines.some(s=>s.includes('結び札')));
+});
+
+test('production modules pass Node syntax checks',()=>{
+ for(const path of [
+  'src/game/village/walk.mjs','src/game/village/dialogue.mjs',
+  'src/game/village/movement.mjs','src/game/village/residents.mjs',
+  'src/game/village/render.mjs','src/game/interiors/walk.mjs',
+  'src/game/interiors/rooms.mjs','src/game/interiors/room-art.mjs',
+  'src/opening/opening.js','src/field/walk.mjs'
+ ])execFileSync(process.execPath,['--check',path]);
 });

@@ -40,7 +40,7 @@ async function image(path){
 function sourceIdToAsset(id){
   // Original authored IDs remain the renderer's object identifiers.
   // The new repository uses one adopted file per ID with descriptive names.
-  return 'assets/tenyo/'+id.replaceAll('_','-').toLowerCase()+'.png';
+  return 'assets/tenyo/'+id.replaceAll('_','-').toLowerCase()+'.png?v=tenyo-water-art';
 }
 function storyLines(npc){return npc.dialogue?.[readStoryStage()]??npc.lines??[];}
 function passable(map,occupied,x,y,blocked){

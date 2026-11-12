@@ -297,12 +297,26 @@ async function start() {
     }
     button.addEventListener('contextmenu',event=>event.preventDefault());
   }
+  const actionA=document.querySelector('#action-a');
+  const actionB=document.querySelector('#action-b');
+  actionA.addEventListener('click',()=>{
+    if(dialogue.active)dialogue.advance();
+    else dialogue.open();
+  });
+  actionB.addEventListener('click',()=>{
+    if(dialogue.active)dialogue.advance();
+  });
   addEventListener('keydown',event=>{
     if(dialogue.active){
-      if(event.key==='Escape') dialogue.close(true);
+      // Native button Enter/Space already triggers click; never advance twice.
+      if((event.key==='Enter'||event.key===' ') && event.target?.tagName==='BUTTON') return;
+      if(['Enter',' ','Escape'].includes(event.key)){
+        event.preventDefault();
+        if(!event.repeat)dialogue.advance();
+      }
       return;
     }
-    if (event.key==='Enter' && event.target===document.body) {
+    if ((event.key==='Enter'||event.key===' ') && event.target===document.body) {
       dialogue.open();
       return;
     }

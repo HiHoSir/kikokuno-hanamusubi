@@ -1,80 +1,110 @@
+// Production Tenyo sanctuary. The approved 28x25 water map, original renderer,
+// sprites, and collision are shared; only game input/story wiring is local.
 import {bindDialogue} from '../village/dialogue.mjs';
 import {residentInFront} from '../village/residents.mjs';
 import {readStoryStage,advanceStoryStage,objectiveForStage} from '../story/chapter-one.mjs';
 
+const {SMModel,SMRender}=globalThis;
 const scene=document.querySelector('#scene');
 const ctx=scene.getContext('2d',{alpha:false});
 const status=document.querySelector('#status');
 const objective=document.querySelector('#objective');
 const load=document.querySelector('#load');
 const buttons=[...document.querySelectorAll('[data-dir]')];
-const directions={down:[0,1,0],up:[0,-1,1],right:[1,0,2],left:[-1,0,3]};
+const directions={down:[0,1,0,'d'],up:[0,-1,1,'u'],right:[1,0,2,'r'],left:[-1,0,3,'l']};
 const keys={ArrowDown:'down',ArrowUp:'up',ArrowRight:'right',ArrowLeft:'left',s:'down',w:'up',d:'right',a:'left'};
-const held=new Map();
-const ZOOM=1.35;
-const STEP_MS=150;
-let queued=null;
+const facing=['d','u','r','l'];
+const input=new Map();
+const SPEED_MS=156,ZOOM=1.4;
+let pendingInput=null;
 
-function setDirection(id,direction){
-  if(direction){held.set(id,direction);queued=direction;}
-  else held.delete(id);
-  const active=[...held.values()].at(-1);
-  for(const button of buttons)button.classList.toggle('held',button.dataset.dir===active);
+function setInput(id,direction){
+  if(direction){input.set(id,direction);pendingInput=direction;}
+  else input.delete(id);
+  const active=[...input.values()].at(-1);
+  buttons.forEach(button=>button.classList.toggle('held',button.dataset.dir===active));
 }
 function clearInput(){
-  held.clear();queued=null;
-  for(const button of buttons)button.classList.remove('held');
+  input.clear();pendingInput=null;
+  buttons.forEach(button=>button.classList.remove('held'));
 }
-export function passable(map,x,y){
-  return Number.isInteger(x)&&Number.isInteger(y)&&
-    x>=0&&x<map.columns&&y>=0&&y<map.rows&&map.grid[y]?.[x]==='.';
-}
-export function isSouthExit(map,x,y){
-  return y===map.southExit.row&&map.southExit.columns.includes(x);
-}
-function assetURL(path){return new URL('../../../'+path,import.meta.url).href;}
-async function image(path){
-  const bitmap=new Image();
-  bitmap.src=assetURL(path);
-  await bitmap.decode();
-  if(!bitmap.naturalWidth)throw new Error('画像を読めません: '+path);
-  return bitmap;
-}
-function cellCenter([x,y]){return {x:x*32+16,y:y*32+16};}
+function center([x,y]){return {x:(x+.5)*32,y:(y+.5)*32};}
 function clamp(n,min,max){return Math.max(min,Math.min(max,n));}
-function npcTalkLines(npc,stage){
-  return npc.dialogue?.[stage]??npc.lines??[];
+function assetURL(path){return new URL('../../../'+path,import.meta.url);}
+async function image(path){
+  const im=new Image();im.src=assetURL(path).href;
+  await im.decode();
+  if(!im.naturalWidth)throw new Error('画像を読み込めません: '+path);
+  return im;
+}
+function sourceIdToAsset(id){
+  // Original authored IDs remain the renderer's object identifiers.
+  // The new repository uses one adopted file per ID with descriptive names.
+  return 'assets/tenyo/'+id.replaceAll('_','-').toLowerCase()+'.png';
+}
+function storyLines(npc){return npc.dialogue?.[readStoryStage()]??npc.lines??[];}
+function passable(map,occupied,x,y,blocked){
+  return Number.isInteger(x)&&Number.isInteger(y)&&SMModel.inside(map,[x,y])&&
+    !blocked.has(x+','+y)&&!occupied.has(x+','+y);
+}
+function exitReached(map,x,y){
+  const exit=map.game.southExit;
+  return y===exit.row&&exit.columns.includes(x);
 }
 
 async function start(){
-  const response=await fetch(new URL('../../../data/maps/tenyo-sanctuary/scene.json',import.meta.url));
+  if(!SMModel||!SMRender)throw new Error('天妖の社の描画エンジンが読み込めません');
+  const mapUrl=new URL('../../../data/maps/tenyo-sanctuary/scene.json',import.meta.url);
+  const response=await fetch(mapUrl);
   if(!response.ok)throw new Error('天妖の社のマップデータを読めません');
-  const map=await response.json();
-  if(map.grid.length!==map.rows||map.grid.some(row=>row.length!==map.columns))throw new Error('通行判定の寸法不一致');
-  if(!passable(map,...map.spawn))throw new Error('開始地点が通行不可です');
-  const residents=map.residents.map(npc=>({...npc,...cellCenter(npc.tile),lines:npcTalkLines(npc,readStoryStage())}));
-  const occupied=new Set(residents.map(npc=>npc.tile.join(',')));
-  const walkable=(x,y)=>passable(map,x,y)&&!occupied.has(x+','+y);
-  const [background,shrine,torii,forest,hero,...npcImages]=await Promise.all([
-    ...['background','shrine','torii','forest'].map(key=>image(map.images[key])),
-    image(map.hero),...residents.map(npc=>image(npc.asset)),
-  ]);
-  const mapWidth=map.columns*map.tileSize,mapHeight=map.rows*map.tileSize;
-  for(const asset of [background,shrine,torii,forest]){
-    if(asset.width!==mapWidth||asset.height!==mapHeight)throw new Error('天妖の社の画像と歩行格子の寸法が一致しません');
-  }
-  residents.forEach((npc,index)=>npc.bitmap=npcImages[index]);
-  const base=document.createElement('canvas');
-  base.width=mapWidth;base.height=mapHeight;
-  const baseContext=base.getContext('2d');
-  baseContext.imageSmoothingEnabled=false;
-  baseContext.drawImage(background,0,0);
-  baseContext.drawImage(shrine,0,0);
+  const map=SMModel.parse(await response.text());
+  const blocked=SMModel.collision(map);
+  const entry=map.game?.entrySpawn;
+  if(!entry||blocked.has(entry.join(',')))throw new Error('社の出現マスが通行不可です');
 
-  const state={x:map.spawn[0],y:map.spawn[1],face:1,motion:null,walkIndex:0};
+  const residents=map.game.residents.map(def=>({
+    ...def,...center(def.tile),lines:storyLines(def),
+  }));
+  const occupied=new Set(residents.map(npc=>npc.tile.join(',')));
+  const canEnter=(x,y)=>passable(map,occupied,x,y,blocked);
+
+  const ids=new Set([
+    ...map.objects.map(item=>item.templateId),
+    ...(map.waterBottom??[]).map(item=>item.tileId),
+    'clear_water_shallow','clear_water_mid','clear_water_deep',
+    ...['deep_mid','mid_shallow'].flatMap(pair=>['N','E','S','W'].map(dir=>'clear_water_shore_'+pair+'_'+dir)),
+    'tenyo_ripple_fx',
+  ]);
+  const [hero,...loaded]=await Promise.all([
+    image(map.game.hero),
+    ...[...ids].map(id=>image(sourceIdToAsset(id))),
+    ...[...new Set(map.game.residents.map(npc=>npc.asset))].map(path=>image(path)),
+  ]);
+  const allIds=[...ids],allNpcPaths=[...new Set(map.game.residents.map(npc=>npc.asset))];
+  const images=Object.fromEntries(allIds.map((id,i)=>[id,loaded[i]]));
+  const npcArt=new Map(allNpcPaths.map((path,i)=>[path,loaded[allIds.length+i]]));
+  images.sanctuary_npc_shirotae=npcArt.get(residents.find(n=>n.id==='shirotae').asset);
+  images.sanctuary_npc_guard=npcArt.get(residents.find(n=>n.id!=='shirotae').asset);
+
+  const world=document.createElement('canvas');
+  world.width=map.width*map.tileSize;
+  world.height=map.height*map.tileSize;
+  const wc=world.getContext('2d',{alpha:false});
+  const bounds=SMRender.actorBounds(hero,(width,height)=>{
+    const canvas=document.createElement('canvas');
+    canvas.width=width;canvas.height=height;return canvas;
+  });
+  const residentObjects=residents.map(npc=>({
+    id:'story-'+npc.id,
+    templateId:npc.id==='shirotae'?'sanctuary_npc_shirotae':'sanctuary_npc_guard',
+    x:npc.tile[0],y:npc.tile[1],dir:'d',frame:0,occupiedTiles:[],
+  }));
+  const paintedMap={...map,objects:[...map.objects,...residentObjects]};
+
+  const state={x:entry[0],y:entry[1],face:1,dir:'u',motion:null,steps:0};
   function refreshObjective(){
     objective.textContent=objectiveForStage(readStoryStage());
-    for(const npc of residents)npc.lines=npcTalkLines(npc,readStoryStage());
+    for(const npc of residents)npc.lines=storyLines(npc);
   }
   const dialogue=bindDialogue(clearInput,ended=>{
     if(ended.id==='shirotae'&&readStoryStage()==='shrine'){
@@ -85,87 +115,100 @@ async function start(){
   });
   refreshObjective();
 
+  // Preserve the separately approved sanctuary waterfall loop without
+  // bypassing the existing audio ON/OFF or iOS user-gesture restrictions.
+  const waterfall=new Audio(assetURL('assets/tenyo/waterfall-loop.m4a').href);
+  waterfall.loop=true;waterfall.volume=.18;waterfall.preload='none';
+  function waterSound(){
+    if(document.hidden||!globalThis.KIKOKU_AUDIO?.enabled){
+      waterfall.pause();return;
+    }
+    void waterfall.play().catch(()=>{}); // Safari may require another tap.
+  }
+  for(const button of document.querySelectorAll('#pad button')){
+    button.addEventListener('pointerdown',waterSound,{passive:true});
+    button.addEventListener('click',waterSound);
+  }
+  document.querySelector('#sound-toggle')?.addEventListener('click',waterSound);
+  document.addEventListener('visibilitychange',()=>{
+    if(document.hidden){clearInput();waterfall.pause();}
+    else waterSound();
+  });
+  addEventListener('pagehide',()=>{clearInput();waterfall.pause();});
+  addEventListener('pageshow',waterSound);
+
   function leave(){
-    clearInput();
+    clearInput();waterfall.pause();
     location.assign(new URL('../../field/?from=shrine',import.meta.url));
   }
-  function attemptStep(direction,now){
-    const [dx,dy,face]=directions[direction];
-    state.face=face;
+  function startMove(direction,now){
+    const [dx,dy,face,dir]=directions[direction];
+    state.face=face;state.dir=dir;
     const nx=state.x+dx,ny=state.y+dy;
-    if(!walkable(nx,ny))return false;
-    state.motion={fromX:state.x,fromY:state.y,toX:nx,toY:ny,at:now,duration:STEP_MS};
-    state.walkIndex++;
+    if(!canEnter(nx,ny))return false;
+    state.motion={fromX:state.x,fromY:state.y,toX:nx,toY:ny,at:now,duration:SPEED_MS};
+    ++state.steps;
     return true;
   }
-  function sample(now){
-    if(!state.motion)return cellCenter([state.x,state.y]);
+  function actor(now){
     const motion=state.motion;
+    if(!motion)return {x:state.x,y:state.y,dir:state.dir,frame:0};
     const t=clamp((now-motion.at)/motion.duration,0,1);
-    return {x:(motion.fromX+(motion.toX-motion.fromX)*t)*32+16,
-      y:(motion.fromY+(motion.toY-motion.fromY)*t)*32+16};
-  }
-  function drawActor(bitmap,x,y,face=0,column=0){
-    ctx.save();
-    ctx.fillStyle='rgba(8,19,23,.25)';
-    ctx.beginPath();ctx.ellipse(x,y+1,12,3.5,0,0,Math.PI*2);ctx.fill();
-    ctx.imageSmoothingEnabled=false;
-    ctx.drawImage(bitmap,column*32,face*32,32,32,Math.round(x-16),Math.round(y-30),32,32);
-    ctx.restore();
+    return {
+      x:motion.fromX+(motion.toX-motion.fromX)*t,
+      y:motion.fromY+(motion.toY-motion.fromY)*t,
+      dir:state.dir,frame:[1,0,1,2][Math.min(3,Math.floor(t*4))],
+    };
   }
   function render(now){
-    const {x,y}=sample(now);
-    const viewport=scene.width/ZOOM;
-    const left=clamp(Math.round(x-viewport/2),0,mapWidth-viewport);
-    const top=clamp(Math.round(y-viewport/2),0,mapHeight-viewport);
+    const player=actor(now);
+    for(let i=0;i<residents.length;i++)
+      residentObjects[i].dir=facing[residents[i].face??0]??'d';
+    SMRender.draw(wc,paintedMap,{
+      images,hero,bounds,actor:player,animationTime:now,shadows:true,
+      lighting:true,reflections:true,atmosphere:true,depthOfField:true,
+    });
+    const width=scene.width,height=scene.height,view=width/ZOOM;
+    const cameraX=clamp((player.x+.5)*32-view/2,0,world.width-view);
+    const cameraY=clamp((player.y+.5)*32-view/2,0,world.height-view);
     ctx.setTransform(1,0,0,1,0,0);
-    ctx.fillStyle='#133349';ctx.fillRect(0,0,scene.width,scene.height);
     ctx.imageSmoothingEnabled=false;
-    ctx.drawImage(base,left,top,viewport,viewport,0,0,scene.width,scene.height);
-    ctx.setTransform(ZOOM,0,0,ZOOM,-left*ZOOM,-top*ZOOM);
-    const actors=[
-      ...residents.map(npc=>({bitmap:npc.bitmap,x:npc.x,y:npc.y,face:npc.face??0,column:0})),
-      {bitmap:hero,x,y,face:state.face,column:state.motion?1+(state.walkIndex%2):0}
-    ].sort((a,b)=>a.y-b.y);
-    for(const actor of actors)drawActor(actor.bitmap,actor.x,actor.y,actor.face,actor.column);
-    // The original layered scene uses foliage and torii above the walking plane.
-    // Leave the authored transparent center path visible; trees cover only their artwork.
-    ctx.setTransform(1,0,0,1,0,0);
-    ctx.drawImage(torii,left,top,viewport,viewport,0,0,scene.width,scene.height);
-    ctx.drawImage(forest,left,top,viewport,viewport,0,0,scene.width,scene.height);
+    ctx.fillStyle='#13354e';ctx.fillRect(0,0,width,height);
+    ctx.drawImage(world,cameraX,cameraY,view,view,0,0,width,height);
+    const foot=center([state.x,state.y]);
+    const npc=residentInFront(foot.x,foot.y,state.face,residents);
+    dialogue.update(npc,foot.x,foot.y);
+    status.textContent=npc?'Aで話す':state.y>=map.height-3?'南へ進むとフィールドへ':'境内';
     scene.dataset.x=String(state.x);
     scene.dataset.y=String(state.y);
-    if(state.y>=29)status.textContent='南へ進むとフィールドへ戻ります';
-    else if(residentInFront(cellCenter([state.x,state.y]).x,cellCenter([state.x,state.y]).y,state.face,residents))status.textContent='Aで話す';
-    else status.textContent='境内';
-    const {x:cx,y:cy}=cellCenter([state.x,state.y]);
-    dialogue.update(residentInFront(cx,cy,state.face,residents),cx,cy);
   }
+  let lastPaint=0;
   function frame(now){
     if(state.motion&&now-state.motion.at>=state.motion.duration){
-      state.x=state.motion.toX;
-      state.y=state.motion.toY;
-      state.motion=null;
-      if(isSouthExit(map,state.x,state.y)){leave();return;}
+      state.x=state.motion.toX;state.y=state.motion.toY;state.motion=null;
+      if(exitReached(map,state.x,state.y)){leave();return;}
     }
     if(!state.motion&&!dialogue.active){
-      const direction=queued??[...held.values()].at(-1);
-      queued=null;
-      if(direction)attemptStep(direction,now);
+      const direction=pendingInput??[...input.values()].at(-1);
+      pendingInput=null;
+      if(direction)startMove(direction,now);
     }
-    render(now);
+    // The original sanctuary renderer composites reflections and focus blur.
+    // Cap full-scene paints without affecting input or movement cadence.
+    if(now-lastPaint>=55){
+      render(now);lastPaint=now;
+    }
     requestAnimationFrame(frame);
   }
 
   for(const button of buttons){
     button.addEventListener('pointerdown',event=>{
       if(event.button!==0||dialogue.active)return;
-      event.preventDefault();
-      button.setPointerCapture(event.pointerId);
-      setDirection(event.pointerId,button.dataset.dir);
+      event.preventDefault();button.setPointerCapture(event.pointerId);
+      setInput(event.pointerId,button.dataset.dir);
     });
     for(const type of ['pointerup','pointercancel','lostpointercapture']){
-      button.addEventListener(type,event=>setDirection(event.pointerId,null));
+      button.addEventListener(type,event=>setInput(event.pointerId,null));
     }
     button.addEventListener('contextmenu',event=>event.preventDefault());
   }
@@ -189,17 +232,12 @@ async function start(){
     }
     const direction=keys[event.key];
     if(!direction||event.metaKey||event.ctrlKey||event.altKey)return;
-    event.preventDefault();if(!event.repeat)setDirection(event.key,direction);
+    event.preventDefault();if(!event.repeat)setInput(event.key,direction);
   });
-  addEventListener('keyup',event=>{
-    if(keys[event.key])setDirection(event.key,null);
-  });
+  addEventListener('keyup',event=>{if(keys[event.key])setInput(event.key,null);});
   addEventListener('blur',clearInput);
-  addEventListener('pagehide',clearInput);
-  document.addEventListener('visibilitychange',()=>{if(document.hidden)clearInput();});
   render(performance.now());
-  load.hidden=true;
-  requestAnimationFrame(frame);
+  load.hidden=true;requestAnimationFrame(frame);
 }
 start().catch(error=>{
   console.error(error);

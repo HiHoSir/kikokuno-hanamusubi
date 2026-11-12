@@ -124,3 +124,35 @@ test('battle is production scene, field encounter and safe return in persistent 
   for(const p of ['src/game/battle/rules.mjs','src/game/battle/walk.mjs','src/field/walk.mjs','src/game/navigation/game-shell.mjs'])
     execFileSync(process.execPath,['--check',p],{stdio:'pipe'});
 });
+
+test('production battle module evaluates, paints enemy/status and accepts an attack without browser-only omissions',()=>{
+  const program=`
+    const nodes=new Map();
+    const makeNode=()=>({
+      dataset:{},style:{},children:[],textContent:'',src:'',classList:{add(){},remove(){},toggle(){}},
+      addEventListener(type,fn){this.listeners??={};this.listeners[type]=fn;},
+      replaceChildren(){this.children=[];},append(child){this.children.push(child);}
+    });
+    globalThis.document={
+      getElementById(id){if(!nodes.has(id))nodes.set(id,makeNode());return nodes.get(id);},
+      querySelectorAll(){return [];},
+      createElement(){return makeNode();},
+      addEventListener(){},
+    };
+    globalThis.addEventListener=()=>{};
+    globalThis.sessionStorage={getItem:()=>null,removeItem(){}};
+    const data=new Map();
+    globalThis.localStorage={getItem:k=>data.get(k)??null,setItem:(k,v)=>data.set(k,v)};
+    globalThis.Audio=class{play(){return Promise.resolve()}pause(){}};
+    globalThis.setTimeout=fn=>{fn();return 0};
+    await import('./src/game/battle/walk.mjs');
+    const node=id=>nodes.get(id);
+    if(node('enemy-label').textContent!=='野の小鬼')throw Error('approved enemy did not load');
+    if(node('hp-label').textContent!=='48 / 48')throw Error('hero status was not rendered');
+    if(node('command-list').children.length!==5)throw Error('battle commands were not created');
+    node('command-list').children[0].listeners.click();
+    if(!data.has('kikokuno-hanamusubi-battle-player'))throw Error('battle turn was not saved');
+    if(!node('battle-message').textContent.includes('攻撃'))throw Error('attack was not performed');
+  `;
+  execFileSync(process.execPath,['--input-type=module','-e',program],{stdio:'pipe',timeout:8000});
+});

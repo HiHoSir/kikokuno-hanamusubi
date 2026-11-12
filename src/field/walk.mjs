@@ -1,4 +1,4 @@
-import {contact, createFieldRenderer, fieldStep, loadFieldArt, villageArrival, world} from './runtime.mjs?v=e044a0a';
+import {contact, createFieldRenderer, fieldStep, loadFieldArt, villageArrival, placeArrival, world} from './runtime.mjs?v=e044a0a';
 
 const scene = document.querySelector('#scene');
 const load = document.querySelector('#load');
@@ -30,9 +30,22 @@ function clearInput() {
   updateButtons();
 }
 
+const RETURN_KEY='kikokuno-hanamusubi-field-return';
+function shrineReturnPosition(){
+  try{
+    const prior=JSON.parse(sessionStorage.getItem(RETURN_KEY)||'null');
+    if(prior?.place==='shrine' && Number.isFinite(prior.x) && Number.isFinite(prior.y) &&
+      world.walkable(prior.x,prior.y) && contact(prior.x,prior.y)!=='shrine' &&
+      Math.hypot(prior.x-world.places.shrine.point[0],prior.y-world.places.shrine.point[1])<256){
+      return [prior.x,prior.y];
+    }
+  }catch{}
+  return placeArrival('shrine');
+}
 async function start() {
-  const [x, y] = villageArrival();
-  const state = {x, y, row: new URLSearchParams(location.search).get('from') === 'village' ? 0 : 1, column: 0};
+  const from=new URLSearchParams(location.search).get('from');
+  const [x, y] = from==='shrine' ? shrineReturnPosition() : villageArrival();
+  const state = {x, y, row: from==='village' ? 0 : 1, column: 0};
   const hero = await loadFieldArt();
   const render = createFieldRenderer(scene.getContext('2d', {alpha: false}), hero);
   let phase = 0;
@@ -49,14 +62,26 @@ async function start() {
     let dirty = Boolean(state.motion);
     let startAt = now;
     if (state.motion && now - state.motion.at >= state.motion.duration) {
+      const completed=state.motion;
       startAt = Math.max(state.motion.at + state.motion.duration, now - 32);
       state.motion = null;
       state.ladder = null;
       state.column = 0;
       updatePosition();
-      if (contact(state.x, state.y) === 'village') {
+      const destination=contact(state.x,state.y);
+      if(destination==='village'){
         clearInput();
         location.assign(new URL('../game/village/?focus=field-exit', import.meta.url));
+        return;
+      }
+      if(destination==='shrine'){
+        clearInput();
+        try{
+          sessionStorage.setItem(RETURN_KEY,JSON.stringify({
+            place:'shrine',x:completed.x,y:completed.y
+          }));
+        }catch{}
+        location.assign(new URL('../game/tenyo/', import.meta.url));
         return;
       }
     }
@@ -84,9 +109,17 @@ async function start() {
   }
 
   document.querySelector('#action-a')?.addEventListener('click',()=>{
-    if(contact(state.x,state.y)==='village') {
+    const destination=contact(state.x,state.y);
+    if(destination==='village'){
       clearInput();
       location.assign(new URL('../game/village/?focus=field-exit',location.href));
+    }else if(destination==='shrine'){
+      clearInput();
+      const prior=state.motion??state;
+      try{sessionStorage.setItem(RETURN_KEY,JSON.stringify({
+        place:'shrine',x:prior.x,y:prior.y
+      }));}catch{}
+      location.assign(new URL('../game/tenyo/',location.href));
     }
   });
   const backAction=document.querySelector('#action-b');

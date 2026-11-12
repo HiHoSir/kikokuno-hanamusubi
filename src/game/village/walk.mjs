@@ -3,6 +3,7 @@ import { villageRooms } from '../interiors/rooms.mjs';
 import { pixelViewport, DEFAULT_CAMERA_ZOOM, canopyOpacity, riverRipples, paintRiverRipples } from './render.mjs';
 import { advanceResident, drawCharacter, makeResident, residentInFront, RESIDENT_RADIUS } from './residents.mjs';
 import { bindDialogue } from './dialogue.mjs';
+import {readStoryStage,advanceStoryStage,objectiveForStage} from '../story/chapter-one.mjs';
 
 const scene = document.querySelector('#scene');
 const status = document.querySelector('#status');

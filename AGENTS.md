@@ -32,6 +32,11 @@
 - 仕様確認用の画像・比較画像を勝手に生成しない。画像加工で修復可能なら再生成しない。
 - 生成結果・採用候補・採用済み・ゲーム実装・公開を混同しない。
 
+## 本編の画面遷移・入口ルール
+- 正式なゲーム開始URLはルートの `index.html` のみ。本編の各HTMLは描画単位として維持するが、直接URL・リロードはタイトルに戻す（検査専用の `previews/` は対象外）。
+- 各本編ページは `src/game/navigation/entry.js` を `<head>` 冒頭で同期読み込みする。タイトルは `data-entry="title"`、その他は `data-entry="game"`。**画面間移動は `window.KIKOKU_ROUTE.go(遷移先)` のみ使用**し、直接 `location.assign` しない。
+- 遷移は `sessionStorage` の一回限りの入場情報で管理する。音声・シナリオ・帰還地点の保存キーとは分離。新しい画面を本編に追加するときは遷移許可先と `tests/entry-routing.test.mjs` を同時更新する。詳細は `docs/GAME_ENTRY.md`。
+
 ## 実装・検査・公開
 - コード変更前は現行実装と原因を調査してから最小範囲を修正する。
 - `npm test` とゲーム固有の検査を行う。GitHub Actions、Pages、iPhone実機Safariは独立した検査として扱い、未実施を成功と報告しない。

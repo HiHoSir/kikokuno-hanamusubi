@@ -112,6 +112,20 @@ test('field movement retains the 32px grid and projects the SD from its foot anc
       }
     }
     assert.ok(reachableShrine,'shrine contact is reachable after returning to field');
+    const fromVillage=villageArrival(),frontier=[fromVillage],visited=new Set([fromVillage.join(',')]);
+    let journeyReachable=false;
+    for(let i=0;i<frontier.length&&!journeyReachable;i++){
+      const [px,py]=frontier[i];
+      for(const [dx,dy] of [[0,32],[0,-32],[32,0],[-32,0]]){
+        const nx=px+dx,ny=py+dy,key=nx+','+ny;
+        if(!visited.has(key)&&world.canMove(px,py,nx,ny)){
+          if(contact(nx,ny)==='shrine'){journeyReachable=true;break;}
+          visited.add(key);frontier.push([nx,ny]);
+        }
+      }
+    }
+    assert.ok(journeyReachable,'walkable field route from village to Tenyo sanctuary');
+
 
     assert.equal(Math.abs(entry.x - x) + Math.abs(entry.y - y), 32);
     assert.equal(entry.motion.duration, 192);

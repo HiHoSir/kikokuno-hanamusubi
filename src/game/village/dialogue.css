@@ -1,0 +1,6 @@
+#talk{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);background:#314337;color:inherit;border:1px solid #a6aa8a;border-radius:8px;min-height:44px;padding:9px 18px;touch-action:manipulation}
+#dialogue{position:absolute;inset:auto 10px 10px;padding:12px;background:#19251e;border:1px solid #b8aa81;border-radius:8px;display:grid;gap:6px}
+#dialogue[hidden]{display:none}
+#speaker{color:#e8cc8b;font-size:14px}
+#line{margin:0;font-size:15px;line-height:1.55}
+#next{justify-self:end;min-height:44px;min-width:72px;padding:0 12px;touch-action:manipulation}

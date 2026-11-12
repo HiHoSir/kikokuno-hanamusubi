@@ -56,7 +56,7 @@ async function start() {
       updatePosition();
       if (contact(state.x, state.y) === 'village') {
         clearInput();
-        location.assign(new URL('../../previews/village-walk/?focus=field-exit&v=field-connection', import.meta.url));
+        location.assign(new URL('../game/village/?focus=field-exit', import.meta.url));
         return;
       }
     }

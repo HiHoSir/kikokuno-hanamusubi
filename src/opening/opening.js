@@ -5,7 +5,7 @@ const overlay = document.querySelector('#play-overlay');
 const playButton = document.querySelector('#play-opening');
 const message = document.querySelector('#playback-message');
 const skipButton = document.querySelector('#skip-opening');
-const villageUrl = new URL('../../previews/village-walk/', document.baseURI);
+const villageUrl = new URL('../game/village/', document.baseURI);
 let navigating = false;
 
 function enterVillage() {

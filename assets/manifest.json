@@ -1163,6 +1163,226 @@
         "path": "assets/terrain/places-v1/village.png"
       },
       "usage": "field-renderer"
+    },
+    {
+      "id": "village-interior-furniture",
+      "type": "object",
+      "path": "assets/village/interiors/furniture.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "ref": "gh-pages",
+        "path": "previews/village-interiors/furniture.png"
+      }
+    },
+    {
+      "id": "village-scene-belltower",
+      "type": "map",
+      "path": "assets/village/scene/belltower.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "ref": "gh-pages",
+        "path": "previews/village-walk/map/belltower.png"
+      }
+    },
+    {
+      "id": "village-scene-collision",
+      "type": "map",
+      "path": "assets/village/scene/collision.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "ref": "gh-pages",
+        "path": "previews/village-walk/map/collision.png"
+      }
+    },
+    {
+      "id": "village-scene-ground-decor",
+      "type": "map",
+      "path": "assets/village/scene/ground-decor.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "ref": "gh-pages",
+        "path": "previews/village-walk/map/ground-decor.png"
+      }
+    },
+    {
+      "id": "village-scene-house-thatch",
+      "type": "map",
+      "path": "assets/village/scene/house-thatch.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "ref": "gh-pages",
+        "path": "previews/village-walk/map/house-thatch.png"
+      }
+    },
+    {
+      "id": "village-scene-house-tile",
+      "type": "map",
+      "path": "assets/village/scene/house-tile.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "ref": "gh-pages",
+        "path": "previews/village-walk/map/house-tile.png"
+      }
+    },
+    {
+      "id": "village-scene-inn",
+      "type": "map",
+      "path": "assets/village/scene/inn.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "ref": "gh-pages",
+        "path": "previews/village-walk/map/inn.png"
+      }
+    },
+    {
+      "id": "village-scene-path-soil",
+      "type": "map",
+      "path": "assets/village/scene/path-soil.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "ref": "gh-pages",
+        "path": "previews/village-walk/map/path-soil.png"
+      }
+    },
+    {
+      "id": "village-scene-sprite-08",
+      "type": "map",
+      "path": "assets/village/scene/sprite-08.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "ref": "gh-pages",
+        "path": "previews/village-walk/map/sprite-08.png"
+      }
+    },
+    {
+      "id": "village-scene-sprite-36",
+      "type": "map",
+      "path": "assets/village/scene/sprite-36.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "ref": "gh-pages",
+        "path": "previews/village-walk/map/sprite-36.png"
+      }
+    },
+    {
+      "id": "village-scene-sprite-46",
+      "type": "map",
+      "path": "assets/village/scene/sprite-46.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "ref": "gh-pages",
+        "path": "previews/village-walk/map/sprite-46.png"
+      }
+    },
+    {
+      "id": "village-scene-sprite-53",
+      "type": "map",
+      "path": "assets/village/scene/sprite-53.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "ref": "gh-pages",
+        "path": "previews/village-walk/map/sprite-53.png"
+      }
+    },
+    {
+      "id": "village-scene-sprite-54",
+      "type": "map",
+      "path": "assets/village/scene/sprite-54.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "ref": "gh-pages",
+        "path": "previews/village-walk/map/sprite-54.png"
+      }
+    },
+    {
+      "id": "village-scene-sprite-55",
+      "type": "map",
+      "path": "assets/village/scene/sprite-55.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "ref": "gh-pages",
+        "path": "previews/village-walk/map/sprite-55.png"
+      }
+    },
+    {
+      "id": "village-scene-sprite-56",
+      "type": "map",
+      "path": "assets/village/scene/sprite-56.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "ref": "gh-pages",
+        "path": "previews/village-walk/map/sprite-56.png"
+      }
+    },
+    {
+      "id": "village-scene-sprite-57",
+      "type": "map",
+      "path": "assets/village/scene/sprite-57.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "ref": "gh-pages",
+        "path": "previews/village-walk/map/sprite-57.png"
+      }
+    },
+    {
+      "id": "village-scene-sprite-58",
+      "type": "map",
+      "path": "assets/village/scene/sprite-58.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "ref": "gh-pages",
+        "path": "previews/village-walk/map/sprite-58.png"
+      }
+    },
+    {
+      "id": "village-scene-sprite-60",
+      "type": "map",
+      "path": "assets/village/scene/sprite-60.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "ref": "gh-pages",
+        "path": "previews/village-walk/map/sprite-60.png"
+      }
+    },
+    {
+      "id": "village-scene-teahouse",
+      "type": "map",
+      "path": "assets/village/scene/teahouse.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "ref": "gh-pages",
+        "path": "previews/village-walk/map/teahouse.png"
+      }
+    },
+    {
+      "id": "village-scene-terrain",
+      "type": "map",
+      "path": "assets/village/scene/terrain.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "ref": "gh-pages",
+        "path": "previews/village-walk/map/terrain.png"
+      }
     }
   ],
   "designReferences": [

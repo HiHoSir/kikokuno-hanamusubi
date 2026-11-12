@@ -40,3 +40,12 @@
 - `src/game/ui/controls.css` の `-webkit-user-select:none` ほか、`selection-guard.mjs` で選択、ドラッグ、長押しのコンテキストメニューを禁止。入力の `pointerdown` やタップを抑止しない。
 - タイトルから本編までWebアプリ設定 `src/game/app.webmanifest` とApple用metaタグを共有。Safari通常タブではブラウザUIを消せないため、ブラウザの共有メニューから「ホーム画面に追加」してWebアプリとして開けばアドレスバーなしで利用可能。
 - QA: iPhone Safari縦横、ノッチ・ホームバーとの非重複、画面内の長押し選択不可、A/BとD-padの継続操作、フィールドのトリミングとカメラを点検。ホーム画面からの起動も別途実機確認。
+
+## BGM・SE実装（2026-11-12）
+- BGM正本は `assets/audio/bgm/`。ユーザー提供のBGMパックから新規採用し、音源の重複を避けるため旧 `review/audio/bgm-pack/*.ogg` は移動。対応MIDIは `review/` に残し、ゲームが参照しない。
+- 現行画面: タイトル→`title.ogg`、鬼灯村・室内→`village.ogg`、フィールド→`field.ogg`。オープニング動画の音はそのまま使用し、BGMの二重再生を禁止。
+- `dungeon.ogg` / `battle.ogg` / `prologue-theme.ogg` / `se/battle-encounter.ogg` は採用アセットとして登録済み。未実装シーンからはまだ再生しない。
+- `src/game/audio/audio.mjs` は1ページ1プレイヤー、BGMの曲別ループ開始秒数、音量管理、ゲームでのSE合成、サウンドON/OFF保存、iPhone Safariの音声アンロック・バックグラウンド停止・復帰を担当。
+- タイトル・村・室内・フィールド右上の `♪ 再生` ボタンで音声を許可。ブラウザ側で無音自動再生が制限されても、操作ボタンのタップで再試行。設定は `kikokuno-hanamusubi-audio-enabled` に保存。
+- 軽い暫定合成SE: 決定・キャンセル・会話開始・歩行入力・会話の文字。正式SE素材が承認されたら `audio.mjs` で置換する。長押しに伴う音の連打はしない。
+- iPhone Safari実機の音量・ループ継ぎ目・着信や画面ロック後の復帰・画面遷移時のBGM変更は未検証。

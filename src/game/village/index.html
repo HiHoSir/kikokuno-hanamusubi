@@ -46,9 +46,11 @@ button:active,button.held,button[aria-pressed=true]{background:#e8cc8b;color:#27
 <link rel="stylesheet" href="./dialogue.css?v=dotgothic16">
 <link rel="stylesheet" href="../ui/controls.css?v=dotgothic16">
 <script type="module" src="../ui/selection-guard.mjs"></script>
+<link rel="stylesheet" href="../audio/audio.css">
+<script type="module" src="../audio/boot.mjs"></script>
 </head>
 <body>
-<main>
+<main data-bgm="village">
 <h1 class="screen-reader">鬼灯村</h1>
 <section class="viewport" aria-label="鬼灯村">
 <div class="village-hud"><span>鬼灯村</span><output id="status" aria-live="polite">村の中</output><p id="objective" aria-live="polite">里長の話を聞こう</p></div>
@@ -72,6 +74,7 @@ button:active,button.held,button[aria-pressed=true]{background:#e8cc8b;color:#27
   <button id="action-b" class="round sub" type="button" aria-label="B 戻る">B<small>戻る</small></button>
   <button id="action-a" class="round main" type="button" aria-label="A 決定・話す">A<small>決定</small></button>
 </section>
+<button id="sound-toggle" type="button" aria-label="サウンドを再生" aria-pressed="false">♪ 再生</button>
 </main>
 <script type="module" src="./walk.mjs"></script>
 </body>

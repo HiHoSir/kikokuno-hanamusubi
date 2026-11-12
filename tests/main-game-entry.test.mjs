@@ -37,7 +37,8 @@ test('production modules pass Node syntax checks',()=>{
   'src/game/village/movement.mjs','src/game/village/residents.mjs',
   'src/game/village/render.mjs','src/game/interiors/walk.mjs',
   'src/game/interiors/rooms.mjs','src/game/interiors/room-art.mjs',
-  'src/opening/opening.js','src/field/walk.mjs'
+  'src/opening/opening.js','src/field/walk.mjs',
+  'src/game/audio/audio.mjs','src/game/audio/boot.mjs'
  ])execFileSync(process.execPath,['--check',path]);
 });
 

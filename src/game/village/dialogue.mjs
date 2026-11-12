@@ -25,7 +25,11 @@ export function bindDialogue(onOpen=()=>{}, onComplete=()=>{}) {
 
   function tick() {
     if(!conversation)return;
-    if(displayed<characters.length)line.textContent+=characters[displayed++];
+    if(displayed<characters.length){
+      const ch=characters[displayed++];
+      line.textContent+=ch;
+      globalThis.KIKOKU_AUDIO?.talkChar?.(ch);
+    }
     if(displayed<characters.length)typingTimer=setTimeout(tick,36);
     else {typingTimer=null;indicator();}
   }
@@ -56,6 +60,7 @@ export function bindDialogue(onOpen=()=>{}, onComplete=()=>{}) {
     index=0;
     conversation.face=faceToward(x-conversation.x,y-conversation.y);
     onOpen();
+    globalThis.KIKOKU_AUDIO?.se?.('talk');
     panel.hidden=false;
     showLine();
     return true;
@@ -77,6 +82,8 @@ export function bindDialogue(onOpen=()=>{}, onComplete=()=>{}) {
 
   function advance() {
     if(!conversation)return false;
+    globalThis.KIKOKU_AUDIO?.unlock?.();
+    globalThis.KIKOKU_AUDIO?.se?.('confirm');
     if(displayed<characters.length) {
       stopTyping();
       displayed=characters.length;

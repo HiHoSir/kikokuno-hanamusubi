@@ -1615,6 +1615,90 @@
         "ref": "gh-pages",
         "path": "previews/village-walk/map/terrain.png"
       }
+    },
+    {
+      "id": "bgm-title",
+      "type": "audio",
+      "path": "assets/audio/bgm/title.ogg",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "ref": "main",
+        "path": "review/audio/bgm-pack/title_bgm_v1.ogg"
+      },
+      "usage": "bgm-title"
+    },
+    {
+      "id": "bgm-field",
+      "type": "audio",
+      "path": "assets/audio/bgm/field.ogg",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "ref": "main",
+        "path": "review/audio/bgm-pack/theme_sfc_v10.ogg"
+      },
+      "usage": "bgm-field"
+    },
+    {
+      "id": "bgm-village",
+      "type": "audio",
+      "path": "assets/audio/bgm/village.ogg",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "ref": "main",
+        "path": "review/audio/bgm-pack/mura_bgm_v1.ogg"
+      },
+      "usage": "bgm-village"
+    },
+    {
+      "id": "bgm-dungeon",
+      "type": "audio",
+      "path": "assets/audio/bgm/dungeon.ogg",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "ref": "main",
+        "path": "review/audio/bgm-pack/dungeon_bgm_v1.ogg"
+      },
+      "usage": "bgm-dungeon"
+    },
+    {
+      "id": "bgm-battle",
+      "type": "audio",
+      "path": "assets/audio/bgm/battle.ogg",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "ref": "main",
+        "path": "review/audio/bgm-pack/battle_bgm_v2.ogg"
+      },
+      "usage": "bgm-battle"
+    },
+    {
+      "id": "bgm-prologue-theme",
+      "type": "audio",
+      "path": "assets/audio/bgm/prologue-theme.ogg",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "ref": "main",
+        "path": "review/audio/bgm-pack/theme_sfc_v8rev.ogg"
+      },
+      "usage": "bgm-prologue-theme"
+    },
+    {
+      "id": "se-battle-encounter",
+      "type": "audio",
+      "path": "assets/audio/se/battle-encounter.ogg",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "ref": "main",
+        "path": "review/audio/bgm-pack/battle_se_v2.ogg"
+      },
+      "usage": "se-battle-encounter"
     }
   ],
   "designReferences": [

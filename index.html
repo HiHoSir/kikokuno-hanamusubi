@@ -12,9 +12,11 @@
   <title>鬼哭の花結び</title>
   <link rel="stylesheet" href="./src/title/title.css?v=dotgothic16">
   <script type="module" src="./src/title/title.js"></script>
+<link rel="stylesheet" href="./src/game/audio/audio.css">
+<script type="module" src="./src/game/audio/boot.mjs"></script>
 </head>
 <body>
-  <main class="title-screen">
+  <main class="title-screen" data-bgm="title">
     <div class="title-home">
       <h1 class="title-logo">
         <img src="./assets/ui/title/logo.webp" width="960" height="640" alt="鬼哭の花結び">
@@ -35,6 +37,7 @@
         </div>
       </footer>
     </section>
-  </main>
+  <button id="sound-toggle" type="button" aria-label="サウンドを再生" aria-pressed="false">♪ 再生</button>
+</main>
 </body>
 </html>

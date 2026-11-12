@@ -66,9 +66,11 @@ button.held{background:#e8cc8b;color:#272d22}
 </style>
 <link rel="stylesheet" href="../game/ui/controls.css?v=dotgothic16">
 <script type="module" src="../game/ui/selection-guard.mjs"></script>
+<link rel="stylesheet" href="../game/audio/audio.css">
+<script type="module" src="../game/audio/boot.mjs"></script>
 </head>
 <body>
-<main>
+<main data-bgm="field">
 
 <section class="viewport" aria-label="フィールド">
 <header class="field-hud"><h1>花霞野</h1><output id="status">鬼灯村の南口</output></header>
@@ -93,6 +95,7 @@ button.held{background:#e8cc8b;color:#272d22}
   <button id="action-b" class="round sub" type="button" aria-label="B 戻る">B<small>戻る</small></button>
   <button id="action-a" class="round main" type="button" aria-label="A 決定・話す">A<small>決定</small></button>
 </section>
+<button id="sound-toggle" type="button" aria-label="サウンドを再生" aria-pressed="false">♪ 再生</button>
 </main>
 <script src="./assets.js?v=e044a0a"></script>
 <script src="../../data/maps/field/terrain.js?v=26136fe"></script>

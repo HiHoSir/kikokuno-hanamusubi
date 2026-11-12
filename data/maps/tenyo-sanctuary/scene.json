@@ -5260,6 +5260,7 @@
       "repository": "HiHoSir/yaksha-hanamusubi",
       "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
       "path": "assets/settlement-editor/maps/tenyo-sanctuary-water-v5.json"
-    }
+    },
+    "heroDisplayScale": 0.52
   }
 }

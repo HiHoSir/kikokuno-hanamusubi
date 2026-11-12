@@ -190,3 +190,30 @@ test('original sanctuary renderer draws 80x112 atlas frames at the SAME foot anc
     assert.equal(renderer.actorDepth({x:3,y:5,dir},bounds,32),176,'depth is ground contact, not head height');
   }
 });
+
+test('sanctuary screenshot regression: player is not giant compared with Shirotae and the shrine',()=>{
+  const scale=map.game.heroDisplayScale;
+  assert.equal(map.game.hero,'assets/characters/hizuki/walk-4dir-80x112.png');
+  assert.equal(scale,0.52,'scene-specific display scale, NOT an asset downsize');
+  const renderer=sandbox.SMRender,im={width:240,height:448};
+  const bounds=renderer.actorBounds(im,()=>{throw Error('village atlas should not use the 32px sampling canvas');});
+  const calls=[];
+  const ctx={drawImage(...args){calls.push(args);}};
+  const a={x:3,y:5,dir:'u',frame:1};
+  renderer.actor(ctx,a,im,bounds,32,null,scale);
+  const [,sx,sy,sw,sh,dx,dy,dw,dh]=calls[0];
+  assert.deepEqual([sx,sy,sw,sh],[80,112,80,112],'keep full village-scale source atlas');
+  const near=(actual,expected)=>assert.ok(Math.abs(actual-expected)<0.0001,`expected ${expected}, got ${actual}`);
+  near(dw,80*scale);near(dh,112*scale);
+  near(dx,(a.x+.5)*32-40*scale);
+  near(dy,(a.y+.5)*32-106*scale);
+  near(dx+40*scale,(a.x+.5)*32);
+  near(dy+106*scale,(a.y+.5)*32);
+  assert.equal(renderer.actorDepth(a,bounds,32),(a.y+.5)*32,'feet, shadows and occlusion retain the same location');
+  const walk=readFileSync('src/game/tenyo/walk.mjs','utf8');
+  assert.ok(walk.includes('heroDisplayScale:map.game.heroDisplayScale??1'),'renderer receives authored visual scale');
+  assert.ok(!walk.includes('map.game.heroDisplayScale*32'),'logical 32px cell movement must not scale with sprite');
+  // White and the two guards retain their approved relative size.
+  assert.equal(map.game.residents.filter(n=>n.id.startsWith('guardian')).length,2);
+  assert.ok(!map.game.residents.some(n=>n.displayScale!==undefined),'NPC scale untouched');
+});

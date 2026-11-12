@@ -153,7 +153,7 @@ async function start() {
       distance += travel;
       [x,y] = [nx,ny];
       if (direction==='down' && y>=plan.exitY) {
-        location.assign(exit.href);
+        window.KIKOKU_ROUTE.go(exit.href);
         return;
       }
     }

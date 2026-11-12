@@ -32,6 +32,12 @@
 - 仕様確認用の画像・比較画像を勝手に生成しない。画像加工で修復可能なら再生成しない。
 - 生成結果・採用候補・採用済み・ゲーム実装・公開を混同しない。
 
+## 本編の単一ページと音声の責務
+- タイトルはルート `index.html`、オープニングは `src/opening/`、本編の唯一の実行ページは `src/game/index.html`。本編の村・室内・フィールド・天妖の社は**親ページから読み込む内側の描画ページ**とし、独立して開始しない。
+- `src/game/navigation/game-shell.mjs` の親画面でBGMを継続再生する。村と室内は同一のトラック `village` のまま再生位置を一切リセットしない。個別描画ページで別BGMプレイヤーを作らない。
+- 画面間移動は `window.KIKOKU_ROUTE.go(遷移先)` のみ使用。親ページにいる場合は `window.KIKOKU_GAME.navigate` へ移譲する。 `location.assign` による画面切替は禁止。
+- 新規の本編画面は `src/game/navigation/game-shell.mjs` の許可ルート・BGM割当、`src/game/navigation/entry.js`、`tests/entry-routing.test.mjs`、`tests/game-shell.test.mjs` を一緒に更新する。直URLと更新はタイトルへ戻す。検査専用 `previews/` は対象外。詳細は `docs/GAME_ENTRY.md`。
+
 ## 実装・検査・公開
 - コード変更前は現行実装と原因を調査してから最小範囲を修正する。
 - `npm test` とゲーム固有の検査を行う。GitHub Actions、Pages、iPhone実機Safariは独立した検査として扱い、未実施を成功と報告しない。

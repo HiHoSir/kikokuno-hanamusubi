@@ -55,6 +55,8 @@ function exitReached(map,x,y){
 async function start(){
   if(!SMModel||!SMRender)throw new Error('天妖の社の描画エンジンが読み込めません');
   const mapUrl=new URL('../../../data/maps/tenyo-sanctuary/scene.json',import.meta.url);
+  // A fresh scene JSON is essential after the accepted NPC assets change.
+  mapUrl.searchParams.set('v','tenyo-npc-80x112');
   const response=await fetch(mapUrl);
   if(!response.ok)throw new Error('天妖の社のマップデータを読めません');
   const map=SMModel.parse(await response.text());
@@ -140,7 +142,7 @@ async function start(){
 
   function leave(){
     clearInput();waterfall.pause();
-    location.assign(new URL('../../field/?from=shrine',import.meta.url));
+    window.KIKOKU_ROUTE.go(new URL('../../field/?from=shrine',import.meta.url));
   }
   function startMove(direction,now){
     const [dx,dy,face,dir]=directions[direction];

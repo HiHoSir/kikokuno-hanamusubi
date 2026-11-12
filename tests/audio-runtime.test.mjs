@@ -119,3 +119,38 @@ test('village music resumes its saved position on interior navigation',async()=>
   assert.equal(field.player.currentTime,0,'a different track must not inherit the village time');
  }finally{for(const [key,val]of Object.entries(old))globalThis[key]=val;}
 });
+
+test('one soundtrack player survives village ↔ interior without touching playback',async()=>{
+ const previous={Audio:globalThis.Audio,window:globalThis.window,document:globalThis.document,
+   localStorage:globalThis.localStorage,sessionStorage:globalThis.sessionStorage};
+ const win=eventTarget(),doc=eventTarget();doc.hidden=false;
+ globalThis.Audio=MockAudio;globalThis.window=win;globalThis.document=doc;
+ globalThis.localStorage={getItem:()=>null,setItem(){}};
+ globalThis.sessionStorage={getItem:()=>null,setItem(){}};
+ try {
+  const engine=makeAudioEngine('village');
+  const player=engine.player;
+  player.allow=true;
+  engine.unlock();
+  await flush();
+  player.currentTime=23.5;
+  const before=player.calls;
+  assert.equal(engine.switchTrack('village'),false);
+  assert.equal(engine.player,player);
+  assert.equal(engine.player.currentTime,23.5);
+  assert.equal(engine.player.paused,false);
+  assert.equal(engine.player.calls,before,'door transition must never start a new play call');
+  assert.equal(engine.switchTrack('field'),true);
+  await flush();
+  assert.equal(engine.player,player,'the HTMLAudioElement must be shared across areas');
+  assert.equal(engine.trackName,'field');
+  assert.equal(engine.player.loop,false);
+  assert.equal(engine.player.currentTime,0);
+  assert.ok(engine.player.src.endsWith('/assets/audio/bgm/field.ogg'));
+  assert.equal(engine.switchTrack('prologue'),true);
+  await flush();
+  assert.ok(engine.player.src.endsWith('/assets/audio/bgm/prologue-theme.ogg'));
+ }finally {
+  for(const [key,val] of Object.entries(previous)) globalThis[key]=val;
+ }
+});

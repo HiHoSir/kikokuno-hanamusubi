@@ -1,13 +1,22 @@
 # 本編への接続と開始フロー
 このファイルは新リポジトリ `HiHoSir/kikokuno-hanamusubi` の現行実装の説明です。
 
+## 単一本編ページへの統合（2026-11-12）
+- ユーザーの正式な開始URLはルート `/`。タイトル→`src/opening/`（既存MP4）→`src/game/` に遷移し、**以後はトップレベルのHTMLを切り替えない**。
+- `src/game/index.html` が本編の親ページ。内部の `iframe#game-scene` に既存の村・室内・フィールド・天妖の社の各描画ページをロードする。レンダラーやD-padの破壊的書き換えを避けるため、画面描画コードとHTMLは当面分離し、親ページのURLと音声プレイヤーを維持する。
+- 親は `src/game/navigation/game-shell.mjs`。共通 `window.KIKOKU_GAME.navigate` によってマップ切替する。各描画ページは引き続き `window.KIKOKU_ROUTE.go` を呼ぶが、親が存在する場合は内側のページ遷移を行わず親のシーンを切り替える。
+- **BGMと右上の♪サウンドボタンは親ページが一元管理。** `makeAudioEngine` はトラック変更 `switchTrack` に対応。同じ曲（村⇄室内）の場合は `Audio.pause()`、`src` 代入、再ロードを一切行わず、再生位置を保持する。村⇄フィールド、フィールド⇄社は曲だけ切り替える。各シーンの `boot.mjs` は親プレイヤーを再利用し、音声を二重生成しない。
+- `src/game/navigation/entry.js` が最初の入場を管理。タイトル→オープニング→親ページは `sessionStorage` のワンタイム情報を使い、シーンHTMLの直リンクや親ページの直リンク／リロードはタイトルへ戻す。親に許可された埋め込みシーンだけは直接読み込める。`previews/` は従来どおり検査用URL。
+- 里長・白妙の進行 `localStorage` とフィールド帰還座標の `sessionStorage` は維持。
+- 品質確認: 自動テストは `tests/entry-routing.test.mjs` と `tests/game-shell.test.mjs`。iPhone SafariでOP終了→村→室内往復（音声無停止）→フィールド往復→天妖の社往復、音声切替、直接URLを試す。音途切れの実機確認は自動テストでは代替できない。
+
 ## 開始フロー
 1. `index.html` の「はじめから」から `src/opening/index.html` を開く。
 2. `assets/prologue/opening.mp4` を音声付きで再生。iPhone Safari で自動再生がブロックされた場合は画面内の再生ボタンを使う。
-3. 動画の `ended` またはスキップから `src/game/village/` を開き、鬼灯村の `scene.json` に定義された開始地点へ緋月を置く。
+3. 動画の `ended` またはスキップで `src/game/` を開き、その親画面の表示フレームに鬼灯村の `scene.json` をロードして緋月を開始地点に置く。
 4. 村の移動、NPC会話、建物入口での接触入場、室内からの徒歩退出、南口からのフィールド移動を利用する。
 5. フィールドの鬼灯村に再接触すると村の南口へ戻る。
-6. フィールドの天妖の社に接触すると本編の `src/game/tenyo/` へ入場。白妙の会話が完了すると目的が「海の入り江」に進む。南側の出口からフィールドへ戻る。
+6. フィールドの天妖の社に接触すると親画面内で `src/game/tenyo/` の描画へ切り替える。白妙の会話が完了すると目的が「海の入り江」に進む。南側の出口から親画面内のフィールド描画へ戻る。
 
 ## 素材とデータの正本
 - 天妖の社（水上聖域・採用版）：`src/game/tenyo/`、`data/maps/tenyo-sanctuary/scene.json`、`assets/tenyo/`。28×25マスで、48×32マスの旧レイヤー版は不採用。
@@ -49,9 +58,9 @@
 - BGM正本は `assets/audio/bgm/`。ユーザー提供のBGMパックから新規採用し、音源の重複を避けるため旧 `review/audio/bgm-pack/*.ogg` は移動。対応MIDIは `review/` に残し、ゲームが参照しない。
 - 現行画面: タイトル→`title.ogg`、鬼灯村・室内→`village.ogg`、フィールド→`field.ogg`、天妖の社→`prologue-theme.ogg`。オープニング動画の音はそのまま使用し、BGMの二重再生を禁止。
 - `dungeon.ogg` / `battle.ogg` / `se/battle-encounter.ogg` は採用アセットとして登録済み。未実装シーンからはまだ再生しない。社では、元の水音 `assets/tenyo/waterfall-loop.m4a` を音声設定に従って小音量で重ねる。
-- `src/game/audio/audio.mjs` は1ページ1プレイヤー、BGMの曲別ループ開始秒数、音量管理、ゲームでのSE合成、サウンドON/OFF保存、iPhone Safariの音声アンロック・バックグラウンド停止・復帰を担当。
+- `src/game/audio/audio.mjs` は本編の親画面に1つだけプレイヤーを保持し、BGMの曲別ループ開始秒数、音量管理、ゲームでのSE合成、サウンドON/OFF保存、iPhone Safariの音声アンロック・バックグラウンド停止・復帰を担当。
 - タイトル・村・室内・フィールド・天妖の社右上の `♪ 再生` ボタンで音声を許可。ブラウザ側で無音自動再生が制限されても、操作ボタンのタップで再試行。設定は `kikokuno-hanamusubi-audio-enabled` に保存。
 - 軽い暫定合成SE: 決定・キャンセル・会話開始・歩行入力・会話の文字。正式SE素材が承認されたら `audio.mjs` で置換する。長押しに伴う音の連打はしない。
 - iPhone Safari実機の音量・ループ継ぎ目・着信や画面ロック後の復帰・画面遷移時のBGM変更は未検証。
 
-- 同じ村BGMを使う屋外⇄室内の画面遷移では直前の再生位置を短期間引き継ぐ。遷移後の再生許可がSafariに遮断された場合は次のタップで復帰。古い再生Promiseが復帰を妨げないよう連番で制御。
+- 村⇄室内は親プレイヤーを止めずに同じBGMと再生位置を保持。旧ページ遷移向けの短期再生位置保存は互換用として残す。異なる曲への切替後、Safariで再生許可が遮断された場合は親画面の♪ボタンから復帰。古い再生Promiseが復帰を妨げないよう連番で制御。

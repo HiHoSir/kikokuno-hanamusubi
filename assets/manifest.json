@@ -1703,26 +1703,50 @@
     {
       "id": "tenyo-shirotae",
       "type": "character",
-      "path": "assets/characters/npc/shirotae-walk-4dir-32.png",
+      "path": "assets/characters/npc/shirotae-walk-4dir-80x112.png",
       "status": "approved",
-      "origin": {
-        "repo": "HiHoSir/yaksha-hanamusubi",
-        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
-        "path": "assets/characters/tenyo-npc-v3/shirotae-walk-96x128.png"
-      },
-      "usage": "tenyo-sanctuary-production"
+      "usage": "tenyo-sanctuary-production",
+      "sourceDescription": "Approved in conversation on 2026-11-12; cut into 12 frames from the displayed sprite sheet, nearest-neighbour rescaled, alpha retained, indexed-color PNG; no copyrighted game sprites copied",
+      "frame": [
+        80,
+        112
+      ],
+      "directions": [
+        "down",
+        "up",
+        "right",
+        "left"
+      ],
+      "framesPerDirection": 3,
+      "footAnchor": [
+        40,
+        106
+      ],
+      "gitBlobSha": "5aa9d4af450057d467c61b8b32db2592945bd504"
     },
     {
       "id": "tenyo-guardian",
       "type": "character",
-      "path": "assets/characters/npc/shrine-guardian-walk-4dir-32.png",
+      "path": "assets/characters/npc/shrine-guardian-walk-4dir-80x112.png",
       "status": "approved",
-      "origin": {
-        "repo": "HiHoSir/yaksha-hanamusubi",
-        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
-        "path": "assets/characters/tenyo-guardian-sd-v1/walk-atlas-32.png"
-      },
-      "usage": "tenyo-sanctuary-production"
+      "usage": "tenyo-sanctuary-production",
+      "sourceDescription": "Approved in conversation on 2026-11-12; cut into 12 frames from the displayed sprite sheet, nearest-neighbour rescaled, alpha retained, indexed-color PNG; no copyrighted game sprites copied",
+      "frame": [
+        80,
+        112
+      ],
+      "directions": [
+        "down",
+        "up",
+        "right",
+        "left"
+      ],
+      "framesPerDirection": 3,
+      "footAnchor": [
+        40,
+        106
+      ],
+      "gitBlobSha": "b09af3bb30c83dabaa3d74fa5b1686be7dd8952d"
     },
     {
       "id": "tenyo-stepping-stone",

@@ -1,0 +1,55 @@
+// The browser stays on /src/game/ while independent scene renderers swap.
+// Only this parent document owns the BGM player and the sound toggle.
+import {makeAudioEngine} from '../audio/audio.mjs';
+
+const root = new URL('../../../', import.meta.url);
+const frame = document.querySelector('#game-scene');
+const curtain = document.querySelector('#scene-transition');
+const audio = makeAudioEngine('village', document.querySelector('#sound-toggle'));
+globalThis.KIKOKU_AUDIO = audio;
+
+const routes = new Map([
+  [new URL('src/game/village/', root).pathname, {track:'village', label:'鬼灯村'}],
+  [new URL('src/game/interiors/', root).pathname, {track:'village', label:'室内'}],
+  [new URL('src/field/', root).pathname, {track:'field', label:'花霞野'}],
+  [new URL('src/game/tenyo/', root).pathname, {track:'prologue', label:'天妖の社'}],
+]);
+let active = '';
+function normalize(url) {
+  const target = new URL(url, location.href);
+  if (target.origin !== root.origin || !routes.has(target.pathname)) {
+    throw new Error('ゲーム本編以外への画面切替は禁止: ' + target.href);
+  }
+  return target;
+}
+function acceptsChild(url, sourceWindow) {
+  if (sourceWindow !== frame.contentWindow || !active) return false;
+  try {
+    const candidate = normalize(url);
+    return candidate.pathname + candidate.search === active;
+  } catch { return false; }
+}
+function navigate(target, sourceWindow) {
+  if (sourceWindow && sourceWindow !== frame.contentWindow) {
+    throw new Error('現在のゲーム画面からのみ遷移できます');
+  }
+  const next = normalize(target);
+  const route = next.pathname + next.search;
+  if (route === active) return;
+  active = route;
+  curtain.hidden = false;
+  frame.title = '鬼哭の花結び ' + routes.get(next.pathname).label;
+  const nextTrack = routes.get(next.pathname).track;
+  if (audio.trackName !== nextTrack) audio.switchTrack(nextTrack);
+  frame.src = next.href;
+}
+window.KIKOKU_GAME = Object.freeze({acceptsChild, navigate, audio});
+frame.addEventListener('load', () => {
+  try {
+    const target = normalize(frame.contentWindow.location.href);
+    if (target.pathname + target.search === active) curtain.hidden = true;
+  } catch {
+    // Keep the transition cover if a scene was unexpectedly replaced.
+  }
+});
+navigate(new URL('src/game/village/',root));

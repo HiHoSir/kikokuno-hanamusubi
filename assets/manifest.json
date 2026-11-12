@@ -1701,54 +1701,6 @@
       "usage": "se-battle-encounter"
     },
     {
-      "id": "tenyo-background",
-      "type": "map",
-      "path": "assets/tenyo/background.webp",
-      "status": "approved",
-      "origin": {
-        "repo": "HiHoSir/yaksha-hanamusubi",
-        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
-        "path": "assets/maps/tenyo/layer-background.webp"
-      },
-      "usage": "tenyo-sanctuary-production"
-    },
-    {
-      "id": "tenyo-shrine",
-      "type": "map",
-      "path": "assets/tenyo/shrine.webp",
-      "status": "approved",
-      "origin": {
-        "repo": "HiHoSir/yaksha-hanamusubi",
-        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
-        "path": "assets/maps/tenyo/layer-shrine.webp"
-      },
-      "usage": "tenyo-sanctuary-production"
-    },
-    {
-      "id": "tenyo-torii",
-      "type": "map",
-      "path": "assets/tenyo/torii.webp",
-      "status": "approved",
-      "origin": {
-        "repo": "HiHoSir/yaksha-hanamusubi",
-        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
-        "path": "assets/maps/tenyo/layer-torii.webp"
-      },
-      "usage": "tenyo-sanctuary-production"
-    },
-    {
-      "id": "tenyo-forest",
-      "type": "map",
-      "path": "assets/tenyo/forest.webp",
-      "status": "approved",
-      "origin": {
-        "repo": "HiHoSir/yaksha-hanamusubi",
-        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
-        "path": "assets/maps/tenyo/layer-trees.webp"
-      },
-      "usage": "tenyo-sanctuary-production"
-    },
-    {
       "id": "tenyo-shirotae",
       "type": "character",
       "path": "assets/characters/npc/shirotae-walk-4dir-32.png",
@@ -1771,6 +1723,306 @@
         "path": "assets/characters/tenyo-guardian-sd-v1/walk-atlas-32.png"
       },
       "usage": "tenyo-sanctuary-production"
+    },
+    {
+      "id": "tenyo-stepping-stone",
+      "type": "object",
+      "path": "assets/tenyo/stepping-stone.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/pack-v1/stepping_stone.png"
+      },
+      "usage": "tenyo-water-sanctuary-production"
+    },
+    {
+      "id": "tenyo-tenyo-water-gate",
+      "type": "object",
+      "path": "assets/tenyo/tenyo-water-gate.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/tenyo-gate-v1/tenyo_gate_6x4_v3.png"
+      },
+      "usage": "tenyo-water-sanctuary-production"
+    },
+    {
+      "id": "tenyo-torii-gate-v2",
+      "type": "object",
+      "path": "assets/tenyo/torii-gate-v2.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/tenyo-gate-v1/torii_gate_v2_4x3.png"
+      },
+      "usage": "tenyo-water-sanctuary-production"
+    },
+    {
+      "id": "tenyo-tenyo-stone-lantern",
+      "type": "object",
+      "path": "assets/tenyo/tenyo-stone-lantern.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/tenyo-gate-v1/stone_lantern_1x2.png"
+      },
+      "usage": "tenyo-water-sanctuary-production"
+    },
+    {
+      "id": "tenyo-rock-island-lantern-base",
+      "type": "object",
+      "path": "assets/tenyo/rock-island-lantern-base.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/rock-island-v1/stone-island-96x64.png"
+      },
+      "usage": "tenyo-water-sanctuary-production"
+    },
+    {
+      "id": "tenyo-rock-island-lantern-base-mirror",
+      "type": "object",
+      "path": "assets/tenyo/rock-island-lantern-base-mirror.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/rock-island-v1/stone-island-mirror-96x64.png"
+      },
+      "usage": "tenyo-water-sanctuary-production"
+    },
+    {
+      "id": "tenyo-sanctuary-forest-frame-v3",
+      "type": "object",
+      "path": "assets/tenyo/sanctuary-forest-frame-v3.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/sanctuary-frame-v1/forest-frame.png"
+      },
+      "usage": "tenyo-water-sanctuary-production"
+    },
+    {
+      "id": "tenyo-sanctuary-horizon-v1",
+      "type": "object",
+      "path": "assets/tenyo/sanctuary-horizon-v1.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/sanctuary-horizon-v1/horizon.png"
+      },
+      "usage": "tenyo-water-sanctuary-production"
+    },
+    {
+      "id": "tenyo-sanctuary-fall-v2",
+      "type": "object",
+      "path": "assets/tenyo/sanctuary-fall-v2.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/sanctuary-horizon-v1/waterfall.png"
+      },
+      "usage": "tenyo-water-sanctuary-production"
+    },
+    {
+      "id": "tenyo-tenyo-ripple-fx",
+      "type": "effect",
+      "path": "assets/tenyo/tenyo-ripple-fx.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/tenyo-water-v1/shallow_ripple_32x4.png"
+      },
+      "usage": "tenyo-water-sanctuary-production"
+    },
+    {
+      "id": "tenyo-tenyo-lotus-1",
+      "type": "object",
+      "path": "assets/tenyo/tenyo-lotus-1.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/tenyo-water-v1/lotus_leaf_1.png"
+      },
+      "usage": "tenyo-water-sanctuary-production"
+    },
+    {
+      "id": "tenyo-tenyo-lotus-2",
+      "type": "object",
+      "path": "assets/tenyo/tenyo-lotus-2.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/tenyo-water-v1/lotus_leaf_2.png"
+      },
+      "usage": "tenyo-water-sanctuary-production"
+    },
+    {
+      "id": "tenyo-tenyo-lotus-3",
+      "type": "object",
+      "path": "assets/tenyo/tenyo-lotus-3.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/tenyo-water-v1/lotus_leaf_3.png"
+      },
+      "usage": "tenyo-water-sanctuary-production"
+    },
+    {
+      "id": "tenyo-clear-water-shallow",
+      "type": "effect",
+      "path": "assets/tenyo/clear-water-shallow.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/clear-water-v1/shallow.png"
+      },
+      "usage": "tenyo-water-sanctuary-production"
+    },
+    {
+      "id": "tenyo-clear-water-mid",
+      "type": "effect",
+      "path": "assets/tenyo/clear-water-mid.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/clear-water-v1/mid.png"
+      },
+      "usage": "tenyo-water-sanctuary-production"
+    },
+    {
+      "id": "tenyo-clear-water-deep",
+      "type": "effect",
+      "path": "assets/tenyo/clear-water-deep.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/clear-water-v1/deep.png"
+      },
+      "usage": "tenyo-water-sanctuary-production"
+    },
+    {
+      "id": "tenyo-clear-water-shore-deep-mid-n",
+      "type": "effect",
+      "path": "assets/tenyo/clear-water-shore-deep-mid-n.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/clear-water-v1/shore_deep_mid_N.png"
+      },
+      "usage": "tenyo-water-sanctuary-production"
+    },
+    {
+      "id": "tenyo-clear-water-shore-deep-mid-e",
+      "type": "effect",
+      "path": "assets/tenyo/clear-water-shore-deep-mid-e.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/clear-water-v1/shore_deep_mid_E.png"
+      },
+      "usage": "tenyo-water-sanctuary-production"
+    },
+    {
+      "id": "tenyo-clear-water-shore-deep-mid-s",
+      "type": "effect",
+      "path": "assets/tenyo/clear-water-shore-deep-mid-s.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/clear-water-v1/shore_deep_mid_S.png"
+      },
+      "usage": "tenyo-water-sanctuary-production"
+    },
+    {
+      "id": "tenyo-clear-water-shore-deep-mid-w",
+      "type": "effect",
+      "path": "assets/tenyo/clear-water-shore-deep-mid-w.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/clear-water-v1/shore_deep_mid_W.png"
+      },
+      "usage": "tenyo-water-sanctuary-production"
+    },
+    {
+      "id": "tenyo-clear-water-shore-mid-shallow-n",
+      "type": "effect",
+      "path": "assets/tenyo/clear-water-shore-mid-shallow-n.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/clear-water-v1/shore_mid_shallow_N.png"
+      },
+      "usage": "tenyo-water-sanctuary-production"
+    },
+    {
+      "id": "tenyo-clear-water-shore-mid-shallow-e",
+      "type": "effect",
+      "path": "assets/tenyo/clear-water-shore-mid-shallow-e.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/clear-water-v1/shore_mid_shallow_E.png"
+      },
+      "usage": "tenyo-water-sanctuary-production"
+    },
+    {
+      "id": "tenyo-clear-water-shore-mid-shallow-s",
+      "type": "effect",
+      "path": "assets/tenyo/clear-water-shore-mid-shallow-s.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/clear-water-v1/shore_mid_shallow_S.png"
+      },
+      "usage": "tenyo-water-sanctuary-production"
+    },
+    {
+      "id": "tenyo-clear-water-shore-mid-shallow-w",
+      "type": "effect",
+      "path": "assets/tenyo/clear-water-shore-mid-shallow-w.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/clear-water-v1/shore_mid_shallow_W.png"
+      },
+      "usage": "tenyo-water-sanctuary-production"
+    },
+    {
+      "id": "tenyo-waterfall-loop",
+      "type": "audio",
+      "path": "assets/tenyo/waterfall-loop.m4a",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/sanctuary-audio-v1/waterfall-loop.m4a"
+      },
+      "usage": "tenyo-water-sanctuary-production"
     }
   ],
   "designReferences": [
@@ -1789,4 +2041,4 @@
       "note": "User-provided official four-view character sheet. This is a reference image, not a game runtime sprite."
     }
   ]
-}
+}\n

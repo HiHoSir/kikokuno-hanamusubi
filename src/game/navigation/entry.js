@@ -9,7 +9,7 @@
   const lifetime = 120000;
   const scenePaths = new Set([
     'src/opening/', 'src/game/', 'src/game/village/',
-    'src/game/interiors/', 'src/field/', 'src/game/tenyo/',
+    'src/game/interiors/', 'src/field/', 'src/game/tenyo/', 'src/game/battle/',
   ].map(path => new URL(path, root).pathname));
   function consumeTicket() {
     try {

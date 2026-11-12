@@ -11,6 +11,7 @@ export const TRACKS=Object.freeze({
 });
 export const ENCOUNTER_SE=new URL('se/battle-encounter.ogg',ASSET_ROOT);
 export const SOUND_SETTING_KEY='kikokuno-hanamusubi-audio-enabled';
+export const BGM_CHECKPOINT_KEY='kikokuno-hanamusubi-bgm-checkpoint';
 
 export function makeAudioEngine(trackName,button=null) {
   const track=TRACKS[trackName];
@@ -22,7 +23,21 @@ export function makeAudioEngine(trackName,button=null) {
   let allowed=true;
   try{allowed=localStorage.getItem(SOUND_SETTING_KEY)!=='off';}catch{}
   let playing=false,unlockNeeded=false,hiddenPaused=false,suspendedForPage=false;
-  let ctx=null,voiceLast=0;
+  let ctx=null,voiceLast=0,playSerial=0;
+
+  // Preserve position for the same area track across document navigations
+  // (e.g. village <-> house), without restarting the track on every doorway.
+  if(trackName==='village'){
+    try{
+      const point=JSON.parse(sessionStorage.getItem(BGM_CHECKPOINT_KEY)||'null');
+      if(point?.track===trackName && Date.now()-point.at<30000 &&
+         Number.isFinite(point.time) && point.time>0 && point.time<track.length){
+        player.addEventListener('loadedmetadata',()=>{
+          try{player.currentTime=point.time;}catch{}
+        },{once:true});
+      }
+    }catch{}
+  }
 
   function updateUI(){
     if(!button)return;
@@ -33,17 +48,22 @@ export function makeAudioEngine(trackName,button=null) {
   }
   async function play(){
     if(!allowed||document.hidden||suspendedForPage)return;
+    const request=++playSerial;
     try{
       await player.play();
+      if(request!==playSerial)return; // An older promise resolved after a newer tap.
+      if(!allowed||document.hidden||suspendedForPage){pause();return;}
       playing=true;unlockNeeded=false;
     }catch(e){
+      if(request!==playSerial)return;
       playing=false;
       unlockNeeded=e?.name==='NotAllowedError';
-      if(e?.name!=='NotAllowedError')console.warn('BGM再生失敗',trackName,e);
+      if(e?.name!=='NotAllowedError'&&e?.name!=='AbortError')console.warn('BGM再生失敗',trackName,e);
     }
     updateUI();
   }
   function pause(){
+    playSerial++;
     player.pause();playing=false;updateUI();
   }
   function audioContext(){
@@ -130,7 +150,10 @@ export function makeAudioEngine(trackName,button=null) {
     }
   });
   player.addEventListener('pause',()=>{playing=false;updateUI();});
-  player.addEventListener('playing',()=>{playing=true;unlockNeeded=false;updateUI();});
+  player.addEventListener('playing',()=>{
+    if(!allowed||document.hidden||suspendedForPage){pause();return;}
+    playing=true;unlockNeeded=false;updateUI();
+  });
   player.addEventListener('error',()=>{playing=false;updateUI();console.warn('BGMファイルを読めません',track.file);});
   button?.addEventListener('click',()=>{
     setEnabled(!allowed||!playing);
@@ -145,7 +168,14 @@ export function makeAudioEngine(trackName,button=null) {
       void play(); // Safari may require an additional user gesture.
     }
   });
-  window.addEventListener('pagehide',()=>{suspendedForPage=true;pause();});
+  window.addEventListener('pagehide',()=>{
+    if(trackName==='village'&&allowed&&Number.isFinite(player.currentTime)&&player.currentTime>0){
+      try{sessionStorage.setItem(BGM_CHECKPOINT_KEY,JSON.stringify({
+        track:trackName,time:player.currentTime,at:Date.now()
+      }));}catch{}
+    }
+    suspendedForPage=true;pause();
+  });
   window.addEventListener('pageshow',()=>{
     if(!suspendedForPage)return;
     suspendedForPage=false;

@@ -1,4 +1,6 @@
-export const HIZUKI_WALK_SPEED = 176;
+// Authored village pace, in world pixels per second. The 14px step cycle
+// in residents.mjs follows actual movement distance rather than clock time.
+export const HIZUKI_WALK_SPEED = 288;
 
 export function touchedEntrance(markers,x,y,nx,ny,radius) {
   if(ny>=y || x!==nx) return;

@@ -13,6 +13,7 @@ const routes = new Map([
   [new URL('src/game/interiors/', root).pathname, {track:'village', label:'室内'}],
   [new URL('src/field/', root).pathname, {track:'field', label:'花霞野'}],
   [new URL('src/game/tenyo/', root).pathname, {track:'prologue', label:'天妖の社'}],
+  [new URL('src/game/battle/', root).pathname, {track:'battle', label:'戦闘'}],
 ]);
 let active = '';
 function normalize(url) {

@@ -12,6 +12,7 @@ const scenes=[
   ['src/game/interiors/','src/game/interiors/index.html'],
   ['src/field/','src/field/index.html'],
   ['src/game/tenyo/','src/game/tenyo/index.html'],
+  ['src/game/battle/','src/game/battle/index.html'],
 ];
 function enter(relativePath,entry,storage=new Map(),parent=null){
   const url=new URL(relativePath,base),changes=[];
@@ -36,7 +37,7 @@ function enter(relativePath,entry,storage=new Map(),parent=null){
 test('direct scene and game shell links return to title, previews are unaffected',()=>{
   for(const [path,html] of scenes){
     const content=readFileSync(html,'utf8');
-    assert.match(content,/<script src="[^"]*navigation\/entry\.js" data-entry="game"><\/script>/);
+    assert.match(content,/<script src="[^"]*navigation\/entry\.js(?:\?[^\"]*)?" data-entry="game"><\/script>/);
     assert.ok(content.indexOf('navigation/entry.js')<content.indexOf('type="module"'));
     const direct=enter(path,'game');
     assert.deepEqual(direct.changes,[['replace',base]],path);
@@ -83,7 +84,7 @@ test('all in-world transitions use the shared routing helper',()=>{
   assert.match(readFileSync('index.html','utf8'),/navigation\/entry\.js" data-entry="title"/);
   assert.match(readFileSync('src/title/title.js','utf8'),/KIKOKU_ROUTE\.go\(/);
   for(const file of ['src/opening/opening.js','src/game/village/walk.mjs',
-    'src/game/interiors/walk.mjs','src/field/walk.mjs','src/game/tenyo/walk.mjs']){
+    'src/game/interiors/walk.mjs','src/field/walk.mjs','src/game/tenyo/walk.mjs','src/game/battle/walk.mjs']){
     const content=readFileSync(file,'utf8');
     assert.match(content,/KIKOKU_ROUTE\.go\(/,file);
     assert.doesNotMatch(content,/(?:window\.)?location\.assign\(/,file);

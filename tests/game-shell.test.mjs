@@ -6,7 +6,7 @@ import {runInNewContext} from 'node:vm';
 const shellSource=readFileSync('src/game/navigation/game-shell.mjs','utf8');
 const html=readFileSync('src/game/index.html','utf8');
 const boot=readFileSync('src/game/audio/boot.mjs','utf8');
-test('one top-level game document hosts all four production areas',()=>{
+test('one top-level game document hosts all five production areas',()=>{
   assert.match(html,/id="game-scene"/);
   assert.match(html,/id="sound-toggle"/);
   assert.match(html,/game-shell\.mjs/);
@@ -14,6 +14,7 @@ test('one top-level game document hosts all four production areas',()=>{
   assert.match(shellSource,/src\/game\/interiors\//);
   assert.match(shellSource,/src\/field\//);
   assert.match(shellSource,/src\/game\/tenyo\//);
+  assert.match(shellSource,/src\/game\/battle\//);
   assert.match(shellSource,/new URL\('src\/game\/village\/',root\)/);
   assert.match(boot,/const shared=parentGame\?\.audio/);
   assert.match(boot,/duplicate\.hidden=true/);
@@ -29,6 +30,7 @@ test('BGM ownership is persistent and a door to the interior does not restart vi
   assert.equal(map.get('src/game/interiors/'),'village');
   assert.equal(map.get('src/field/'),'field');
   assert.equal(map.get('src/game/tenyo/'),'prologue');
+  assert.equal(map.get('src/game/battle/'),'battle');
 });
 test('game shell navigation is delegated and validates scene and frame identity',()=>{
   const base='https://example.test/kikokuno-hanamusubi/';
@@ -59,4 +61,8 @@ test('game shell navigation is delegated and validates scene and frame identity'
   assert.throws(()=>host.navigate(new URL('previews/cave-prototype/',base),frame.contentWindow),/ゲーム本編以外/);
   host.navigate(new URL('src/field/?from=village',base),frame.contentWindow);
   assert.deepEqual(transitions,['field']);
+  host.navigate(new URL('src/game/battle/',base),frame.contentWindow);
+  assert.deepEqual(transitions,['field','battle']);
+  host.navigate(new URL('src/field/?from=battle',base),frame.contentWindow);
+  assert.deepEqual(transitions,['field','battle','field']);
 });

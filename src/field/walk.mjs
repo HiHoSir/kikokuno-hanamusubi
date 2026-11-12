@@ -1,4 +1,5 @@
 import {contact, createFieldRenderer, fieldStep, loadFieldArt, villageArrival, placeArrival, world} from './runtime.mjs?v=e044a0a';
+import {BATTLE_REQUEST_KEY,FIELD_RETURN_KEY,chooseEnemy} from '../game/battle/rules.mjs';
 
 const scene = document.querySelector('#scene');
 const load = document.querySelector('#load');
@@ -31,6 +32,16 @@ function clearInput() {
 }
 
 const RETURN_KEY='kikokuno-hanamusubi-field-return';
+function battleReturnPosition(){
+  try{
+    const point=JSON.parse(sessionStorage.getItem(FIELD_RETURN_KEY)||'null');
+    if(Number.isFinite(point?.x)&&Number.isFinite(point?.y)&&
+      world.walkable(point.x,point.y)&&!contact(point.x,point.y)){
+      return [point.x,point.y];
+    }
+  }catch{}
+  return villageArrival();
+}
 function shrineReturnPosition(){
   try{
     const prior=JSON.parse(sessionStorage.getItem(RETURN_KEY)||'null');
@@ -44,8 +55,20 @@ function shrineReturnPosition(){
 }
 async function start() {
   const from=new URLSearchParams(location.search).get('from');
-  const [x, y] = from==='shrine' ? shrineReturnPosition() : villageArrival();
+  const [x, y] = from==='shrine' ? shrineReturnPosition() : from==='battle' ? battleReturnPosition() : villageArrival();
   const state = {x, y, row: from==='village' ? 0 : 1, column: 0};
+  let walkedSteps=0;
+  const encounterAfter=9+Math.floor(Math.random()*5);
+  function startBattle(){
+    clearInput();
+    try{
+      sessionStorage.setItem(FIELD_RETURN_KEY,JSON.stringify({x:state.x,y:state.y,row:state.row}));
+      sessionStorage.setItem(BATTLE_REQUEST_KEY,JSON.stringify({
+        enemyId:chooseEnemy(walkedSteps),at:Date.now()
+      }));
+    }catch{}
+    window.KIKOKU_ROUTE.go(new URL('../game/battle/', import.meta.url));
+  }
   const hero = await loadFieldArt();
   const render = createFieldRenderer(scene.getContext('2d', {alpha: false}), hero);
   let phase = 0;
@@ -63,6 +86,7 @@ async function start() {
     let startAt = now;
     if (state.motion && now - state.motion.at >= state.motion.duration) {
       const completed=state.motion;
+      const wasLadder=Boolean(state.ladder);
       startAt = Math.max(state.motion.at + state.motion.duration, now - 32);
       state.motion = null;
       state.ladder = null;
@@ -82,6 +106,13 @@ async function start() {
           }));
         }catch{}
         window.KIKOKU_ROUTE.go(new URL('../game/tenyo/', import.meta.url));
+        return;
+      }
+      // Enter battle only after several completed, walkable wilderness steps.
+      // Do not trigger on scripted entrances or during a ladder traversal.
+      walkedSteps++;
+      if(walkedSteps>=encounterAfter && !destination && !wasLadder){
+        startBattle();
         return;
       }
     }

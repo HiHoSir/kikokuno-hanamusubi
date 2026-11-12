@@ -33,7 +33,7 @@
 - 里長との会話を最後まで読むと、結び札を受け取った進行状態が `localStorage` の `kikokuno-hanamusubi-chapter-one` に `shrine` として保存され、目標が「天妖の社へ向かおう」に更新される。
 - 白妙との会話を最後まで読むと、同じキーが `cove` に更新され、海の入り江の潮平を探す目標になる。里長との再会話でも進捗は戻らない。
 - ゲーム進行の共通ロジックは `src/game/story/chapter-one.mjs`。天妖の社の位置・当たり判定・素材・QAは `docs/TENYO_SHRINE.md` を参照。
-- 海の入り江の個別イベント、持ち物UI、戦闘等は別途実装する。
+- 海の入り江の個別イベントと本格的な持ち物UIは別途実装する。緋月1人の通常戦闘は `src/game/battle/` と `docs/BATTLE_SYSTEM.md` を正本とし、既存敵3種・既存戦闘BGMで本編に接続済み。
 
 ## 品質検査
 - `npm test`: 台帳・既存資産の検査に加えて `tests/main-game-entry.test.mjs` の配線と素材を検査。

@@ -262,13 +262,13 @@ async function start() {
       const [nx,ny]=walk.move(x,y,dx*step,dy*step,occupied);
       if(crossesSouthExit(fieldExit,x,y,nx,ny)){
         clearInput();
-        location.assign('../../field/?from=village');
+        window.KIKOKU_ROUTE.go('../../field/?from=village');
         return;
       }
       const entrance=touchedEntrance(entrances,x,y,nx,ny,data.radius);
       if(entrance){
         clearInput();
-        location.assign('../interiors/?building='+encodeURIComponent(entrance.id));
+        window.KIKOKU_ROUTE.go('../interiors/?building='+encodeURIComponent(entrance.id));
         return;
       }
       const travel=Math.hypot(nx-x,ny-y);

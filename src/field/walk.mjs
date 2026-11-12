@@ -71,7 +71,7 @@ async function start() {
       const destination=contact(state.x,state.y);
       if(destination==='village'){
         clearInput();
-        location.assign(new URL('../game/village/?focus=field-exit', import.meta.url));
+        window.KIKOKU_ROUTE.go(new URL('../game/village/?focus=field-exit', import.meta.url));
         return;
       }
       if(destination==='shrine'){
@@ -81,7 +81,7 @@ async function start() {
             place:'shrine',x:completed.x,y:completed.y
           }));
         }catch{}
-        location.assign(new URL('../game/tenyo/', import.meta.url));
+        window.KIKOKU_ROUTE.go(new URL('../game/tenyo/', import.meta.url));
         return;
       }
     }
@@ -112,14 +112,14 @@ async function start() {
     const destination=contact(state.x,state.y);
     if(destination==='village'){
       clearInput();
-      location.assign(new URL('../game/village/?focus=field-exit',location.href));
+      window.KIKOKU_ROUTE.go(new URL('../game/village/?focus=field-exit',location.href));
     }else if(destination==='shrine'){
       clearInput();
       const prior=state.motion??state;
       try{sessionStorage.setItem(RETURN_KEY,JSON.stringify({
         place:'shrine',x:prior.x,y:prior.y
       }));}catch{}
-      location.assign(new URL('../game/tenyo/',location.href));
+      window.KIKOKU_ROUTE.go(new URL('../game/tenyo/',location.href));
     }
   });
   const backAction=document.querySelector('#action-b');

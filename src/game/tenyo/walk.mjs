@@ -140,7 +140,7 @@ async function start(){
 
   function leave(){
     clearInput();waterfall.pause();
-    location.assign(new URL('../../field/?from=shrine',import.meta.url));
+    window.KIKOKU_ROUTE.go(new URL('../../field/?from=shrine',import.meta.url));
   }
   function startMove(direction,now){
     const [dx,dy,face,dir]=directions[direction];

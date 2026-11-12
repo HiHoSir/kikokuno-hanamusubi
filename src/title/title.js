@@ -3,6 +3,13 @@ const scenes = [
   { name: '花霞野', url: new URL('../../assets/ui/title/field.webp', import.meta.url) },
 ];
 
+// Only a title-menu click may authorize entering the opening movie.
+document.querySelector('.title-start').addEventListener('click', event => {
+  if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+  event.preventDefault();
+  window.KIKOKU_ROUTE.go(event.currentTarget.href);
+});
+
 const home = document.querySelector('.title-home');
 const demo = document.querySelector('.title-demo');
 const openDemo = document.querySelector('#show-demo');

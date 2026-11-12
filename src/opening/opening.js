@@ -11,7 +11,7 @@ let navigating = false;
 function enterVillage() {
   if (navigating) return;
   navigating = true;
-  window.location.assign(villageUrl.href);
+  window.KIKOKU_ROUTE.go(villageUrl.href);
 }
 
 function showPlayButton(text) {

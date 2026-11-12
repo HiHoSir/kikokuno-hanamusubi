@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync,existsSync} from 'node:fs';
+import {createHash} from 'node:crypto';
 import {execFileSync} from 'node:child_process';
 import {createContext,runInContext} from 'node:vm';
 import {readStoryStage,advanceStoryStage,objectiveForStage} from '../src/game/story/chapter-one.mjs';
@@ -141,4 +142,51 @@ test('production sanctuary ESM entry links and begins loading its canonical map'
     await import('./src/game/tenyo/walk.mjs');
   `;
   execFileSync(process.execPath,['--input-type=module','-e',boot],{timeout:10000,stdio:'pipe'});
+});
+
+test('Shirotae and both shrine guards share village-scale transparent atlas conventions',()=>{
+  const hero='assets/characters/hizuki/walk-4dir-80x112.png';
+  const white='assets/characters/npc/shirotae-walk-4dir-80x112.png';
+  const guard='assets/characters/npc/shrine-guardian-walk-4dir-80x112.png';
+  assert.equal(map.game.hero,hero,'field-only SD32 is not allowed inside sanctuary');
+  assert.equal(map.game.residents.find(x=>x.id==='shirotae').asset,white);
+  const sentries=map.game.residents.filter(x=>x.id.startsWith('guardian'));
+  assert.equal(sentries.length,2);
+  assert.ok(sentries.every(x=>x.asset===guard),'two guards reuse ONE approved image');
+  const manifest=JSON.parse(readFileSync('assets/manifest.json','utf8'));
+  for(const [key,path] of [['tenyo-shirotae',white],['tenyo-guardian',guard]]){
+    const record=manifest.assets.find(x=>x.id===key);
+    assert.equal(record.path,path);
+    const bytes=readFileSync(path);
+    assert.equal(bytes.subarray(1,4).toString(),'PNG');
+    assert.equal(bytes.readUInt32BE(16),240,'3 frames each 80 pixels wide');
+    assert.equal(bytes.readUInt32BE(20),448,'4 directions each 112 pixels tall');
+    assert.ok(bytes.indexOf(Buffer.from('tRNS'))!==-1,'must have transparent PNG palette');
+    const gitSha=createHash('sha1').update('blob '+bytes.length+'\\0').update(bytes).digest('hex');
+    assert.equal(gitSha,record.gitBlobSha,'manifest must identify exactly the approved PNG');
+  }
+  assert.equal(C.byId.sanctuary_npc_shirotae.src,white);
+  assert.equal(C.byId.sanctuary_npc_guard.src,guard);
+  for(const oldPath of ['shirotae-walk-4dir-32.png','shrine-guardian-walk-4dir-32.png'])
+    assert.equal(existsSync('assets/characters/npc/'+oldPath),false,'obsolete same-role sprite must be removed');
+});
+
+test('original sanctuary renderer draws 80x112 atlas frames at the SAME foot anchor as the village',()=>{
+  const renderer=sandbox.SMRender,image={width:240,height:448};
+  const bounds=renderer.actorBounds(image,()=>{throw Error('fixed 96x128 buffer is forbidden for village atlas')});
+  const calls=[];
+  const ctx={drawImage(...args){calls.push(args)}};
+  for(const [dir,row] of [['d',0],['u',1],['r',2],['l',3]]){
+    renderer.actor(ctx,{x:3,y:5,dir,frame:1},image,bounds,32);
+    const args=calls.at(-1);
+    assert.equal(args[1],80,'second walking frame');
+    assert.equal(args[2],row*112,'correct directional row');
+    assert.equal(args[3],80);
+    assert.equal(args[4],112);
+    assert.equal(args[5],72,'foot X = tile center minus 40');
+    assert.equal(args[6],70,'foot Y = tile center minus 106');
+    assert.equal(args[7],80);
+    assert.equal(args[8],112);
+    assert.equal(renderer.actorDepth({x:3,y:5,dir},bounds,32),176,'depth is ground contact, not head height');
+  }
 });

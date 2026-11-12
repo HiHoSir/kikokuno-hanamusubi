@@ -118,7 +118,7 @@ test('battle is production scene, field encounter and safe return in persistent 
   assert.ok(field.includes('walkedSteps>=encounterAfter'));
   assert.ok(shell.includes("track:'battle'"));
   assert.ok(entry.includes("'src/game/battle/'"));
-  assert.ok(code.includes(BATTLE_REQUEST_KEY));
+  assert.ok(code.includes('BATTLE_REQUEST_KEY'));
   assert.ok(field.includes(FIELD_RETURN_KEY));
   assert.ok(!/previews\//.test(html));
   for(const p of ['src/game/battle/rules.mjs','src/game/battle/walk.mjs','src/field/walk.mjs','src/game/navigation/game-shell.mjs'])

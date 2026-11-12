@@ -1,4 +1,4 @@
-import {HIZUKI_WALK_SPEED, makeWalk} from '../village/movement.mjs';
+import {HIZUKI_INTERIOR_WALK_SPEED, makeWalk} from '../village/movement.mjs?v=village-speed-288';
 import {DEFAULT_CAMERA_ZOOM, pixelViewport} from '../village/render.mjs';
 import {drawCharacter, RESIDENT_RADIUS, residentInFront} from '../village/residents.mjs';
 import {bindDialogue} from '../village/dialogue.mjs';
@@ -146,7 +146,7 @@ async function start() {
     if (direction && !dialogue.active) {
       const [dx,dy,row] = directions[direction];
       face = row;
-      const step=HIZUKI_WALK_SPEED*elapsed/1000;
+      const step=HIZUKI_INTERIOR_WALK_SPEED*elapsed/1000;
       const [nx,ny] = walk.move(x,y,dx*step,dy*step);
       const travel = Math.hypot(nx-x,ny-y);
       moving = travel>0;

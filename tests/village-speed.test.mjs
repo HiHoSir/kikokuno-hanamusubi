@@ -36,7 +36,7 @@ test('walking animation strides are tied to real distance instead of elapsed tim
 test('increased speed still checks collisions at subpixel-sized intervals',()=>{
   const width=120,height=100,blocked=new Uint8Array(width*height);
   for(let y=0;y<height;y++)for(let x=60;x<width;x++)blocked[y*width+x]=1;
-  const walk=makeWalk(width,height,8);
+  const walk=makeWalk(width,height,blocked,8);
   let [x,y]=[40,50];
   const distancePerFrame=HIZUKI_WALK_SPEED*40/1000;
   for(let i=0;i<8;i++)[x,y]=walk.move(x,y,distancePerFrame,0);

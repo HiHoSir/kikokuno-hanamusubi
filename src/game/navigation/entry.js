@@ -48,9 +48,9 @@
   }
 
   window.KIKOKU_ROUTE = Object.freeze({ go });
-  if (script.dataset.entry === 'title') {
+  if (script.dataset?.entry === 'title') {
     try { sessionStorage.removeItem(ticketKey); } catch { /* unavailable */ }
-  } else if (script.dataset.entry === 'game' && !consumeTicket()) {
+  } else if (script.dataset?.entry === 'game' && !consumeTicket()) {
     // Run synchronously in <head> before scene modules or assets are loaded.
     document.documentElement.style.visibility = 'hidden';
     location.replace(root.href);

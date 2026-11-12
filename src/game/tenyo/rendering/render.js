@@ -9,26 +9,51 @@ function phase(o,t){return o.forExport?0:Number.isInteger(o.animationFrame)?((o.
 function drawWater(c,m,o={}){const frames=M.autotileLayout(m);for(const v of m.objects.filter(v=>C.byId[v.templateId].water||C.byId[v.templateId].bridgePassages).sort((a,b)=>Number(!!C.byId[a.templateId].bridgePassages)-Number(!!C.byId[b.templateId].bridgePassages))){const t=C.byId[v.templateId],im=o.images?.[v.templateId];if(!im)continue;const index=frames.get(v.id),r=M.visualRect(m,v),source=t.autotile?[index%8*32,Math.floor(index/8)*32+(t.animation?phase(o,t)*t.animation.frameHeight:0),32,32]:t.sourceRect;c.drawImage(im,...source,r.x,r.y,r.width,r.height)}}
 const clearCache=new WeakMap(),horizonFadeCache=new WeakMap(),reflectionCache=new WeakMap(),characterBoundsCache=new WeakMap(),atmosphereCache=new Map(),focusBuffers=new Map();
 function characterBounds(im){let b=characterBoundsCache.get(im);if(!b){b=actorBounds(im,(w,h)=>{const cv=document.createElement('canvas');cv.width=w;cv.height=h;return cv;});characterBoundsCache.set(im,b);}return b;}
-function waterTile(images,depth,neighbours,frame,noFoam=false){
- const main=images.clear_water_deep;if(!main||!images.clear_water_mid||!images.clear_water_shallow)return null;
- let cache=clearCache.get(main);if(!cache){cache=new Map();clearCache.set(main,cache);}const key=depth+':'+frame+':'+neighbours.join('')+':'+Number(noFoam);if(cache.has(key))return cache.get(key);
- const make=()=>{if(typeof document!=='undefined')return document.createElement('canvas');throw Error('Canvas unavailable');};
- const source=make();source.width=32;source.height=32;const sc=source.getContext('2d',{willReadFrequently:true}),samples=[];
- for(const kind of ['shallow','mid','deep']){sc.clearRect(0,0,32,32);sc.drawImage(images['clear_water_'+kind],0,frame*32,32,32,0,0,32,32);samples.push(sc.getImageData(0,0,32,32).data);}
- // Sample the supplied directional transition frames for foam colours.
- const foam={};for(const dir of ['N','E','S','W']){const pair=depth===2?'deep_mid':'mid_shallow',im=images['clear_water_shore_'+pair+'_'+dir];if(!im)continue;sc.clearRect(0,0,32,32);sc.drawImage(im,0,frame*32,32,32,0,0,32,32);foam[dir]=sc.getImageData(0,0,32,32).data;}
- const surface=make();surface.width=32;surface.height=32;const ctx=surface.getContext('2d'),result=ctx.createImageData(32,32),n=neighbours;
+const waterKinds=['shallow','mid','deep'];
+const waterOrder={shallow:0,mid:1,deep:2};
+function waterTile(images,cell,neighbours,frame){
+ const atlas=waterKinds.map(kind=>images['clear_water_'+kind]);
+ if(atlas.some(image=>!image))return null;
+ let cache=clearCache.get(images);
+ if(!cache){cache={tiles:new Map(),frames:[]};clearCache.set(images,cache);}
+ const uniform=neighbours.every(other=>other.depth===cell.depth&&other.opacity===cell.opacity);
+ const key=uniform?[frame,cell.depth,cell.opacity].join(':'):
+   [frame,cell.x,cell.y,...neighbours.flatMap(other=>[other.depth,other.opacity])].join(':');
+ if(cache.tiles.has(key))return cache.tiles.get(key);
+ const surface=document.createElement('canvas');
+ surface.width=32;surface.height=32;
+ const ctx=surface.getContext('2d',{willReadFrequently:true});
+ if(!cache.frames[frame])cache.frames[frame]=atlas.map(image=>{
+   ctx.clearRect(0,0,32,32);
+   ctx.drawImage(image,0,frame*32,32,32,0,0,32,32);
+   return ctx.getImageData(0,0,32,32).data;
+ });
+ const samples=cache.frames[frame],result=ctx.createImageData(32,32);
+ // Bend the depth contours in world coordinates so the curves cross tile seams.
+ const worldX=cell.x*32,worldY=cell.y*32;
  for(let y=0;y<32;y++)for(let x=0;x<32;x++){
-  const gx=(x+.5)/32-.5,gy=(y+.5)/32-.5,ix=Math.floor(gx),iy=Math.floor(gy),u=gx-ix,v=gy-iy;
-  const at=(dx,dy)=>n[(dy+1)*3+dx+1];
-  const f=(1-u)*(1-v)*at(ix,iy)+u*(1-v)*at(ix+1,iy)+(1-u)*v*at(ix,iy+1)+u*v*at(ix+1,iy+1);
-  // Each boundary belongs to the deeper cell; direct deep-to-shallow is
-  // treated as a single transition and samples the shallower neighbour.
-  const min=Math.min(...n),delta=depth-f,selected=delta>.18?Math.max(min,Math.min(depth-1,Math.round(f))):depth;
-  const i=(y*32+x)*4,src=samples[selected];if(noFoam){const low=Math.max(0,Math.min(2,Math.floor(f))),high=Math.min(2,low+1),mix=Math.max(0,Math.min(1,f-low));for(let k=0;k<4;k++)result.data[i+k]=samples[low][i+k]*(1-mix)+samples[high][i+k]*mix;}else for(let k=0;k<4;k++)result.data[i+k]=src[i+k];
-  if(!noFoam&&delta>.14&&delta<.23&&depth>min){const dir=Math.abs(gx)>Math.abs(gy)?(gx<0?'W':'E'):(gy<0?'N':'S'),fdata=foam[dir];if(fdata){let best=0,score=-1;for(let k=0;k<32;k++){const j=(dir==='N'||dir==='S'?(k*32+x):(y*32+k))*4,brightness=fdata[j]+fdata[j+1]+fdata[j+2];if(brightness>score){score=brightness;best=j;}}for(let k=0;k<3;k++)result.data[i+k]=fdata[best+k];}}
+   let depth=cell.depth,opacity=cell.opacity;
+   if(!uniform){
+     const px=worldX+x+.5,py=worldY+y+.5;
+     const gx=(x+.5+8*Math.sin((py+px*.4)/43)+4*Math.sin((py-px*.35)/17))/32-.5;
+     const gy=(y+.5+7*Math.sin((px+py*.35)/37)+4*Math.sin((px-py*.3)/16))/32-.5;
+     const ix=Math.floor(gx),iy=Math.floor(gy),u=gx-ix,v=gy-iy,index=(iy+1)*3+ix+1;
+     const a=neighbours[index],b=neighbours[index+1],c=neighbours[index+3],d=neighbours[index+4];
+     const aWeight=(1-u)*(1-v),bWeight=u*(1-v),cWeight=(1-u)*v,dWeight=u*v;
+     depth=a.depth*aWeight+b.depth*bWeight+c.depth*cWeight+d.depth*dWeight;
+     opacity=a.opacity*aWeight+b.opacity*bWeight+c.opacity*cWeight+d.opacity*dWeight;
+   }
+   const low=Math.min(2,Math.floor(depth)),high=Math.min(2,low+1),mix=depth-low;
+   const i=(y*32+x)*4;
+   for(let channel=0;channel<3;channel++){
+     result.data[i+channel]=samples[low][i+channel]*(1-mix)+samples[high][i+channel]*mix;
+   }
+   result.data[i+3]=(samples[low][i+3]*(1-mix)+samples[high][i+3]*mix)*opacity;
  }
- ctx.putImageData(result,0,0);if(cache.size>=1024)cache.clear();cache.set(key,surface);return surface;
+ ctx.putImageData(result,0,0);
+ if(cache.tiles.size>=2048)cache.tiles.clear();
+ cache.tiles.set(key,surface);
+ return surface;
 }
 function draw(c,m,o={}){const images=o.images||{},tile=m.tileSize,objects=o.groundOnly?m.objects.filter(v=>C.byId[v.templateId].layer==='ground'):m.objects,sun=objects.find(v=>v.templateId==='sanctuary_horizon_v1');if(o.forExport){if(m.background&&!o.backgroundImage)throw Error('背景画像が未読込です');for(const v of objects)if(!images[v.templateId])throw Error('素材画像が未読込です');}
 c.imageSmoothingEnabled=false;c.clearRect(0,0,m.width*tile,m.height*tile);
@@ -38,14 +63,26 @@ const waterFrame=o.forExport?0:Math.floor((o.animationTime||0)/360)%4;
 const auto=typeof module==='object'&&module.exports?require('./autotile.js'):globalThis.SMAutotile;
 const bottomSets=new Map();for(const v of m.waterBottom||[]){if(!bottomSets.has(v.tileId))bottomSets.set(v.tileId,new Set());bottomSets.get(v.tileId).add(v.x+','+v.y);}
 function layerTiles(entries,mode){for(const v of entries||[]){const id=mode==='bottom'?v.tileId:'clear_water_'+v.depth;const t=C.byId[id],im=images[id];if(!t||!im)continue;const x=v.x*tile,y=v.y*tile;let sr=t.sourceRect;if(t.autotile){const mask=auto.maskAt(bottomSets.get(id)||new Set(),v.x,v.y),index=auto.indices[mask];sr=[index%8*32,Math.floor(index/8)*32,32,32];}else if(t.animation){sr=[0,waterFrame*t.animation.frameHeight,32,32];}c.save();if(mode==='surface')c.globalAlpha=v.opacity??.65;c.drawImage(im,...sr,x,y,tile,tile);c.restore();}}
-const waterDepth=new Map((m.waterSurface||[]).map(v=>[v.x+','+v.y,v.depth]));
 const waterCells=new Map((m.waterSurface||[]).map(v=>[v.x+','+v.y,v]));
-const depths=['shallow','mid','deep'],order={shallow:0,mid:1,deep:2};
-function surfaceTile(v){const d=order[v.depth],neighbours=[];for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const k=waterDepth.get((v.x+dx)+','+(v.y+dy));neighbours.push(order[k]===undefined?d:order[k]);}return waterTile(images,d,neighbours,waterFrame,!!v.noFoam);}
+const surfaceTiles=new Map();
+function surfaceTile(v){
+ if(surfaceTiles.has(v))return surfaceTiles.get(v);
+ const opacity=v.opacity??.65,depth=waterOrder[v.depth];
+ if(opacity<=0||depth===undefined)return null;
+ const cell={x:v.x,y:v.y,depth,opacity},neighbours=[];
+ for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
+   const other=waterCells.get((v.x+dx)+','+(v.y+dy));
+   const otherDepth=waterOrder[other?.depth];
+   neighbours.push(otherDepth===undefined?cell:{depth:otherDepth,opacity:other.opacity??.65});
+ }
+ const surface=waterTile(images,cell,neighbours,waterFrame);
+ surfaceTiles.set(v,surface);
+ return surface;
+}
 // Water blends only with the opaque pixels of the submerged part of each sprite.
 function sprite(im,source,r,waterline,height,onlyShallow=false){if(!height||!waterCells.size){c.drawImage(im,...source,r.x,r.y,r.width,r.height);return;}
 const cv=document.createElement('canvas');cv.width=Math.ceil(r.width);cv.height=Math.ceil(r.height);const sc=cv.getContext('2d');sc.imageSmoothingEnabled=false;sc.drawImage(im,...source,0,0,r.width,r.height);sc.save();sc.beginPath();sc.rect(0,waterline-height-r.y,r.width,height);sc.clip();sc.globalCompositeOperation='source-atop';
-for(let y=Math.floor((waterline-height)/tile);y<Math.ceil(waterline/tile);y++)for(let x=Math.floor(r.x/tile);x<Math.ceil((r.x+r.width)/tile);x++){const cell=waterCells.get(x+','+y);if(!cell||onlyShallow&&cell.depth!=='shallow')continue;const surface=surfaceTile(cell);if(!surface)continue;sc.globalAlpha=(cell.opacity??.65)*(onlyShallow ? .78 : .55);sc.drawImage(surface,0,0,32,32,x*tile-r.x,y*tile-r.y,tile,tile);}sc.restore();c.drawImage(cv,r.x,r.y);}
+for(let y=Math.floor((waterline-height)/tile);y<Math.ceil(waterline/tile);y++)for(let x=Math.floor(r.x/tile);x<Math.ceil((r.x+r.width)/tile);x++){const cell=waterCells.get(x+','+y);if(!cell||onlyShallow&&cell.depth!=='shallow')continue;const surface=surfaceTile(cell);if(!surface)continue;sc.globalAlpha=onlyShallow ? .78 : .55;sc.drawImage(surface,0,0,32,32,x*tile-r.x,y*tile-r.y,tile,tile);}sc.restore();c.drawImage(cv,r.x,r.y);}
 const frames=M.autotileLayout(m),object=v=>{const im=images[v.templateId],t=C.byId[v.templateId],r=M.visualRect(m,v),index=frames.get(v.id),source=t.autotile?[index%8*32,Math.floor(index/8)*32+(t.animation?phase(o,t)*t.animation.frameHeight:0),32,32]:t.animation?.frameWidth?[t.sourceRect[0]+phase(o,t)*t.animation.frameWidth,...t.sourceRect.slice(1)]:t.sourceRect;if(!im)return;
 if(t.character){const state={x:v.x,y:v.y,dir:v.dir||'d',frame:v.frame||0},bounds=characterBounds(im);if(o.shadows)actorShadow(c,state,bounds,tile,sun ? .38 : .28);actor(c,state,im,bounds,tile,(ctx,img,sx,sy,sw,sh,x,y,width,height)=>sprite(img,[sx,sy,sw,sh],{x,y,width,height},actorDepth(state,bounds,tile),7*tile/32,true));return;}
 // Elevated objects stand on their support rather than in the water below it.
@@ -57,12 +94,11 @@ if(t.flowRegion&&!o.forExport){const step=phase(o,t);if(step){const [sx,sy,sw,sh
 const groundOrder=v=>{const t=C.byId[v.templateId];return t.bridgePassages?3:t.paintGroup==='base'?0:t.shallow?1:t.autotile?1:2;};
 for(const v of objects.filter(v=>C.byId[v.templateId].layer==='ground').sort((a,b)=>groundOrder(a)-groundOrder(b)))object(v);
 layerTiles(m.waterBottom,'bottom');
-// Clear water uses a continuous field of neighbouring depth values. The
-// boundary is sampled on the 32px world grid, including diagonal cells.
-// Frame and neighbour topology are cached; editing never alters collision.
-for(const v of m.waterSurface||[]){const d=order[v.depth];if(d===undefined)continue;
-const im=surfaceTile(v);if(!im)continue;
-c.save();c.globalAlpha=v.opacity??.65;c.drawImage(im,0,0,32,32,v.x*tile,v.y*tile,tile,tile);c.restore();}
+// The surface image carries interpolated depth and opacity for both the lake and submerged sprites.
+for(const v of m.waterSurface||[]){
+ const im=surfaceTile(v);
+ if(im)c.drawImage(im,0,0,32,32,v.x*tile,v.y*tile,tile,tile);
+}
 if(sun&&o.lighting!==false&&waterCells.size){const r=M.visualRect(m,sun),cx=r.x+r.width/2,cy=r.y+r.height*.38,s=tile/32,frame=o.forExport?0:waterFrame;c.save();c.beginPath();for(const v of m.waterSurface||[])if((v.opacity??.65)>0)c.rect(v.x*tile,v.y*tile,tile,tile);c.clip();
 // Sparse sunset glints supplement, rather than replace, object reflections.
 for(let i=0;i<90;i++){const h=n=>{const z=Math.sin(n*127.1+41.7)*43758.5453;return z-Math.floor(z);},p=h(i*3+1),q=h(i*3+2),y=cy+10*s+p*(m.height*tile*.7-cy),distance=(y-cy)/(m.height*tile-cy),spread=(10+48*distance)*s,x=cx+(q-.5)*2*spread+(frame%2?1:-1)*s,alpha=(.075*(1-distance)+.01)*(.4+.6*h(i*3+3));c.fillStyle='rgba(255,204,124,'+alpha+')';c.fillRect(Math.round(x),Math.round(y),Math.max(1,(2+4*h(i*5+3))*s),Math.max(1,s));}c.restore();}

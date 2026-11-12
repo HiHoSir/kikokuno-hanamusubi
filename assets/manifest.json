@@ -1757,7 +1757,8 @@
         "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
         "path": "assets/settlement-editor/pack-v1/stepping_stone.png"
       },
-      "usage": "tenyo-water-sanctuary-production"
+      "usage": "tenyo-water-sanctuary-production",
+      "gitBlobSha": "9b92634327cd4978d3ed813e4dd33114f3d604c9"
     },
     {
       "id": "tenyo-tenyo-water-gate",
@@ -1769,7 +1770,8 @@
         "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
         "path": "assets/settlement-editor/tenyo-gate-v1/tenyo_gate_6x4_v3.png"
       },
-      "usage": "tenyo-water-sanctuary-production"
+      "usage": "tenyo-water-sanctuary-production",
+      "gitBlobSha": "aab305c01876c6a7f0c1a5d2ee3fc789ffb3a7ea"
     },
     {
       "id": "tenyo-torii-gate-v2",
@@ -1781,7 +1783,8 @@
         "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
         "path": "assets/settlement-editor/tenyo-gate-v1/torii_gate_v2_4x3.png"
       },
-      "usage": "tenyo-water-sanctuary-production"
+      "usage": "tenyo-water-sanctuary-production",
+      "gitBlobSha": "0d3900405a4e0785a2d6b529574ceac2b30b5c44"
     },
     {
       "id": "tenyo-tenyo-stone-lantern",
@@ -1793,7 +1796,8 @@
         "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
         "path": "assets/settlement-editor/tenyo-gate-v1/stone_lantern_1x2.png"
       },
-      "usage": "tenyo-water-sanctuary-production"
+      "usage": "tenyo-water-sanctuary-production",
+      "gitBlobSha": "b12adaa9ab2dfcf728a1dcc015a0a2b3e548ca65"
     },
     {
       "id": "tenyo-rock-island-lantern-base",
@@ -1805,7 +1809,8 @@
         "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
         "path": "assets/settlement-editor/rock-island-v1/stone-island-96x64.png"
       },
-      "usage": "tenyo-water-sanctuary-production"
+      "usage": "tenyo-water-sanctuary-production",
+      "gitBlobSha": "17eb998500f97183b8916ef73d99982a1d142b7b"
     },
     {
       "id": "tenyo-rock-island-lantern-base-mirror",
@@ -1817,7 +1822,8 @@
         "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
         "path": "assets/settlement-editor/rock-island-v1/stone-island-mirror-96x64.png"
       },
-      "usage": "tenyo-water-sanctuary-production"
+      "usage": "tenyo-water-sanctuary-production",
+      "gitBlobSha": "ae05d94b57cd214fe0d037852cb2c9f7815f1f9d"
     },
     {
       "id": "tenyo-sanctuary-forest-frame-v3",
@@ -1829,7 +1835,8 @@
         "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
         "path": "assets/settlement-editor/sanctuary-frame-v1/forest-frame.png"
       },
-      "usage": "tenyo-water-sanctuary-production"
+      "usage": "tenyo-water-sanctuary-production",
+      "gitBlobSha": "3f4eb4e30ef7ba1cc81d2b811a4ebb1810c9b1d5"
     },
     {
       "id": "tenyo-sanctuary-horizon-v1",
@@ -1841,7 +1848,8 @@
         "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
         "path": "assets/settlement-editor/sanctuary-horizon-v1/horizon.png"
       },
-      "usage": "tenyo-water-sanctuary-production"
+      "usage": "tenyo-water-sanctuary-production",
+      "gitBlobSha": "285d263effd171e5195f61d83bc944ce197ce2fb"
     },
     {
       "id": "tenyo-sanctuary-fall-v2",
@@ -1853,7 +1861,8 @@
         "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
         "path": "assets/settlement-editor/sanctuary-horizon-v1/waterfall.png"
       },
-      "usage": "tenyo-water-sanctuary-production"
+      "usage": "tenyo-water-sanctuary-production",
+      "gitBlobSha": "168c1b7110be6b623daff927b8c70d98dc005849"
     },
     {
       "id": "tenyo-tenyo-ripple-fx",
@@ -1865,7 +1874,8 @@
         "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
         "path": "assets/settlement-editor/tenyo-water-v1/shallow_ripple_32x4.png"
       },
-      "usage": "tenyo-water-sanctuary-production"
+      "usage": "tenyo-water-sanctuary-production",
+      "gitBlobSha": "3dfed2544761d675f124c00b41ff85a70958176c"
     },
     {
       "id": "tenyo-tenyo-lotus-1",
@@ -1877,7 +1887,8 @@
         "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
         "path": "assets/settlement-editor/tenyo-water-v1/lotus_leaf_1.png"
       },
-      "usage": "tenyo-water-sanctuary-production"
+      "usage": "tenyo-water-sanctuary-production",
+      "gitBlobSha": "6be7e58966d85da189676225c70e324ec47e7b4b"
     },
     {
       "id": "tenyo-tenyo-lotus-2",
@@ -1889,7 +1900,8 @@
         "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
         "path": "assets/settlement-editor/tenyo-water-v1/lotus_leaf_2.png"
       },
-      "usage": "tenyo-water-sanctuary-production"
+      "usage": "tenyo-water-sanctuary-production",
+      "gitBlobSha": "9bddbf2305db05a16893ea3480a28607e12f6fbd"
     },
     {
       "id": "tenyo-tenyo-lotus-3",
@@ -1901,7 +1913,8 @@
         "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
         "path": "assets/settlement-editor/tenyo-water-v1/lotus_leaf_3.png"
       },
-      "usage": "tenyo-water-sanctuary-production"
+      "usage": "tenyo-water-sanctuary-production",
+      "gitBlobSha": "48df8316008667f53cae85c542d6474f604482e2"
     },
     {
       "id": "tenyo-clear-water-shallow",
@@ -1913,7 +1926,8 @@
         "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
         "path": "assets/settlement-editor/clear-water-v1/shallow.png"
       },
-      "usage": "tenyo-water-sanctuary-production"
+      "usage": "tenyo-water-sanctuary-production",
+      "gitBlobSha": "9d618cdc389331c94b755a50342d910c216e384e"
     },
     {
       "id": "tenyo-clear-water-mid",
@@ -1925,7 +1939,8 @@
         "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
         "path": "assets/settlement-editor/clear-water-v1/mid.png"
       },
-      "usage": "tenyo-water-sanctuary-production"
+      "usage": "tenyo-water-sanctuary-production",
+      "gitBlobSha": "48c80abf55c3eb505cbb69993a519404b7a6424d"
     },
     {
       "id": "tenyo-clear-water-deep",
@@ -1937,7 +1952,8 @@
         "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
         "path": "assets/settlement-editor/clear-water-v1/deep.png"
       },
-      "usage": "tenyo-water-sanctuary-production"
+      "usage": "tenyo-water-sanctuary-production",
+      "gitBlobSha": "1fa52c35472553f588a1b1c632a8c2121dbf1ddc"
     },
     {
       "id": "tenyo-clear-water-shore-deep-mid-n",
@@ -1949,7 +1965,8 @@
         "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
         "path": "assets/settlement-editor/clear-water-v1/shore_deep_mid_N.png"
       },
-      "usage": "tenyo-water-sanctuary-production"
+      "usage": "tenyo-water-sanctuary-production",
+      "gitBlobSha": "6d9790d191f796879d5c86ba989f22947b192e04"
     },
     {
       "id": "tenyo-clear-water-shore-deep-mid-e",
@@ -1961,7 +1978,8 @@
         "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
         "path": "assets/settlement-editor/clear-water-v1/shore_deep_mid_E.png"
       },
-      "usage": "tenyo-water-sanctuary-production"
+      "usage": "tenyo-water-sanctuary-production",
+      "gitBlobSha": "f0a7ab2d125eb016ce04890e96ad2cf6d1640f3f"
     },
     {
       "id": "tenyo-clear-water-shore-deep-mid-s",
@@ -1973,7 +1991,8 @@
         "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
         "path": "assets/settlement-editor/clear-water-v1/shore_deep_mid_S.png"
       },
-      "usage": "tenyo-water-sanctuary-production"
+      "usage": "tenyo-water-sanctuary-production",
+      "gitBlobSha": "e4fd10515d5618729853ce5bf5e0e9c186972267"
     },
     {
       "id": "tenyo-clear-water-shore-deep-mid-w",
@@ -1985,7 +2004,8 @@
         "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
         "path": "assets/settlement-editor/clear-water-v1/shore_deep_mid_W.png"
       },
-      "usage": "tenyo-water-sanctuary-production"
+      "usage": "tenyo-water-sanctuary-production",
+      "gitBlobSha": "6d5ecb78b2915fb1c21217c22a687d75ffb39e98"
     },
     {
       "id": "tenyo-clear-water-shore-mid-shallow-n",
@@ -1997,7 +2017,8 @@
         "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
         "path": "assets/settlement-editor/clear-water-v1/shore_mid_shallow_N.png"
       },
-      "usage": "tenyo-water-sanctuary-production"
+      "usage": "tenyo-water-sanctuary-production",
+      "gitBlobSha": "838985ffc685dc15f5f98aef780feac6b1513ef2"
     },
     {
       "id": "tenyo-clear-water-shore-mid-shallow-e",
@@ -2009,7 +2030,8 @@
         "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
         "path": "assets/settlement-editor/clear-water-v1/shore_mid_shallow_E.png"
       },
-      "usage": "tenyo-water-sanctuary-production"
+      "usage": "tenyo-water-sanctuary-production",
+      "gitBlobSha": "c1f076111bdf4679372b3fdcc9d652f6c54aedb9"
     },
     {
       "id": "tenyo-clear-water-shore-mid-shallow-s",
@@ -2021,7 +2043,8 @@
         "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
         "path": "assets/settlement-editor/clear-water-v1/shore_mid_shallow_S.png"
       },
-      "usage": "tenyo-water-sanctuary-production"
+      "usage": "tenyo-water-sanctuary-production",
+      "gitBlobSha": "f233303b43fb5d84404013c414a66b8ad2628f80"
     },
     {
       "id": "tenyo-clear-water-shore-mid-shallow-w",
@@ -2033,7 +2056,8 @@
         "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
         "path": "assets/settlement-editor/clear-water-v1/shore_mid_shallow_W.png"
       },
-      "usage": "tenyo-water-sanctuary-production"
+      "usage": "tenyo-water-sanctuary-production",
+      "gitBlobSha": "d1bd7ad730596161b6ffc09d5e751e2a59b3d4c6"
     },
     {
       "id": "tenyo-waterfall-loop",

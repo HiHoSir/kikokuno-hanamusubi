@@ -4,7 +4,7 @@
 - 正本は `HiHoSir/kikokuno-hanamusubi` の `main`。これは第1作『鬼哭の花結び』用の新規制作環境。
 - 旧 `HiHoSir/yaksha-hanamusubi` と続編 `HiHoSir/kikokuno-hanachigiri` の実装・アセット・採用状態を無断移植しない。
 - 制作前に本書、関連する `.agents/skills/<name>/SKILL.md`、`docs/REPOSITORY_POLICY.md`、`assets/manifest.json` と実ファイルを確認。読めない規則・未確認の承認状態を推測しない。
-- 新規初期状態では採用ゲーム素材や動作するゲームはまだ存在しない。
+- ゲームの現行入口は `index.html`。村・室内・フィールド・天妖の社の本編実装は `src/` と `data/` を正本とし、採用素材は `assets/manifest.json` と一致させる。天妖の社の接続仕様は `docs/TENYO_SHRINE.md`。
 
 ## スキルの唯一の保存先
 - 画像やアセットの生成・編集・変換: `.agents/skills/asset-design/SKILL.md`

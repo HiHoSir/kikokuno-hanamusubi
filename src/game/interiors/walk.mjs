@@ -186,6 +186,8 @@ async function start() {
   });
   addEventListener('keydown',event=>{
     if(dialogue.active){
+      // Native button Enter/Space already triggers click; never advance twice.
+      if((event.key==='Enter'||event.key===' ') && event.target?.tagName==='BUTTON') return;
       if(['Enter',' ','Escape'].includes(event.key)){
         event.preventDefault();
         if(!event.repeat)dialogue.advance();

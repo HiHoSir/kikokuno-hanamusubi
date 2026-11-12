@@ -2,6 +2,13 @@
   "schemaVersion": 1,
   "assets": [
     {
+      "id": "opening-movie",
+      "type": "other",
+      "path": "assets/prologue/opening.mp4",
+      "status": "approved",
+      "usage": "prologue-video"
+    },
+    {
       "id": "title-logo",
       "type": "ui",
       "path": "assets/ui/title/logo.webp",

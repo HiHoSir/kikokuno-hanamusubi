@@ -1,0 +1,64 @@
+/* Battle uses the same fixed canvas-independent, one-page iPhone play surface as the field.
+   Only accepted character/enemy PNGs are shown; gradients are scenery, not replacement artwork. */
+:root{color-scheme:dark;color:#f9f0d8;background:#0c1925}
+body{margin:0;background:#0c1925}
+.viewport{position:relative;isolation:isolate;background:#1b3243;min-height:0}
+.battle-backdrop{position:absolute;inset:0;overflow:hidden;background:
+  radial-gradient(ellipse 83% 36% at 52% 27%,rgba(246,196,120,.23),transparent 70%),
+  linear-gradient(180deg,#142236 0%,#385574 35%,#537078 55%,#4d6256 59%,#253d33 100%)}
+.moonlight{position:absolute;width:min(15vw,120px);height:min(15vw,120px);top:11%;left:66%;border-radius:50%;background:rgba(244,226,188,.45);filter:blur(14px)}
+.horizon{position:absolute;top:52%;left:-4%;width:108%;height:24%;
+  background:linear-gradient(8deg,rgba(12,40,37,.7),rgba(27,66,60,.18) 70%,transparent 80%);transform:skewY(-3deg)}
+.earth{position:absolute;bottom:-13%;left:-20%;width:140%;height:47%;border-radius:50% 50% 0 0/15% 15% 0 0;
+  background:repeating-linear-gradient(160deg,transparent,transparent 32px,rgba(157,179,128,.045) 33px,rgba(157,179,128,.045) 35px),linear-gradient(#415345,#182e29)}
+.battle-stage{position:absolute;left:2%;right:2%;top:11%;bottom:40%;pointer-events:none}
+.actor{position:absolute;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;margin:0;transform-origin:center bottom}
+.actor img{display:block;width:100%;height:100%;object-fit:contain;image-rendering:pixelated;filter:drop-shadow(1px 5px 4px rgba(5,19,23,.45))}
+.actor figcaption{position:absolute;bottom:0;font-size:11px;letter-spacing:.1em;background:rgba(13,25,34,.65);padding:2px 9px;border-radius:4px;color:#f5e1a5}
+.actor.hero{left:0;bottom:-4%;width:min(54%,330px);height:92%}
+.actor.enemy{right:0;top:0;width:min(55%,345px);height:89%}
+.actor.enemy img{image-rendering:auto}
+.actor.hit{animation:battle-hit .38s steps(2,end)}
+.actor.attacking{animation:battle-strike .38s ease-out}
+.actor.enemy.hit{animation:battle-enemy-hit .38s steps(2,end)}
+@keyframes battle-hit{0%,60%{filter:brightness(2) sepia(1)}30%{transform:translateX(-9px)}50%{transform:translateX(10px)}100%{transform:none}}
+@keyframes battle-enemy-hit{0%,60%{filter:brightness(1.8)}20%{transform:translateX(12px)}50%{transform:translateX(-8px)}100%{transform:none}}
+@keyframes battle-strike{0%{transform:translateX(0)}40%{transform:translateX(16px) scale(1.035)}100%{transform:none}}
+.battle-message{position:absolute;z-index:4;bottom:calc(318px + env(safe-area-inset-bottom));left:max(12px,env(safe-area-inset-left));right:max(12px,env(safe-area-inset-right));min-height:38px;
+ display:flex;align-items:center;justify-content:center;text-align:center;padding:5px 12px;border:1px solid rgba(229,201,137,.74);background:rgba(14,29,43,.78);border-radius:6px;box-shadow:0 6px 18px rgba(0,0,0,.2)}
+.battle-message p{font-size:13px;line-height:1.45;margin:0;color:#fff1d4}
+.battle-panels{position:absolute;z-index:4;left:max(12px,env(safe-area-inset-left));right:max(12px,env(safe-area-inset-right));bottom:calc(181px + env(safe-area-inset-bottom));height:126px;
+ display:grid;grid-template-columns:1.06fr 1fr;gap:8px}
+.battle-window{min-width:0;padding:8px 9px;border:2px solid rgba(204,175,112,.83);border-radius:7px;background:rgba(12,30,50,.82);box-shadow:0 3px 15px rgba(4,15,23,.25)}
+.battle-window h2{display:flex;justify-content:space-between;align-items:center;font-size:13px;margin:0 0 7px;color:#efd28c;font-weight:700}
+.command-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px}
+.command-grid button{min-width:0;min-height:28px;line-height:1.2;white-space:nowrap;border:1px solid transparent;background:rgba(24,50,65,.38);font:12px "DotGothic16",sans-serif;color:#fff5df;border-radius:3px;padding:2px;cursor:pointer;touch-action:manipulation}
+.command-grid button:last-child:nth-child(odd){grid-column:1/-1}
+.command-grid button.selected{border-color:#f5d386;background:rgba(190,140,58,.22)}
+.command-grid button:disabled{opacity:.55}
+.stat-row{display:flex;justify-content:space-between;gap:5px;align-items:center;font-size:12px;line-height:1.5}
+.stat-row strong{font-weight:600;font-size:12px;white-space:nowrap}
+.meter{height:5px;border-radius:4px;overflow:hidden;background:rgba(245,245,255,.16);margin:1px 0 3px}
+.meter-fill{height:100%;transition:width .2s ease}
+.meter-fill.health{background:#b8c87f}
+.meter-fill.magic{background:#72a8d3}
+.battle-sub{margin:3px 0 0;font-size:10px;color:#d1cbb9;white-space:nowrap}
+.encounter-overlay{position:absolute;z-index:15;inset:0;display:grid;place-items:center;pointer-events:none;background:rgba(9,12,15,.77);animation:encounter-screen 1.05s forwards}
+.encounter-overlay strong{font:900 clamp(56px,19vw,126px)/1.1 "Yu Mincho",serif;letter-spacing:.12em;color:#fcf4e8;text-shadow:2px 4px #a22c37;animation:encounter-text 1.05s forwards}
+.encounter-overlay::before{content:"";position:absolute;inset:0;pointer-events:none;background:#fff;animation:encounter-flash .85s forwards}
+@keyframes encounter-screen{0%,75%{opacity:1;filter:grayscale(1)}100%{opacity:0}}
+@keyframes encounter-flash{0%{opacity:.95}18%,100%{opacity:0}}
+@keyframes encounter-text{0%,13%{opacity:0;transform:scale(1.3)}28%,77%{opacity:1;transform:scale(1)}100%{opacity:0}}
+@media(max-height:740px) and (orientation:portrait){.battle-panels{bottom:calc(157px + env(safe-area-inset-bottom));height:116px}.battle-message{bottom:calc(281px + env(safe-area-inset-bottom))}.battle-stage{bottom:36%}}
+@media(orientation:landscape){
+ .battle-stage{left:18%;right:18%;top:4%;bottom:9%}
+ .actor.hero{left:4%;width:min(40%,240px);height:96%}
+ .actor.enemy{right:5%;width:min(40%,260px);height:96%}
+ .battle-panels{left:23%;right:18%;bottom:max(8px,env(safe-area-inset-bottom));height:118px;grid-template-columns:1fr 1fr}
+ .battle-message{left:22%;right:20%;bottom:calc(134px + env(safe-area-inset-bottom));min-height:27px;padding:3px}
+ .battle-message p{font-size:11px}
+ .battle-window{padding:5px 7px}.battle-window h2{margin-bottom:4px}
+ .command-grid button{min-height:23px}
+ .field-hud{max-width:25%}
+}
+@media(prefers-reduced-motion:reduce){.encounter-overlay,.encounter-overlay::before,.encounter-overlay strong{animation-duration:.15s}.actor.hit,.actor.attacking{animation:none}}

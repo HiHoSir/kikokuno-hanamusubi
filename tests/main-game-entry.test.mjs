@@ -40,3 +40,31 @@ test('production modules pass Node syntax checks',()=>{
   'src/opening/opening.js','src/field/walk.mjs'
  ])execFileSync(process.execPath,['--check',path]);
 });
+
+test('production screens use old-game four-way controls with A/B',()=>{
+ for(const path of ['src/game/village/index.html','src/game/interiors/index.html','src/field/index.html']){
+  const html=readFileSync(path,'utf8');
+  assert.match(html,/id="pad"/);
+  for(const id of ['up','down','left','right','action-a','action-b'])assert.match(html,new RegExp('id="'+id+'"'));
+  assert.match(html,/controls\.css/);
+  assert.doesNotMatch(html,/data-dir="up"[\\s\\S]*data-dir="up"/);
+ }
+ const css=readFileSync('src/game/ui/controls.css','utf8');
+ assert.match(css,/safe-area-inset-bottom/);
+ assert.match(css,/\.dpad::before/);
+ assert.match(css,/52px/);
+ assert.match(css,/#action-a/);
+});
+test('dialogue reuses the animated arrow and action-button controls',()=>{
+ const style=readFileSync('src/game/village/dialogue.css','utf8');
+ const code=readFileSync('src/game/village/dialogue.mjs','utf8');
+ assert.match(style,/hasNextLine/);
+ assert.match(code,/setTimeout\(tick,36\)/);
+ assert.match(code,/function advance\(\)/);
+ for(const path of ['src/game/village/walk.mjs','src/game/interiors/walk.mjs']){
+  const content=readFileSync(path,'utf8');
+  assert.match(content,/#action-a/);
+  assert.match(content,/#action-b/);
+  assert.match(content,/dialogue\.advance\(\)/);
+ }
+});

@@ -26,3 +26,10 @@
 - `npm test`: 台帳・既存資産の検査に加えて `tests/main-game-entry.test.mjs` の配線と素材を検査。
 - iPhone Safari: オープニングの音声・終了後遷移、村での方向入力、里長会話、茶店入場と退出、村南口とフィールドの往復。
 - 絵柄・実機の再確認はGitHub Actionsとは別。検査版で採用した配置規則は `docs/VILLAGE_MAP_WORKFLOW.md` を参照。
+
+## ゲーム操作UI（旧レポジトリを基準）
+- 正本は `src/game/ui/controls.css` と `src/game/village/dialogue.css`。
+- 旧 `HiHoSir/yaksha-hanamusubi/css/game.css` の最終的な4方向D-pad、半透明A/B、セーフエリア対応の浮動配置を移植。
+- 村・室内・フィールドは同一のコントローラーを使用。AはNPCと話す／会話の文字表示を加速／次へ、Bは会話中の次送り。フィールドのBはメニュー未実装につき無効。
+- 会話UIは旧版の青系背景・金縁・ピンクの話者名、36ms/文字、次の行があるときの点滅▼、横画面で左右のコントローラーを避ける配置。
+- 移動入力は会話中停止し、誤入力やタッチの押しっぱなしによる移動を防止する。

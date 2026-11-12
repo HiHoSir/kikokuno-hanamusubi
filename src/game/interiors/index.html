@@ -37,6 +37,7 @@ button:active,button.held,button[aria-pressed=true]{background:#e8cc8b;color:#27
 }
 .screen-reader{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}</style>
 <link rel="stylesheet" href="../village/dialogue.css">
+<link rel="stylesheet" href="../ui/controls.css">
 </head>
 <body>
 <main>
@@ -45,17 +46,22 @@ button:active,button.held,button[aria-pressed=true]{background:#e8cc8b;color:#27
 <canvas id="scene"></canvas><p id="load">室内を読み込んでいます</p>
 <button id="talk" type="button" hidden>話す</button>
 <section id="dialogue" aria-labelledby="speaker" hidden>
-<strong id="speaker"></strong><p id="line" aria-live="polite"></p><button id="next" type="button">次へ</button>
+  <div class="dialog-window" role="dialog" aria-modal="false">
+    <strong id="speaker"></strong>
+    <p id="line"></p>
+    <button id="next" type="button" aria-label="次のセリフへ">▼</button>
+  </div>
 </section>
 </section>
-<section class="controls" aria-label="移動・会話操作">
-<div class="dpad" aria-label="方向ボタン">
-<button type="button" data-dir="up" aria-label="上">▲</button>
-<button type="button" data-dir="left" aria-label="左">◀</button>
-<button type="button" data-dir="down" aria-label="下">▼</button>
-<button type="button" data-dir="right" aria-label="右">▶</button>
-</div>
-
+<section id="pad" class="controls" aria-label="ゲーム操作">
+  <div class="dpad" aria-label="十字キー・4方向移動" role="group">
+    <button id="up" type="button" data-dir="up" aria-label="上">▲</button>
+    <button id="left" type="button" data-dir="left" aria-label="左">◀</button>
+    <button id="right" type="button" data-dir="right" aria-label="右">▶</button>
+    <button id="down" type="button" data-dir="down" aria-label="下">▼</button>
+  </div>
+  <button id="action-b" class="round sub" type="button" aria-label="B 戻る">B<small>戻る</small></button>
+  <button id="action-a" class="round main" type="button" aria-label="A 決定・話す">A<small>決定</small></button>
 </section>
 </main>
 <script type="module" src="./walk.mjs"></script>

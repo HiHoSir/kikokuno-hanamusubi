@@ -188,3 +188,12 @@ body {
     min-width: 126px;
   }
 }
+
+/* Game menus are not browser document text; avoid text selection/callouts
+   while preserving taps and the native opening video controls. */
+.title-screen,.title-screen *, .opening-screen,.opening-screen *{
+  -webkit-user-select:none;user-select:none;
+  -webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;
+}
+.title-logo img,.title-demo img{-webkit-user-drag:none}
+.title-screen,.opening-screen{min-height:100dvh}

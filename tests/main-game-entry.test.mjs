@@ -68,3 +68,27 @@ test('dialogue reuses the animated arrow and action-button controls',()=>{
   assert.match(content,/dialogue\.advance\(\)/);
  }
 });
+
+test('immersive gameplay fills the viewport and prevents game text selection',()=>{
+ const css=readFileSync('src/game/ui/controls.css','utf8');
+ assert.match(css,/position:fixed;inset:0/);
+ assert.match(css,/height:100dvh/);
+ assert.match(css,/-webkit-user-select:none!important/);
+ assert.match(css,/-webkit-touch-callout:none!important/);
+ const guard=readFileSync('src/game/ui/selection-guard.mjs','utf8');
+ for(const type of ['selectstart','contextmenu','dragstart'])assert.ok(guard.includes(type));
+ assert.doesNotMatch(guard,/preventDefault\(\).*(pointer|touch)/);
+ for(const p of ['src/game/village/index.html','src/game/interiors/index.html','src/field/index.html']){
+  const html=readFileSync(p,'utf8');
+  assert.match(html,/selection-guard\.mjs/);
+  assert.match(html,/app\.webmanifest/);
+  assert.match(html,/apple-mobile-web-app-capable/);
+ }
+ const field=readFileSync('src/field/index.html','utf8');
+ assert.match(field,/object-fit:cover/);
+ assert.match(field,/--scene-size:max\(100cqw,100cqh\)/);
+ const webmanifest=JSON.parse(readFileSync('src/game/app.webmanifest','utf8'));
+ assert.equal(webmanifest.display,'standalone');
+ assert.equal(webmanifest.start_url,'../../');
+ assert.equal(webmanifest.scope,'../../');
+});

@@ -44,6 +44,7 @@ body{margin:0;background:#0c1925}
 .meter-fill.magic{background:#72a8d3}
 .battle-sub{margin:3px 0 0;font-size:10px;color:#d1cbb9;white-space:nowrap}
 .encounter-overlay{position:absolute;z-index:15;inset:0;display:grid;place-items:center;pointer-events:none;background:rgba(9,12,15,.77);animation:encounter-screen 1.05s forwards}
+.encounter-overlay[hidden]{display:none}
 .encounter-overlay strong{font:900 clamp(56px,19vw,126px)/1.1 "Yu Mincho",serif;letter-spacing:.12em;color:#fcf4e8;text-shadow:2px 4px #a22c37;animation:encounter-text 1.05s forwards}
 .encounter-overlay::before{content:"";position:absolute;inset:0;pointer-events:none;background:#fff;animation:encounter-flash .85s forwards}
 @keyframes encounter-screen{0%,75%{opacity:1;filter:grayscale(1)}100%{opacity:0}}

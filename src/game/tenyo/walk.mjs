@@ -56,7 +56,7 @@ async function start(){
   if(!SMModel||!SMRender)throw new Error('天妖の社の描画エンジンが読み込めません');
   const mapUrl=new URL('../../../data/maps/tenyo-sanctuary/scene.json',import.meta.url);
   // A fresh scene JSON is essential after the accepted NPC assets change.
-  mapUrl.searchParams.set('v','tenyo-npc-80x112');
+  mapUrl.searchParams.set('v','tenyo-proportions-052');
   const response=await fetch(mapUrl);
   if(!response.ok)throw new Error('天妖の社のマップデータを読めません');
   const map=SMModel.parse(await response.text());
@@ -168,7 +168,7 @@ async function start(){
     for(let i=0;i<residents.length;i++)
       residentObjects[i].dir=facing[residents[i].face??0]??'d';
     SMRender.draw(wc,paintedMap,{
-      images,hero,bounds,actor:player,animationTime:now,shadows:true,
+      images,hero,bounds,actor:player,heroDisplayScale:map.game.heroDisplayScale??1,animationTime:now,shadows:true,
       lighting:true,reflections:true,atmosphere:true,depthOfField:true,
     });
     const width=scene.width,height=scene.height,view=width/ZOOM;

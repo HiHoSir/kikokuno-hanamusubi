@@ -9,7 +9,7 @@ test('opening links the approved movie and supports inline Safari playback', () 
   assert.match(page, /playsinline/);
   assert.match(page, /id="play-opening"/);
   assert.match(player, /video\.addEventListener\('ended', enterVillage\)/);
-  assert.match(player, /previews\/village-walk\//);
+  assert.match(player, /\.\.\/game\/village\//);
   assert.ok(existsSync('assets/prologue/opening.mp4'));
 });
 

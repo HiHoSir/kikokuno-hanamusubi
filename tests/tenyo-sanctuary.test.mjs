@@ -127,19 +127,52 @@ test('the production game loads original water render, common controller and fie
   }
 });
 
-test('production sanctuary ESM entry links and begins loading its canonical map',()=>{
+test('production sanctuary paints its entrance within landscape and portrait viewports',()=>{
   const boot=`
+    import assert from 'node:assert/strict';
+    import {readFileSync} from 'node:fs';
+    const viewport={clientWidth:1363,clientHeight:936};
+    let view, actor, resize, nextFrame;
+    const context={setTransform(){},fillRect(){},drawImage(_world,...args){view=args;}};
+    const scene={width:768,height:768,parentElement:viewport,dataset:{},getContext:()=>context};
+    const load={hidden:false};
+    const element={addEventListener(){}};
     globalThis.document={
-      querySelector:sel=>({
-        '#scene':{getContext:()=>({})},
-        '#status':{textContent:''}, '#objective':{textContent:''},'#load':{hidden:false}
-      }[sel]||null),
+      querySelector:id=>({'#scene':scene,'#load':load}[id]??{...element}),
       querySelectorAll:()=>[],
+      createElement:()=>({getContext:()=>({})}),
+      addEventListener(){},
     };
-    globalThis.SMModel={parse(){}};
-    globalThis.SMRender={draw(){}};
-    globalThis.fetch=()=>new Promise(()=>{});
+    globalThis.SMModel={parse:JSON.parse,collision:()=>new Set()};
+    globalThis.SMRender={actorBounds(){},draw(_context,_map,options){actor=options.actor;}};
+    globalThis.Image=class{naturalWidth=240;async decode(){}};
+    globalThis.Audio=class{};
+    globalThis.fetch=async url=>({ok:true,text:async()=>readFileSync(url,'utf8')});
+    globalThis.addEventListener=()=>{};
+    globalThis.requestAnimationFrame=callback=>{nextFrame=callback;};
+    globalThis.ResizeObserver=class{
+      constructor(callback){resize=callback;}
+      observe(parent){assert.equal(parent,viewport);}
+    };
     await import('./src/game/tenyo/walk.mjs');
+    await new Promise(setImmediate);
+    assert.equal(load.hidden,true,'first paint completes the loading screen');
+    assert.deepEqual([actor.x,actor.y],[13,23]);
+    function checkView(){
+      const [left,top,width,height,dx,dy,dw,dh]=view;
+      assert.deepEqual([dx,dy,dw,dh],[0,0,scene.width,scene.height]);
+      assert.ok(Math.abs(dw/dh-viewport.clientWidth/viewport.clientHeight)<0.005,
+        'canvas buffer matches the visible aspect ratio');
+      assert.ok(Math.abs(dw/width-dh/height)<0.0001,'same world scale on both axes');
+      const foot=(actor.y+.5)*32;
+      assert.ok(top<=foot-46&&foot<top+height,'entrance sprite is entirely inside the view');
+      assert.ok(left<=0.5*32+actor.x*32&&left+width>0.5*32+actor.x*32);
+    }
+    checkView();
+    Object.assign(viewport,{clientWidth:402,clientHeight:874});
+    resize();
+    nextFrame(performance.now()+60);
+    checkView();
   `;
   execFileSync(process.execPath,['--input-type=module','-e',boot],{timeout:10000,stdio:'pipe'});
 });

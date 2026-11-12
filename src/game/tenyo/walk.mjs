@@ -15,7 +15,7 @@ const directions={down:[0,1,0,'d'],up:[0,-1,1,'u'],right:[1,0,2,'r'],left:[-1,0,
 const keys={ArrowDown:'down',ArrowUp:'up',ArrowRight:'right',ArrowLeft:'left',s:'down',w:'up',d:'right',a:'left'};
 const facing=['d','u','r','l'];
 const input=new Map();
-const SPEED_MS=156,ZOOM=1.4;
+const SPEED_MS=156,ZOOM=1.4,VIEWPORT_EDGE=768;
 let pendingInput=null;
 
 function setInput(id,direction){
@@ -163,6 +163,15 @@ async function start(){
       dir:state.dir,frame:[1,0,1,2][Math.min(3,Math.floor(t*4))],
     };
   }
+  function resize(){
+    const {clientWidth,clientHeight}=scene.parentElement;
+    const scale=VIEWPORT_EDGE/Math.max(clientWidth,clientHeight,1);
+    const width=Math.max(1,Math.round(clientWidth*scale));
+    const height=Math.max(1,Math.round(clientHeight*scale));
+    if(scene.width===width&&scene.height===height)return;
+    scene.width=width;
+    scene.height=height;
+  }
   function render(now){
     const player=actor(now);
     for(let i=0;i<residents.length;i++)
@@ -171,13 +180,15 @@ async function start(){
       images,hero,bounds,actor:player,heroDisplayScale:map.game.heroDisplayScale??1,animationTime:now,shadows:true,
       lighting:true,reflections:true,atmosphere:true,depthOfField:true,
     });
-    const width=scene.width,height=scene.height,view=width/ZOOM;
-    const cameraX=clamp((player.x+.5)*32-view/2,0,world.width-view);
-    const cameraY=clamp((player.y+.5)*32-view/2,0,world.height-view);
+    const width=scene.width,height=scene.height;
+    const worldPixelsPerPixel=VIEWPORT_EDGE/(Math.max(width,height)*ZOOM);
+    const viewWidth=width*worldPixelsPerPixel,viewHeight=height*worldPixelsPerPixel;
+    const cameraX=clamp((player.x+.5)*32-viewWidth/2,0,world.width-viewWidth);
+    const cameraY=clamp((player.y+.5)*32-viewHeight/2,0,world.height-viewHeight);
     ctx.setTransform(1,0,0,1,0,0);
     ctx.imageSmoothingEnabled=false;
     ctx.fillStyle='#13354e';ctx.fillRect(0,0,width,height);
-    ctx.drawImage(world,cameraX,cameraY,view,view,0,0,width,height);
+    ctx.drawImage(world,cameraX,cameraY,viewWidth,viewHeight,0,0,width,height);
     const foot=center([state.x,state.y]);
     const npc=residentInFront(foot.x,foot.y,state.face,residents);
     dialogue.update(npc,foot.x,foot.y);
@@ -239,6 +250,8 @@ async function start(){
   });
   addEventListener('keyup',event=>{if(keys[event.key])setInput(event.key,null);});
   addEventListener('blur',clearInput);
+  resize();
+  new ResizeObserver(resize).observe(scene.parentElement);
   render(performance.now());
   load.hidden=true;requestAnimationFrame(frame);
 }

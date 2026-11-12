@@ -73,6 +73,7 @@ test('immersive gameplay fills the viewport and prevents game text selection',()
  const css=readFileSync('src/game/ui/controls.css','utf8');
  assert.match(css,/position:fixed;inset:0/);
  assert.match(css,/height:100dvh/);
+ assert.doesNotMatch(css,/main \\.viewport\\{touch-action:none\\}/);
  assert.match(css,/-webkit-user-select:none!important/);
  assert.match(css,/-webkit-touch-callout:none!important/);
  const guard=readFileSync('src/game/ui/selection-guard.mjs','utf8');

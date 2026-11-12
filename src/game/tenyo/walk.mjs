@@ -78,7 +78,7 @@ async function start(){
     'tenyo_ripple_fx',
   ]);
   const [hero,...loaded]=await Promise.all([
-    image(map.game.hero),
+    image(map.game.hero+'?v=fb40c1b'),
     ...[...ids].map(id=>image(sourceIdToAsset(id))),
     ...[...new Set(map.game.residents.map(npc=>npc.asset))].map(path=>image(path)),
   ]);

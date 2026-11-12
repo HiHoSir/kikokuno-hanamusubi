@@ -30,7 +30,7 @@ const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 const zoom = DEFAULT_CAMERA_ZOOM;
 
 
-function image(name,url=name==='hizuki.png' ? '../../../assets/characters/hizuki/walk-4dir-80x112.png' : '../../../assets/village/scene/'+name) {
+function image(name,url=name==='hizuki.png' ? '../../../assets/characters/hizuki/walk-4dir-80x112.png?v=fb40c1b' : '../../../assets/village/scene/'+name) {
   return new Promise((resolve,reject) => {
     const bitmap = new Image();
     bitmap.onload = () => resolve(bitmap);

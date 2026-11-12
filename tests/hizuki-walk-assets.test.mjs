@@ -91,3 +91,12 @@ test('the approved village art retains the established descriptive sprite identi
   const { origin } = manifest.assets.find(item => item.id === v.assetId);
   assert.equal(origin.sourceSha256, '697fac848e3ed639eee45a7b0ba0380a8ae9cf72d4a7b527728d4890e39cd47e');
 });
+
+test('all shared walking-sprite loaders use the current atlas revision in the browser cache key', () => {
+  const revision = spec.variants['4dir-80x112'].gitBlobSha.slice(0, 7);
+  for (const area of ['village', 'interiors', 'tenyo']) {
+    const dir = 'src/game/' + area;
+    assert.ok(bytes(dir + '/walk.mjs').toString().includes('?v=' + revision), area + ': image URL');
+    assert.ok(bytes(dir + '/index.html').toString().includes('./walk.mjs?v=' + revision), area + ': loader URL');
+  }
+});

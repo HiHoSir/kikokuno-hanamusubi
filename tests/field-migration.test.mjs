@@ -158,7 +158,7 @@ test('a direction tap between animation frames still moves one cell', async () =
   const loading = {hidden: false};
   const status = {};
   const frames = [];
-  const controller = source('src/field/walk.mjs').replace(/^import .*;\n/, '')
+  const controller = source('src/field/walk.mjs').replace(/^import .*;\n/gm, '')
     .replaceAll('import.meta.url', '"https://example.test/src/field/walk.mjs"');
   const context = createContext({
     document: {querySelector: selector => ({'#scene': scene, '#load': loading, '#status': status}[selector]),

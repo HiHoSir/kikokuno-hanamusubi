@@ -86,6 +86,7 @@ async function start() {
     let startAt = now;
     if (state.motion && now - state.motion.at >= state.motion.duration) {
       const completed=state.motion;
+      const wasLadder=Boolean(state.ladder);
       startAt = Math.max(state.motion.at + state.motion.duration, now - 32);
       state.motion = null;
       state.ladder = null;
@@ -110,7 +111,7 @@ async function start() {
       // Enter battle only after several completed, walkable wilderness steps.
       // Do not trigger on scripted entrances or during a ladder traversal.
       walkedSteps++;
-      if(walkedSteps>=encounterAfter && !destination && !completed.ladder){
+      if(walkedSteps>=encounterAfter && !destination && !wasLadder){
         startBattle();
         return;
       }

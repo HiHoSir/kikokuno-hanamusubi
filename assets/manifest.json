@@ -898,12 +898,11 @@
       "path": "assets/characters/hizuki/walk-4dir-80x112.png",
       "status": "approved",
       "origin": {
-        "repo": "HiHoSir/yaksha-hanamusubi",
-        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
-        "path": "assets/characters/hizuki/hana-20261107/walk/walk-atlas-80x112.png",
-        "gitBlobSha": "18e86aadeb3f4931828f1f2d91e3b0b24df463ba"
+        "path": "青髪と赤衣装の12フレーム歩行スプライト.png",
+        "sourceSha256": "697fac848e3ed639eee45a7b0ba0380a8ae9cf72d4a7b527728d4890e39cd47e",
+        "gitBlobSha": "fb40c1b034c744077a928362bbd4aa6da84104ab"
       },
-      "usage": "village-default;field-selectable"
+      "usage": "village;interiors;tenyo-sanctuary"
     },
     {
       "id": "hizuki-battle-idle",

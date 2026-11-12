@@ -78,15 +78,16 @@ test('SD editor holds all 12 current 32px RGBA frames', () => {
 test('4-direction 80x112 anchor and display height remain separate from 32px collision', () => {
   const v = spec.variants['4dir-80x112'];
   assert.deepEqual(v.footAnchorPx, [40, 106]);
-  assert.deepEqual(v.neutralVisibleHeightPxByRow, [99, 100, 97, 97]);
-  assert.equal(v.nominalRenderedVisibleHeightPx, 48);
+  assert.deepEqual(v.neutralVisibleHeightPxByRow, [87, 87, 86, 88]);
+  assert.equal(v.nominalRenderedVisibleHeightPx, 44);
 });
 
-test('new repository uses descriptive sprite identities, keeping old labels in provenance only', () => {
+test('the approved village art retains the established descriptive sprite identity', () => {
   const v = spec.variants['4dir-80x112'];
   assert.equal(v.assetId, 'hizuki-walk-4dir-80x112');
   assert.equal(v.path, 'assets/characters/hizuki/walk-4dir-80x112.png');
   assert.ok(!Object.keys(spec.variants).includes('hana'));
   assert.ok(manifest.assets.every(a => !/hana/i.test(a.id) && !/hana/i.test(a.path)));
-  assert.ok(v.sourceOriginalPath.includes('/hana-20261107/'), 'original source naming stays only in provenance');
+  const { origin } = manifest.assets.find(item => item.id === v.assetId);
+  assert.equal(origin.sourceSha256, '697fac848e3ed639eee45a7b0ba0380a8ae9cf72d4a7b527728d4890e39cd47e');
 });

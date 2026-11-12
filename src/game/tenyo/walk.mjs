@@ -89,7 +89,8 @@ async function start(){
   const world=document.createElement('canvas');
   world.width=map.width*map.tileSize;
   world.height=map.height*map.tileSize;
-  const wc=world.getContext('2d',{alpha:false});
+  // Keep original alpha compositing: water is transparent over the sea backdrop.
+  const wc=world.getContext('2d');
   const bounds=SMRender.actorBounds(hero,(width,height)=>{
     const canvas=document.createElement('canvas');
     canvas.width=width;canvas.height=height;return canvas;

@@ -2,9 +2,18 @@
    yaksha-hanamusubi/css/game.css (last override, lines 485-549, 573-585).
    This is the ONLY production controller stylesheet. */
 :root{--game-gold:#d8bb78}
-html,body{height:100%;overflow:hidden}
+/* Disable selection and iOS long-press callouts across the full PLAY surface,
+   not just the D-pad. Never prevent default pointer/touch events globally. */
+html,body{width:100%;height:100%;margin:0;overflow:hidden;overscroll-behavior:none}
 body{background:#07101e;color:#fff}
-main{position:relative;width:100%;max-width:none;height:100vh;height:100dvh;margin:0;padding:0;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr);gap:0;overflow:hidden}
+body,body *,body *::before,body *::after{
+  -webkit-user-select:none!important;user-select:none!important;
+  -webkit-touch-callout:none!important;-webkit-tap-highlight-color:transparent;
+}
+body img,body canvas{-webkit-user-drag:none;user-drag:none}
+main{position:fixed;inset:0;width:100%;max-width:none;height:100vh;height:100dvh;margin:0;padding:0;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr);gap:0;overflow:hidden;overscroll-behavior:none}
+main .viewport{touch-action:none}
+main .viewport canvas{touch-action:none}
 .viewport{grid-area:1/1/2/2;width:100%;height:100%;min-height:0;border:0;border-radius:0;overflow:hidden}
 #pad{position:absolute;left:0;right:0;bottom:0;z-index:30;height:calc(170px + env(safe-area-inset-bottom));display:block;padding:0;margin:0;background:transparent;border:0;box-shadow:none;pointer-events:none}
 #pad .dpad{position:absolute;display:block;left:max(16px,calc(env(safe-area-inset-left) + 12px));top:auto;bottom:calc(10px + env(safe-area-inset-bottom));width:156px;height:156px;transform:none;opacity:.88;pointer-events:auto;touch-action:none}
@@ -23,10 +32,13 @@ main{position:relative;width:100%;max-width:none;height:100vh;height:100dvh;marg
 #pad button,#pad *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
 #pad button:focus-visible{outline:2px solid #f4d185;outline-offset:2px}
 #pad .round:disabled{opacity:.38}
-.field-hud{position:absolute;z-index:4;top:max(8px,env(safe-area-inset-top));left:max(8px,env(safe-area-inset-left));display:flex;flex-direction:column;gap:4px;max-width:65%;padding:7px 10px;border:1px solid rgba(201,173,120,.65);border-radius:8px;background:rgba(8,23,40,.65);pointer-events:none}
+.field-hud{position:absolute;z-index:4;top:max(8px,calc(env(safe-area-inset-top) + 8px));left:max(8px,env(safe-area-inset-left));display:flex;flex-direction:column;gap:4px;max-width:65%;padding:7px 10px;border:1px solid rgba(201,173,120,.65);border-radius:8px;background:rgba(8,23,40,.65);pointer-events:none}
 .field-hud h1{font-size:14px;margin:0;color:#f1d296}
 .field-hud output{font-size:12px;text-align:left;color:#f7efdb}
 @media(max-height:720px){#pad .dpad{transform:scale(.84);transform-origin:left bottom}#pad #action-a{width:72px;height:72px}#pad #action-b{width:54px;height:54px}}
 @media(max-width:380px){#pad .dpad{left:max(5px,env(safe-area-inset-left))}#pad #action-a{right:max(7px,env(safe-area-inset-right));width:70px;height:70px}#pad #action-b{right:max(86px,calc(env(safe-area-inset-right) + 80px));width:50px;height:50px}}
 @media(orientation:landscape){#pad{height:calc(135px + env(safe-area-inset-bottom))}#pad .dpad{bottom:calc(6px + env(safe-area-inset-bottom));transform:scale(.72);transform-origin:left bottom}#pad #action-a{bottom:calc(16px + env(safe-area-inset-bottom))}#pad #action-b{bottom:calc(46px + env(safe-area-inset-bottom))}}
 @media(prefers-reduced-transparency:reduce){#pad .dpad button,#pad .round{opacity:1;backdrop-filter:none;-webkit-backdrop-filter:none}}
+
+/* The village HUD also stays below the iPhone notch in immersive mode. */
+.village-hud{top:max(8px,calc(env(safe-area-inset-top) + 8px))}

@@ -3,6 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="鬼哭の花結び">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="../game/app.webmanifest">
 <meta name="theme-color" content="#19251e">
 <title>花霞野｜鬼哭の花結び</title>
 <style>
@@ -14,7 +19,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:8px}
 h1{font-size:17px;margin:0}
 output{font-size:12px;color:#dbdec6;text-align:right}
 .viewport{position:relative;display:grid;place-items:center;overflow:hidden;border:1px solid #73785c;border-radius:8px;background:#243322}
-canvas{display:block;width:100%;height:100%;object-fit:contain;image-rendering:pixelated;touch-action:none}
+canvas{display:block;width:100%;height:100%;object-fit:cover;object-position:center center;image-rendering:pixelated;touch-action:none}
 .field-weather{display:none}
 @supports (width:1cqw) and (mask-image:url("")){
  /* Follow the fitted square in the canvas grid cell, including clipped viewports. */
@@ -23,7 +28,7 @@ canvas{display:block;width:100%;height:100%;object-fit:contain;image-rendering:p
   pointer-events:none;
  }
  .field-weather-scene{
-  --scene-size:min(100cqw,100cqh);
+  --scene-size:max(100cqw,100cqh);
   position:absolute;overflow:hidden;left:50%;top:50%;
   width:var(--scene-size);height:var(--scene-size);transform:translate(-50%,-50%);
  }
@@ -60,6 +65,7 @@ button.held{background:#e8cc8b;color:#272d22}
 }
 </style>
 <link rel="stylesheet" href="../game/ui/controls.css">
+<script type="module" src="../game/ui/selection-guard.mjs"></script>
 </head>
 <body>
 <main>

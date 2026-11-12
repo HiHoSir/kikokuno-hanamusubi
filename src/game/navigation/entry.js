@@ -1,24 +1,20 @@
-// One official title entrance, while preserving existing independent scene HTMLs.
-// This is a navigation guard, not security/authentication. Tickets are one-use and
-// scoped to this browser tab, exact destination path/query, and a short lifetime.
+// Authorize the official title -> opening -> game-shell sequence.
+// Legacy per-scene documents render only inside the persistent gameplay shell.
+// A direct link / reload to any playable screen returns to the title.
 (function () {
   'use strict';
   const script = document.currentScript;
   const root = new URL('../../../', script.src);
   const ticketKey = 'kikokuno-hanamusubi-next-entry';
-  const ticketLifetimeMs = 120000; // Allows a slow iPhone Safari navigation.
+  const lifetime = 120000;
   const scenePaths = new Set([
-    'src/opening/',
-    'src/game/village/',
-    'src/game/interiors/',
-    'src/field/',
-    'src/game/tenyo/',
+    'src/opening/', 'src/game/', 'src/game/village/',
+    'src/game/interiors/', 'src/field/', 'src/game/tenyo/',
   ].map(path => new URL(path, root).pathname));
-
   function consumeTicket() {
     try {
       const raw = sessionStorage.getItem(ticketKey);
-      sessionStorage.removeItem(ticketKey); // A reload or copied link must not reuse it.
+      sessionStorage.removeItem(ticketKey);
       if (!raw) return false;
       const ticket = JSON.parse(raw);
       return ticket.route === location.pathname + location.search &&
@@ -27,31 +23,49 @@
       return false;
     }
   }
-
+  function hostedGame() {
+    if (!window.parent || window.parent === window) return null;
+    try {
+      const host = window.parent.KIKOKU_GAME;
+      return host?.acceptsChild?.(location.href, window) ? host : null;
+    } catch {
+      return null;
+    }
+  }
+  const mode = script.dataset?.entry;
+  const host = mode === 'game' ? hostedGame() : null;
   function go(target) {
     const destination = new URL(target, location.href);
     if (destination.origin !== root.origin || !scenePaths.has(destination.pathname)) {
       throw new Error('本編の遷移先ではありません: ' + destination.href);
     }
+    if (host) {
+      // Inner scenes never navigate their own document on a normal area change.
+      host.navigate(destination.href, window);
+      return;
+    }
     try {
       sessionStorage.setItem(ticketKey, JSON.stringify({
         route: destination.pathname + destination.search,
-        expiresAt: Date.now() + ticketLifetimeMs,
+        expiresAt: Date.now() + lifetime,
       }));
     } catch {
-      // Never bypass the guard when private browsing blocks storage.
       document.documentElement.style.visibility = 'hidden';
       location.replace(root.href);
       return;
     }
     location.assign(destination.href);
   }
-
-  window.KIKOKU_ROUTE = Object.freeze({ go });
-  if (script.dataset?.entry === 'title') {
-    try { sessionStorage.removeItem(ticketKey); } catch { /* unavailable */ }
-  } else if (script.dataset?.entry === 'game' && !consumeTicket()) {
-    // Run synchronously in <head> before scene modules or assets are loaded.
+  let admitted = true;
+  if (mode === 'title') {
+    try { sessionStorage.removeItem(ticketKey); } catch {}
+  } else if (mode === 'shell') {
+    admitted = consumeTicket();
+  } else if (mode === 'game') {
+    admitted = Boolean(host) || consumeTicket();
+  }
+  window.KIKOKU_ROUTE = Object.freeze({go, admitted});
+  if (!admitted) {
     document.documentElement.style.visibility = 'hidden';
     location.replace(root.href);
   }

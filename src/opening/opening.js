@@ -5,13 +5,13 @@ const overlay = document.querySelector('#play-overlay');
 const playButton = document.querySelector('#play-opening');
 const message = document.querySelector('#playback-message');
 const skipButton = document.querySelector('#skip-opening');
-const villageUrl = new URL('../game/village/', document.baseURI);
+const gameUrl = new URL('../game/', document.baseURI);
 let navigating = false;
 
 function enterVillage() {
   if (navigating) return;
   navigating = true;
-  window.KIKOKU_ROUTE.go(villageUrl.href);
+  window.KIKOKU_ROUTE.go(gameUrl.href);
 }
 
 function showPlayButton(text) {

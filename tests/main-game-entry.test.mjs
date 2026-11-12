@@ -4,7 +4,8 @@ import {readFileSync,existsSync} from 'node:fs';
 import {execFileSync} from 'node:child_process';
 test('opening enters a real village game, not the review preview',()=>{
  const opening=readFileSync('src/opening/opening.js','utf8');
- assert.match(opening,/\.\.\/game\/village\//);
+ assert.match(opening,/\.\.\/game\//);
+ assert.match(readFileSync('src/game/navigation/game-shell.mjs','utf8'),/src\/game\/village\//);
  assert.doesNotMatch(opening,/previews\//);
  for(const path of ['src/game/village/index.html','src/game/interiors/index.html']){
   const page=readFileSync(path,'utf8');
@@ -38,7 +39,7 @@ test('production modules pass Node syntax checks',()=>{
   'src/game/village/render.mjs','src/game/interiors/walk.mjs',
   'src/game/interiors/rooms.mjs','src/game/interiors/room-art.mjs',
   'src/opening/opening.js','src/field/walk.mjs',
-  'src/game/audio/audio.mjs','src/game/audio/boot.mjs'
+  'src/game/audio/audio.mjs','src/game/audio/boot.mjs','src/game/navigation/game-shell.mjs'
  ])execFileSync(process.execPath,['--check',path]);
 });
 

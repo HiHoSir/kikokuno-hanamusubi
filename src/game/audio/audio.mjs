@@ -14,7 +14,7 @@ export const SOUND_SETTING_KEY='kikokuno-hanamusubi-audio-enabled';
 export const BGM_CHECKPOINT_KEY='kikokuno-hanamusubi-bgm-checkpoint';
 
 export function makeAudioEngine(trackName,button=null) {
-  const track=TRACKS[trackName];
+  let track=TRACKS[trackName];
   if(!track)throw new Error('Unknown game BGM: '+trackName);
   const player=new Audio(new URL(track.file,ASSET_ROOT).href);
   player.preload='metadata';
@@ -87,6 +87,23 @@ export function makeAudioEngine(trackName,button=null) {
     if(!allowed){pause();if(ctx?.state==='running')void ctx.suspend().catch(()=>{});}
     else unlock();
     updateUI();
+  }
+  function switchTrack(nextName) {
+    const next = TRACKS[nextName];
+    if (!next) throw new Error('Unknown game BGM: ' + nextName);
+    if (nextName === trackName) return false; // Never touch the village player at a doorway.
+    ++playSerial; // Invalidate any pending play() promise for the previous source.
+    player.pause();
+    playing = false;
+    trackName = nextName;
+    track = next;
+    player.src = new URL(track.file, ASSET_ROOT).href;
+    player.loop = track.loopStart === 0;
+    try { player.currentTime = 0; } catch {}
+    player.load?.();
+    updateUI();
+    if (allowed) void play();
+    return true;
   }
   function se(name){
     const patterns={
@@ -183,6 +200,6 @@ export function makeAudioEngine(trackName,button=null) {
   });
   updateUI();
   if(allowed)void play(); // Automatic playback is best effort, never assumed.
-  return {trackName,player,unlock,se,talkChar,pause,setEnabled,get enabled(){return allowed;},
+  return {get trackName(){return trackName;},player,unlock,se,talkChar,pause,setEnabled,switchTrack,get enabled(){return allowed;},
     get needsGesture(){return unlockNeeded;},get playing(){return playing;}};
 }

@@ -10,6 +10,7 @@
 6. フィールドの天妖の社に接触すると本編の `src/game/tenyo/` へ入場。白妙の会話が完了すると目的が「海の入り江」に進む。南側の出口からフィールドへ戻る。
 
 ## 素材とデータの正本
+- 天妖の社（水上聖域・採用版）：`src/game/tenyo/`、`data/maps/tenyo-sanctuary/scene.json`、`assets/tenyo/`。28×25マスで、48×32マスの旧レイヤー版は不採用。
 - 村ランタイム: `src/game/village/`
 - 室内ランタイム: `src/game/interiors/`
 - フィールド: `src/field/`
@@ -33,12 +34,12 @@
 ## ゲーム操作UI（旧レポジトリを基準）
 - 正本は `src/game/ui/controls.css` と `src/game/village/dialogue.css`。
 - 旧 `HiHoSir/yaksha-hanamusubi/css/game.css` の最終的な4方向D-pad、半透明A/B、セーフエリア対応の浮動配置を移植。
-- 村・室内・フィールドは同一のコントローラーを使用。AはNPCと話す／会話の文字表示を加速／次へ、Bは会話中の次送り。フィールドのBはメニュー未実装につき無効。
+- 村・室内・フィールド・天妖の社は同一のコントローラーを使用。AはNPCと話す／会話の文字表示を加速／次へ、Bは会話中の次送り。フィールドのBはメニュー未実装につき無効。
 - 会話UIは旧版の青系背景・金縁・ピンクの話者名、36ms/文字、次の行があるときの点滅▼、横画面で左右のコントローラーを避ける配置。
 - 移動入力は会話中停止し、誤入力やタッチの押しっぱなしによる移動を防止する。
 
 ## 全画面表示とiPhoneのテキスト選択抑止
-- 本編3画面はゲーム領域を `100dvh` と全幅で表示。HUD、D-pad、A/Bの安全領域は `env(safe-area-inset-*)` に追従。
+- 本編の村・室内・フィールド・天妖の社はゲーム領域を `100dvh` と全幅で表示。HUD、D-pad、A/Bの安全領域は `env(safe-area-inset-*)` に追従。
 - フィールドは正方形レンダリングの縦横比を維持して `object-fit:cover` で画面いっぱいに配置。細長い画面では左右または上下が一部トリミングされる。
 - `src/game/ui/controls.css` の `-webkit-user-select:none` ほか、`selection-guard.mjs` で選択、ドラッグ、長押しのコンテキストメニューを禁止。入力の `pointerdown` やタップを抑止しない。
 - タイトルから本編までWebアプリ設定 `src/game/app.webmanifest` とApple用metaタグを共有。Safari通常タブではブラウザUIを消せないため、ブラウザの共有メニューから「ホーム画面に追加」してWebアプリとして開けばアドレスバーなしで利用可能。
@@ -47,7 +48,7 @@
 ## BGM・SE実装（2026-11-12）
 - BGM正本は `assets/audio/bgm/`。ユーザー提供のBGMパックから新規採用し、音源の重複を避けるため旧 `review/audio/bgm-pack/*.ogg` は移動。対応MIDIは `review/` に残し、ゲームが参照しない。
 - 現行画面: タイトル→`title.ogg`、鬼灯村・室内→`village.ogg`、フィールド→`field.ogg`、天妖の社→`prologue-theme.ogg`。オープニング動画の音はそのまま使用し、BGMの二重再生を禁止。
-- `dungeon.ogg` / `battle.ogg` / `prologue-theme.ogg` / `se/battle-encounter.ogg` は採用アセットとして登録済み。未実装シーンからはまだ再生しない。
+- `dungeon.ogg` / `battle.ogg` / `se/battle-encounter.ogg` は採用アセットとして登録済み。未実装シーンからはまだ再生しない。社では、元の水音 `assets/tenyo/waterfall-loop.m4a` を音声設定に従って小音量で重ねる。
 - `src/game/audio/audio.mjs` は1ページ1プレイヤー、BGMの曲別ループ開始秒数、音量管理、ゲームでのSE合成、サウンドON/OFF保存、iPhone Safariの音声アンロック・バックグラウンド停止・復帰を担当。
 - タイトル・村・室内・フィールド・天妖の社右上の `♪ 再生` ボタンで音声を許可。ブラウザ側で無音自動再生が制限されても、操作ボタンのタップで再試行。設定は `kikokuno-hanamusubi-audio-enabled` に保存。
 - 軽い暫定合成SE: 決定・キャンセル・会話開始・歩行入力・会話の文字。正式SE素材が承認されたら `audio.mjs` で置換する。長押しに伴う音の連打はしない。

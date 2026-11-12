@@ -22,7 +22,7 @@ test('BGM ownership is persistent and a door to the interior does not restart vi
   const audioSource=readFileSync('src/game/audio/audio.mjs','utf8');
   assert.match(audioSource,/function switchTrack\(nextName\)/);
   assert.match(audioSource,/if \(nextName === trackName\) return false/);
-  assert.match(shellSource,/audio\.switchTrack\(routes\.get\(next\.pathname\)\.track\)/);
+  assert.match(shellSource,/if \(audio\.trackName !== nextTrack\) audio\.switchTrack\(nextTrack\)/);
   const maps=[...shellSource.matchAll(/\[new URL\('([^']+)', root\)\.pathname, \{track:'([^']+)'/g)];
   const map=new Map(maps.map(([,route,track])=>[route,track]));
   assert.equal(map.get('src/game/village/'),'village');
@@ -38,7 +38,7 @@ test('game shell navigation is delegated and validates scene and frame identity'
   };
   const curtain={hidden:false};
   const transitions=[];
-  const audio={switchTrack(track){transitions.push(track);}};
+  const audio={trackName:'village',switchTrack(track){transitions.push(track);this.trackName=track;}};
   const document={querySelector(selector){
     return {'#game-scene':frame,'#scene-transition':curtain,'#sound-toggle':{}}[selector];
   }};
@@ -54,9 +54,9 @@ test('game shell navigation is delegated and validates scene and frame identity'
   assert.ok(host.acceptsChild(frame.src,frame.contentWindow));
   host.navigate(new URL('src/game/interiors/?building=inn',base),frame.contentWindow);
   assert.equal(frame.src,new URL('src/game/interiors/?building=inn',base).href);
-  assert.deepEqual(transitions,['village']);
+  assert.deepEqual(transitions,[]);
   assert.throws(()=>host.navigate(new URL('src/game/village/',base),{}),/現在のゲーム画面/);
   assert.throws(()=>host.navigate(new URL('previews/cave-prototype/',base),frame.contentWindow),/ゲーム本編以外/);
   host.navigate(new URL('src/field/?from=village',base),frame.contentWindow);
-  assert.deepEqual(transitions,['village','field']);
+  assert.deepEqual(transitions,['field']);
 });

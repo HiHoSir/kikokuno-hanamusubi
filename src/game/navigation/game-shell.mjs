@@ -39,7 +39,8 @@ function navigate(target, sourceWindow) {
   active = route;
   curtain.hidden = false;
   frame.title = '鬼哭の花結び ' + routes.get(next.pathname).label;
-  audio.switchTrack(routes.get(next.pathname).track);
+  const nextTrack = routes.get(next.pathname).track;
+  if (audio.trackName !== nextTrack) audio.switchTrack(nextTrack);
   frame.src = next.href;
 }
 window.KIKOKU_GAME = Object.freeze({acceptsChild, navigate, audio});

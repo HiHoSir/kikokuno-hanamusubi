@@ -1,0 +1,50 @@
+name: Import approved Tenyo sanctuary assets
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/tenyo-assets.yml']
+permissions:
+  contents: write
+jobs:
+  copy-assets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Copy existing approved assets from former game
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="https://raw.githubusercontent.com/HiHoSir/yaksha-hanamusubi/26136fef4e73bcea60a73edf4e02cd252b3976d0"
+          mkdir -p assets/tenyo assets/characters/npc
+          curl --fail --location --retry 3 --silent --show-error "$base/assets/maps/tenyo/layer-background.webp" -o assets/tenyo/background.webp
+          curl --fail --location --retry 3 --silent --show-error "$base/assets/maps/tenyo/layer-shrine.webp" -o assets/tenyo/shrine.webp
+          curl --fail --location --retry 3 --silent --show-error "$base/assets/maps/tenyo/layer-torii.webp" -o assets/tenyo/torii.webp
+          curl --fail --location --retry 3 --silent --show-error "$base/assets/maps/tenyo/layer-trees.webp" -o assets/tenyo/forest.webp
+          curl --fail --location --retry 3 --silent --show-error "$base/assets/characters/tenyo-npc-v3/shirotae-walk-96x128.png" -o assets/characters/npc/shirotae-walk-4dir-32.png
+          curl --fail --location --retry 3 --silent --show-error "$base/assets/characters/tenyo-guardian-sd-v1/walk-atlas-32.png" -o assets/characters/npc/shrine-guardian-walk-4dir-32.png
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          manifest=Path('assets/manifest.json')
+          obj=json.loads(manifest.read_text())
+          base='assets/maps/tenyo/'
+          entries=[
+            ('tenyo-background','map','assets/tenyo/background.webp',base+'layer-background.webp'),
+            ('tenyo-shrine','map','assets/tenyo/shrine.webp',base+'layer-shrine.webp'),
+            ('tenyo-torii','map','assets/tenyo/torii.webp',base+'layer-torii.webp'),
+            ('tenyo-forest','map','assets/tenyo/forest.webp',base+'layer-trees.webp'),
+            ('tenyo-shirotae','character','assets/characters/npc/shirotae-walk-4dir-32.png','assets/characters/tenyo-npc-v3/shirotae-walk-96x128.png'),
+            ('tenyo-guardian','character','assets/characters/npc/shrine-guardian-walk-4dir-32.png','assets/characters/tenyo-guardian-sd-v1/walk-atlas-32.png'),
+          ]
+          paths={a['path'] for a in obj['assets']}
+          for id,kind,path,source in entries:
+              assert Path(path).stat().st_size > 0, path
+              if path not in paths:
+                  obj['assets'].append({'id':id,'type':kind,'path':path,'status':'approved','origin':{'repo':'HiHoSir/yaksha-hanamusubi','commit':'26136fef4e73bcea60a73edf4e02cd252b3976d0','path':source},'usage':'tenyo-sanctuary-production'})
+          manifest.write_text(json.dumps(obj,ensure_ascii=False,indent=2)+'\n')
+          PY
+          git add assets/tenyo assets/characters/npc/shirotae-walk-4dir-32.png assets/characters/npc/shrine-guardian-walk-4dir-32.png assets/manifest.json
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'Import approved Tenyo sanctuary layers and NPC atlases'
+          git push origin HEAD:main

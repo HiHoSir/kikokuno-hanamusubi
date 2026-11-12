@@ -1,4 +1,4 @@
-import { HIZUKI_WALK_SPEED, makeWalk, touchedEntrance, crossesSouthExit } from './movement.mjs';
+import { HIZUKI_WALK_SPEED, makeWalk, touchedEntrance, crossesSouthExit } from './movement.mjs?v=village-speed-288';
 import { villageRooms } from '../interiors/rooms.mjs';
 import { pixelViewport, DEFAULT_CAMERA_ZOOM, canopyOpacity, riverRipples, paintRiverRipples } from './render.mjs';
 import { advanceResident, drawCharacter, makeResident, residentInFront, RESIDENT_RADIUS } from './residents.mjs';

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {TRACKS,ENCOUNTER_SE,SOUND_SETTING_KEY,makeAudioEngine} from '../src/game/audio/audio.mjs';
+import {TRACKS,ENCOUNTER_SE,SOUND_SETTING_KEY,BGM_CHECKPOINT_KEY,makeAudioEngine} from '../src/game/audio/audio.mjs';
 
 test('soundtrack routing uses the approved audio and author-defined intro loops',()=>{
  assert.equal(TRACKS.title.file,'bgm/title.ogg');
@@ -91,4 +91,31 @@ test('BGM skips intros only after the first complete pass',async()=>{
  }finally{
   for(const [key,val]of Object.entries(old))globalThis[key]=val;
  }
+});
+
+test('village music resumes its saved position on interior navigation',async()=>{
+ const old={Audio:globalThis.Audio,window:globalThis.window,document:globalThis.document,
+  localStorage:globalThis.localStorage,sessionStorage:globalThis.sessionStorage};
+ const win=eventTarget(),doc=eventTarget();doc.hidden=false;
+ const points=new Map();
+ globalThis.Audio=MockAudio;globalThis.window=win;globalThis.document=doc;
+ globalThis.localStorage={getItem:()=>null,setItem(){}};
+ globalThis.sessionStorage={getItem:key=>points.get(key)??null,setItem:(key,value)=>points.set(key,value)};
+ try{
+  const village=makeAudioEngine('village');
+  village.player.allow=true;village.unlock();await flush();
+  village.player.currentTime=23.5;
+  win.fire('pagehide');
+  const saved=JSON.parse(points.get(BGM_CHECKPOINT_KEY));
+  assert.equal(saved.track,'village');
+  assert.equal(saved.time,23.5);
+  const newWindow=eventTarget();
+  globalThis.window=newWindow;
+  const indoors=makeAudioEngine('village');
+  indoors.player.events.fire('loadedmetadata');
+  assert.equal(indoors.player.currentTime,23.5);
+  const field=makeAudioEngine('field');
+  field.player.events.fire('loadedmetadata');
+  assert.equal(field.player.currentTime,0,'a different track must not inherit the village time');
+ }finally{for(const [key,val]of Object.entries(old))globalThis[key]=val;}
 });

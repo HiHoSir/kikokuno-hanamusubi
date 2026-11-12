@@ -58,8 +58,8 @@
     "4dir-80x112": {
       "assetId": "hizuki-walk-4dir-80x112",
       "path": "assets/characters/hizuki/walk-4dir-80x112.png",
-      "sourceOriginalPath": "assets/characters/hizuki/hana-20261107/walk/walk-atlas-80x112.png",
-      "gitBlobSha": "18e86aadeb3f4931828f1f2d91e3b0b24df463ba",
+      "sourceOriginalPath": "青髪と赤衣装の12フレーム歩行スプライト.png",
+      "gitBlobSha": "fb40c1b034c744077a928362bbd4aa6da84104ab",
       "atlasPx": [
         240,
         448
@@ -89,12 +89,12 @@
         106
       ],
       "neutralVisibleHeightPxByRow": [
-        99,
-        100,
-        97,
-        97
+        87,
+        87,
+        86,
+        88
       ],
-      "nominalRenderedVisibleHeightPx": 48,
+      "nominalRenderedVisibleHeightPx": 44,
       "legacyRuntimeNote": "Foot y=106 is the drawing origin one past last opaque y=105, not a 32px collision anchor; rendered size is independent of the 32px movement grid."
     }
   },

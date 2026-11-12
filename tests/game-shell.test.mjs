@@ -44,7 +44,7 @@ test('game shell navigation is delegated and validates scene and frame identity'
   }};
   const window={};
   const location={href:new URL('src/game/',base).href};
-  const source=shellSource.replace(/^import \{makeAudioEngine\} from '[^']+';\s*/,'')
+  const source=shellSource.replace(/import \{makeAudioEngine\} from '[^']+';\s*/,'')
     .replaceAll('import.meta.url',JSON.stringify(new URL('src/game/navigation/game-shell.mjs',base).href));
   runInNewContext(source,{document,window,globalThis:window,location,URL,makeAudioEngine:()=>audio});
   assert.equal(frame.src,new URL('src/game/village/',base).href);

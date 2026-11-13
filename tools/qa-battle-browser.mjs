@@ -74,6 +74,25 @@ try{
      pictures:{hero:pic('hero-image'),enemy:pic('enemy-image'),second:pic('enemy-image-2')},
      musicParent:!!document.querySelector('#sound-toggle')};
    });
+   // Validate the real background image that the production HTML and CSS use.
+   const backdrop=await page.evaluate(async()=>{
+    const frame=document.querySelector('iframe');
+    const d=frame.contentDocument,main=d.querySelector('main');
+    const node=d.querySelector('.battle-backdrop');
+    const style=d.defaultView.getComputedStyle(node);
+    const url=style.backgroundImage.match(/url\(["']?([^"')]+)/)?.[1];
+    if(!url)return {terrain:main.dataset.battleTerrain,error:'CSS has no image'};
+    const bitmap=new frame.contentWindow.Image();
+    bitmap.src=new URL(url,d.location.href).href;
+    await bitmap.decode();
+    return {terrain:main.dataset.battleTerrain,
+     width:bitmap.naturalWidth,height:bitmap.naturalHeight,
+     imageRendering:style.imageRendering,url:bitmap.src};
+   });
+   if(backdrop.terrain!=='grassland'||backdrop.width!==384||backdrop.height!==216||
+       backdrop.imageRendering!=='pixelated'){
+    issues.push(width+'x'+height+' grassland backdrop missing/unreadable: '+JSON.stringify(backdrop));
+   }
    const overlaps=(a,b)=>{
     if(!a||!b)return 0;
     return Math.max(0,Math.min(a.right,b.right)-Math.max(a.x,b.x))*

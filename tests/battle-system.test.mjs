@@ -199,3 +199,39 @@ test('production battle module evaluates, paints enemy/status and accepts an att
   `;
   execFileSync(process.execPath,['--input-type=module','-e',program],{stdio:'pipe',timeout:8000});
 });
+
+test('two approved enemies render and can be targeted independently in the production ESM scene',()=>{
+  const program=`
+    const nodes=new Map();
+    const makeNode=()=>({
+      dataset:{},style:{},children:[],textContent:'',src:'',hidden:false,
+      classList:{add(){},remove(){},toggle(){}},
+      addEventListener(type,fn){this.listeners??={};this.listeners[type]=fn;},
+      replaceChildren(){this.children=[];},append(child){this.children.push(child);}
+    });
+    globalThis.document={
+      getElementById(id){if(!nodes.has(id))nodes.set(id,makeNode());return nodes.get(id);},
+      querySelectorAll(){return [];},createElement(){return makeNode();},addEventListener(){}
+    };
+    globalThis.addEventListener=()=>{};
+    globalThis.sessionStorage={
+      getItem(key){return key==='kikokuno-hanamusubi-battle-request'?JSON.stringify({enemyId:'tanuki',count:2,at:Date.now()}):null;},
+      removeItem(){}
+    };
+    const store=new Map();
+    globalThis.localStorage={getItem:key=>store.get(key)??null,setItem:(key,v)=>store.set(key,v)};
+    globalThis.Audio=class{play(){return Promise.resolve()}pause(){}};
+    globalThis.setTimeout=fn=>{fn();return 0;};
+    await import('./src/game/battle/walk.mjs');
+    const node=id=>nodes.get(id);
+    if(node('enemy-figure-2').hidden)throw Error('second enemy hidden');
+    if(!node('enemy-label-2').textContent.includes('化け狸'))throw Error('second enemy not drawn');
+    node('command-list').children[0].listeners.click();
+    const targets=node('command-list').children;
+    if(targets.length!==3)throw Error('two-target command menu not shown');
+    targets[1].listeners.click();
+    if(!store.has('kikokuno-hanamusubi-battle-player'))throw Error('targeted hit was not saved');
+    if(!node('battle-message').textContent.includes('攻撃'))throw Error('targeted battle action not executed');
+  `;
+  execFileSync(process.execPath,['--input-type=module','-e',program],{stdio:'pipe',timeout:8000});
+});

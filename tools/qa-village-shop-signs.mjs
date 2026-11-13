@@ -27,7 +27,7 @@ try{
     [390,844,'portrait','teahouse-northeast','teahouse','sign-teahouse.png',[1614,548]],
     [900,390,'landscape','teahouse-northeast','teahouse','sign-teahouse.png',[1614,548]],
     [390,844,'portrait','inn-southeast','inn','sign-inn.png',[2004,1885]],
-    [900,390,'landscape','inn-southeast','inn','sign-inn.png',[2084,1975]],
+    [900,390,'landscape','inn-southeast','inn','sign-inn.png',[2004,1885]],
   ]){
     const page=await browser.newPage({viewport:{width,height},deviceScaleFactor:1,hasTouch:true,isMobile:true});
     const errors=[];

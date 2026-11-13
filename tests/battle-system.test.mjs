@@ -298,5 +298,5 @@ test('landscape A and portrait B layout keep the same battle DOM and leave touch
   assert.match(js,/choose\('target-'\+index\)/);
   assert.doesNotMatch(js,/orientationchange|location\.assign/);
   assert.ok(html.includes('assets/characters/hizuki/battle/idle.png'));
-  assert.ok(html.includes('href="./battle.css?v=layout-a-b-2"'));
+  assert.ok(html.includes('href="./battle.css?v=layout-a-b-3"'));
 });

@@ -118,7 +118,7 @@ export const villageRooms = {
   'house-northwest-tile':'house-family',
   'house-northwest-thatch':'house-farm',
   'house-northeast-thatch':'house-craft',
-  'house-southeast-tile':'house-family',
+  'house-southeast-tile':'armory',
   'house-southwest-thatch':'house-farm',
   'house-southeast-thatch':'house-craft',
   'house-southwest-tile':'house-family',

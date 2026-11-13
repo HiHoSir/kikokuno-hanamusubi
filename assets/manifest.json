@@ -2126,6 +2126,24 @@
         "kind": "generated-pixel-signboard-and-rasterized-kanji"
       },
       "approvalNote": "2026-11-14: produced for requested Momotaro-style legible shop signage; visual implementation pending iPhone review."
+    },
+    {
+      "id": "village-shop-sign-armory",
+      "type": "object",
+      "path": "assets/village/scene/sign-armory.png",
+      "status": "approved",
+      "name": "兵具屋の木札",
+      "usage": "village-storefront-sign",
+      "buildingId": "house-southeast-tile",
+      "dimensions": {
+        "width": 96,
+        "height": 120
+      },
+      "origin": {
+        "kind": "generated-pixel-signboard-and-rasterized-kanji"
+      },
+      "gitBlobSha": "fa77275647a701055a6998418ecc73b4b52ea076",
+      "approvalNote": "2026-11-14: user authorized repurposing one low-story-role house as armory; same exterior dimensions, original tile house art, existing entrance and collision, with separate 96x120px sign sprite."
     }
   ],
   "designReferences": [

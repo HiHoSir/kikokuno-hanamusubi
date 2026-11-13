@@ -28,6 +28,8 @@ try{
     [900,390,'landscape','teahouse-northeast','teahouse','sign-teahouse.png',[1614,548]],
     [390,844,'portrait','inn-southeast','inn','sign-inn.png',[2004,1885]],
     [900,390,'landscape','inn-southeast','inn','sign-inn.png',[2004,1885]],
+    [390,844,'portrait','house-southeast-tile','armory','sign-armory.png',[1500,1254]],
+    [900,390,'landscape','house-southeast-tile','armory','sign-armory.png',[1500,1254]],
   ]){
     const page=await browser.newPage({viewport:{width,height},deviceScaleFactor:1,hasTouch:true,isMobile:true});
     const errors=[];

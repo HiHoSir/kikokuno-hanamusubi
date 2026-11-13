@@ -30,7 +30,8 @@ const rect=e=>{const r=e?.getBoundingClientRect();return r?
 try{
  for(const [width,height,enemyId,count] of [
   [900,390,'tanuki',2],[1536,706,'tanuki',2],
-  [390,844,'tanuki',2],[375,667,'field-oni',1]
+  [390,844,'tanuki',2],[375,667,'field-oni',1],
+  [390,844,'onibi',1],[900,390,'onibi',1]
  ]){
   const page=await chromiumBrowser.newPage({viewport:{width,height},deviceScaleFactor:1,hasTouch:true,isMobile:true});
   const errors=[];
@@ -107,8 +108,8 @@ try{
       interpolation:d.defaultView.getComputedStyle(img).imageRendering
     }));
    });
-   const expectsPixelArt=enemyId==='tanuki'||enemyId==='field-oni';
-   const version=enemyId==='tanuki'?'77a93691':'651fcddc';
+   const expectsPixelArt=['tanuki','field-oni','onibi'].includes(enemyId);
+   const version=({tanuki:'77a93691','field-oni':'651fcddc',onibi:'4efa9446'})[enemyId];
    if(enemyArt.length!==count||enemyArt.some(item=>
      item.source.startsWith('data:')||
      (expectsPixelArt?(item.pixelArt!=='true'||item.dimensions[0]!==128||item.dimensions[1]!==128||

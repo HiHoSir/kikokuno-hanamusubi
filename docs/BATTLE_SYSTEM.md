@@ -55,8 +55,9 @@
 ## 敵画像のドット感と個別採用スプライト（2026-11-13）
 - **化け狸**は生成済みの単体透過ドット絵（128×128px）についてユーザーの採用承認を受け、既存の `assets/enemies/tanuki.png` を同じ正式パスで置き換えた。台帳ID `enemy-tanuki` は維持し、旧画像はGit履歴から取り出せる。単体素材以外に戦闘画面全体の画像生成はしない。
 - **野の小鬼**もユーザーが邪悪すぎない「いたずら小鬼」の外見を採用承認。正式パス `assets/enemies/field-oni.png` と台帳ID `enemy-field-oni` を維持し、128×128pxの単体透過ドット絵へ差し替えた。赤い肌・二本角・棍棒・腰布は継承しつつ、笑顔と軽快な動きに変更。旧画像はGit履歴から復元可能。
-- **64pxへの一律縮小加工を廃止**。化け狸と野の小鬼の承認画像を原寸128pxで `image-rendering:pixelated` で表示し、鬼火は元の承認画像をそのまま表示する（個別描き直し待ち）。
-- `src/game/battle/walk.mjs` ではPNGからCanvasのデータURLを生成しない。実PNGの読み込みと複数体の見せ方は `tools/qa-battle-browser.mjs` で横・縦4サイズを検査する。Safariの古い画像キャッシュを避けるため、化け狸と野の小鬼の画像にGit Blob由来の更新パラメータを付けている。
+- **鬼火**もユーザーの採用承認を受け、`assets/enemies/onibi.png`（台帳ID `enemy-onibi`）を128×128pxの透過ドット絵へ同じ正式パスで差し替えた。青白い炎・黄色い目・笑み・漂う火の粉は継承。旧画像はGit履歴に保存。
+- **64pxへの一律縮小加工を廃止**。化け狸・野の小鬼・鬼火の採用PNGを、どれも原寸128pxのまま `image-rendering:pixelated` で表示する。実行時Canvas縮小・別名コピーはしない。
+- `src/game/battle/walk.mjs` ではPNGからCanvasのデータURLを生成しない。実PNGの読み込みと複数体の見せ方は `tools/qa-battle-browser.mjs` で従来の縦横4サイズに加えて鬼火の縦横2ケースを検査する。Safariの古い画像キャッシュを避けるため、化け狸・野の小鬼・鬼火それぞれの画像にGit Blob由来の更新パラメータを付けている。
 
 ## B式v2：確定数値
 数値正本は `data/characters/hizuki-status.json`、実行時の定数は `src/game/battle/rules.mjs` 内の `STATUS_V2` に対応。自動検査で不一致を検出する。

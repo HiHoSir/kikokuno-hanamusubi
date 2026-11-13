@@ -1036,12 +1036,15 @@
       "status": "approved",
       "name": "鬼火",
       "origin": {
-        "repo": "HiHoSir/yaksha-hanamusubi",
-        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
-        "path": "assets/enemies/redesign-v1/003-onibi/onibi-intact-512.png",
-        "gitBlobSha": "066267f52023d06620e09dc4e7d599f2efda091b"
+        "kind": "generated-single-enemy-sprite",
+        "source": "approved blue-flame onibi pixel sprite 2026-11-13"
       },
-      "usage": "battle-enemy"
+      "usage": "battle-enemy",
+      "dimensions": {
+        "width": 128,
+        "height": 128
+      },
+      "approvalNote": "2026-11-13: user approved the 128x128 transparent blue-flame onibi sprite with yellow eyes, grin, and floating embers. Replaces existing PNG in place; original remains in Git history."
     },
     {
       "id": "enemy-isoy",

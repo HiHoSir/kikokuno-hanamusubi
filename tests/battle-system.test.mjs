@@ -13,10 +13,10 @@ test('wild battle enemies use approved sprites with verified individual provenan
     const entry=manifest.assets.find(asset=>asset.path===enemy.asset);
     assert.equal(entry?.status,'approved',enemy.asset);
     assert.equal(entry?.usage,'battle-enemy',enemy.asset);
-    if(key==='tanuki'||key==='field-oni'){
+    if(['tanuki','field-oni','onibi'].includes(key)){
       assert.equal(entry?.origin?.kind,'generated-single-enemy-sprite');
       assert.deepEqual(entry?.dimensions,{width:128,height:128});
-    }else assert.equal(entry?.origin?.repo,'HiHoSir/yaksha-hanamusubi');
+    }
     assert.ok(existsSync(enemy.asset),'missing approved sprite: '+key);
     assert.ok(enemy.hp>0&&enemy.attack>0);
   }
@@ -318,7 +318,7 @@ test('grassland backdrop is registered and uses distinct terrain-specific stylin
   assert.match(css,/image-rendering:pixelated/);
 });
 
-test('approved tanuki and field-oni pixel sprites retain 128px originals without runtime resampling',()=>{
+test('all three approved battle sprites retain original 128px PNGs without runtime resampling',()=>{
   const html=readFileSync('src/game/battle/index.html','utf8');
   const css=readFileSync('src/game/battle/battle.css','utf8');
   const runtime=readFileSync('src/game/battle/walk.mjs','utf8');
@@ -327,19 +327,22 @@ test('approved tanuki and field-oni pixel sprites retain 128px originals without
   assert.ok(!runtime.includes('coarseEnemyImage'));
   assert.ok(!runtime.includes('ENEMY_PIXEL_MAX_SIDE'));
   assert.ok(!runtime.includes("canvas.toDataURL('image/png')"));
-  assert.ok(runtime.includes("image.dataset.pixelArt=(e.id==='tanuki'||e.id==='field-oni')?'true':'false'"));
+  assert.ok(runtime.includes("image.dataset.pixelArt=['tanuki','field-oni','onibi'].includes(e.id)?'true':'false'"));
   assert.match(runtime,/source\.searchParams\.set\('v','77a93691'\)/);
   assert.match(runtime,/source\.searchParams\.set\('v','651fcddc'\)/);
-  const oni=readFileSync('assets/enemies/field-oni.png');
-  assert.equal(oni.subarray(1,4).toString(),'PNG');
-  assert.equal(oni.readUInt32BE(16),128);
-  assert.equal(oni.readUInt32BE(20),128);
-  assert.equal(oni[25],6,'RGBA PNG required');
+  assert.match(runtime,/source\.searchParams\.set\('v','4efa9446'\)/);
   const manifest=JSON.parse(readFileSync('assets/manifest.json','utf8'));
-  const asset=manifest.assets.find(item=>item.id==='enemy-field-oni');
-  assert.equal(asset.status,'approved');
-  assert.deepEqual(asset.dimensions,{width:128,height:128});
-  assert.ok(html.includes('walk.mjs?v=approved-oni-pixel-sprite-1'));
+  for(const id of ['field-oni','tanuki','onibi']){
+    const sprite=readFileSync('assets/enemies/'+id+'.png');
+    assert.equal(sprite.subarray(1,4).toString(),'PNG',id);
+    assert.equal(sprite.readUInt32BE(16),128,id+' width');
+    assert.equal(sprite.readUInt32BE(20),128,id+' height');
+    assert.equal(sprite[25],6,id+' RGBA PNG required');
+    const asset=manifest.assets.find(item=>item.id==='enemy-'+id);
+    assert.equal(asset.status,'approved',id);
+    assert.deepEqual(asset.dimensions,{width:128,height:128},id);
+  }
+  assert.ok(html.includes('walk.mjs?v=approved-onibi-pixel-sprite-1'));
 });
 
 test('battle visuals preserve approved figures and sequence impacts before hiding defeated enemies',()=>{

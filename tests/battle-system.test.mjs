@@ -117,10 +117,10 @@ test('invalid magic/herbs cost no turn; provisional 糸遊 and つむぎ follow 
 });
 
 test('defense reduces incoming damage and escape/defeat stop the fight',()=>{
-  const normal=createBattle('field-oni',DEFAULT_PLAYER,()=>0);
+  const normal=createBattle('onibi',DEFAULT_PLAYER,()=>.5);
   normal.act('attack');
   const normalDamage=DEFAULT_PLAYER.hp-normal.state.hero.hp;
-  const defended=createBattle('field-oni',DEFAULT_PLAYER,()=>0);
+  const defended=createBattle('onibi',DEFAULT_PLAYER,()=>.5);
   defended.act('guard');
   assert.ok(DEFAULT_PLAYER.hp-defended.state.hero.hp<normalDamage);
   const fleeing=createBattle('field-oni',DEFAULT_PLAYER,()=>0);

@@ -55,7 +55,7 @@ try{
    await page.waitForFunction(()=>{
     const d=document.querySelector('iframe')?.contentDocument;
     const enemies=[...d?.querySelectorAll('.actor.enemy:not([hidden]) img')||[]];
-    return enemies.length>0&&enemies.every(img=>img.dataset.enemyPixelated==='yes');
+    return enemies.length>0&&enemies.every(img=>img.complete&&img.naturalWidth>0);
    },null,{timeout:20000});
    const data=await page.evaluate(()=>{
     const d=document.querySelector('iframe').contentDocument;
@@ -98,19 +98,22 @@ try{
        backdrop.imageRendering!=='pixelated'){
     issues.push(width+'x'+height+' grassland backdrop missing/unreadable: '+JSON.stringify(backdrop));
    }
-   const pixelArt=await page.evaluate(()=>{
+   const enemyArt=await page.evaluate(()=>{
     const d=document.querySelector('iframe').contentDocument;
     return [...d.querySelectorAll('.actor.enemy:not([hidden]) img')].map(img=>({
-      state:img.dataset.enemyPixelated,
       dimensions:[img.naturalWidth,img.naturalHeight],
-      dataURL:img.currentSrc.startsWith('data:image/png'),
+      source:img.currentSrc,
+      pixelArt:img.dataset.pixelArt,
       interpolation:d.defaultView.getComputedStyle(img).imageRendering
     }));
    });
-   if(pixelArt.length!==count||pixelArt.some(item=>
-       item.state!=='yes'||!item.dataURL||
-       Math.max(...item.dimensions)>64||item.interpolation!=='pixelated')){
-     issues.push(width+'x'+height+' enemy sprite pixelation failed: '+JSON.stringify(pixelArt));
+   const expectsTanuki=enemyId==='tanuki';
+   if(enemyArt.length!==count||enemyArt.some(item=>
+     item.source.startsWith('data:')||
+     (expectsTanuki?(item.pixelArt!=='true'||item.dimensions[0]!==128||item.dimensions[1]!==128||
+       item.interpolation!=='pixelated'||!item.source.includes('tanuki.png?v=77a93691')):
+      (item.pixelArt!=='false'||!item.source.includes('/'+enemyId+'.png'))))){
+     issues.push(width+'x'+height+' approved enemy PNG failed to load: '+JSON.stringify(enemyArt));
    }
    const overlaps=(a,b)=>{
     if(!a||!b)return 0;

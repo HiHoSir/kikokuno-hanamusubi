@@ -1016,12 +1016,15 @@
       "status": "approved",
       "name": "化け狸",
       "origin": {
-        "repo": "HiHoSir/yaksha-hanamusubi",
-        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
-        "path": "assets/enemies/redesign-v1/002-tanuki/tanuki-intact-512.png",
-        "gitBlobSha": "ce363f68b69670c89ea3d5ba859c061b0d470724"
+        "kind": "generated-single-enemy-sprite",
+        "source": "approved tanuki_sprite_pixel_candidate_128.png"
       },
-      "usage": "battle-enemy"
+      "usage": "battle-enemy",
+      "dimensions": {
+        "width": 128,
+        "height": 128
+      },
+      "approvalNote": "2026-11-13: user approved previously generated standalone 128x128 transparent pixel art; replaces original at identical stable path, recoverable via Git history."
     },
     {
       "id": "enemy-onibi",

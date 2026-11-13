@@ -6,15 +6,18 @@ import {BATTLE_REQUEST_KEY,FIELD_RETURN_KEY,PLAYER_KEY,ENEMIES,createBattle,
   chooseEnemy,readPlayer,savePlayer,normalizePlayer,DEFAULT_PLAYER,
   STATUS_V2,levelStats,nextLevelXp,physicalDamage,fieldEncounterZone,chooseFieldEncounter} from '../src/game/battle/rules.mjs';
 
-test('all wild battle enemy sprites are existing approved old-repository assets',()=>{
+test('wild battle enemies use approved sprites with verified individual provenance',()=>{
   const manifest=JSON.parse(readFileSync('assets/manifest.json','utf8'));
   for(const [key,enemy] of Object.entries(ENEMIES)){
     assert.equal(key,enemy.id);
     const entry=manifest.assets.find(asset=>asset.path===enemy.asset);
     assert.equal(entry?.status,'approved',enemy.asset);
     assert.equal(entry?.usage,'battle-enemy',enemy.asset);
-    assert.equal(entry?.origin?.repo,'HiHoSir/yaksha-hanamusubi');
-    assert.ok(existsSync(enemy.asset),'no generated replacement: '+key);
+    if(key==='tanuki'){
+      assert.equal(entry?.origin?.kind,'generated-single-enemy-sprite');
+      assert.deepEqual(entry?.dimensions,{width:128,height:128});
+    }else assert.equal(entry?.origin?.repo,'HiHoSir/yaksha-hanamusubi');
+    assert.ok(existsSync(enemy.asset),'missing approved sprite: '+key);
     assert.ok(enemy.hp>0&&enemy.attack>0);
   }
   for(const pose of ['idle','attack','skill','hit','guard','victory']){
@@ -298,7 +301,7 @@ test('landscape A and portrait B layout keep the same battle DOM and leave touch
   assert.match(js,/choose\('target-'\+index\)/);
   assert.doesNotMatch(js,/orientationchange|location\.assign/);
   assert.ok(html.includes('assets/characters/hizuki/battle/idle.png'));
-  assert.ok(html.includes('href="./battle.css?v=enemy-pixel-grid-1"'));
+  assert.ok(html.includes('href="./battle.css?v=tanuki-pixel-sprite-1"'));
 });
 
 
@@ -315,17 +318,18 @@ test('grassland backdrop is registered and uses distinct terrain-specific stylin
   assert.match(css,/image-rendering:pixelated/);
 });
 
-test('existing enemy PNGs are downsampled on the client without replacing any asset',()=>{
+test('approved tanuki pixel sprite uses its original 128px PNG without runtime resampling',()=>{
   const html=readFileSync('src/game/battle/index.html','utf8');
   const css=readFileSync('src/game/battle/battle.css','utf8');
   const runtime=readFileSync('src/game/battle/walk.mjs','utf8');
-  assert.match(css,/\.actor\.enemy img\{image-rendering:crisp-edges;image-rendering:pixelated\}/);
-  assert.match(runtime,/const ENEMY_PIXEL_MAX_SIDE=64;/);
-  assert.match(runtime,/canvas\.toDataURL\('image\/png'\)/);
-  assert.match(runtime,/const assetUrl=new URL\(e\.asset,root\)\.href;/);
-  assert.match(runtime,/image\.dataset\.enemyPixelated='yes';/);
-  assert.match(runtime,/\)\.catch\(\(\)=>src\);/);
-  assert.ok(html.includes('walk.mjs?v=enemy-pixel-grid-2'));
+  assert.match(css,/\.actor\.enemy img\[data-pixel-art="true"\]\{image-rendering:pixelated\}/);
+  assert.match(css,/\.actor\.enemy img\{image-rendering:auto\}/);
+  assert.ok(!runtime.includes('coarseEnemyImage'));
+  assert.ok(!runtime.includes('ENEMY_PIXEL_MAX_SIDE'));
+  assert.ok(!runtime.includes("canvas.toDataURL('image/png')"));
+  assert.match(runtime,/image\.dataset\.pixelArt=e\.id==='tanuki'\?'true':'false'/);
+  assert.match(runtime,/source\.searchParams\.set\('v','77a93691'\)/);
+  assert.ok(html.includes('walk.mjs?v=tanuki-pixel-sprite-1'));
 });
 
 test('battle visuals preserve approved figures and sequence impacts before hiding defeated enemies',()=>{

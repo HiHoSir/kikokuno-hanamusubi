@@ -2092,6 +2092,40 @@
         "path": "assets/settlement-editor/sanctuary-audio-v1/waterfall-loop.m4a"
       },
       "usage": "tenyo-water-sanctuary-production"
+    },
+    {
+      "id": "village-shop-sign-teahouse",
+      "type": "object",
+      "path": "assets/village/scene/sign-teahouse.png",
+      "status": "approved",
+      "name": "茶の木札",
+      "usage": "village-storefront-sign",
+      "buildingId": "teahouse-northeast",
+      "dimensions": {
+        "width": 96,
+        "height": 120
+      },
+      "origin": {
+        "kind": "generated-pixel-signboard-and-rasterized-kanji"
+      },
+      "approvalNote": "2026-11-14: produced for requested Momotaro-style legible shop signage; visual implementation pending iPhone review."
+    },
+    {
+      "id": "village-shop-sign-inn",
+      "type": "object",
+      "path": "assets/village/scene/sign-inn.png",
+      "status": "approved",
+      "name": "宿の木札",
+      "usage": "village-storefront-sign",
+      "buildingId": "inn-southeast",
+      "dimensions": {
+        "width": 96,
+        "height": 120
+      },
+      "origin": {
+        "kind": "generated-pixel-signboard-and-rasterized-kanji"
+      },
+      "approvalNote": "2026-11-14: produced for requested Momotaro-style legible shop signage; visual implementation pending iPhone review."
     }
   ],
   "designReferences": [

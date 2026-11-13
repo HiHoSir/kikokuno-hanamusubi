@@ -67,7 +67,7 @@ try{
   try{
    await page.waitForFunction(()=>{
     const f=document.querySelector('iframe')?.contentWindow;
-    return !!f?.document?.querySelector('#scene')?.dataset?.fieldHeroFoot
+    return !!f?.document?.querySelector('#scene')
      &&f.document.querySelector('#load')?.hidden===true;
    },null,{timeout:20000});
   }catch(e){
@@ -115,7 +115,7 @@ try{
     }
     visible={spriteTop,spriteBottom,relTop,relBottom,redPixels:red,solidPixels:solid,rect:[x0,y0,x1-x0,y1-y0]};
    }
-   return {window:[innerWidth,innerHeight],scene:[w,h],field:[field.width,field.height],
+   return {window:[innerWidth,innerHeight],scene:[w,h],field:[field.width,field.height],canvasRect:[box.x,box.y,box.width,box.height],
     pad:[bar.y,bar.height],cropTop:top,foot,draws:draws.length,
     imageFit:css.objectFit,visible,loadHidden:doc.querySelector('#load')?.hidden,
     sceneURL:doc.location.href};

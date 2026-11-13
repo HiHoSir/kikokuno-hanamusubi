@@ -116,8 +116,10 @@ function perform(command){
   const isStrike=baseCommand==='attack'||baseCommand==='bloom';
   const enemyTarget=command.endsWith(':1')?enemyFigure2:enemyFigure;
   const receivedHit=result.events.some(e=>e.kind==='hit');
-  // The battle rules calculate the outcome immediately, but animation and
-  // hiding a defeated enemy must occur in visual order.
+  // Timeline for a physical/skill attack: hero attack (0ms), enemy impact
+  // (95ms, removed by 505ms), optional enemy retaliation and hero hit (570ms),
+  // result (1060ms). Do not display hit.png while attack FX remains on screen.
+  // Non-strike actions use a shorter retaliation/recovery timeline.
   announce(result.events[0]?.text||'');
   if(isStrike){
     flash(heroFigure,'attacking');
@@ -136,7 +138,7 @@ function perform(command){
       flash(heroFigure,'impact-hit');
       const retaliation=result.events.filter(e=>e.kind==='hit');
       announce(retaliation.at(-1)?.text||'緋月は傷を負った。');
-    },225);
+    },isStrike?570:225);
   }
   setTimeout(()=>{
     updateStatus(); // Enemy defeated: hide only after its impact.
@@ -155,7 +157,7 @@ function perform(command){
     // Avoid overflowing the message window with all retaliation lines.
     announce(result.events.at(-1)?.text||'');
     selected=0;locked=false;updateMenu();
-  },440);
+  },receivedHit?(isStrike?1060:680):(isStrike?600:440));
 }
 function choose(command){
   if(!ready||locked)return;

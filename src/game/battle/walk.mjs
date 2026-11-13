@@ -5,6 +5,7 @@ const el=id=>document.getElementById(id);
 const list=el('command-list'),title=el('command-title'),message=el('battle-message');
 const hero=el('hero-image'),heroFigure=el('hero-figure'),enemyFigure=el('enemy-figure');
 const enemyImage=el('enemy-image'),enemyLabel=el('enemy-label');
+const enemyFigure2=el('enemy-figure-2'),enemyImage2=el('enemy-image-2'),enemyLabel2=el('enemy-label-2');
 const hp=el('hp-label'),mp=el('mp-label'),level=el('level-label'),resources=el('resource-label');
 const hpMeter=el('hp-meter'),mpMeter=el('mp-meter'),intro=el('encounter');
 const image=(path)=>new URL(path,root).href;
@@ -23,13 +24,13 @@ try{
     Date.now()-value.at<120000)request=value;
   sessionStorage.removeItem(BATTLE_REQUEST_KEY);
 }catch{}
-const battle=createBattle(request?.enemyId||'field-oni',readPlayer());
+const battle=createBattle(request?.enemyId||'field-oni',readPlayer(),Math.random,request?.count||1);
 const {state}=battle;
 const audio=()=>globalThis.KIKOKU_AUDIO;
-let mode='main',selected=0,ready=false,locked=false;
+let mode='main',selected=0,ready=false,locked=false,targetCommand=null,targetReturn='main';
 const commands={
   main:[['たたかう','attack'],['術','magic'],['道具','items'],['防御','guard'],['にげる','flee']],
-  magic:[['花焔  術4','bloom'],['癒し  術3','heal'],['もどる','back']],
+  magic:[['糸遊  技3','bloom'],['つむぎ  技5','heal'],['もどる','back']],
   items:[['薬草','herb'],['もどる','back']],
   result:[['フィールドへ戻る','return']]
 };
@@ -44,6 +45,22 @@ function flash(node,cssClass){
   node.classList.add(cssClass);
   setTimeout(()=>node.classList.remove(cssClass),410);
 }
+function updateEnemies(){
+  const two=state.enemies.length>1;
+  el('battle-stage').classList.toggle('pair',two);
+  const figures=[enemyFigure,enemyFigure2],images=[enemyImage,enemyImage2],labels=[enemyLabel,enemyLabel2];
+  const alive=state.enemies.filter(e=>e.hp>0);
+  for(let i=0;i<2;i++){
+    const e=state.enemies[i],figure=figures[i],image=images[i],label=labels[i];
+    figure.hidden=!e||e.hp<=0;
+    if(!e)continue;
+    if(image.dataset.enemyId!==e.id){
+      image.src=new URL(e.asset,root).href;image.alt=e.name;image.dataset.enemyId=e.id;
+    }
+    label.textContent=e.name+(two?' '+(i+1):'');
+    figure.classList.toggle('targeted',mode==='targets'&&alive.indexOf(e)===selected);
+  }
+}
 function updateStatus(){
   hp.textContent=state.hero.hp+' / '+state.hero.maxhp;
   mp.textContent=state.hero.mp+' / '+state.hero.maxmp;
@@ -51,13 +68,14 @@ function updateStatus(){
   hpMeter.style.width=(state.hero.hp/state.hero.maxhp*100)+'%';
   mpMeter.style.width=(state.hero.maxmp?state.hero.mp/state.hero.maxmp*100:0)+'%';
   resources.textContent='薬草 '+state.hero.potions+'　銭 '+state.hero.gold;
+  updateEnemies();
 }
 function announce(text){message.textContent=text;}
 function changeMode(next){mode=next;selected=0;updateMenu();}
 function updateMenu(){
-  title.textContent=mode==='magic'?'術を選ぶ':mode==='items'?'道具を選ぶ':
+  title.textContent=mode==='targets'?'標的を選ぶ':mode==='magic'?'術を選ぶ':mode==='items'?'道具を選ぶ':
     mode==='result'?(state.outcome==='victory'?'勝利':state.outcome==='escape'?'退却':'敗北'):'緋月の行動';
-  const rows=mode==='result'&&state.outcome==='defeat'?[['鬼灯村へ戻る','return']]:commands[mode];
+  const rows=mode==='targets'?[...state.enemies.flatMap((enemy,i)=>enemy.hp>0?[[enemy.name+' '+(i+1),'target-'+i]]:[]),['もどる','back']]:mode==='result'&&state.outcome==='defeat'?[['鬼灯村へ戻る','return']]:commands[mode];
   list.replaceChildren();
   for(let i=0;i<rows.length;i++){
     const [label,command]=rows[i];
@@ -65,7 +83,7 @@ function updateMenu(){
     button.type='button';button.dataset.command=command;
     button.textContent=label;
     button.classList.toggle('selected',i===selected);
-    button.disabled=locked||!ready;
+    button.disabled=locked||!ready||(command==='bloom'&&state.hero.lv<3);
     button.addEventListener('click',()=>{if(ready&&!locked){selected=i;choose(command);}});
     list.append(button);
   }
@@ -80,17 +98,18 @@ function navigateBack(){
 function perform(command){
   if(locked||!ready)return;
   locked=true;updateMenu();
+  const baseCommand=command.split(':')[0];
   const result=battle.act(command);
   if(!result.accepted){
     locked=false;announce(result.events[0]?.text||'行動できない。');sound('cancel');updateMenu();return;
   }
   const actionPose={attack:'attack',bloom:'skill',heal:'skill',herb:'idle',
-    guard:'guard',flee:'idle'}[command]||'idle';
+    guard:'guard',flee:'idle'}[baseCommand]||'idle';
   pose(actionPose);
-  if(command==='attack'||command==='bloom'){
-    flash(heroFigure,'attacking');flash(enemyFigure,'hit');sound('confirm');
-  }else if(command==='guard'){sound('confirm');}
-  else if(command==='flee'){sound(result.outcome==='escape'?'confirm':'cancel');}
+  if(baseCommand==='attack'||baseCommand==='bloom'){
+    flash(heroFigure,'attacking');flash(command.endsWith(':1')?enemyFigure2:enemyFigure,'hit');sound('confirm');
+  }else if(baseCommand==='guard'){sound('confirm');}
+  else if(baseCommand==='flee'){sound(result.outcome==='escape'?'confirm':'cancel');}
   else sound('notify');
   if(result.events.some(e=>e.kind==='hit'))flash(heroFigure,'hit');
   announce(result.events.map(e=>e.text).join('　'));
@@ -100,8 +119,8 @@ function perform(command){
     if(result.outcome){
       if(result.outcome==='defeat'){
         // Preserve experience and gold, but return home able to move again.
-        state.hero.hp=Math.max(1,Math.ceil(state.hero.maxhp/2));
-        state.hero.mp=Math.max(0,Math.ceil(state.hero.maxmp/2));
+        state.hero.hp=state.hero.maxhp;
+        state.hero.mp=state.hero.maxmp;
         savePlayer(state.hero);
         pose('hit');
       }else pose(result.outcome==='victory'?'victory':'idle');
@@ -115,7 +134,17 @@ function perform(command){
 function choose(command){
   if(!ready||locked)return;
   if(command==='return'){navigateBack();return;}
-  if(command==='back'){sound('cancel');changeMode('main');return;}
+  if(command==='back'){
+    sound('cancel');if(mode==='targets'){targetCommand=null;changeMode(targetReturn);}
+    else changeMode('main');return;
+  }
+  if(mode==='targets'&&command?.startsWith('target-')){
+    const index=Number(command.slice(7));const action=targetCommand;
+    targetCommand=null;perform(action+':'+index);return;
+  }
+  if((command==='attack'||command==='bloom')&&state.enemies.filter(e=>e.hp>0).length>1){
+    targetCommand=command;targetReturn=mode;sound('confirm');changeMode('targets');return;
+  }
   if(command==='magic'||command==='items'){
     sound('confirm');changeMode(command);return;
   }
@@ -135,7 +164,7 @@ function confirm(){
 }
 function cancel(){
   if(!ready||locked)return;
-  if(mode==='magic'||mode==='items')choose('back');
+  if(mode==='magic'||mode==='items'||mode==='targets')choose('back');
 }
 const directions=new Set(['up','down','left','right']);
 for(const b of document.querySelectorAll('[data-dir]')){
@@ -163,13 +192,11 @@ const encounterSE=new Audio(image('assets/audio/se/battle-encounter.ogg'));
 encounterSE.preload='none';encounterSE.volume=.65;
 document.addEventListener('visibilitychange',()=>{if(document.hidden)encounterSE.pause();});
 addEventListener('pagehide',()=>encounterSE.pause());
-enemyImage.src=image(state.enemy.asset);
-enemyImage.alt=state.enemy.name;
-enemyLabel.textContent=state.enemy.name;
+updateEnemies();
 el('battle-area').textContent='花霞野';
 pose('idle');
 updateStatus();updateMenu();
-announce(state.enemy.name+'が現れた！');
+announce(state.enemies.length>1?state.enemy.name+'が'+state.enemies.length+'体現れた！':state.enemy.name+'が現れた！');
 if(audio()?.enabled!==false)void encounterSE.play().catch(()=>{});
 setTimeout(()=>{
   intro.hidden=true;

@@ -63,3 +63,11 @@ body{margin:0;background:#0c1925}
  .field-hud{max-width:25%}
 }
 @media(prefers-reduced-motion:reduce){.encounter-overlay,.encounter-overlay::before,.encounter-overlay strong{animation-duration:.15s}.actor.hit,.actor.attacking{animation:none}}
+
+/* Two enemy instances keep their own visible bodies and selectable targets. */
+.actor[hidden]{display:none!important}
+.battle-stage.pair .actor.hero{width:min(41%,228px)}
+.battle-stage.pair .actor.enemy{width:min(31%,205px);height:77%;top:9%;right:1%}
+.battle-stage.pair .actor.enemy.secondary{right:30%}
+.battle-stage.pair .actor.enemy.targeted img{filter:drop-shadow(0 0 8px #f9d885) drop-shadow(1px 5px 4px rgba(5,19,23,.45))}
+@media(orientation:landscape){.battle-stage.pair .actor.hero{width:min(33%,195px)}.battle-stage.pair .actor.enemy{width:min(25%,175px)}.battle-stage.pair .actor.enemy.secondary{right:25%}}

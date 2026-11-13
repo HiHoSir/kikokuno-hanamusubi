@@ -19,9 +19,10 @@
 <section class="viewport" aria-label="戦闘画面">
  <div class="battle-backdrop" aria-hidden="true"><div class="moonlight"></div><div class="horizon"></div><div class="earth"></div></div>
  <div class="field-hud"><h1>接敵</h1><output id="battle-area">花霞野</output></div>
- <div class="battle-stage" aria-label="戦っているキャラクター">
+ <div id="battle-stage" class="battle-stage" aria-label="戦っているキャラクター">
   <figure id="hero-figure" class="actor hero"><img id="hero-image" src="../../../assets/characters/hizuki/battle/idle.png" alt="後ろ姿の緋月" draggable="false"><figcaption>緋月</figcaption></figure>
   <figure id="enemy-figure" class="actor enemy"><img id="enemy-image" alt="敵の姿" draggable="false"><figcaption id="enemy-label"></figcaption></figure>
+  <figure id="enemy-figure-2" class="actor enemy secondary" hidden><img id="enemy-image-2" alt="敵の姿" draggable="false"><figcaption id="enemy-label-2"></figcaption></figure>
  </div>
  <section class="battle-message" aria-live="polite" aria-atomic="true"><p id="battle-message">敵が現れた！</p></section>
  <div class="battle-panels">

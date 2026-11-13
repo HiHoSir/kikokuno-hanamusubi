@@ -64,7 +64,7 @@ async function start() {
     try{
       sessionStorage.setItem(FIELD_RETURN_KEY,JSON.stringify({x:state.x,y:state.y,row:state.row}));
       sessionStorage.setItem(BATTLE_REQUEST_KEY,JSON.stringify({
-        enemyId:chooseEnemy(walkedSteps),at:Date.now()
+        enemyId:chooseEnemy(walkedSteps),count:chooseEnemy(walkedSteps)==='tanuki'?2:1,at:Date.now()
       }));
     }catch{}
     window.KIKOKU_ROUTE.go(new URL('../game/battle/', import.meta.url));

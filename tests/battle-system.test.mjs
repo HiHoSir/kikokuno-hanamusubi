@@ -13,7 +13,7 @@ test('wild battle enemies use approved sprites with verified individual provenan
     const entry=manifest.assets.find(asset=>asset.path===enemy.asset);
     assert.equal(entry?.status,'approved',enemy.asset);
     assert.equal(entry?.usage,'battle-enemy',enemy.asset);
-    if(key==='tanuki'){
+    if(key==='tanuki'||key==='field-oni'){
       assert.equal(entry?.origin?.kind,'generated-single-enemy-sprite');
       assert.deepEqual(entry?.dimensions,{width:128,height:128});
     }else assert.equal(entry?.origin?.repo,'HiHoSir/yaksha-hanamusubi');

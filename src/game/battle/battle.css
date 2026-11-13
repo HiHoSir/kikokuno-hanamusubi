@@ -138,8 +138,8 @@ body{margin:0;background:#0c1424}
  .field-hud{max-width:25%}
 }
 @media(max-height:700px) and (orientation:portrait){
- .viewport{grid-template-rows:minmax(0,1fr) 176px 46px 117px;gap:3px}
- #pad{height:calc(117px + env(safe-area-inset-bottom))}
+ .viewport{grid-template-rows:minmax(0,1fr) 166px 46px 112px;gap:3px}
+ #pad{height:calc(112px + env(safe-area-inset-bottom))}
  #pad .dpad{transform:scale(.85);transform-origin:left bottom}
 }
 @media(max-width:360px) and (orientation:portrait){

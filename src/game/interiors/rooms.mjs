@@ -47,7 +47,7 @@ export const rooms = {
       ['teaTable',108,328], ['teaTable',488,328],
     ],
     destinations:[[388,276],[188,480],[568,480]],
-    resident:{asset:'shop-clerk',name:'茶店の店番',counter:'teaCounter',lines:['いらっしゃい。歩き疲れたら、お茶を飲んでいってね。']},
+    resident:{asset:'shop-clerk',name:'茶店の店番',counter:'teaCounter',lines:['いらっしゃい。おにぎりと団子もあるよ。旅のお供にどうだい？']},
   },
   shop: {
     name:'物販店', width:704, height:544, floor:'cedar', windows:[294],
@@ -77,7 +77,7 @@ export const rooms = {
       ['weaponCounter',256,224], ['supplies',80,350], ['supplies',548,350],
     ],
     destinations:[[368,400],[156,272],[584,272]],
-    resident:{asset:'shop-clerk',name:'兵具屋の店番',counter:'weaponCounter',lines:['遠出するなら、道具の手入れを忘れずにね。']},
+    resident:{asset:'shop-clerk',name:'兵具屋の店番',counter:'weaponCounter',lines:['いらっしゃい。初めての旅なら、丈夫な兵具を揃えていきな。']},
   },
   'house-farm': {
     name:'農家', width:640, height:512, floor:'walnut', windows:[240],

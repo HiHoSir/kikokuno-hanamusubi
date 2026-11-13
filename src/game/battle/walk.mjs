@@ -1,4 +1,4 @@
-import {BATTLE_REQUEST_KEY,ENEMIES,createBattle,readPlayer,savePlayer} from './rules.mjs';
+import {BATTLE_REQUEST_KEY,ENEMIES,FOOD_ITEMS,createBattle,readPlayer,savePlayer} from './rules.mjs';
 
 const root=new URL('../../../',import.meta.url);
 const el=id=>document.getElementById(id);
@@ -90,7 +90,7 @@ function changeMode(next){mode=next;selected=0;updateMenu();}
 function updateMenu(){
   title.textContent=mode==='targets'?'標的を選ぶ':mode==='magic'?'術を選ぶ':mode==='items'?'道具を選ぶ':
     mode==='result'?(state.outcome==='victory'?'勝利':state.outcome==='escape'?'退却':'敗北'):'緋月の行動';
-  const rows=mode==='targets'?[...state.enemies.flatMap((enemy,i)=>enemy.hp>0?[[enemy.name+' '+(i+1),'target-'+i]]:[]),['もどる','back']]:mode==='result'&&state.outcome==='defeat'?[['鬼灯村へ戻る','return']]:commands[mode];
+  const rows=mode==='targets'?[...state.enemies.flatMap((enemy,i)=>enemy.hp>0?[[enemy.name+' '+(i+1),'target-'+i]]:[]),['もどる','back']]:mode==='items'?[['薬草 '+state.hero.potions,'herb'],...Object.values(FOOD_ITEMS).map(item=>[item.name+' '+state.hero.foods[item.id],'food:'+item.id]),['もどる','back']]:mode==='result'&&state.outcome==='defeat'?[['鬼灯村へ戻る','return']]:commands[mode];
   list.replaceChildren();
   for(let i=0;i<rows.length;i++){
     const [label,command]=rows[i];
@@ -119,7 +119,7 @@ function perform(command){
   if(!result.accepted){
     locked=false;announce(result.events[0]?.text||'行動できない。');sound('cancel');updateMenu();return;
   }
-  const actionPose={attack:'attack',bloom:'skill',heal:'skill',herb:'idle',
+  const actionPose={attack:'attack',bloom:'skill',heal:'skill',herb:'idle',food:'idle',
     guard:'guard',flee:'idle'}[baseCommand]||'idle';
   pose(actionPose);
   const isStrike=baseCommand==='attack'||baseCommand==='bloom';

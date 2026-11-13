@@ -43,17 +43,25 @@ export function physicalDamage(attack,defense,random=Math.random){
   const withVariance=Math.floor(base*(1+(roll(random)-.5)/8));
   return Math.max(1,Math.floor(atk*.1),withVariance);
 }
+// Provisional first-village food stock: bought in the teahouse and usable in battle.
+export const FOOD_ITEMS=Object.freeze({
+  onigiri:Object.freeze({id:'onigiri',name:'おにぎり',price:8,heal:12}),
+  dango:Object.freeze({id:'dango',name:'団子',price:16,heal:22})
+});
+// One early equipment tier is available from the existing armory interior.
+// Price and item name are playtest values, not a final equipment catalog.
+export const ARMORY_STOCK=Object.freeze({id:'starter-gear',name:'旅の兵具一式',price:200,tier:'T1'});
 export const ENEMIES=Object.freeze({
   // Initial field only. These are provisional first-area numbers, not the planned late regions.
   'field-oni':Object.freeze({id:'field-oni',name:'野の小鬼',asset:'assets/enemies/field-oni.png',hp:12,attack:7,defense:2,xp:8,gold:8}),
   'tanuki':Object.freeze({id:'tanuki',name:'化け狸',asset:'assets/enemies/tanuki.png',hp:6,attack:6,defense:2,xp:4,gold:4}),
   'onibi':Object.freeze({id:'onibi',name:'鬼火',asset:'assets/enemies/onibi.png',hp:16,attack:8,defense:2,xp:9,gold:8})
 });
-export const ACTIONS=Object.freeze(['attack','bloom','heal','herb','guard','flee']);
+export const ACTIONS=Object.freeze(['attack','bloom','heal','herb','food','guard','flee']);
 export const DEFAULT_PLAYER=Object.freeze({
   lv:1,hp:26,maxhp:26,mp:12,maxmp:12,attack:9,defense:6,speed:9,
   equipmentTier:'T0',awakening:0,balanceVersion:2,
-  xp:0,gold:0,potions:3,wins:0
+  xp:0,gold:0,potions:3,foods:Object.freeze({onigiri:0,dango:0}),wins:0
 });
 export function normalizePlayer(input={}){
   const lv=clamp(nonNegative(input?.lv,1),1,99);
@@ -68,7 +76,9 @@ export function normalizePlayer(input={}){
     mp:v2?clamp(nonNegative(input.mp,stats.maxmp),0,stats.maxmp):stats.maxmp,
     equipmentTier,awakening,balanceVersion:2,
     xp:nonNegative(input?.xp,0),gold:nonNegative(input?.gold,0),
-    potions:nonNegative(input?.potions,3),wins:nonNegative(input?.wins,0)
+    potions:nonNegative(input?.potions,3),
+    foods:Object.fromEntries(Object.keys(FOOD_ITEMS).map(id=>[id,clamp(nonNegative(input?.foods?.[id],0),0,99)])),
+    wins:nonNegative(input?.wins,0)
   };
 }
 export function readPlayer(storage=globalThis.localStorage){
@@ -78,6 +88,21 @@ export function savePlayer(player,storage=globalThis.localStorage){
   const value=normalizePlayer(player);
   try{storage?.setItem(PLAYER_KEY,JSON.stringify(value));}catch{}
   return value;
+}
+export function purchaseFood(player,id){
+  const hero=normalizePlayer(player),item=FOOD_ITEMS[id];
+  if(!Object.hasOwn(FOOD_ITEMS,id))return {accepted:false,player:hero,message:'商品を選んでください。'};
+  if(hero.foods[id]>=99)return {accepted:false,player:hero,message:'もう持ちきれません。'};
+  if(hero.gold<item.price)return {accepted:false,player:hero,message:'両が足りません。'};
+  hero.gold-=item.price;hero.foods[id]++;
+  return {accepted:true,player:hero,message:item.name+'を買いました。'};
+}
+export function purchaseArmory(player){
+  const hero=normalizePlayer(player),item=ARMORY_STOCK;
+  if(hero.equipmentTier!=='T0')return {accepted:false,player:hero,message:'その兵具はもう揃っています。'};
+  if(hero.gold<item.price)return {accepted:false,player:hero,message:'両が足りません。'};
+  const updated=normalizePlayer({...hero,gold:hero.gold-item.price,equipmentTier:item.tier});
+  return {accepted:true,player:updated,message:item.name+'を身につけました。'};
 }
 export function chooseEnemy(steps=0){
   return ['field-oni','tanuki','onibi'][Math.floor(Math.max(0,steps)/8)%3];
@@ -174,6 +199,14 @@ export function createBattle(enemyId='field-oni',player=DEFAULT_PLAYER,random=Ma
       hero.potions--;
       const amount=Math.min(hero.maxhp-hero.hp,26);
       hero.hp+=amount;event('薬草を使い、体力を'+amount+'回復した。','heal');
+    }else if(kind==='food'){
+      if(!Object.hasOwn(FOOD_ITEMS,indexText))return {accepted:false,events:[{text:'食べ物を選んでください。',kind:'warning'}],outcome:null};
+      const item=FOOD_ITEMS[indexText];
+      if(!hero.foods[indexText])return {accepted:false,events:[{text:item.name+'を持っていない。',kind:'warning'}],outcome:null};
+      if(hero.hp>=hero.maxhp)return {accepted:false,events:[{text:'体力は満ちている。',kind:'warning'}],outcome:null};
+      hero.foods[indexText]--;
+      const amount=Math.min(hero.maxhp-hero.hp,item.heal);
+      hero.hp+=amount;event(item.name+'を食べ、体力を'+amount+'回復した。','heal');
     }else if(kind==='guard'){
       guarding=true;event('緋月は身構えた。','guard');
     }else if(kind==='flee'){

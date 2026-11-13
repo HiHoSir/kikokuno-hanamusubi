@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync,existsSync} from 'node:fs';
 import {execFileSync} from 'node:child_process';
 import {BATTLE_REQUEST_KEY,FIELD_RETURN_KEY,PLAYER_KEY,ENEMIES,createBattle,
-  chooseEnemy,readPlayer,savePlayer,normalizePlayer,DEFAULT_PLAYER,
+  chooseEnemy,readPlayer,savePlayer,normalizePlayer,DEFAULT_PLAYER,FOOD_ITEMS,ARMORY_STOCK,purchaseFood,purchaseArmory,
   STATUS_V2,levelStats,nextLevelXp,physicalDamage,fieldEncounterZone,chooseFieldEncounter} from '../src/game/battle/rules.mjs';
 
 test('wild battle enemies use approved sprites with verified individual provenance',()=>{
@@ -418,4 +418,42 @@ test('battle visuals preserve approved figures and sequence impacts before hidin
   const final=runtime.indexOf('    updateStatus(); // Enemy defeated: hide only after its impact.');
   assert.ok(final>runtime.indexOf('},95);'));
   assert.equal(runtime.includes('announce(result.events.map(e=>e.text).join('),false);
+});
+
+
+test('teahouse purchases preserve currency and recovery stock without a village item shop',()=>{
+  const money={...DEFAULT_PLAYER,gold:25};
+  const bought=purchaseFood(money,'onigiri');
+  assert.equal(bought.accepted,true);
+  assert.equal(bought.player.gold,17);
+  assert.equal(bought.player.foods.onigiri,1);
+  assert.equal(purchaseFood(money,'dango').accepted,true);
+  assert.equal(purchaseFood({...DEFAULT_PLAYER,gold:7},'onigiri').accepted,false);
+  assert.equal(purchaseFood({...DEFAULT_PLAYER,gold:9999,foods:{onigiri:99,dango:0}},'onigiri').accepted,false);
+  assert.equal(purchaseFood(money,'invalid').accepted,false);
+  const hero=readPlayer({getItem:()=>JSON.stringify(bought.player)});
+  assert.equal(hero.foods.onigiri,1);
+  const battle=createBattle('field-oni',{...bought.player,hp:5},()=>.5);
+  assert.equal(battle.act('food:onigiri').accepted,true);
+  assert.equal(battle.state.hero.foods.onigiri,0);
+  assert.ok(battle.state.hero.hp>5);
+  const missing=createBattle('field-oni',{...DEFAULT_PLAYER,hp:5},()=>.5);
+  assert.equal(missing.act('food:onigiri').accepted,false);
+  assert.equal(missing.state.turn,1);
+  const full=createBattle('field-oni',bought.player,()=>.5);
+  assert.equal(full.act('food:onigiri').accepted,false);
+});
+
+test('armory sells only the existing tier one once and recomputes normalized combat stats',()=>{
+  const money={...DEFAULT_PLAYER,gold:210};
+  const result=purchaseArmory(money);
+  assert.equal(result.accepted,true);
+  assert.equal(result.player.gold,10);
+  assert.equal(result.player.equipmentTier,'T1');
+  assert.equal(result.player.attack,29);
+  assert.equal(result.player.defense,20);
+  assert.equal(result.player.hp,DEFAULT_PLAYER.hp);
+  assert.equal(purchaseArmory(result.player).accepted,false);
+  assert.equal(purchaseArmory(DEFAULT_PLAYER).accepted,false);
+  assert.equal(ARMORY_STOCK.price,200);
 });

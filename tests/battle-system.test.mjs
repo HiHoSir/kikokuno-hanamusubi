@@ -325,7 +325,7 @@ test('existing enemy PNGs are downsampled on the client without replacing any as
   assert.match(runtime,/const assetUrl=new URL\(e\.asset,root\)\.href;/);
   assert.match(runtime,/image\.dataset\.enemyPixelated='yes';/);
   assert.match(runtime,/\)\.catch\(\(\)=>src\);/);
-  assert.ok(html.includes('walk.mjs?v=enemy-pixel-grid-1'));
+  assert.ok(html.includes('walk.mjs?v=enemy-pixel-grid-2'));
 });
 
 test('battle visuals preserve approved figures and sequence impacts before hiding defeated enemies',()=>{

@@ -298,5 +298,22 @@ test('landscape A and portrait B layout keep the same battle DOM and leave touch
   assert.match(js,/choose\('target-'\+index\)/);
   assert.doesNotMatch(js,/orientationchange|location\.assign/);
   assert.ok(html.includes('assets/characters/hizuki/battle/idle.png'));
-  assert.ok(html.includes('href="./battle.css?v=layout-a-b-3"'));
+  assert.ok(html.includes('href="./battle.css?v=layout-a-b-4"'));
+});
+
+
+test('battle visuals preserve approved figures and sequence impacts before hiding defeated enemies',()=>{
+  const html=readFileSync('src/game/battle/index.html','utf8');
+  const css=readFileSync('src/game/battle/battle.css','utf8');
+  const runtime=readFileSync('src/game/battle/walk.mjs','utf8');
+  assert.equal((html.match(/class="impact-effect"/g)||[]).length,3);
+  assert.match(css,/battle-impact-physical/);
+  assert.match(css,/battle-impact-magic/);
+  assert.match(css,/battle-impact-hit/);
+  assert.match(css,/assets\/field\/objects\/horizon\.png/);
+  assert.ok(runtime.indexOf('},95);')<runtime.indexOf('},225);'));
+  assert.ok(runtime.indexOf('},225);')<runtime.indexOf('},440);'));
+  const final=runtime.indexOf('    updateStatus(); // Enemy defeated: hide only after its impact.');
+  assert.ok(final>runtime.indexOf('},95);'));
+  assert.equal(runtime.includes('announce(result.events.map(e=>e.text).join('),false);
 });

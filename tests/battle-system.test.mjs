@@ -298,9 +298,22 @@ test('landscape A and portrait B layout keep the same battle DOM and leave touch
   assert.match(js,/choose\('target-'\+index\)/);
   assert.doesNotMatch(js,/orientationchange|location\.assign/);
   assert.ok(html.includes('assets/characters/hizuki/battle/idle.png'));
-  assert.ok(html.includes('href="./battle.css?v=layout-a-b-5"'));
+  assert.ok(html.includes('href="./battle.css?v=grassland-background-1"'));
 });
 
+
+test('grassland backdrop is registered and uses distinct terrain-specific styling',()=>{
+  const html=readFileSync('src/game/battle/index.html','utf8');
+  const css=readFileSync('src/game/battle/battle.css','utf8');
+  const registry=JSON.parse(readFileSync('assets/manifest.json','utf8'));
+  const item=registry.assets.find(a=>a.id==='battle-background-grassland');
+  assert.ok(item);
+  assert.equal(item.path,'assets/battle/backgrounds/grassland.png');
+  assert.equal(item.terrain,'grassland');
+  assert.ok(html.includes('data-battle-terrain="grassland"'));
+  assert.match(css,/data-battle-terrain="grassland"/);
+  assert.match(css,/image-rendering:pixelated/);
+});
 
 test('battle visuals preserve approved figures and sequence impacts before hiding defeated enemies',()=>{
   const html=readFileSync('src/game/battle/index.html','utf8');

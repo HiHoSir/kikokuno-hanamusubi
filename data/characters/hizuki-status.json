@@ -1,0 +1,106 @@
+{
+  "schemaVersion": 1,
+  "scope": "first-game-hizuki",
+  "status": "approved-v2-core",
+  "displayNames": {
+    "level": "段",
+    "hp": "体力",
+    "mp": "技",
+    "attack": "攻",
+    "defense": "守",
+    "speed": "はやさ",
+    "xp": "心",
+    "gold": "両"
+  },
+  "formula": "floor(攻/2 - 守/4)",
+  "variance": "±1/16",
+  "minimumDamage": "approximately 10% attacker attack; at least 1",
+  "level": {
+    "minimum": 1,
+    "maximum": 99,
+    "base": {
+      "hp": 26,
+      "mp": 12,
+      "attack": 9,
+      "defense": 6,
+      "speed": 9
+    },
+    "perLevel": {
+      "hp": 8,
+      "mp": 1.3,
+      "attack": 2.6,
+      "defense": 1.6,
+      "speed": 2
+    },
+    "rounding": "half-up-per-displayed-total"
+  },
+  "xp": {
+    "nextLevel": "round(80 * level^1.35)",
+    "healsOnLevelUp": true
+  },
+  "tiers": [
+    {
+      "id": "T0",
+      "weaponAttack": 0,
+      "armorDefense": 0
+    },
+    {
+      "id": "T1",
+      "weaponAttack": 20,
+      "armorDefense": 14
+    },
+    {
+      "id": "T2",
+      "weaponAttack": 42,
+      "armorDefense": 30
+    },
+    {
+      "id": "T3",
+      "weaponAttack": 64,
+      "armorDefense": 46
+    },
+    {
+      "id": "T4",
+      "weaponAttack": 88,
+      "armorDefense": 64
+    },
+    {
+      "id": "T5",
+      "weaponAttack": 114,
+      "armorDefense": 84
+    },
+    {
+      "id": "T6",
+      "weaponAttack": 140,
+      "armorDefense": 104
+    }
+  ],
+  "awakenings": [
+    {
+      "stage": 1,
+      "trigger": "story",
+      "hp": 20,
+      "attack": 8
+    },
+    {
+      "stage": 2,
+      "trigger": "story",
+      "defense": 8,
+      "speed": 6
+    },
+    {
+      "stage": 3,
+      "trigger": "story",
+      "bonuses": "undecided"
+    }
+  ],
+  "targetLastBossLevel": 40,
+  "death": {
+    "goldLossRatio": 0.25,
+    "returnTown": "lastVisitedTown"
+  },
+  "meta": {
+    "source": "user-confirmed hizuki-status-v2.json / conversation",
+    "notes": "T0-T6 approved aggregate bonuses; equipment slots, sales and T7-T8 are not approved as game data. Spell details remain provisional."
+  }
+}

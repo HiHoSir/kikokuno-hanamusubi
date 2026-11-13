@@ -10,7 +10,7 @@
 <title>接敵｜鬼哭の花結び</title>
 <link rel="stylesheet" href="../ui/controls.css?v=dotgothic16">
 <link rel="stylesheet" href="../audio/audio.css">
-<link rel="stylesheet" href="./battle.css">
+<link rel="stylesheet" href="./battle.css?v=layout-a-b-2">
 <script type="module" src="../ui/selection-guard.mjs"></script>
 <script type="module" src="../audio/boot.mjs"></script>
 </head>
@@ -19,9 +19,10 @@
 <section class="viewport" aria-label="戦闘画面">
  <div class="battle-backdrop" aria-hidden="true"><div class="moonlight"></div><div class="horizon"></div><div class="earth"></div></div>
  <div class="field-hud"><h1>接敵</h1><output id="battle-area">花霞野</output></div>
- <div class="battle-stage" aria-label="戦っているキャラクター">
+ <div id="battle-stage" class="battle-stage" aria-label="戦っているキャラクター">
   <figure id="hero-figure" class="actor hero"><img id="hero-image" src="../../../assets/characters/hizuki/battle/idle.png" alt="後ろ姿の緋月" draggable="false"><figcaption>緋月</figcaption></figure>
-  <figure id="enemy-figure" class="actor enemy"><img id="enemy-image" alt="敵の姿" draggable="false"><figcaption id="enemy-label"></figcaption></figure>
+  <figure id="enemy-figure" class="actor enemy" role="button" tabindex="-1" aria-label="敵を選ぶ"><img id="enemy-image" alt="敵の姿" draggable="false"><figcaption id="enemy-label"></figcaption></figure>
+  <figure id="enemy-figure-2" class="actor enemy secondary" role="button" tabindex="-1" aria-label="敵を選ぶ" hidden><img id="enemy-image-2" alt="敵の姿" draggable="false"><figcaption id="enemy-label-2"></figcaption></figure>
  </div>
  <section class="battle-message" aria-live="polite" aria-atomic="true"><p id="battle-message">敵が現れた！</p></section>
  <div class="battle-panels">
@@ -38,7 +39,7 @@
    <h2>緋月 <span id="level-label">一段</span></h2>
    <div class="stat-row"><span>体力</span><strong id="hp-label"></strong></div>
    <div class="meter"><div id="hp-meter" class="meter-fill health"></div></div>
-   <div class="stat-row"><span>術力</span><strong id="mp-label"></strong></div>
+   <div class="stat-row"><span>技</span><strong id="mp-label"></strong></div>
    <div class="meter"><div id="mp-meter" class="meter-fill magic"></div></div>
    <p class="battle-sub" id="resource-label"></p>
   </section>
@@ -57,6 +58,6 @@
 </section>
 <button id="sound-toggle" type="button" aria-label="サウンドを再生" aria-pressed="false">♪ 再生</button>
 </main>
-<script type="module" src="./walk.mjs?v=battle-core-1"></script>
+<script type="module" src="./walk.mjs?v=battle-layout-2"></script>
 </body>
 </html>

@@ -238,7 +238,10 @@ test('landscape field crops the real rendered hero and never double-crops in CSS
       assert.equal(onScreenCalls.length,1,'a single offscreen canvas is composited onto screen');
       const [buffer,sx,sy,sw,sh,dx,dy,dw,dh]=onScreenCalls[0];
       assert.equal(buffer,sourceBuffer);
-      assert.deepEqual([sx,sy,sw,sh,dx,dy,dw,dh],[0,crop.top,768,crop.height,0,0,768,display.height]);
+      assert.deepEqual([sx,sw,sh,dx,dy,dw,dh],[0,768,crop.height,0,0,768,display.height]);
+      // dataset is an integer diagnostic; the live renderer keeps sub-pixel
+      // precision from its actual projected foot before rounding the label.
+      assert.ok(Math.abs(sy-crop.top)<1,'source crop must track drawn foot precisely');
       const footFraction=(heroFoot-sy)/sh;
       assert.ok(footFraction>=.65&&footFraction<=.71,
         'rendered hero foot must remain within 65–71% of the visible field: '+footFraction);

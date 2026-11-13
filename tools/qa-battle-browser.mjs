@@ -150,6 +150,14 @@ try{
     if(await frame.locator('#enemy-figure-2').evaluate(node=>node.hidden))
      issues.push(name+' impact started after enemy disappeared');
     await frame.locator('#hero-figure.impact-hit').waitFor({state:'attached',timeout:900});
+    const fx=await frame.locator('#enemy-figure-2 .impact-effect').evaluate(node=>{
+     const p=node.getBoundingClientRect(),actor=node.closest('figure').getBoundingClientRect();
+     return {height:p.height,top:p.top,actorTop:actor.top,actorHeight:actor.height};
+    });
+    if(height>width && fx.top<fx.actorTop+fx.actorHeight*.45)
+     issues.push(name+' attack FX is floating above enemy sprite');
+    const staleCursor=await frame.locator('.actor.enemy.targeted').count();
+    if(staleCursor)issues.push(name+' cursor remains on another enemy during attack');
     await page.screenshot({path:'artifacts/battle-'+width+'x'+height+'-impact.png'});
     await page.waitForTimeout(360);
     await frame.locator('[data-command="attack"]').click();

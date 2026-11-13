@@ -49,6 +49,12 @@ try{
     });
     try{
       await page.goto(origin+'/',{waitUntil:'domcontentloaded'});
+      if(room==='teahouse'||room==='armory')await page.evaluate(()=>{
+        localStorage.setItem('kikokuno-hanamusubi-battle-player',JSON.stringify({
+          lv:1,balanceVersion:2,gold:250,hp:26,maxhp:26,mp:12,maxmp:12,
+          equipmentTier:'T0',potions:3,foods:{onigiri:0,dango:0}
+        }));
+      });
       await page.evaluate(()=>sessionStorage.setItem('kikokuno-hanamusubi-next-entry',
         JSON.stringify({route:'/src/game/',expiresAt:Date.now()+120000})));
       await page.goto(origin+'/src/game/',{waitUntil:'domcontentloaded'});
@@ -88,6 +94,46 @@ try{
           return iframe?.src?.includes('/interiors/') && d?.querySelector('#scene')?.dataset.room===room && d.querySelector('#load')?.hidden;
         },room,{timeout:8000});
         entered=true;
+        if(room==='teahouse'||room==='armory'){
+          // Move on the actual floor from the door to the clerk's counter.
+          const targetY=room==='teahouse'?300:410;
+          await page.evaluate(()=>{
+            const w=document.querySelector('iframe').contentWindow;
+            w.dispatchEvent(new KeyboardEvent('keyup',{key:'ArrowUp'}));
+            w.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowUp'}));
+          });
+          await page.waitForFunction(y=>{
+            const d=document.querySelector('iframe')?.contentDocument;
+            const cy=Number(d?.querySelector('#scene')?.dataset.y);
+            return Number.isFinite(cy)&&cy<=y;
+          },targetY,{timeout:9000});
+          await page.evaluate(()=>{
+            const d=document.querySelector('iframe').contentDocument;
+            const w=d.defaultView;
+            w.dispatchEvent(new KeyboardEvent('keyup',{key:'ArrowUp'}));
+            d.getElementById('action-a').click();
+            d.getElementById('next').click();
+            d.getElementById('next').click();
+          });
+          await page.waitForFunction(()=>{
+            const d=document.querySelector('iframe')?.contentDocument;
+            return d?.getElementById('shop-panel')?.hidden===false;
+          },null,{timeout:4000});
+          await page.screenshot({path:'artifacts/village-shop-'+label+'-'+room+'.png',fullPage:true});
+          const purchased=await page.evaluate(room=>{
+            const d=document.querySelector('iframe').contentDocument;
+            const id=room==='teahouse'?'onigiri':'starter-gear';
+            d.querySelector('[data-shop-item="'+id+'"]').click();
+            const player=JSON.parse(localStorage.getItem('kikokuno-hanamusubi-battle-player'));
+            d.getElementById('action-b').click();
+            return {room,gold:player.gold,foods:player.foods,equipmentTier:player.equipmentTier,
+              closed:d.getElementById('shop-panel').hidden};
+          },room);
+          if(!purchased.closed||purchased.gold!==(room==='teahouse'?242:50)||
+            (room==='teahouse'?purchased.foods?.onigiri!==1:purchased.equipmentTier!=='T1')){
+            issues.push(label+' '+building+' purchase persistence failed: '+JSON.stringify(purchased));
+          }
+        }
         await page.evaluate(()=>{
           const child=document.querySelector('iframe').contentWindow;
           child.dispatchEvent(new KeyboardEvent('keyup',{key:'ArrowUp',bubbles:true}));

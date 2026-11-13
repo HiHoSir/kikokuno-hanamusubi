@@ -218,3 +218,28 @@ body{margin:0;background:#0c1424}
  .actor.impact-physical .impact-effect,.actor.impact-magic .impact-effect,
  .actor.impact-hit .impact-effect{animation:none;opacity:.30}
 }
+
+
+/* Terrain-specific battle scenery. The chosen 384x216, 64-color PNG is drawn
+   as a single opaque backdrop behind all actors. No game/UI overlays are baked
+   into the asset. Future terrains get separate data-battle-terrain selectors. */
+main[data-battle-terrain="grassland"] .battle-backdrop{
+ background-color:#427037;
+ background-image:url("../../../assets/battle/backgrounds/grassland.png");
+ background-size:cover;
+ background-position:center 42%;
+ background-repeat:no-repeat;
+ image-rendering:pixelated;
+}
+main[data-battle-terrain="grassland"] .battle-backdrop::before,
+main[data-battle-terrain="grassland"] .battle-backdrop::after,
+main[data-battle-terrain="grassland"] .battle-backdrop .moonlight,
+main[data-battle-terrain="grassland"] .battle-backdrop .horizon,
+main[data-battle-terrain="grassland"] .battle-backdrop .earth{
+ display:none;
+}
+@media(orientation:portrait){
+ main[data-battle-terrain="grassland"] .battle-backdrop{
+  background-position:center center;
+ }
+}

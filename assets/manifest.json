@@ -905,6 +905,19 @@
       "usage": "village;interiors;tenyo-sanctuary"
     },
     {
+      "id": "battle-background-grassland",
+      "type": "ui",
+      "path": "assets/battle/backgrounds/grassland.png",
+      "status": "approved",
+      "usage": "battle-background",
+      "terrain": "grassland",
+      "dimensions": {
+        "width": 384,
+        "height": 216
+      },
+      "approvalNote": "Created from the grassland pixel-art image selected for in-game battle background trial; 64-color pixel-sized PNG."
+    },
+    {
       "id": "hizuki-battle-idle",
       "type": "character",
       "path": "assets/characters/hizuki/battle/idle.png",

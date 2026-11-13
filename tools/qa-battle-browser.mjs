@@ -149,7 +149,20 @@ try{
     await frame.locator('#enemy-figure-2.impact-physical').waitFor({state:'attached',timeout:900});
     if(await frame.locator('#enemy-figure-2').evaluate(node=>node.hidden))
      issues.push(name+' impact started after enemy disappeared');
-    await frame.locator('#hero-figure.impact-hit').waitFor({state:'attached',timeout:900});
+    const attackPhase=await frame.locator('#hero-image').evaluate(node=>({
+     pose:node.dataset.pose,src:node.getAttribute('src'),
+     heroHit:document.getElementById('hero-figure').classList.contains('impact-hit')
+    }));
+    if(attackPhase.pose!=='attack'||!attackPhase.src.includes('/attack.png')||attackPhase.heroHit)
+     issues.push(name+' attack action used hit pose before enemy retaliation');
+    await page.screenshot({path:'artifacts/battle-'+width+'x'+height+'-attack.png'});
+    await frame.locator('#hero-figure.impact-hit').waitFor({state:'attached',timeout:1200});
+    const retaliationPhase=await frame.locator('#hero-image').evaluate(node=>({
+     pose:node.dataset.pose,src:node.getAttribute('src'),
+     enemyFX:document.getElementById('enemy-figure-2').classList.contains('impact-physical')
+    }));
+    if(retaliationPhase.pose!=='hit'||!retaliationPhase.src.includes('/hit.png')||retaliationPhase.enemyFX)
+     issues.push(name+' hit pose overlaps physical attack animation or uses wrong image');
     const fx=await frame.locator('#enemy-figure-2 .impact-effect').evaluate(node=>{
      const p=node.getBoundingClientRect(),actor=node.closest('figure').getBoundingClientRect();
      return {height:p.height,top:p.top,actorTop:actor.top,actorHeight:actor.height};
@@ -159,13 +172,12 @@ try{
     const staleCursor=await frame.locator('.actor.enemy.targeted').count();
     if(staleCursor)issues.push(name+' cursor remains on another enemy during attack');
     await page.screenshot({path:'artifacts/battle-'+width+'x'+height+'-impact.png'});
-    await page.waitForTimeout(360);
     await frame.locator('[data-command="attack"]').click();
     await frame.locator('#enemy-figure-2').click();
     await frame.locator('#enemy-figure-2.impact-physical').waitFor({state:'attached',timeout:900});
     if(await frame.locator('#enemy-figure-2').evaluate(node=>node.hidden))
      issues.push(name+' defeated target was hidden before last impact');
-    await page.waitForTimeout(480);
+    await frame.locator('#enemy-figure-2[hidden]').waitFor({state:'attached',timeout:1500});
     const targetResult=await frame.locator('#enemy-figure-2').evaluate(el=>({
      secondDefeated:el.hidden,
      firstAlive:!document.querySelector('#enemy-figure').hidden

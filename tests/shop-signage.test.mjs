@@ -53,7 +53,7 @@ test('shop-only interior definitions remain unlinked until actual outside shops 
   const walk=readFileSync('src/game/village/walk.mjs','utf8');
   const entry=readFileSync('src/game/village/index.html','utf8');
   assert.ok(walk.includes("'../../../data/maps/hozuki-village/scene.json?v=shop-signs-1'"));
-  assert.ok(entry.includes('./walk.mjs?v=shop-signs-1'));
+  assert.ok(entry.includes('./walk.mjs?v=fb40c1b-20261112-village-speed-288-shop-signs-1'));
   assert.ok(walk.includes('data.sprites.flatMap'));
   assert.ok(walk.includes('art.get(sprite.file)'));
 });

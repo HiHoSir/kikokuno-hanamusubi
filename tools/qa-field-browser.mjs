@@ -34,6 +34,8 @@ try{
   const errors=[];
   const page=await browser.newPage({viewport:{width,height},deviceScaleFactor:1});
   page.on('pageerror',e=>errors.push('pageerror: '+e.message));
+  page.on('console',m=>{if(m.type()==='error')errors.push('console: '+m.text());});
+  page.on('response',r=>{if(r.status()>=400)errors.push('HTTP '+r.status()+' '+r.url());});
   page.on('requestfailed',r=>errors.push('request failed: '+r.url()+' '+r.failure()?.errorText));
   await page.addInitScript(()=>{
    const original=CanvasRenderingContext2D.prototype.drawImage;
@@ -62,11 +64,26 @@ try{
   await page.goto(origin+'/src/game/',{waitUntil:'domcontentloaded'});
   await page.waitForFunction(()=>!!window.KIKOKU_GAME?.navigate,{timeout:20000});
   await page.evaluate(()=>window.KIKOKU_GAME.navigate(new URL('/src/field/?from=village',location.href).href));
-  await page.waitForFunction(()=>{
-   const f=document.querySelector('iframe')?.contentWindow;
-   return !!f?.document?.querySelector('#scene')?.dataset?.fieldHeroFoot
-    &&f.document.querySelector('#load')?.hidden===true;
-  },{timeout:45000});
+  try{
+   await page.waitForFunction(()=>{
+    const f=document.querySelector('iframe')?.contentWindow;
+    return !!f?.document?.querySelector('#scene')?.dataset?.fieldHeroFoot
+     &&f.document.querySelector('#load')?.hidden===true;
+   },null,{timeout:20000});
+  }catch(e){
+   const failure=await page.evaluate(()=>{
+    const frame=document.querySelector('iframe'),doc=frame?.contentDocument;
+    return {frameSrc:frame?.src,frameLocation:doc?.location?.href,
+     title:doc?.title,loadText:doc?.querySelector('#load')?.textContent,
+     loadHidden:doc?.querySelector('#load')?.hidden,
+     bodyText:doc?.body?.innerText?.slice(0,350),
+     canvasFoot:doc?.querySelector('#scene')?.dataset?.fieldHeroFoot,
+     readyState:doc?.readyState};
+   });
+   console.error('BROWSER FIELD LOAD DIAGNOSTIC '+JSON.stringify({viewport:width+'x'+height,...failure,errors},null,2));
+   await page.screenshot({path:'artifacts/field-'+width+'x'+height+'.png'});
+   throw e;
+  }
   await page.waitForTimeout(600);
   const detail=await page.evaluate(()=>{
    const doc=document.querySelector('iframe').contentDocument;

@@ -98,6 +98,12 @@ try{
    if(rects.hero && rects.hero.bottom>rects.stage.bottom+4)overlapIssues.push('hero below stage');
    if(rects.command?.bottom>height+1||rects.message?.bottom>height+1)overlapIssues.push('panel below viewport');
    if(data.enemyHidden !== (count===1))overlapIssues.push('wrong number of enemies');
+   if(count===2 && rects.enemy1.x>=rects.enemy2.x){
+    overlapIssues.push('enemy numbering must progress left to right');
+   }
+   if(height>width && rects.stage.h<height*.49){
+    overlapIssues.push('portrait battle stage takes insufficient vertical area');
+   }
    const shot='artifacts/battle-'+width+'x'+height+'-'+count+'enemy.png';
    await page.screenshot({path:shot});
    const name=width+'x'+height+'/'+count+'enemy';
@@ -110,9 +116,47 @@ try{
     const chosen=await frame.locator('#enemy-figure').evaluate(x=>x.classList.contains('targeted'));
     const secondVisible=await frame.locator('#enemy-figure-2').isVisible();
     if(!chosen||!secondVisible)issues.push(name+' two-target cursor not visible');
+    const cursor=await frame.locator('#enemy-figure').evaluate(el=>{
+     const r=el.getBoundingClientRect();
+     const style=getComputedStyle(el,'::before');
+     return {position:r.bottom-Number.parseFloat(style.bottom),top:r.top,bottom:r.bottom};
+    });
+    if(height>width && cursor.position<cursor.top+60){
+     issues.push(name+' target marker floats above the visible portrait sprite');
+    }
     await page.screenshot({path:'artifacts/battle-'+width+'x'+height+'-target.png'});
+    if(height>width){
+     // Rotate while the target submenu is open. A CSS-only orientation
+     // change must preserve the selected enemy and current command state.
+     await page.setViewportSize({width:900,height:390});
+     const stateAfterRotation=await frame.locator('#enemy-figure').evaluate(el=>({
+      target:el.classList.contains('targeted'),
+      stillSelecting:document.querySelector('#command-title')?.textContent==='標的を選ぶ'
+     }));
+     if(!stateAfterRotation.target||!stateAfterRotation.stillSelecting)
+      issues.push(name+' target selection reset on landscape rotation');
+     await page.setViewportSize({width,height});
+    }
+    // Two attacks against the second enemy must remove that specific sprite,
+    // while the first remains alive. This proves independent HP and targeting.
     await frame.locator('#enemy-figure-2').click();
-    await frame.locator('#command-list button').first().waitFor({state:'visible',timeout:1500});
+    await page.waitForTimeout(520);
+    await frame.locator('[data-command="attack"]').click();
+    await frame.locator('#enemy-figure-2').click();
+    await page.waitForTimeout(520);
+    const targetResult=await frame.locator('#enemy-figure-2').evaluate(el=>({
+     secondDefeated:el.hidden,
+     firstAlive:!document.querySelector('#enemy-figure').hidden
+    }));
+    if(!targetResult.secondDefeated||!targetResult.firstAlive)
+     issues.push(name+' independent target HP was not respected');
+    // A submenu can be entered and dismissed without leaving the fight.
+    await frame.locator('[data-command="magic"]').click();
+    const spellShown=await frame.locator('#command-title').innerText();
+    if(spellShown!=='術を選ぶ')issues.push(name+' spell submenu is inaccessible');
+    await frame.locator('#action-b').click();
+    const mainShown=await frame.locator('#command-title').innerText();
+    if(mainShown!=='緋月の行動')issues.push(name+' B button failed to return from spell menu');
    }
   }catch(e){
    issues.push(width+'x'+height+': '+e.message+' '+errors.join(';'));

@@ -156,7 +156,7 @@ body{margin:0;background:#0c1424}
 @media(prefers-reduced-motion:reduce){
  .encounter-overlay,.encounter-overlay::before,.encounter-overlay strong{animation-duration:.15s}
  .actor.hit,.actor.attacking{animation:none}
- .actor.enemy img[data-enemy-id="onibi"]{animation:none}
+ .actor.enemy:not(.hit) img[data-enemy-id="onibi"]{animation:none}
  .meter-fill{transition:none}
 }
 

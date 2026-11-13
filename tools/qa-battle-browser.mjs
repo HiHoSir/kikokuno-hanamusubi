@@ -120,6 +120,16 @@ try{
       (item.pixelArt!=='false'||!item.source.includes('/'+enemyId+'.png'))))){
      issues.push(width+'x'+height+' approved enemy PNG failed to load: '+JSON.stringify(enemyArt));
    }
+   if(enemyId==='onibi'){
+     await page.emulateMedia({reducedMotion:'reduce'});
+     const reduced=await page.evaluate(()=>{
+       const d=document.querySelector('iframe').contentDocument;
+       const img=d.querySelector('.actor.enemy:not([hidden]) img');
+       return d.defaultView.getComputedStyle(img).animationName;
+     });
+     if(reduced!=='none')issues.push(width+'x'+height+' reduced-motion onibi should not float: '+reduced);
+     await page.emulateMedia({reducedMotion:'no-preference'});
+   }
    const overlaps=(a,b)=>{
     if(!a||!b)return 0;
     return Math.max(0,Math.min(a.right,b.right)-Math.max(a.x,b.x))*

@@ -346,7 +346,7 @@ test('all three approved battle sprites retain original 128px PNGs without runti
   assert.match(css,/img\[data-enemy-id="onibi"\]\{animation:battle-onibi-float 2\.4s steps\(3,end\) infinite\}/);
   assert.match(css,/@keyframes battle-onibi-float/);
   assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
-  assert.match(css,/img\[data-enemy-id="onibi"\]\{animation:none\}/);
+  assert.match(css,/\.actor\.enemy:not\(\.hit\) img\[data-enemy-id="onibi"\]\{animation:none\}/);
 });
 
 test('battle visuals preserve approved figures and sequence impacts before hiding defeated enemies',()=>{

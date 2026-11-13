@@ -4,7 +4,8 @@
 - **正本は `HiHoSir/kikokuno-hanamusubi`。** 旧 `yaksha-hanamusubi` の `js/game.js` 等の実装は採用しない。
 - 主人公は緋月1人。戦闘は `src/game/battle/index.html` + `rules.mjs` + `walk.mjs`。親 `src/game/index.html` と `src/game/navigation/game-shell.mjs` に統合し、BGMは親ページが管理する。単独の別タブ戦闘／追加検証HTMLを設けない。
 - フィールドでは歩行完了9〜13回を目安に敵1〜2体と接敵。村・天妖の社への入口接触時やはしご中では接敵しない。勝利・逃走後はフィールドへ戻り、敗北時は鬼灯村へ戻る。
-- フィールドに現在採用済みの通常敵画像は `assets/enemies/{field-oni,tanuki,onibi}.png` の3種類（`assets/manifest.json` 参照）。化け狸は2体出現する場合があり、個別の体力を持ち、攻撃標的を選べる。**未接続の地域へ旧作品の敵を勝手に追加しない**。
+- フィールドに現在採用済みの通常敵画像は `assets/enemies/{field-oni,tanuki,onibi}.png` の3種類（`assets/manifest.json` 参照）。野の小鬼1体／化け狸2体／鬼火1体を使用。化け狸は個別の体力を持ち、攻撃標的を選べる。**未接続の地域へ旧作品の敵を勝手に追加しない**。
+- 第一ルート（鬼灯村→天妖の社）の実際の地形道路 `YK_WORLD.roads[0]` から出現帯を決定。道の前半は野の小鬼55%・化け狸2体45%、後半は野の小鬼20%・鬼火45%・化け狸2体35%。道から外れた未接続地域には前半の安全な敵のみ登場。詳細の試算は `docs/BATTLE_BALANCE.md`。
 - 緋月の戦闘ポーズは `assets/characters/hizuki/battle/` の6画像（待機・物理攻撃・術・被弾・防御・勝利）。左右二分割のコマンド・状態パネル、上下左右キーとA/Bは継続。
 
 ## B式v2：確定数値

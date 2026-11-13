@@ -195,7 +195,7 @@ encounterSE.preload='none';encounterSE.volume=.65;
 document.addEventListener('visibilitychange',()=>{if(document.hidden)encounterSE.pause();});
 addEventListener('pagehide',()=>encounterSE.pause());
 updateEnemies();
-el('battle-area').textContent='花霞野';
+el('battle-area').textContent=request?.zone==='shrine-approach'?'天妖の社への道':'花霞野';
 pose('idle');
 updateStatus();updateMenu();
 announce(state.enemies.length>1?state.enemy.name+'が'+state.enemies.length+'体現れた！':state.enemy.name+'が現れた！');

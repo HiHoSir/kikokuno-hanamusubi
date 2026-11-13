@@ -3286,6 +3286,21 @@
       "doorVisibleHeight": 95
     },
     {
+      "id": "sign-inn-southeast",
+      "file": "sign-inn.png",
+      "point": [
+        2004,
+        1885
+      ],
+      "depth": 2006,
+      "size": [
+        96,
+        120
+      ],
+      "signFor": "inn-southeast",
+      "symbol": "宿"
+    },
+    {
       "id": "shrub-8",
       "file": "sprite-36.png",
       "point": [
@@ -3339,21 +3354,6 @@
       "frames": 8,
       "frameMs": 150,
       "id": "physalis-42"
-    },
-    {
-      "id": "sign-inn-southeast",
-      "file": "sign-inn.png",
-      "point": [
-        2084,
-        1975
-      ],
-      "depth": 2095,
-      "size": [
-        96,
-        120
-      ],
-      "signFor": "inn-southeast",
-      "symbol": "宿"
     },
     {
       "file": "sprite-53.png",

@@ -268,9 +268,35 @@ test('two approved enemies render and can be targeted independently in the produ
     node('command-list').children[0].listeners.click();
     const targets=node('command-list').children;
     if(targets.length!==3)throw Error('two-target command menu not shown');
-    targets[1].listeners.click();
-    if(!store.has('kikokuno-hanamusubi-battle-player'))throw Error('targeted hit was not saved');
+    if(node('enemy-figure-2').tabIndex!==0)throw Error('second enemy not touch-selectable');
+    node('enemy-figure-2').listeners.click(); // select the second visible enemy directly
+    if(!store.has('kikokuno-hanamusubi-battle-player'))throw Error('tapped target did not resolve combat');
     if(!node('battle-message').textContent.includes('攻撃'))throw Error('targeted battle action not executed');
   `;
   execFileSync(process.execPath,['--input-type=module','-e',program],{stdio:'pipe',timeout:8000});
+});
+
+
+test('landscape A and portrait B layout keep the same battle DOM and leave touch controls unobstructed',()=>{
+  const html=readFileSync('src/game/battle/index.html','utf8');
+  const css=readFileSync('src/game/battle/battle.css','utf8');
+  const js=readFileSync('src/game/battle/walk.mjs','utf8');
+  assert.match(css,/grid-template-areas:"stage stage" "command status" "message message" "control control"/);
+  assert.match(css,/@media\(orientation:landscape\)/);
+  assert.match(css,/grid-template-areas:"stage stage stage stage" "\. command status \." "\. command message \."/);
+  assert.match(css,/\.battle-panels\{display:contents\}/);
+  assert.match(css,/\.actor\.enemy\.targeted::before/);
+  assert.match(css,/\.actor\.enemy\.targeted::after/);
+  assert.match(css,/#pad \.(?:dpad|round)|#pad #action-a/);
+  assert.match(css,/safe-area-inset-bottom/);
+  assert.doesNotMatch(css,/bottom:calc\(318px/);
+  assert.match(html,/id="enemy-figure-2"/);
+  assert.match(html,/id="battle-message"/);
+  assert.match(html,/<span>技<\/span>/);
+  assert.match(js,/figure\.addEventListener\('click',target\)/);
+  assert.match(js,/figure\.addEventListener\('keydown'/);
+  assert.match(js,/choose\('target-'\+index\)/);
+  assert.doesNotMatch(js,/orientationchange|location\.assign/);
+  assert.ok(html.includes('assets/characters/hizuki/battle/idle.png'));
+  assert.ok(html.includes('href="./battle.css?v=layout-a-b-2"'));
 });

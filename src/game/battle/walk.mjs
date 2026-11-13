@@ -11,7 +11,7 @@ const hpMeter=el('hp-meter'),mpMeter=el('mp-meter'),intro=el('encounter');
 const image=(path)=>new URL(path,root).href;
 // Reduce only existing enemy PNGs to a fixed coarse pixel grid. No AI artwork,
 // replacement asset, or new repo PNG is generated; source files stay unchanged.
-const ENEMY_PIXEL_MAX_SIDE=88;
+const ENEMY_PIXEL_MAX_SIDE=64;
 const enemyPixelCache=new Map();
 function coarseEnemyImage(src){
   if(!enemyPixelCache.has(src)){

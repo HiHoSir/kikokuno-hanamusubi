@@ -87,6 +87,7 @@ function updateMenu(){
     button.addEventListener('click',()=>{if(ready&&!locked){selected=i;choose(command);}});
     list.append(button);
   }
+  updateEnemies();
 }
 function navigateBack(){
   if(state.outcome==='defeat'){
@@ -157,6 +158,7 @@ function moveSelection(direction){
   if(direction==='up'||direction==='left')selected=(selected+len-1)%len;
   else selected=(selected+1)%len;
   for(let i=0;i<len;i++)list.children[i].classList.toggle('selected',i===selected);
+  updateEnemies();
   sound('step');
 }
 function confirm(){

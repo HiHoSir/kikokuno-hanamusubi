@@ -66,12 +66,63 @@ button.held{background:#e8cc8b;color:#272d22}
 }
 </style>
 <link rel="stylesheet" href="../game/ui/controls.css?v=dotgothic16">
+<style>
+/* Field-only iPhone landscape layout. Other scenes retain their own layout.
+   The field art is rendered on an authored 768px square: `object-fit:cover` crops
+   that image on wide screens. Center the crop on the projected hero's feet
+   rather than the sky; do not resize the authored 32px field sprites. */
+@media (orientation:landscape) and (max-height:560px){
+ main.field-screen{
+  grid-template-columns:minmax(0,1fr);
+  grid-template-rows:minmax(0,1fr) 108px;
+  gap:0;
+ }
+ main.field-screen > .viewport{
+  grid-area:1/1/2/2;
+  min-width:0;
+  min-height:0;
+ }
+ main.field-screen .viewport canvas{
+  object-fit:cover;
+  object-position:center 65%;
+ }
+ /* The cloud layer uses the same square/crop offset as the terrain canvas. */
+ main.field-screen .field-weather-scene{
+  top:65%;
+  transform:translate(-50%,-65%);
+ }
+ main.field-screen #pad{
+  grid-area:2/1/3/2;
+  position:relative;
+  left:auto;right:auto;bottom:auto;
+  width:100%;height:108px;
+  padding:0;margin:0;
+  background:linear-gradient(180deg,#0b1a27,#08131e);
+  border-top:1px solid rgba(201,173,120,.55);
+  pointer-events:none;
+ }
+ main.field-screen #pad .dpad{
+  left:max(10px,env(safe-area-inset-left));
+  bottom:4px;
+  transform:scale(.64);
+  transform-origin:left bottom;
+ }
+ main.field-screen #pad #action-a{
+  right:max(14px,env(safe-area-inset-right));
+  bottom:16px;
+ }
+ main.field-screen #pad #action-b{
+  right:max(108px,calc(env(safe-area-inset-right) + 100px));
+  bottom:25px;
+ }
+}
+</style>
 <script type="module" src="../game/ui/selection-guard.mjs"></script>
 <link rel="stylesheet" href="../game/audio/audio.css">
 <script type="module" src="../game/audio/boot.mjs"></script>
 </head>
 <body>
-<main data-bgm="field">
+<main class="field-screen" data-bgm="field">
 
 <section class="viewport" aria-label="フィールド">
 <header class="field-hud"><h1>花霞野</h1><output id="status">鬼灯村の南口</output></header>

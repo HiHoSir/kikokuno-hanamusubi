@@ -318,7 +318,7 @@ test('grassland backdrop is registered and uses distinct terrain-specific stylin
   assert.match(css,/image-rendering:pixelated/);
 });
 
-test('approved tanuki pixel sprite uses its original 128px PNG without runtime resampling',()=>{
+test('approved tanuki and field-oni pixel sprites retain 128px originals without runtime resampling',()=>{
   const html=readFileSync('src/game/battle/index.html','utf8');
   const css=readFileSync('src/game/battle/battle.css','utf8');
   const runtime=readFileSync('src/game/battle/walk.mjs','utf8');
@@ -327,9 +327,19 @@ test('approved tanuki pixel sprite uses its original 128px PNG without runtime r
   assert.ok(!runtime.includes('coarseEnemyImage'));
   assert.ok(!runtime.includes('ENEMY_PIXEL_MAX_SIDE'));
   assert.ok(!runtime.includes("canvas.toDataURL('image/png')"));
-  assert.match(runtime,/image\.dataset\.pixelArt=e\.id==='tanuki'\?'true':'false'/);
+  assert.ok(runtime.includes("image.dataset.pixelArt=(e.id==='tanuki'||e.id==='field-oni')?'true':'false'"));
   assert.match(runtime,/source\.searchParams\.set\('v','77a93691'\)/);
-  assert.ok(html.includes('walk.mjs?v=tanuki-pixel-sprite-1'));
+  assert.match(runtime,/source\.searchParams\.set\('v','651fcddc'\)/);
+  const oni=readFileSync('assets/enemies/field-oni.png');
+  assert.equal(oni.subarray(1,4).toString(),'PNG');
+  assert.equal(oni.readUInt32BE(16),128);
+  assert.equal(oni.readUInt32BE(20),128);
+  assert.equal(oni[25],6,'RGBA PNG required');
+  const manifest=JSON.parse(readFileSync('assets/manifest.json','utf8'));
+  const asset=manifest.assets.find(item=>item.id==='enemy-field-oni');
+  assert.equal(asset.status,'approved');
+  assert.deepEqual(asset.dimensions,{width:128,height:128});
+  assert.ok(html.includes('walk.mjs?v=approved-oni-pixel-sprite-1'));
 });
 
 test('battle visuals preserve approved figures and sequence impacts before hiding defeated enemies',()=>{

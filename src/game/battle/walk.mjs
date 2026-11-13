@@ -62,12 +62,13 @@ function updateEnemies(){
     if(!e)continue;
     if(image.dataset.enemyId!==e.id){
       image.dataset.enemyId=e.id;
-      // Only the approved hand-pixelled 128px tanuki uses nearest-neighbor
-      // display. Other enemy originals are not artificially coarsened.
-      image.dataset.pixelArt=e.id==='tanuki'?'true':'false';
+      // Approved individual 128px pixel sprites use nearest-neighbor display;
+      // other enemy originals remain unchanged, never canvas-downsampled.
+      image.dataset.pixelArt=(e.id==='tanuki'||e.id==='field-oni')?'true':'false';
       image.alt=e.name;
       const source=new URL(e.asset,root);
       if(e.id==='tanuki')source.searchParams.set('v','77a93691');
+      else if(e.id==='field-oni')source.searchParams.set('v','651fcddc');
       image.src=source.href;
     }
     label.textContent=e.name+(two?' '+(i+1):'');

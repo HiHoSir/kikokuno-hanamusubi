@@ -107,11 +107,12 @@ try{
       interpolation:d.defaultView.getComputedStyle(img).imageRendering
     }));
    });
-   const expectsTanuki=enemyId==='tanuki';
+   const expectsPixelArt=enemyId==='tanuki'||enemyId==='field-oni';
+   const version=enemyId==='tanuki'?'77a93691':'651fcddc';
    if(enemyArt.length!==count||enemyArt.some(item=>
      item.source.startsWith('data:')||
-     (expectsTanuki?(item.pixelArt!=='true'||item.dimensions[0]!==128||item.dimensions[1]!==128||
-       item.interpolation!=='pixelated'||!item.source.includes('tanuki.png?v=77a93691')):
+     (expectsPixelArt?(item.pixelArt!=='true'||item.dimensions[0]!==128||item.dimensions[1]!==128||
+       item.interpolation!=='pixelated'||!item.source.includes('/'+enemyId+'.png?v='+version)):
       (item.pixelArt!=='false'||!item.source.includes('/'+enemyId+'.png'))))){
      issues.push(width+'x'+height+' approved enemy PNG failed to load: '+JSON.stringify(enemyArt));
    }

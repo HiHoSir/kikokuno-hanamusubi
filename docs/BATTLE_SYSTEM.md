@@ -52,10 +52,11 @@
 - **ポーズ対応と演出の分離（2026-11-13再検査）：** `attack.png` は攻撃が命中するまで、`hit.png` は敵の反撃を受けた時だけ使用する。旧表示では95ms後の斬撃（約410ms維持）と225ms後の被弾が重なっていた。反撃を570ms後へ遅らせ、Chrome検査で攻撃中は `attack.png`、反撃中は `hit.png`、被弾中は斬撃エフェクトが消えていることを確認。検査結果：<https://github.com/HiHoSir/kikokuno-hanamusubi/actions/runs/43398826042>。
 - **iPhone Safari実機での見た目とアニメーション速度は未確認**。ブラウザQA合格だけで実機合格としない。
 
-## 敵画像のドット感と化け狸の正式差し替え（2026-11-13）
+## 敵画像のドット感と個別採用スプライト（2026-11-13）
 - **化け狸**は生成済みの単体透過ドット絵（128×128px）についてユーザーの採用承認を受け、既存の `assets/enemies/tanuki.png` を同じ正式パスで置き換えた。台帳ID `enemy-tanuki` は維持し、旧画像はGit履歴から取り出せる。単体素材以外に戦闘画面全体の画像生成はしない。
-- **64pxへの一律縮小加工を廃止**。既存画像を粗い格子へ縮小すると汚くなるため、画像側を適切に描き直す方針とした。化け狸は原寸128px画像を `image-rendering:pixelated` で表示し、野の小鬼と鬼火は現時点で元の承認画像をそのまま表示する（後の個別描き直し待ち）。
-- `src/game/battle/walk.mjs` ではPNGからCanvasのデータURLを生成しない。実PNGの読み込みと複数体の見せ方は `tools/qa-battle-browser.mjs` で横・縦4サイズを検査する。Safariの古い画像キャッシュを避けるため化け狸画像にGit Blob由来の更新パラメータを付けている。
+- **野の小鬼**もユーザーが邪悪すぎない「いたずら小鬼」の外見を採用承認。正式パス `assets/enemies/field-oni.png` と台帳ID `enemy-field-oni` を維持し、128×128pxの単体透過ドット絵へ差し替えた。赤い肌・二本角・棍棒・腰布は継承しつつ、笑顔と軽快な動きに変更。旧画像はGit履歴から復元可能。
+- **64pxへの一律縮小加工を廃止**。化け狸と野の小鬼の承認画像を原寸128pxで `image-rendering:pixelated` で表示し、鬼火は元の承認画像をそのまま表示する（個別描き直し待ち）。
+- `src/game/battle/walk.mjs` ではPNGからCanvasのデータURLを生成しない。実PNGの読み込みと複数体の見せ方は `tools/qa-battle-browser.mjs` で横・縦4サイズを検査する。Safariの古い画像キャッシュを避けるため、化け狸と野の小鬼の画像にGit Blob由来の更新パラメータを付けている。
 
 ## B式v2：確定数値
 数値正本は `data/characters/hizuki-status.json`、実行時の定数は `src/game/battle/rules.mjs` 内の `STATUS_V2` に対応。自動検査で不一致を検出する。

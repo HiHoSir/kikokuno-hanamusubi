@@ -1002,12 +1002,15 @@
       "status": "approved",
       "name": "野の小鬼",
       "origin": {
-        "repo": "HiHoSir/yaksha-hanamusubi",
-        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
-        "path": "assets/enemies/redesign-v1/001-field-oni/oni-intact-512.png",
-        "gitBlobSha": "980fc23db59acf497110470fb28b40dd0d90c919"
+        "kind": "generated-single-enemy-sprite",
+        "source": "approved mischievous imp sprite 2026-11-13"
       },
-      "usage": "battle-enemy"
+      "usage": "battle-enemy",
+      "dimensions": {
+        "width": 128,
+        "height": 128
+      },
+      "approvalNote": "2026-11-13: user approved mischievous, non-villainous oni pixel sprite after visual revision; 128x128 RGBA PNG with limited palette, original preserved in Git history."
     },
     {
       "id": "enemy-tanuki",

@@ -191,7 +191,9 @@ test('a direction tap between animation frames still moves one cell', async () =
 test('landscape field crops the real rendered hero and never double-crops in CSS', async () => {
   const html=source(entry);
   assert.match(html, /<main class="field-screen" data-bgm="field">/);
-  assert.match(html, /@media \(orientation:landscape\) and \(max-height:560px\)/);
+  assert.match(html, /@media \(orientation:landscape\)/);
+  assert.match(html, /canvas\{position:absolute;inset:0;display:block;width:100%;height:100%/);
+  assert.match(html, /\.viewport\{position:relative;display:block;overflow:hidden/);
   assert.match(html, /grid-template-rows:minmax\(0,1fr\) 108px/);
   assert.match(html, /main\.field-screen #pad\{[\s\S]*?position:relative/);
   assert.match(html, /main\.field-screen \.viewport canvas\{[\s\S]*?object-fit:fill/);

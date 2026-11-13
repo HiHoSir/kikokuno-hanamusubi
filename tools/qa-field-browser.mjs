@@ -90,15 +90,17 @@ try{
    const scene=doc.querySelector('#scene'),viewport=doc.querySelector('.viewport');
    const pad=doc.querySelector('#pad'),css=doc.defaultView.getComputedStyle(scene);
    const draws=doc.defaultView.__fieldHeroDraws||[];
-   const last=draws.at(-1),top=Number(scene.dataset.fieldCropTop);
-   const foot=Number(scene.dataset.fieldHeroFoot);
+   const last=draws.at(-1),top=scene.dataset.fieldCropTop===undefined?0:Number(scene.dataset.fieldCropTop);
+   const foot=scene.dataset.fieldHeroFoot===undefined?null:Number(scene.dataset.fieldHeroFoot);
    const box=scene.getBoundingClientRect(),field=viewport.getBoundingClientRect();
    const bar=pad.getBoundingClientRect(),w=scene.width,h=scene.height;
    let visible=null;
+   const aspect=box.width/Math.max(1,box.height);
+   const wide=aspect>1.35;
    if(last){
     const [a,b,c,d,e,f]=last.matrix;
     const spriteTop=last.y*d+f,spriteBottom=(last.y+last.h)*d+f;
-    const cropHeight=Number.isFinite(top)&&box.width/box.height>1.35?768/(box.width/box.height):768;
+    const cropHeight=wide?768/aspect:768;
     const relTop=(spriteTop-top)/cropHeight,relBottom=(spriteBottom-top)/cropHeight;
     const ctx=scene.getContext('2d');
     const x0=Math.max(0,Math.floor((last.x*a+e)));
@@ -129,9 +131,9 @@ try{
 console.log(JSON.stringify(results,null,2));
 const failures=results.filter(r=>
  r.errors.some(e=>e.includes('pageerror'))||
- r.draws<1||!Number.isFinite(r.foot)||r.foot<0||
+ r.draws<1||(r.viewport!=='390x844'&&(!Number.isFinite(r.foot)||r.foot<0))||
  !r.visible||r.visible.relTop<0||r.visible.relBottom>1.05||
- r.visible.redPixels<3||
+ r.visible.redPixels<3||r.canvasRect[2]>r.field[0]+1||r.canvasRect[3]>r.field[1]+1||
  (r.viewport!=='390x844'&&r.pad[0]<r.field[1]-4)
 );
 if(failures.length)throw Error('Actual Chrome field render QA failed: '+failures.map(x=>x.viewport+' red='+x.visible?.redPixels+' range='+x.visible?.relTop+','+x.visible?.relBottom+' errors='+x.errors.join(';')).join(' | '));

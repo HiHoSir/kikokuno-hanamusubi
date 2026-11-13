@@ -166,7 +166,11 @@ function choose(command){
   }
   if(mode==='targets'&&command?.startsWith('target-')){
     const index=Number(command.slice(7));const action=targetCommand;
-    targetCommand=null;perform(action+':'+index);return;
+    // Leave target-selection mode before animating the committed attack.
+    // Otherwise a different enemy keeps the yellow cursor while hit effects
+    // play on the chosen one.
+    targetCommand=null;mode='main';selected=0;
+    perform(action+':'+index);return;
   }
   if((command==='attack'||command==='bloom')&&state.enemies.filter(e=>e.hp>0).length>1){
     targetCommand=command;targetReturn=mode;sound('confirm');changeMode('targets');return;

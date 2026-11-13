@@ -113,19 +113,36 @@ function perform(command){
   const actionPose={attack:'attack',bloom:'skill',heal:'skill',herb:'idle',
     guard:'guard',flee:'idle'}[baseCommand]||'idle';
   pose(actionPose);
-  if(baseCommand==='attack'||baseCommand==='bloom'){
-    flash(heroFigure,'attacking');flash(command.endsWith(':1')?enemyFigure2:enemyFigure,'hit');sound('confirm');
+  const isStrike=baseCommand==='attack'||baseCommand==='bloom';
+  const enemyTarget=command.endsWith(':1')?enemyFigure2:enemyFigure;
+  const receivedHit=result.events.some(e=>e.kind==='hit');
+  // The battle rules calculate the outcome immediately, but animation and
+  // hiding a defeated enemy must occur in visual order.
+  announce(result.events[0]?.text||'');
+  if(isStrike){
+    flash(heroFigure,'attacking');
+    sound('confirm');
+    setTimeout(()=>{
+      flash(enemyTarget,'hit');
+      flash(enemyTarget,baseCommand==='bloom'?'impact-magic':'impact-physical');
+    },95);
   }else if(baseCommand==='guard'){sound('confirm');}
   else if(baseCommand==='flee'){sound(result.outcome==='escape'?'confirm':'cancel');}
   else sound('notify');
-  if(result.events.some(e=>e.kind==='hit'))flash(heroFigure,'hit');
-  announce(result.events.map(e=>e.text).join('　'));
-  updateStatus();
-  savePlayer(state.hero);
+  if(receivedHit){
+    setTimeout(()=>{
+      pose('hit');
+      flash(heroFigure,'hit');
+      flash(heroFigure,'impact-hit');
+      const retaliation=result.events.filter(e=>e.kind==='hit');
+      announce(retaliation.at(-1)?.text||'緋月は傷を負った。');
+    },225);
+  }
   setTimeout(()=>{
+    updateStatus(); // Enemy defeated: hide only after its impact.
+    savePlayer(state.hero);
     if(result.outcome){
       if(result.outcome==='defeat'){
-        // Preserve experience and gold, but return home able to move again.
         state.hero.hp=state.hero.maxhp;
         state.hero.mp=state.hero.maxmp;
         savePlayer(state.hero);
@@ -135,6 +152,8 @@ function perform(command){
     }else{
       pose('idle');mode='main';
     }
+    // Avoid overflowing the message window with all retaliation lines.
+    announce(result.events.at(-1)?.text||'');
     selected=0;locked=false;updateMenu();
   },440);
 }

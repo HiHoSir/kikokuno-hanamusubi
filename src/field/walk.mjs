@@ -63,8 +63,9 @@ async function start() {
     clearInput();
     try{
       sessionStorage.setItem(FIELD_RETURN_KEY,JSON.stringify({x:state.x,y:state.y,row:state.row}));
+      const enemyId=chooseEnemy(Math.floor(Math.random()*24));
       sessionStorage.setItem(BATTLE_REQUEST_KEY,JSON.stringify({
-        enemyId:chooseEnemy(walkedSteps),count:chooseEnemy(walkedSteps)==='tanuki'?2:1,at:Date.now()
+        enemyId,count:enemyId==='tanuki'?2:1,at:Date.now()
       }));
     }catch{}
     window.KIKOKU_ROUTE.go(new URL('../game/battle/', import.meta.url));

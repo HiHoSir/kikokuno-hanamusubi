@@ -313,8 +313,13 @@ test('battle visuals preserve approved figures and sequence impacts before hidin
   assert.match(css,/assets\/field\/objects\/horizon\.png/);
   assert.match(css,/\.actor\.enemy \.impact-effect\{inset:auto 0 0;height:min\(48%,140px\)/);
   assert.match(runtime,/targetCommand=null;mode='main';selected=0;/);
-  assert.ok(runtime.indexOf('},95);')<runtime.indexOf('},225);'));
-  assert.ok(runtime.indexOf('},225);')<runtime.indexOf('},440);'));
+  assert.match(runtime,/},95\);/);
+  assert.match(runtime,/},isStrike\?570:225\);/);
+  assert.match(runtime,/},receivedHit\?\(isStrike\?1060:680\):\(isStrike\?600:440\)\);/);
+  // Enemy hit overlay remains for 410ms after the 95ms impact begins.
+  // Hit pose may only be shown after that effect has cleared.
+  assert.ok(570>95+410,'hit.png must not overlap the slash');
+  assert.ok(1060>570+410,'result must outlive the retaliation flash');
   const final=runtime.indexOf('    updateStatus(); // Enemy defeated: hide only after its impact.');
   assert.ok(final>runtime.indexOf('},95);'));
   assert.equal(runtime.includes('announce(result.events.map(e=>e.text).join('),false);

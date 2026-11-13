@@ -1,5 +1,5 @@
 import {contact, createFieldRenderer, fieldStep, loadFieldArt, villageArrival, placeArrival, world} from './runtime.mjs?v=e044a0a';
-import {BATTLE_REQUEST_KEY,FIELD_RETURN_KEY,chooseEnemy} from '../game/battle/rules.mjs';
+import {BATTLE_REQUEST_KEY,FIELD_RETURN_KEY,chooseFieldEncounter} from '../game/battle/rules.mjs';
 
 const scene = document.querySelector('#scene');
 const load = document.querySelector('#load');
@@ -63,9 +63,9 @@ async function start() {
     clearInput();
     try{
       sessionStorage.setItem(FIELD_RETURN_KEY,JSON.stringify({x:state.x,y:state.y,row:state.row}));
-      const enemyId=chooseEnemy(Math.floor(Math.random()*24));
+      const encounter=chooseFieldEncounter({x:state.x,y:state.y},world,Math.random);
       sessionStorage.setItem(BATTLE_REQUEST_KEY,JSON.stringify({
-        enemyId,count:enemyId==='tanuki'?2:1,at:Date.now()
+        ...encounter,at:Date.now()
       }));
     }catch{}
     window.KIKOKU_ROUTE.go(new URL('../game/battle/', import.meta.url));

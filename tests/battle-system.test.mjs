@@ -6,15 +6,18 @@ import {BATTLE_REQUEST_KEY,FIELD_RETURN_KEY,PLAYER_KEY,ENEMIES,createBattle,
   chooseEnemy,readPlayer,savePlayer,normalizePlayer,DEFAULT_PLAYER,
   STATUS_V2,levelStats,nextLevelXp,physicalDamage,fieldEncounterZone,chooseFieldEncounter} from '../src/game/battle/rules.mjs';
 
-test('all wild battle enemy sprites are existing approved old-repository assets',()=>{
+test('wild battle enemies use approved sprites with verified individual provenance',()=>{
   const manifest=JSON.parse(readFileSync('assets/manifest.json','utf8'));
   for(const [key,enemy] of Object.entries(ENEMIES)){
     assert.equal(key,enemy.id);
     const entry=manifest.assets.find(asset=>asset.path===enemy.asset);
     assert.equal(entry?.status,'approved',enemy.asset);
     assert.equal(entry?.usage,'battle-enemy',enemy.asset);
-    assert.equal(entry?.origin?.repo,'HiHoSir/yaksha-hanamusubi');
-    assert.ok(existsSync(enemy.asset),'no generated replacement: '+key);
+    if(['tanuki','field-oni','onibi'].includes(key)){
+      assert.equal(entry?.origin?.kind,'generated-single-enemy-sprite');
+      assert.deepEqual(entry?.dimensions,{width:128,height:128});
+    }
+    assert.ok(existsSync(enemy.asset),'missing approved sprite: '+key);
     assert.ok(enemy.hp>0&&enemy.attack>0);
   }
   for(const pose of ['idle','attack','skill','hit','guard','victory']){
@@ -298,5 +301,73 @@ test('landscape A and portrait B layout keep the same battle DOM and leave touch
   assert.match(js,/choose\('target-'\+index\)/);
   assert.doesNotMatch(js,/orientationchange|location\.assign/);
   assert.ok(html.includes('assets/characters/hizuki/battle/idle.png'));
-  assert.ok(html.includes('href="./battle.css?v=layout-a-b-2"'));
+  assert.ok(html.includes('href="./battle.css?v=onibi-float-1"'));
+});
+
+
+test('grassland backdrop is registered and uses distinct terrain-specific styling',()=>{
+  const html=readFileSync('src/game/battle/index.html','utf8');
+  const css=readFileSync('src/game/battle/battle.css','utf8');
+  const registry=JSON.parse(readFileSync('assets/manifest.json','utf8'));
+  const item=registry.assets.find(a=>a.id==='battle-background-grassland');
+  assert.ok(item);
+  assert.equal(item.path,'assets/battle/backgrounds/grassland.png');
+  assert.equal(item.terrain,'grassland');
+  assert.ok(html.includes('data-battle-terrain="grassland"'));
+  assert.match(css,/data-battle-terrain="grassland"/);
+  assert.match(css,/image-rendering:pixelated/);
+});
+
+test('all three approved battle sprites retain original 128px PNGs without runtime resampling',()=>{
+  const html=readFileSync('src/game/battle/index.html','utf8');
+  const css=readFileSync('src/game/battle/battle.css','utf8');
+  const runtime=readFileSync('src/game/battle/walk.mjs','utf8');
+  assert.match(css,/\.actor\.enemy img\[data-pixel-art="true"\]\{image-rendering:pixelated\}/);
+  assert.match(css,/\.actor\.enemy img\{image-rendering:auto\}/);
+  assert.ok(!runtime.includes('coarseEnemyImage'));
+  assert.ok(!runtime.includes('ENEMY_PIXEL_MAX_SIDE'));
+  assert.ok(!runtime.includes("canvas.toDataURL('image/png')"));
+  assert.ok(runtime.includes("image.dataset.pixelArt=['tanuki','field-oni','onibi'].includes(e.id)?'true':'false'"));
+  assert.match(runtime,/source\.searchParams\.set\('v','77a93691'\)/);
+  assert.match(runtime,/source\.searchParams\.set\('v','651fcddc'\)/);
+  assert.match(runtime,/source\.searchParams\.set\('v','4efa9446'\)/);
+  const manifest=JSON.parse(readFileSync('assets/manifest.json','utf8'));
+  for(const id of ['field-oni','tanuki','onibi']){
+    const sprite=readFileSync('assets/enemies/'+id+'.png');
+    assert.equal(sprite.subarray(1,4).toString(),'PNG',id);
+    assert.equal(sprite.readUInt32BE(16),128,id+' width');
+    assert.equal(sprite.readUInt32BE(20),128,id+' height');
+    assert.equal(sprite[25],6,id+' RGBA PNG required');
+    const asset=manifest.assets.find(item=>item.id==='enemy-'+id);
+    assert.equal(asset.status,'approved',id);
+    assert.deepEqual(asset.dimensions,{width:128,height:128},id);
+  }
+  assert.ok(html.includes('walk.mjs?v=approved-onibi-pixel-sprite-1'));
+  assert.match(css,/img\[data-enemy-id="onibi"\]\{animation:battle-onibi-float 2\.4s steps\(3,end\) infinite\}/);
+  assert.match(css,/@keyframes battle-onibi-float/);
+  assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
+  assert.match(css,/\.actor\.enemy:not\(\.hit\) img\[data-enemy-id="onibi"\]\{animation:none\}/);
+});
+
+test('battle visuals preserve approved figures and sequence impacts before hiding defeated enemies',()=>{
+  const html=readFileSync('src/game/battle/index.html','utf8');
+  const css=readFileSync('src/game/battle/battle.css','utf8');
+  const runtime=readFileSync('src/game/battle/walk.mjs','utf8');
+  assert.equal((html.match(/class="impact-effect"/g)||[]).length,3);
+  assert.match(css,/battle-impact-physical/);
+  assert.match(css,/battle-impact-magic/);
+  assert.match(css,/battle-impact-hit/);
+  assert.match(css,/assets\/field\/objects\/horizon\.png/);
+  assert.match(css,/\.actor\.enemy \.impact-effect\{inset:auto 0 0;height:min\(48%,140px\)/);
+  assert.match(runtime,/targetCommand=null;mode='main';selected=0;/);
+  assert.match(runtime,/},95\);/);
+  assert.match(runtime,/},isStrike\?570:225\);/);
+  assert.match(runtime,/},receivedHit\?\(isStrike\?1060:680\):\(isStrike\?600:440\)\);/);
+  // Enemy hit overlay remains for 410ms after the 95ms impact begins.
+  // Hit pose may only be shown after that effect has cleared.
+  assert.ok(570>95+410,'hit.png must not overlap the slash');
+  assert.ok(1060>570+410,'result must outlive the retaliation flash');
+  const final=runtime.indexOf('    updateStatus(); // Enemy defeated: hide only after its impact.');
+  assert.ok(final>runtime.indexOf('},95);'));
+  assert.equal(runtime.includes('announce(result.events.map(e=>e.text).join('),false);
 });

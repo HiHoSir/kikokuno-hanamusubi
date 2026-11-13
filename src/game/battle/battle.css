@@ -29,6 +29,10 @@ body{margin:0;background:#0c1424}
 .actor.enemy{right:8%;top:14%;width:47%;height:78%}
 .actor.enemy img{image-rendering:auto}
 .actor.enemy img[data-pixel-art="true"]{image-rendering:pixelated}
+/* Blue fire drifts in small whole-pixel steps without blurring the approved sprite.
+   The figure (cursor/impact anchor) stays stationary. */
+.actor.enemy:not(.hit) img[data-enemy-id="onibi"]{animation:battle-onibi-float 2.4s steps(3,end) infinite}
+@keyframes battle-onibi-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
 .actor[hidden]{display:none!important}
 .battle-stage.pair .actor.hero{width:40%;height:90%}
 .battle-stage.pair .actor.enemy{right:33%;top:11%;width:35%;height:79%}
@@ -152,6 +156,7 @@ body{margin:0;background:#0c1424}
 @media(prefers-reduced-motion:reduce){
  .encounter-overlay,.encounter-overlay::before,.encounter-overlay strong{animation-duration:.15s}
  .actor.hit,.actor.attacking{animation:none}
+ .actor.enemy:not(.hit) img[data-enemy-id="onibi"]{animation:none}
  .meter-fill{transition:none}
 }
 

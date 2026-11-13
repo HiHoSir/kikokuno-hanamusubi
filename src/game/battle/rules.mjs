@@ -45,9 +45,9 @@ export function physicalDamage(attack,defense,random=Math.random){
 }
 export const ENEMIES=Object.freeze({
   // Initial field only. These are provisional first-area numbers, not the planned late regions.
-  'field-oni':Object.freeze({id:'field-oni',name:'野の小鬼',asset:'assets/enemies/field-oni.png',hp:18,attack:11,defense:2,xp:8,gold:8}),
-  'tanuki':Object.freeze({id:'tanuki',name:'化け狸',asset:'assets/enemies/tanuki.png',hp:8,attack:7,defense:2,xp:4,gold:4}),
-  'onibi':Object.freeze({id:'onibi',name:'鬼火',asset:'assets/enemies/onibi.png',hp:16,attack:10,defense:2,xp:9,gold:8})
+  'field-oni':Object.freeze({id:'field-oni',name:'野の小鬼',asset:'assets/enemies/field-oni.png',hp:12,attack:7,defense:2,xp:8,gold:8}),
+  'tanuki':Object.freeze({id:'tanuki',name:'化け狸',asset:'assets/enemies/tanuki.png',hp:6,attack:6,defense:2,xp:4,gold:4}),
+  'onibi':Object.freeze({id:'onibi',name:'鬼火',asset:'assets/enemies/onibi.png',hp:16,attack:8,defense:2,xp:9,gold:8})
 });
 export const ACTIONS=Object.freeze(['attack','bloom','heal','herb','guard','flee']);
 export const DEFAULT_PLAYER=Object.freeze({
@@ -82,6 +82,29 @@ export function savePlayer(player,storage=globalThis.localStorage){
 export function chooseEnemy(steps=0){
   return ['field-oni','tanuki','onibi'][Math.floor(Math.max(0,steps)/8)%3];
 }
+// The first authored field route is Village -> Tenyo Shrine. Do not use the
+// unreleased destinations or the archived game's area IDs as encounter zones.
+// The live field remains safe against inventing enemies when walking off-route.
+export function fieldEncounterZone(point,world){
+  const road=world?.roads?.[0];
+  if(!road?.length||!Number.isFinite(point?.x)||!Number.isFinite(point?.y))
+    return 'village-outskirts';
+  let closest=Infinity,index=0;
+  for(let i=0;i<road.length;i++){
+    const d=Math.hypot(point.x-road[i][0],point.y-road[i][1]);
+    if(d<closest){closest=d;index=i;}
+  }
+  if(closest>32*4)return 'village-outskirts';
+  return index>=Math.floor(road.length*.6)?'shrine-approach':'village-outskirts';
+}
+export function chooseFieldEncounter(point,world,random=Math.random){
+  const zone=fieldEncounterZone(point,world),r=roll(random);
+  const [enemyId,count]=zone==='shrine-approach'
+    ?r<.20?['field-oni',1]:r<.65?['onibi',1]:['tanuki',2]
+    :r<.55?['field-oni',1]:['tanuki',2];
+  return {enemyId,count,zone};
+}
+
 export function createBattle(enemyId='field-oni',player=DEFAULT_PLAYER,random=Math.random,count=1){
   const original=ENEMIES[enemyId];
   if(!original)throw Error('Unknown encounter: '+enemyId);

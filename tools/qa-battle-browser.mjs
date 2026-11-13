@@ -140,10 +140,24 @@ try{
     // Two attacks against the second enemy must remove that specific sprite,
     // while the first remains alive. This proves independent HP and targeting.
     await frame.locator('#enemy-figure-2').click();
-    await page.waitForTimeout(520);
+    // Combat now animates before removing a defeated figure. Verify actual
+    // DOM/paint progression, not just final hit points.
+    const early=await frame.locator('#enemy-figure-2').evaluate(node=>({
+     hidden:node.hidden,firstAlive:!document.getElementById('enemy-figure').hidden
+    }));
+    if(early.hidden||!early.firstAlive)issues.push(name+' target hidden before first hit animation');
+    await frame.locator('#enemy-figure-2.impact-physical').waitFor({state:'attached',timeout:900});
+    if(await frame.locator('#enemy-figure-2').evaluate(node=>node.hidden))
+     issues.push(name+' impact started after enemy disappeared');
+    await frame.locator('#hero-figure.impact-hit').waitFor({state:'attached',timeout:900});
+    await page.screenshot({path:'artifacts/battle-'+width+'x'+height+'-impact.png'});
+    await page.waitForTimeout(360);
     await frame.locator('[data-command="attack"]').click();
     await frame.locator('#enemy-figure-2').click();
-    await page.waitForTimeout(520);
+    await frame.locator('#enemy-figure-2.impact-physical').waitFor({state:'attached',timeout:900});
+    if(await frame.locator('#enemy-figure-2').evaluate(node=>node.hidden))
+     issues.push(name+' defeated target was hidden before last impact');
+    await page.waitForTimeout(480);
     const targetResult=await frame.locator('#enemy-figure-2').evaluate(el=>({
      secondDefeated:el.hidden,
      firstAlive:!document.querySelector('#enemy-figure').hidden

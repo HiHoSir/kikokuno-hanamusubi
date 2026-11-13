@@ -29,8 +29,7 @@ function coarseEnemyImage(src){
       const ctx=canvas.getContext('2d',{alpha:true});
       if(!ctx)return src;
       ctx.clearRect(0,0,canvas.width,canvas.height);
-      ctx.imageSmoothingEnabled=true; // smooth only while reducing, not on display
-      ctx.imageSmoothingQuality='high';
+      ctx.imageSmoothingEnabled=false; // nearest-pixel reduction: no painterly blur
       ctx.drawImage(original,0,0,canvas.width,canvas.height);
       return canvas.toDataURL('image/png');
     })().catch(()=>src); // Safari fallback: retain original enemy sprite.

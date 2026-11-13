@@ -52,6 +52,11 @@ try{
      d?.getElementById('enemy-image')?.naturalWidth>0 &&
      d?.getElementById('command-list')?.children?.length===5;
    },null,{timeout:20000});
+   await page.waitForFunction(()=>{
+    const d=document.querySelector('iframe')?.contentDocument;
+    const enemies=[...d?.querySelectorAll('.actor.enemy:not([hidden]) img')||[]];
+    return enemies.length>0&&enemies.every(img=>img.dataset.enemyPixelated==='yes');
+   },null,{timeout:20000});
    const data=await page.evaluate(()=>{
     const d=document.querySelector('iframe').contentDocument;
     const ids=['battle-stage','hero-figure','enemy-figure','enemy-figure-2',
@@ -92,6 +97,20 @@ try{
    if(backdrop.terrain!=='grassland'||backdrop.width!==384||backdrop.height!==216||
        backdrop.imageRendering!=='pixelated'){
     issues.push(width+'x'+height+' grassland backdrop missing/unreadable: '+JSON.stringify(backdrop));
+   }
+   const pixelArt=await page.evaluate(()=>{
+    const d=document.querySelector('iframe').contentDocument;
+    return [...d.querySelectorAll('.actor.enemy:not([hidden]) img')].map(img=>({
+      state:img.dataset.enemyPixelated,
+      dimensions:[img.naturalWidth,img.naturalHeight],
+      dataURL:img.currentSrc.startsWith('data:image/png'),
+      interpolation:d.defaultView.getComputedStyle(img).imageRendering
+    }));
+   });
+   if(pixelArt.length!==count||pixelArt.some(item=>
+       item.state!=='yes'||!item.dataURL||
+       Math.max(...item.dimensions)>88||item.interpolation!=='pixelated')){
+     issues.push(width+'x'+height+' enemy sprite pixelation failed: '+JSON.stringify(pixelArt));
    }
    const overlaps=(a,b)=>{
     if(!a||!b)return 0;

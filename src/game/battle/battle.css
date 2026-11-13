@@ -27,7 +27,7 @@ body{margin:0;background:#0c1424}
 .actor.hero{left:0;bottom:0;width:39%;height:88%}
 .actor.hero figcaption{display:none}
 .actor.enemy{right:8%;top:14%;width:47%;height:78%}
-.actor.enemy img{image-rendering:auto}
+.actor.enemy img{image-rendering:crisp-edges;image-rendering:pixelated}
 .actor[hidden]{display:none!important}
 .battle-stage.pair .actor.hero{width:40%;height:90%}
 .battle-stage.pair .actor.enemy{right:33%;top:11%;width:35%;height:79%}

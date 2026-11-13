@@ -298,7 +298,7 @@ test('landscape A and portrait B layout keep the same battle DOM and leave touch
   assert.match(js,/choose\('target-'\+index\)/);
   assert.doesNotMatch(js,/orientationchange|location\.assign/);
   assert.ok(html.includes('assets/characters/hizuki/battle/idle.png'));
-  assert.ok(html.includes('href="./battle.css?v=grassland-background-1"'));
+  assert.ok(html.includes('href="./battle.css?v=enemy-pixel-grid-1"'));
 });
 
 
@@ -313,6 +313,19 @@ test('grassland backdrop is registered and uses distinct terrain-specific stylin
   assert.ok(html.includes('data-battle-terrain="grassland"'));
   assert.match(css,/data-battle-terrain="grassland"/);
   assert.match(css,/image-rendering:pixelated/);
+});
+
+test('existing enemy PNGs are downsampled on the client without replacing any asset',()=>{
+  const html=readFileSync('src/game/battle/index.html','utf8');
+  const css=readFileSync('src/game/battle/battle.css','utf8');
+  const runtime=readFileSync('src/game/battle/walk.mjs','utf8');
+  assert.match(css,/\.actor\.enemy img\{image-rendering:crisp-edges;image-rendering:pixelated\}/);
+  assert.match(runtime,/const ENEMY_PIXEL_MAX_SIDE=88;/);
+  assert.match(runtime,/canvas\.toDataURL\('image\/png'\)/);
+  assert.match(runtime,/const assetUrl=new URL\(e\.asset,root\)\.href;/);
+  assert.match(runtime,/image\.dataset\.enemyPixelated='yes';/);
+  assert.match(runtime,/\)\.catch\(\(\)=>src\);/);
+  assert.ok(html.includes('walk.mjs?v=enemy-pixel-grid-1'));
 });
 
 test('battle visuals preserve approved figures and sequence impacts before hiding defeated enemies',()=>{

@@ -320,7 +320,7 @@ test('existing enemy PNGs are downsampled on the client without replacing any as
   const css=readFileSync('src/game/battle/battle.css','utf8');
   const runtime=readFileSync('src/game/battle/walk.mjs','utf8');
   assert.match(css,/\.actor\.enemy img\{image-rendering:crisp-edges;image-rendering:pixelated\}/);
-  assert.match(runtime,/const ENEMY_PIXEL_MAX_SIDE=88;/);
+  assert.match(runtime,/const ENEMY_PIXEL_MAX_SIDE=64;/);
   assert.match(runtime,/canvas\.toDataURL\('image\/png'\)/);
   assert.match(runtime,/const assetUrl=new URL\(e\.asset,root\)\.href;/);
   assert.match(runtime,/image\.dataset\.enemyPixelated='yes';/);

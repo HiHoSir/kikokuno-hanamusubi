@@ -57,6 +57,7 @@
 - **野の小鬼**もユーザーが邪悪すぎない「いたずら小鬼」の外見を採用承認。正式パス `assets/enemies/field-oni.png` と台帳ID `enemy-field-oni` を維持し、128×128pxの単体透過ドット絵へ差し替えた。赤い肌・二本角・棍棒・腰布は継承しつつ、笑顔と軽快な動きに変更。旧画像はGit履歴から復元可能。
 - **鬼火**もユーザーの採用承認を受け、`assets/enemies/onibi.png`（台帳ID `enemy-onibi`）を128×128pxの透過ドット絵へ同じ正式パスで差し替えた。青白い炎・黄色い目・笑み・漂う火の粉は継承。旧画像はGit履歴に保存。
 - **64pxへの一律縮小加工を廃止**。化け狸・野の小鬼・鬼火の採用PNGを、どれも原寸128pxのまま `image-rendering:pixelated` で表示する。実行時Canvas縮小・別名コピーはしない。
+- **鬼火の浮遊演出：** CSS `battle-onibi-float` で画像だけを0〜3pxの整数位置へ段階移動。敵枠・標的カーソル・命中演出の基準位置は固定し、被弾中および `prefers-reduced-motion: reduce` では停止する。新しい画像アセットは追加しない。
 - `src/game/battle/walk.mjs` ではPNGからCanvasのデータURLを生成しない。実PNGの読み込みと複数体の見せ方は `tools/qa-battle-browser.mjs` で従来の縦横4サイズに加えて鬼火の縦横2ケースを検査する。Safariの古い画像キャッシュを避けるため、化け狸・野の小鬼・鬼火それぞれの画像にGit Blob由来の更新パラメータを付けている。
 
 ## B式v2：確定数値

@@ -105,11 +105,14 @@ try{
       dimensions:[img.naturalWidth,img.naturalHeight],
       source:img.currentSrc,
       pixelArt:img.dataset.pixelArt,
-      interpolation:d.defaultView.getComputedStyle(img).imageRendering
+      interpolation:d.defaultView.getComputedStyle(img).imageRendering,
+      animation:d.defaultView.getComputedStyle(img).animationName
     }));
    });
    const expectsPixelArt=['tanuki','field-oni','onibi'].includes(enemyId);
    const version=({tanuki:'77a93691','field-oni':'651fcddc',onibi:'4efa9446'})[enemyId];
+   if(enemyId==='onibi'&&enemyArt.some(item=>item.animation!=='battle-onibi-float'))
+     issues.push(width+'x'+height+' onibi idle float missing: '+JSON.stringify(enemyArt));
    if(enemyArt.length!==count||enemyArt.some(item=>
      item.source.startsWith('data:')||
      (expectsPixelArt?(item.pixelArt!=='true'||item.dimensions[0]!==128||item.dimensions[1]!==128||

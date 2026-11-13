@@ -301,7 +301,7 @@ test('landscape A and portrait B layout keep the same battle DOM and leave touch
   assert.match(js,/choose\('target-'\+index\)/);
   assert.doesNotMatch(js,/orientationchange|location\.assign/);
   assert.ok(html.includes('assets/characters/hizuki/battle/idle.png'));
-  assert.ok(html.includes('href="./battle.css?v=tanuki-pixel-sprite-1"'));
+  assert.ok(html.includes('href="./battle.css?v=onibi-float-1"'));
 });
 
 
@@ -343,6 +343,10 @@ test('all three approved battle sprites retain original 128px PNGs without runti
     assert.deepEqual(asset.dimensions,{width:128,height:128},id);
   }
   assert.ok(html.includes('walk.mjs?v=approved-onibi-pixel-sprite-1'));
+  assert.match(css,/img\[data-enemy-id="onibi"\]\{animation:battle-onibi-float 2\.4s steps\(3,end\) infinite\}/);
+  assert.match(css,/@keyframes battle-onibi-float/);
+  assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
+  assert.match(css,/img\[data-enemy-id="onibi"\]\{animation:none\}/);
 });
 
 test('battle visuals preserve approved figures and sequence impacts before hiding defeated enemies',()=>{

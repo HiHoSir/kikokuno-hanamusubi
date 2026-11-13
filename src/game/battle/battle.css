@@ -190,8 +190,15 @@ body{margin:0;background:#0c1424}
  animation:battle-impact-magic .38s steps(4,end) both;
 }
 .actor.impact-hit .impact-effect{
- background:linear-gradient(180deg,rgba(255,235,186,.38),rgba(255,112,104,.35));
+ background:radial-gradient(ellipse 38% 48% at 50% 62%,
+  rgba(255,237,198,.44) 0 44%,rgba(242,139,118,.28) 45% 68%,transparent 72%);
  animation:battle-impact-hit .28s steps(2,end) both;
+}
+/* A portrait sprite is letterboxed toward the actor's feet. The spark and
+   slash must be anchored to the *visible* character, not the full figure. */
+@media(orientation:portrait){
+ .actor.enemy .impact-effect{inset:auto 0 0;height:min(48%,140px)}
+ .actor.hero .impact-effect{inset:auto 0 0;height:min(39%,115px)}
 }
 @keyframes battle-impact-physical{
  0%{opacity:0;transform:scale(.48)}

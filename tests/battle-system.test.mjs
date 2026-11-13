@@ -176,6 +176,54 @@ test('T0 early encounters are winnable without an immediate heal every battle',(
   assert.equal(nextLevelXp(1),80); // ~9-10 fights for one level.
 });
 
+test('first-route encounter weights stay deterministic for every 0.1% percentile',()=>{
+  const terrainSource=readFileSync('data/maps/field/terrain.js','utf8')
+    .replace(/^window\.YK_FIELD_TERRAIN=/,'').replace(/;\s*$/,'');
+  const road=JSON.parse(terrainSource).referenceComposition.roads[0];
+  const world={roads:[road.map(([x,y])=>[x*32+16,y*32+16])]};
+  const positions=[
+    {point:{x:road[0][0]*32+16,y:road[0][1]*32+16},expected:{'field-oni':550,tanuki:450}},
+    {point:{x:road.at(-1)[0]*32+16,y:road.at(-1)[1]*32+16},expected:{'field-oni':200,onibi:450,tanuki:350}}
+  ];
+  for(const {point,expected} of positions){
+    const counts={};
+    for(let i=0;i<1000;i++){
+      const {enemyId,count}=chooseFieldEncounter(point,world,()=>(i+.5)/1000);
+      counts[enemyId]=(counts[enemyId]||0)+1;
+      assert.equal(count,enemyId==='tanuki'?2:1,'approved enemy formation');
+    }
+    assert.deepEqual(counts,expected);
+  }
+});
+
+test('ten planned first-route fights allow level two without equipment or unlimited consumables',()=>{
+  const plan=[
+    ['field-oni',1],['tanuki',2],['field-oni',1],['tanuki',2],['onibi',1],
+    ['field-oni',1],['tanuki',2],['onibi',1],['field-oni',1],['tanuki',2]
+  ];
+  let hero={...DEFAULT_PLAYER},herbsUsed=0;
+  for(const [id,count] of plan){
+    const battle=createBattle(id,hero,()=>.5,count);
+    if(battle.state.hero.hp<=11){
+      assert.ok(battle.state.hero.potions>0,'must have a limited herb available');
+      assert.equal(battle.act('herb').accepted,true);
+      herbsUsed++;
+    }
+    for(let turn=0;!battle.state.outcome&&turn<12;turn++)
+      assert.equal(battle.act('attack').accepted,true);
+    assert.equal(battle.state.outcome,'victory','first-route playthrough defeated by '+id);
+    hero=battle.state.hero;
+  }
+  assert.equal(hero.wins,10);
+  assert.equal(herbsUsed,2);
+  assert.equal(hero.potions,1);
+  assert.equal(hero.lv,2);
+  assert.equal(hero.xp,2);
+  assert.equal(hero.gold,80);
+  assert.equal(hero.hp,hero.maxhp,'level-up restores full HP');
+  assert.equal(hero.equipmentTier,'T0','no unapproved equipment is introduced');
+});
+
 test('battle is production scene, field encounter and safe return in persistent game shell',()=>{
   const html=readFileSync('src/game/battle/index.html','utf8');
   const code=readFileSync('src/game/battle/walk.mjs','utf8');

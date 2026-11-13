@@ -11,7 +11,7 @@ const hpMeter=el('hp-meter'),mpMeter=el('mp-meter'),intro=el('encounter');
 const image=(path)=>new URL(path,root).href;
 // Reduce only existing enemy PNGs to a fixed coarse pixel grid. No AI artwork,
 // replacement asset, or new repo PNG is generated; source files stay unchanged.
-const ENEMY_PIXEL_MAX_SIDE=88;
+const ENEMY_PIXEL_MAX_SIDE=64;
 const enemyPixelCache=new Map();
 function coarseEnemyImage(src){
   if(!enemyPixelCache.has(src)){
@@ -29,8 +29,7 @@ function coarseEnemyImage(src){
       const ctx=canvas.getContext('2d',{alpha:true});
       if(!ctx)return src;
       ctx.clearRect(0,0,canvas.width,canvas.height);
-      ctx.imageSmoothingEnabled=true; // smooth only while reducing, not on display
-      ctx.imageSmoothingQuality='high';
+      ctx.imageSmoothingEnabled=false; // nearest-pixel reduction: no painterly blur
       ctx.drawImage(original,0,0,canvas.width,canvas.height);
       return canvas.toDataURL('image/png');
     })().catch(()=>src); // Safari fallback: retain original enemy sprite.

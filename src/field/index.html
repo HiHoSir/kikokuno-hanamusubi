@@ -67,10 +67,8 @@ button.held{background:#e8cc8b;color:#272d22}
 </style>
 <link rel="stylesheet" href="../game/ui/controls.css?v=dotgothic16">
 <style>
-/* Field-only iPhone landscape layout. Other scenes retain their own layout.
-   The field art is rendered on an authored 768px square: `object-fit:cover` crops
-   that image on wide screens. Center the crop on the projected hero's feet
-   rather than the sky; do not resize the authored 32px field sprites. */
+/* Field-only iPhone landscape layout. Field camera crops in runtime.mjs
+   using the rendered hero's actual foot; CSS must never crop it a second time. */
 @media (orientation:landscape) and (max-height:560px){
  main.field-screen{
   grid-template-columns:minmax(0,1fr);
@@ -83,13 +81,13 @@ button.held{background:#e8cc8b;color:#272d22}
   min-height:0;
  }
  main.field-screen .viewport canvas{
-  object-fit:cover;
-  object-position:center 65%;
+  object-fit:fill;
+  object-position:center center;
  }
- /* The cloud layer uses the same square/crop offset as the terrain canvas. */
+ /* The canvas owns the camera crop. Weather is a noninteractive overlay. */
  main.field-screen .field-weather-scene{
-  top:65%;
-  transform:translate(-50%,-65%);
+  top:50%;
+  transform:translate(-50%,-50%);
  }
  main.field-screen #pad{
   grid-area:2/1/3/2;
@@ -160,6 +158,6 @@ button.held{background:#e8cc8b;color:#272d22}
 <script src="./camera-position.js?v=26136fe"></script>
 <script src="./movement-rules.js?v=26136fe"></script>
 <script src="./area-transitions.js?v=26136fe"></script>
-<script type="module" src="./walk.mjs?v=battle-1"></script>
+<script type="module" src="./walk.mjs?v=field-camera-2"></script>
 </body>
 </html>

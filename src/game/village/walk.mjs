@@ -58,7 +58,7 @@ function clearInput() {
 
 async function start() {
   const [data,residentConfigs] = await Promise.all([
-    '../../../data/maps/hozuki-village/scene.json', '../../../data/maps/hozuki-village/residents.json',
+    '../../../data/maps/hozuki-village/scene.json?v=shop-signs-1', '../../../data/maps/hozuki-village/residents.json',
   ].map(async url=>{
     const response = await fetch(url);
     if (!response.ok) throw new Error(url);

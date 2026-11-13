@@ -47,12 +47,18 @@ function flash(node,cssClass){
 }
 function updateEnemies(){
   const two=state.enemies.length>1;
-  el('battle-stage').classList.toggle('pair',two);
+  const stage=el('battle-stage');
+  stage.classList.toggle('pair',two);
+  stage.classList.toggle('target-mode',mode==='targets');
   const figures=[enemyFigure,enemyFigure2],images=[enemyImage,enemyImage2],labels=[enemyLabel,enemyLabel2];
   const alive=state.enemies.filter(e=>e.hp>0);
   for(let i=0;i<2;i++){
     const e=state.enemies[i],figure=figures[i],image=images[i],label=labels[i];
     figure.hidden=!e||e.hp<=0;
+    const canTarget=mode==='targets'&&!!e&&e.hp>0;
+    figure.classList.toggle('targetable',canTarget);
+    figure.tabIndex=canTarget?0:-1;
+    figure.setAttribute?.('aria-label',canTarget?e.name+' '+(i+1)+'番を標的に選ぶ':e?.name||'');
     if(!e)continue;
     if(image.dataset.enemyId!==e.id){
       image.src=new URL(e.asset,root).href;image.alt=e.name;image.dataset.enemyId=e.id;
@@ -167,6 +173,17 @@ function confirm(){
 function cancel(){
   if(!ready||locked)return;
   if(mode==='magic'||mode==='items'||mode==='targets')choose('back');
+}
+// Enemy art can be tapped in target mode; the D-pad and A/B use the same
+// selection state, so an orientation change never recreates the battle.
+for(const [index,figure] of [enemyFigure,enemyFigure2].entries()){
+  const target=()=>{if(ready&&!locked&&mode==='targets'&&state.enemies[index]?.hp>0)choose('target-'+index);};
+  figure.addEventListener('click',target);
+  figure.addEventListener('keydown',event=>{
+    if(event.key==='Enter'||event.key===' '){
+      event.preventDefault?.();event.stopPropagation?.();target();
+    }
+  });
 }
 const directions=new Set(['up','down','left','right']);
 for(const b of document.querySelectorAll('[data-dir]')){

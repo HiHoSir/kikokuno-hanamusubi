@@ -109,7 +109,7 @@ try{
    });
    if(pixelArt.length!==count||pixelArt.some(item=>
        item.state!=='yes'||!item.dataURL||
-       Math.max(...item.dimensions)>88||item.interpolation!=='pixelated')){
+       Math.max(...item.dimensions)>64||item.interpolation!=='pixelated')){
      issues.push(width+'x'+height+' enemy sprite pixelation failed: '+JSON.stringify(pixelArt));
    }
    const overlaps=(a,b)=>{

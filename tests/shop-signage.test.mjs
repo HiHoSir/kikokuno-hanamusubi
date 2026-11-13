@@ -7,11 +7,12 @@ const scene=JSON.parse(readFileSync('data/maps/hozuki-village/scene.json','utf8'
 const manifest=JSON.parse(readFileSync('assets/manifest.json','utf8'));
 const pair=[
   {building:'teahouse-northeast',id:'sign-teahouse-northeast',file:'sign-teahouse.png',label:'茶',room:'teahouse'},
-  {building:'inn-southeast',id:'sign-inn-southeast',file:'sign-inn.png',label:'宿',room:'inn'}
+  {building:'inn-southeast',id:'sign-inn-southeast',file:'sign-inn.png',label:'宿',room:'inn'},
+  {building:'house-southeast-tile',id:'sign-armory-southeast',file:'sign-armory.png',label:'兵',room:'armory'}
 ];
 
 test('storefront signs are native-size PNG layers tied to existing enterable buildings',()=>{
-  assert.equal(scene.sprites.filter(s=>s.signFor).length,2);
+  assert.equal(scene.sprites.filter(s=>s.signFor).length,3);
   assert.ok(scene.sprites.every((s,i)=>i===0||s.depth>=scene.sprites[i-1].depth));
   for(const {building,id,file,label,room} of pair){
     const owner=scene.sprites.find(s=>s.id===building),sign=scene.sprites.find(s=>s.id===id);
@@ -19,7 +20,7 @@ test('storefront signs are native-size PNG layers tied to existing enterable bui
     assert.ok(owner?.eave&&marker?.entrance,'missing established door for '+building);
     assert.equal(villageRooms[building],room);
     assert.equal(resolveInterior(new URLSearchParams('building='+building)).selected,room);
-    assert.equal(rooms[room].name,building.startsWith('inn')?'宿':'茶店');
+    assert.equal(rooms[room].name,{inn:'宿',teahouse:'茶店',armory:'兵具屋'}[room]);
     assert.equal(sign.signFor,building);
     assert.equal(sign.symbol,label);
     assert.equal(sign.file,file);
@@ -44,16 +45,20 @@ test('storefront signs are native-size PNG layers tied to existing enterable bui
   }
 });
 
-test('shop-only interior definitions remain unlinked until actual outside shops exist',()=>{
+test('one generic family house becomes the armory; no item shop is placed',()=>{
   const marks=scene.markers.filter(m=>m.entrance);
-  assert.equal(marks.length,9,'do not repurpose or add fictitious existing homes');
-  assert.ok(!Object.values(villageRooms).includes('armory'));
+  assert.equal(marks.length,9,'reuse existing doors without adding buildings');
+  assert.equal(villageRooms['house-southeast-tile'],'armory');
+  assert.equal(scene.markers.find(x=>x.id==='house-southeast-tile').name,'兵具屋の入口');
+  assert.equal(Object.values(villageRooms).filter(x=>x==='house-family').length,2);
+  assert.equal(Object.values(villageRooms).filter(x=>x==='armory').length,1);
   assert.ok(!Object.values(villageRooms).includes('shop'));
   assert.ok(rooms.armory&&rooms.shop);
+  assert.ok(!scene.markers.some(x=>x.id==='shop'));
   const walk=readFileSync('src/game/village/walk.mjs','utf8');
   const entry=readFileSync('src/game/village/index.html','utf8');
-  assert.ok(walk.includes("'../../../data/maps/hozuki-village/scene.json?v=shop-signs-1'"));
-  assert.ok(entry.includes('./walk.mjs?v=fb40c1b-20261112-village-speed-288-shop-signs-1'));
+  assert.ok(walk.includes("'../../../data/maps/hozuki-village/scene.json?v=armory-signs-1'"));
+  assert.ok(entry.includes('./walk.mjs?v=fb40c1b-20261112-village-speed-288-armory-signs-1'));
   assert.ok(walk.includes('data.sprites.flatMap'));
   assert.ok(walk.includes('art.get(sprite.file)'));
 });

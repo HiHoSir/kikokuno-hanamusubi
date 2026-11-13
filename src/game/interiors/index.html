@@ -41,7 +41,16 @@ button:active,button.held,button[aria-pressed=true]{background:#e8cc8b;color:#27
  header{grid-column:1/-1}
  .controls{flex-direction:column;justify-content:center}
 }
-.screen-reader{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}</style>
+.screen-reader{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+#shop-panel{position:absolute;top:5%;left:5%;right:5%;bottom:auto;max-height:76%;z-index:26;overflow:auto;padding:13px 16px;border:3px double #d6b881;border-radius:7px;background:#122438f5;box-shadow:0 10px 24px #000a;color:#fff4df;font-family:"DotGothic16",sans-serif;touch-action:pan-y}
+#shop-panel[hidden]{display:none!important}
+#shop-panel h2{margin:0 0 5px;font-size:19px;color:#eed59b}
+#shop-wallet,#shop-message{font-size:14px;margin:5px 0 9px}
+#shop-options{display:grid;gap:7px}
+#shop-options button{min-height:44px;text-align:left;padding:6px 10px;font-family:inherit;font-size:15px}
+#shop-options button.selected{border-color:#f4d482;background:#675435}
+@media(orientation:landscape){#shop-panel{top:5%;left:17%;right:17%;bottom:auto;max-height:90%;padding:8px 14px}#shop-options{gap:4px}#shop-options button{min-height:34px}}
+</style>
 <link rel="stylesheet" href="../village/dialogue.css?v=dotgothic16">
 <link rel="stylesheet" href="../ui/controls.css?v=dotgothic16">
 <script type="module" src="../ui/selection-guard.mjs"></script>
@@ -61,6 +70,12 @@ button:active,button.held,button[aria-pressed=true]{background:#e8cc8b;color:#27
     <button id="next" type="button" aria-label="次のセリフへ">▼</button>
   </div>
 </section>
+<section id="shop-panel" aria-label="店の商品" hidden>
+<h2 id="shop-title">品書き</h2>
+<p id="shop-wallet">所持金</p>
+<div id="shop-options"></div>
+<p id="shop-message" aria-live="polite"></p>
+</section>
 </section>
 <section id="pad" class="controls" aria-label="ゲーム操作">
   <div class="dpad" aria-label="十字キー・4方向移動" role="group">
@@ -74,6 +89,6 @@ button:active,button.held,button[aria-pressed=true]{background:#e8cc8b;color:#27
 </section>
 <button id="sound-toggle" type="button" aria-label="サウンドを再生" aria-pressed="false">♪ 再生</button>
 </main>
-<script type="module" src="./walk.mjs?v=fb40c1b"></script>
+<script type="module" src="./walk.mjs?v=fb40c1b-village-commerce-1"></script>
 </body>
 </html>

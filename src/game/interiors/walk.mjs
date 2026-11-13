@@ -4,6 +4,7 @@ import {drawCharacter, RESIDENT_RADIUS, residentInFront} from '../village/reside
 import {bindDialogue} from '../village/dialogue.mjs';
 import {rooms, resolveInterior, prepareInterior} from './rooms.mjs';
 import {paintRoom, paintPartition, paintContactShadow} from './room-art.mjs';
+import {FOOD_ITEMS,ARMORY_STOCK,purchaseFood,purchaseArmory,readPlayer,savePlayer} from '../battle/rules.mjs';
 
 const scene = document.querySelector('#scene');
 const context = scene.getContext('2d', {alpha:false});
@@ -46,7 +47,57 @@ async function start() {
     Promise.all([...assets].map(async asset=>[asset,await loadImage('../../../assets/characters/npc/'+asset+'-walk-4dir-80x112.png')])),
   ]);
   const residentArt = new Map(portraits);
-  const dialogue = bindDialogue(clearInput);
+  let selectedRoom='';
+  let shopActive=false,shopSelected=0;
+  const shopPanel=document.getElementById('shop-panel');
+  const shopTitle=document.getElementById('shop-title');
+  const shopWallet=document.getElementById('shop-wallet');
+  const shopOptions=document.getElementById('shop-options');
+  const shopMessage=document.getElementById('shop-message');
+  function options(){
+    return selectedRoom==='teahouse'
+      ?[...Object.values(FOOD_ITEMS).map(item=>({id:item.id,label:item.name+'　'+item.price+'両（体力+'+item.heal+'）'})),{id:'exit',label:'もどる'}]
+      :selectedRoom==='armory'?[{id:ARMORY_STOCK.id,label:ARMORY_STOCK.name+'　'+ARMORY_STOCK.price+'両'},{id:'exit',label:'もどる'}]:[];
+  }
+  function refreshShop(){
+    const hero=readPlayer();
+    shopWallet.textContent='所持金 '+hero.gold+'両';
+    const rows=options();
+    shopOptions.replaceChildren();
+    for(const [i,item] of rows.entries()){
+      const button=document.createElement('button');
+      button.type='button';button.dataset.shopItem=item.id;
+      button.classList.toggle('selected',shopSelected===i);
+      button.textContent=item.label+(hero.foods[item.id]!==undefined?'　所持'+hero.foods[item.id]:item.id===ARMORY_STOCK.id&&hero.equipmentTier!=='T0'?'　購入済':'');
+      button.addEventListener('click',()=>{shopSelected=i;confirmShop();});
+      shopOptions.append(button);
+    }
+  }
+  function openShop(){
+    if(selectedRoom!=='teahouse'&&selectedRoom!=='armory')return;
+    shopActive=true;shopSelected=0;clearInput();
+    shopTitle.textContent=selectedRoom==='teahouse'?'茶店の品書き':'兵具屋の品書き';
+    shopMessage.textContent='何をお求めですか？';
+    shopPanel.hidden=false;refreshShop();
+  }
+  function closeShop(){shopActive=false;shopPanel.hidden=true;clearInput();}
+  function moveShop(direction){
+    const length=options().length;
+    if(!length)return;
+    shopSelected=(shopSelected+((direction==='up'||direction==='left')?-1:1)+length)%length;
+    refreshShop();
+  }
+  function confirmShop(){
+    if(!shopActive)return;
+    const choice=options()[shopSelected];
+    if(!choice)return;
+    if(choice.id==='exit'){closeShop();return;}
+    const result=selectedRoom==='teahouse'?purchaseFood(readPlayer(),choice.id):purchaseArmory(readPlayer());
+    if(result.accepted)savePlayer(result.player);
+    shopMessage.textContent=result.message;refreshShop();
+    globalThis.KIKOKU_AUDIO?.se?.(result.accepted?'confirm':'cancel');
+  }
+  const dialogue = bindDialogue(clearInput,()=>{if(selectedRoom==='teahouse'||selectedRoom==='armory')openShop();});
   const params = new URLSearchParams(location.search);
   const initial = resolveInterior(params);
   const outdoor = new URL('../village/',location.href);
@@ -63,6 +114,8 @@ async function start() {
     clearInput();
     dialogue.close();
     room = nextRoom;
+    selectedRoom=selected;
+    shopActive=false;shopPanel.hidden=true;
     plan = prepareInterior(room);
     plan.resident.bitmap=residentArt.get(plan.resident.asset);
     walk = makeWalk(room.width,room.height,plan.blocked,8);
@@ -143,7 +196,7 @@ async function start() {
     lastFrame = now;
     const direction = [...input.values()].at(-1);
     let moving = false;
-    if (direction && !dialogue.active) {
+    if (direction && !dialogue.active && !shopActive) {
       const [dx,dy,row] = directions[direction];
       face = row;
       const step=HIZUKI_INTERIOR_WALK_SPEED*elapsed/1000;
@@ -167,6 +220,7 @@ async function start() {
     button.addEventListener('pointerdown',event=>{
       if (event.button!==0 || dialogue.active) return;
       event.preventDefault();
+      if(shopActive){moveShop(button.dataset.dir);return;}
       button.setPointerCapture(event.pointerId);
       setInput(event.pointerId,button.dataset.dir);
     });
@@ -178,13 +232,24 @@ async function start() {
   const actionA=document.querySelector('#action-a');
   const actionB=document.querySelector('#action-b');
   actionA.addEventListener('click',()=>{
-    if(dialogue.active)dialogue.advance();
+    if(shopActive)confirmShop();
+    else if(dialogue.active)dialogue.advance();
     else dialogue.open();
   });
   actionB.addEventListener('click',()=>{
-    if(dialogue.active)dialogue.advance();
+    if(shopActive)closeShop();
+    else if(dialogue.active)dialogue.advance();
   });
   addEventListener('keydown',event=>{
+    if(shopActive){
+      const direction=keys[event.key];
+      if(direction){event.preventDefault();if(!event.repeat)moveShop(direction);}
+      else if(['Enter',' '].includes(event.key)){
+        if(event.target?.tagName==='BUTTON')return;
+        event.preventDefault();if(!event.repeat)confirmShop();
+      }else if(event.key==='Escape'||event.key==='Backspace'){event.preventDefault();closeShop();}
+      return;
+    }
     if(dialogue.active){
       // Native button Enter/Space already triggers click; never advance twice.
       if((event.key==='Enter'||event.key===' ') && event.target?.tagName==='BUTTON') return;

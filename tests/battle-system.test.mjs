@@ -4,7 +4,7 @@ import {readFileSync,existsSync} from 'node:fs';
 import {execFileSync} from 'node:child_process';
 import {BATTLE_REQUEST_KEY,FIELD_RETURN_KEY,PLAYER_KEY,ENEMIES,createBattle,
   chooseEnemy,readPlayer,savePlayer,normalizePlayer,DEFAULT_PLAYER,
-  STATUS_V2,levelStats,nextLevelXp,physicalDamage} from '../src/game/battle/rules.mjs';
+  STATUS_V2,levelStats,nextLevelXp,physicalDamage,fieldEncounterZone,chooseFieldEncounter} from '../src/game/battle/rules.mjs';
 
 test('all wild battle enemy sprites are existing approved old-repository assets',()=>{
   const manifest=JSON.parse(readFileSync('assets/manifest.json','utf8'));
@@ -84,10 +84,10 @@ test('battle wins follow B-formula, persist resources and level, and handle a tw
 
   const pair=createBattle('tanuki',DEFAULT_PLAYER,()=>.5,2);
   assert.equal(pair.state.enemies.length,2);
-  assert.equal(pair.state.enemies[0].hp,8);
+  assert.equal(pair.state.enemies[0].hp,6);
   pair.act('attack:1');
-  assert.equal(pair.state.enemies[0].hp,8,'first target is untouched');
-  assert.equal(pair.state.enemies[1].hp,4,'selected second target takes damage');
+  assert.equal(pair.state.enemies[0].hp,6,'first target is untouched');
+  assert.equal(pair.state.enemies[1].hp,2,'selected second target takes damage');
   assert.equal(pair.act('attack:8').accepted,false,'invalid targets cannot use a turn');
   for(let i=0;i<10&&!pair.state.outcome;i++)pair.act('attack');
   assert.equal(pair.state.outcome,'victory');
@@ -133,6 +133,44 @@ test('defense reduces incoming damage and escape/defeat stop the fight',()=>{
   assert.equal(defeated.act('guard').outcome,'defeat');
   assert.equal(defeated.act('attack').accepted,false);
   assert.equal(normalizePlayer({...DEFAULT_PLAYER,hp:999}).hp,26);
+});
+
+test('the live encounter pool follows the actual Village-to-Tenyo Shrine road',()=>{
+  const terrainSource=readFileSync('data/maps/field/terrain.js','utf8')
+    .replace(/^window\.YK_FIELD_TERRAIN=/,'').replace(/;\s*$/,'');
+  const terrain=JSON.parse(terrainSource);
+  const roads=terrain.referenceComposition.roads.map(route=>route.map(([x,y])=>[x*32+16,y*32+16]));
+  const world={roads},road=roads[0];
+  const point=([x,y])=>({x,y});
+  assert.equal(fieldEncounterZone(point(road[0]),world),'village-outskirts');
+  assert.equal(fieldEncounterZone(point(road[10]),world),'village-outskirts');
+  assert.equal(fieldEncounterZone(point(road[road.length-4]),world),'shrine-approach');
+  assert.equal(fieldEncounterZone({x:2560,y:2560},world),'village-outskirts');
+  assert.deepEqual(chooseFieldEncounter(point(road[0]),world,()=>.10),
+    {enemyId:'field-oni',count:1,zone:'village-outskirts'});
+  assert.deepEqual(chooseFieldEncounter(point(road[0]),world,()=>.90),
+    {enemyId:'tanuki',count:2,zone:'village-outskirts'});
+  assert.deepEqual(chooseFieldEncounter(point(road.at(-1)),world,()=>.45),
+    {enemyId:'onibi',count:1,zone:'shrine-approach'});
+  assert.deepEqual(chooseFieldEncounter(point(road.at(-1)),world,()=>.85),
+    {enemyId:'tanuki',count:2,zone:'shrine-approach'});
+  assert.ok(roads[0].length>30);
+});
+
+test('T0 early encounters are winnable without an immediate heal every battle',()=>{
+  const expected=[['field-oni',1,3,4],['tanuki',2,4,4],['onibi',1,4,6]];
+  for(const [id,count,hits,loss] of expected){
+    const combat=createBattle(id,DEFAULT_PLAYER,()=>.5,count);
+    let rounds=0;
+    while(!combat.state.outcome && rounds<10){combat.act('attack');rounds++;}
+    assert.equal(combat.state.outcome,'victory',id);
+    assert.equal(rounds,hits,id+' attack count');
+    assert.equal(DEFAULT_PLAYER.hp-combat.state.hero.hp,loss,id+' HP loss');
+  }
+  assert.equal(ENEMIES['field-oni'].xp,8);
+  assert.equal(ENEMIES.tanuki.xp*2,8);
+  assert.equal(ENEMIES.onibi.xp,9);
+  assert.equal(nextLevelXp(1),80); // ~9-10 fights for one level.
 });
 
 test('battle is production scene, field encounter and safe return in persistent game shell',()=>{

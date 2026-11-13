@@ -9,6 +9,35 @@ const enemyFigure2=el('enemy-figure-2'),enemyImage2=el('enemy-image-2'),enemyLab
 const hp=el('hp-label'),mp=el('mp-label'),level=el('level-label'),resources=el('resource-label');
 const hpMeter=el('hp-meter'),mpMeter=el('mp-meter'),intro=el('encounter');
 const image=(path)=>new URL(path,root).href;
+// Reduce only existing enemy PNGs to a fixed coarse pixel grid. No AI artwork,
+// replacement asset, or new repo PNG is generated; source files stay unchanged.
+const ENEMY_PIXEL_MAX_SIDE=88;
+const enemyPixelCache=new Map();
+function coarseEnemyImage(src){
+  if(!enemyPixelCache.has(src)){
+    const task=(async()=>{
+      const original=new Image();
+      original.src=src;
+      if(typeof original.decode==='function')await original.decode();
+      else await new Promise((resolve,reject)=>{original.onload=resolve;original.onerror=reject;});
+      const longer=Math.max(original.naturalWidth,original.naturalHeight);
+      if(!longer||longer<=ENEMY_PIXEL_MAX_SIDE)return src;
+      const scale=ENEMY_PIXEL_MAX_SIDE/longer;
+      const canvas=document.createElement('canvas');
+      canvas.width=Math.max(1,Math.round(original.naturalWidth*scale));
+      canvas.height=Math.max(1,Math.round(original.naturalHeight*scale));
+      const ctx=canvas.getContext('2d',{alpha:true});
+      if(!ctx)return src;
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      ctx.imageSmoothingEnabled=true; // smooth only while reducing, not on display
+      ctx.imageSmoothingQuality='high';
+      ctx.drawImage(original,0,0,canvas.width,canvas.height);
+      return canvas.toDataURL('image/png');
+    })().catch(()=>src); // Safari fallback: retain original enemy sprite.
+    enemyPixelCache.set(src,task);
+  }
+  return enemyPixelCache.get(src);
+}
 const posePaths=Object.freeze({
   idle:'assets/characters/hizuki/battle/idle.png',
   attack:'assets/characters/hizuki/battle/attack.png',
@@ -61,7 +90,18 @@ function updateEnemies(){
     figure.setAttribute?.('aria-label',canTarget?e.name+' '+(i+1)+'番を標的に選ぶ':e?.name||'');
     if(!e)continue;
     if(image.dataset.enemyId!==e.id){
-      image.src=new URL(e.asset,root).href;image.alt=e.name;image.dataset.enemyId=e.id;
+      const assetUrl=new URL(e.asset,root).href;
+      image.dataset.enemyId=e.id;
+      image.dataset.enemyPixelated='pending';
+      image.alt=e.name;
+      image.src=assetUrl;
+      coarseEnemyImage(assetUrl).then(pixelSource=>{
+        if(image.dataset.enemyId!==e.id)return;
+        if(pixelSource!==assetUrl){
+          image.src=pixelSource;
+          image.dataset.enemyPixelated='yes';
+        }else image.dataset.enemyPixelated='fallback';
+      });
     }
     label.textContent=e.name+(two?' '+(i+1):'');
     figure.classList.toggle('targeted',mode==='targets'&&alive.indexOf(e)===selected);

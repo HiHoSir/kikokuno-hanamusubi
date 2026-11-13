@@ -188,23 +188,76 @@ test('a direction tap between animation frames still moves one cell', async () =
   assert.equal(scene.dataset.y, '69');
 });
 
-test('landscape iPhone field keeps the hero centered and touch controls out of the terrain', () => {
+test('landscape field crops the real rendered hero and never double-crops in CSS', async () => {
   const html=source(entry);
   assert.match(html, /<main class="field-screen" data-bgm="field">/);
   assert.match(html, /@media \(orientation:landscape\) and \(max-height:560px\)/);
   assert.match(html, /grid-template-rows:minmax\(0,1fr\) 108px/);
-  assert.match(html, /main\.field-screen > \.viewport/);
   assert.match(html, /main\.field-screen #pad\{[\s\S]*?position:relative/);
-  assert.match(html, /main\.field-screen \.viewport canvas\{[\s\S]*?object-position:center 65%/);
-  assert.match(html, /main\.field-screen \.field-weather-scene\{[\s\S]*?top:65%/);
-  // Geometric regression: a 900x390 CSS-pixel iPhone landscape screen,
-  // 108px reserved for controls. The field bitmap is an authored 768px square.
-  const canvasSize=768,viewW=900,viewH=390-108;
-  const zoom=Math.max(viewW/canvasSize,viewH/canvasSize);
-  const visibleHeight=viewH/zoom;
-  const cropTop=(canvasSize-visibleHeight)*.65;
-  const projectedActorFoot=32+1.2*(354+14*1.08);
-  const y=(projectedActorFoot-cropTop)*zoom;
-  assert.ok(y/viewH>.35&&y/viewH<.75, 'hero foot is clipped in landscape: y='+y);
-  assert.ok(108<=390*.29, 'control bar must leave sufficient view height');
+  assert.match(html, /main\.field-screen \.viewport canvas\{[\s\S]*?object-fit:fill/);
+  assert.doesNotMatch(html, /object-position:center 65%/);
+
+  const worldContext=loadField();
+  worldContext.YK_LANDSCAPE.drawQuarter=(_ctx,_map,actor)=>actor.draw(320,354,1.08);
+  globalThis.window=worldContext;
+  const onScreenCalls=[];
+  let width=1536,height=440;
+  const display={width:768,height:768,dataset:{},
+    getBoundingClientRect(){return {width,height};}};
+  const paint=(canvas,calls)=>({
+    canvas,save(){},restore(){},clearRect(){},fillRect(){},
+    translate(){},scale(){},beginPath(){},ellipse(){},fill(){},
+    drawImage(...args){calls.push(args);},
+    set imageSmoothingEnabled(value){this._smoothing=value;}
+  });
+  const displayContext=paint(display,onScreenCalls);
+  let sourceBuffer;
+  globalThis.document={createElement(tag){
+    assert.equal(tag,'canvas');
+    const buffer={width:0,height:0};
+    buffer.getContext=()=>paint(buffer,[]);
+    sourceBuffer=buffer;
+    return buffer;
+  }};
+  try{
+    // The query avoids a cached module instance whose world was constructed
+    // by a different test. Test the actual exported production renderer.
+    const {createFieldRenderer,fieldViewportCrop}=await import('../src/field/runtime.mjs?landscape-camera-regression');
+    const render=createFieldRenderer(displayContext,{});
+    for(const [w,h] of [[1536,440],[900,282],[1179,320]]){
+      width=w;height=h;
+      onScreenCalls.length=0;
+      render({x:1200,y:2256,row:0,column:0},0);
+      const ratio=width/height;
+      const heroFoot=Number(display.dataset.fieldHeroFoot);
+      const crop=fieldViewportCrop(ratio,heroFoot);
+      assert.equal(display.width,768);
+      assert.equal(display.height,Math.round(768/ratio));
+      assert.equal(sourceBuffer.width,768);
+      assert.equal(sourceBuffer.height,768);
+      assert.equal(onScreenCalls.length,1,'a single offscreen canvas is composited onto screen');
+      const [buffer,sx,sy,sw,sh,dx,dy,dw,dh]=onScreenCalls[0];
+      assert.equal(buffer,sourceBuffer);
+      assert.deepEqual([sx,sw,sh,dx,dy,dw,dh],[0,768,crop.height,0,0,768,display.height]);
+      // dataset is an integer diagnostic; the live renderer keeps sub-pixel
+      // precision from its actual projected foot before rounding the label.
+      assert.ok(Math.abs(sy-crop.top)<1,'source crop must track drawn foot precisely');
+      const footFraction=(heroFoot-sy)/sh;
+      assert.ok(footFraction>=.65&&footFraction<=.71,
+        'rendered hero foot must remain within 65–71% of the visible field: '+footFraction);
+      assert.ok(sy>=0&&sy+sh<=768,'crop must remain inside original projection');
+    }
+    // Switching back to portrait restores the original 768-square field;
+    // nothing about its game state or world coordinates is reset.
+    width=390;height=710;
+    onScreenCalls.length=0;
+    render({x:1200,y:2256,row:0,column:0},0);
+    assert.deepEqual([display.width,display.height],[768,768]);
+    assert.equal(display.dataset.fieldHeroFoot!==undefined,true);
+    assert.equal(onScreenCalls.length,1,'portrait continues to draw the hero directly');
+    assert.equal(onScreenCalls[0][0].constructor,Object);
+  }finally{
+    delete globalThis.window;
+    delete globalThis.document;
+  }
 });

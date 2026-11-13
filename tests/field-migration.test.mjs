@@ -187,3 +187,24 @@ test('a direction tap between animation frames still moves one cell', async () =
   frames.shift()(1000);
   assert.equal(scene.dataset.y, '69');
 });
+
+test('landscape iPhone field keeps the hero centered and touch controls out of the terrain', () => {
+  const html=source(entry);
+  assert.match(html, /<main class="field-screen" data-bgm="field">/);
+  assert.match(html, /@media \(orientation:landscape\) and \(max-height:560px\)/);
+  assert.match(html, /grid-template-rows:minmax\(0,1fr\) 108px/);
+  assert.match(html, /main\.field-screen > \.viewport/);
+  assert.match(html, /main\.field-screen #pad\{[\s\S]*?position:relative/);
+  assert.match(html, /main\.field-screen \.viewport canvas\{[\s\S]*?object-position:center 65%/);
+  assert.match(html, /main\.field-screen \.field-weather-scene\{[\s\S]*?top:65%/);
+  // Geometric regression: a 900x390 CSS-pixel iPhone landscape screen,
+  // 108px reserved for controls. The field bitmap is an authored 768px square.
+  const canvasSize=768,viewW=900,viewH=390-108;
+  const zoom=Math.max(viewW/canvasSize,viewH/canvasSize);
+  const visibleHeight=viewH/zoom;
+  const cropTop=(canvasSize-visibleHeight)*.65;
+  const projectedActorFoot=32+1.2*(354+14*1.08);
+  const y=(projectedActorFoot-cropTop)*zoom;
+  assert.ok(y/viewH>.35&&y/viewH<.75, 'hero foot is clipped in landscape: y='+y);
+  assert.ok(108<=390*.29, 'control bar must leave sufficient view height');
+});

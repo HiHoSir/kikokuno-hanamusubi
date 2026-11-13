@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import {readFileSync,existsSync} from 'node:fs';
 import {execFileSync} from 'node:child_process';
 import {BATTLE_REQUEST_KEY,FIELD_RETURN_KEY,PLAYER_KEY,ENEMIES,createBattle,
-  chooseEnemy,readPlayer,savePlayer,normalizePlayer,DEFAULT_PLAYER} from '../src/game/battle/rules.mjs';
+  chooseEnemy,readPlayer,savePlayer,normalizePlayer,DEFAULT_PLAYER,
+  STATUS_V2,levelStats,nextLevelXp,physicalDamage} from '../src/game/battle/rules.mjs';
 
 test('all wild battle enemy sprites are existing approved old-repository assets',()=>{
   const manifest=JSON.parse(readFileSync('assets/manifest.json','utf8'));
@@ -28,11 +29,36 @@ test('all wild battle enemy sprites are existing approved old-repository assets'
   assert.equal(chooseEnemy(16),'onibi');
 });
 
-test('battle wins are earned by turns and persist solo experience, coins and level',()=>{
-  const combat=createBattle('onibi',DEFAULT_PLAYER,()=>0);
+
+test('approved v2 core values match the restored status JSON and battle formula',()=>{
+  const canonical=JSON.parse(readFileSync('data/characters/hizuki-status.json','utf8'));
+  assert.equal(canonical.status,'approved-v2-core');
+  assert.deepEqual(STATUS_V2.base,canonical.level.base);
+  assert.deepEqual(STATUS_V2.growth,canonical.level.perLevel);
+  for(const item of STATUS_V2.equipment){
+    const tier=canonical.tiers.find(t=>t.id===item.id);
+    assert.equal(item.attack,tier.weaponAttack);
+    assert.equal(item.defense,tier.armorDefense);
+  }
+  assert.equal(DEFAULT_PLAYER.maxhp,26);
+  assert.equal(DEFAULT_PLAYER.attack,9);
+  assert.equal(DEFAULT_PLAYER.defense,6);
+  assert.equal(levelStats(18,'T4',0).attack,141);
+  assert.equal(levelStats(18,'T4',1).attack,149);
+  assert.equal(levelStats(18,'T4',1).maxhp,182);
+  assert.equal(levelStats(30,'T6',0).attack,224);
+  assert.equal(levelStats(30,'T6',2).attack,232);
+  assert.equal(physicalDamage(141,30,()=>.5),63);
+  assert.equal(physicalDamage(149,30,()=>.5),67);
+  assert.equal(nextLevelXp(30),7892);
+  assert.equal(nextLevelXp(40),11638);
+});
+
+test('battle wins follow B-formula, persist resources and level, and handle a two-foe victory',()=>{
+  const combat=createBattle('onibi',DEFAULT_PLAYER,()=>.5);
   const {state}=combat;
   let result;
-  for(let i=0;i<5&&!state.outcome;i++){
+  for(let i=0;i<12&&!state.outcome;i++){
     result=combat.act('attack');
     assert.equal(result.accepted,true);
   }
@@ -47,30 +73,47 @@ test('battle wins are earned by turns and persist solo experience, coins and lev
   savePlayer(state.hero,storage);
   assert.deepEqual(readPlayer(storage),state.hero);
   assert.ok(store.has(PLAYER_KEY));
-  const leveling=createBattle('field-oni',{...DEFAULT_PLAYER,xp:38},()=>0);
-  for(let i=0;i<7&&!leveling.state.outcome;i++)leveling.act('attack');
+
+  const leveling=createBattle('field-oni',{...DEFAULT_PLAYER,xp:nextLevelXp(1)-ENEMIES['field-oni'].xp},()=>.5);
+  for(let i=0;i<12&&!leveling.state.outcome;i++)leveling.act('attack');
   assert.equal(leveling.state.outcome,'victory');
   assert.equal(leveling.state.hero.lv,2);
-  assert.ok(leveling.state.hero.maxhp>DEFAULT_PLAYER.maxhp);
+  assert.equal(leveling.state.hero.maxhp,34);
+  assert.equal(leveling.state.hero.hp,34);
+  assert.equal(leveling.state.hero.mp,leveling.state.hero.maxmp);
+
+  const pair=createBattle('tanuki',DEFAULT_PLAYER,()=>.5,2);
+  assert.equal(pair.state.enemies.length,2);
+  assert.equal(pair.state.enemies[0].hp,8);
+  pair.act('attack:1');
+  assert.equal(pair.state.enemies[0].hp,8,'first target is untouched');
+  assert.equal(pair.state.enemies[1].hp,4,'selected second target takes damage');
+  assert.equal(pair.act('attack:8').accepted,false,'invalid targets cannot use a turn');
+  for(let i=0;i<10&&!pair.state.outcome;i++)pair.act('attack');
+  assert.equal(pair.state.outcome,'victory');
+  assert.equal(pair.state.hero.gold,8);
+  assert.equal(pair.state.hero.xp,8);
 });
 
-test('invalid magic or herbs never cost a turn; valid magic and healing consume resources',()=>{
-  const combat=createBattle('field-oni',{...DEFAULT_PLAYER,mp:0,potions:0},()=>0);
-  assert.equal(combat.act('bloom').accepted,false);
-  assert.equal(combat.act('heal').accepted,false);
-  assert.equal(combat.act('herb').accepted,false);
-  assert.equal(combat.state.turn,1);
-  assert.equal(combat.state.hero.hp,DEFAULT_PLAYER.hp);
-  const caster=createBattle('field-oni',{...DEFAULT_PLAYER,hp:20,mp:12},()=>0);
-  const startHp=caster.state.enemy.hp;
+test('invalid magic/herbs cost no turn; provisional 糸遊 and つむぎ follow their candidates',()=>{
+  const novice=createBattle('field-oni',{...DEFAULT_PLAYER,mp:0,potions:0},()=>.5);
+  assert.equal(novice.act('bloom').accepted,false);
+  assert.equal(novice.act('heal').accepted,false);
+  assert.equal(novice.act('herb').accepted,false);
+  assert.equal(novice.state.turn,1);
+  assert.equal(novice.state.hero.hp,DEFAULT_PLAYER.hp);
+  const caster=createBattle('field-oni',{...DEFAULT_PLAYER,lv:3,hp:30,mp:12},()=>.5);
   assert.equal(caster.act('bloom').accepted,true);
-  assert.equal(caster.state.hero.mp,8);
-  assert.ok(caster.state.enemy.hp<startHp);
-  assert.equal(caster.act('heal').accepted,true);
-  assert.equal(caster.state.hero.mp,5);
-  assert.equal(caster.act('herb').accepted,true);
-  assert.equal(caster.state.hero.potions,2);
-  assert.ok(caster.state.hero.hp>0&&caster.state.hero.hp<=caster.state.hero.maxhp);
+  assert.equal(caster.state.outcome,'victory');
+  assert.equal(caster.state.hero.mp,9);
+  assert.equal(caster.state.enemy.hp,0);
+  const healer=createBattle('field-oni',{...DEFAULT_PLAYER,hp:10,mp:12},()=>.5);
+  assert.equal(healer.act('heal').accepted,true);
+  assert.equal(healer.state.hero.mp,7);
+  assert.ok(healer.state.hero.hp>10);
+  assert.equal(healer.act('herb').accepted,true);
+  assert.equal(healer.state.hero.potions,2);
+  assert.ok(healer.state.hero.hp>0&&healer.state.hero.hp<=healer.state.hero.maxhp);
 });
 
 test('defense reduces incoming damage and escape/defeat stop the fight',()=>{
@@ -89,7 +132,7 @@ test('defense reduces incoming damage and escape/defeat stop the fight',()=>{
   const defeated=createBattle('field-oni',{...DEFAULT_PLAYER,hp:1},()=>0);
   assert.equal(defeated.act('guard').outcome,'defeat');
   assert.equal(defeated.act('attack').accepted,false);
-  assert.equal(normalizePlayer({maxhp:5,hp:999}).hp,5);
+  assert.equal(normalizePlayer({...DEFAULT_PLAYER,hp:999}).hp,26);
 });
 
 test('battle is production scene, field encounter and safe return in persistent game shell',()=>{
@@ -148,7 +191,7 @@ test('production battle module evaluates, paints enemy/status and accepts an att
     await import('./src/game/battle/walk.mjs');
     const node=id=>nodes.get(id);
     if(node('enemy-label').textContent!=='野の小鬼')throw Error('approved enemy did not load');
-    if(node('hp-label').textContent!=='48 / 48')throw Error('hero status was not rendered');
+    if(node('hp-label').textContent!=='26 / 26')throw Error('hero status was not rendered');
     if(node('command-list').children.length!==5)throw Error('battle commands were not created');
     node('command-list').children[0].listeners.click();
     if(!data.has('kikokuno-hanamusubi-battle-player'))throw Error('battle turn was not saved');

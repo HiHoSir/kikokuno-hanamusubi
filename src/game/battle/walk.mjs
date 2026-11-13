@@ -73,7 +73,7 @@ function updateStatus(){
   level.textContent=state.hero.lv+'段';
   hpMeter.style.width=(state.hero.hp/state.hero.maxhp*100)+'%';
   mpMeter.style.width=(state.hero.maxmp?state.hero.mp/state.hero.maxmp*100:0)+'%';
-  resources.textContent='薬草 '+state.hero.potions+'　銭 '+state.hero.gold;
+  resources.textContent='薬草 '+state.hero.potions+'　両 '+state.hero.gold;
   updateEnemies();
 }
 function announce(text){message.textContent=text;}

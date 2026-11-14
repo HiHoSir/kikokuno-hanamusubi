@@ -34,11 +34,10 @@ test('field profiling is opt-in and does not alter the rendered world or state',
  assert.match(browser,/ArrowRight/);
 });
 
-test('perspective UV painting uses compact 16px seamless padding with safe fallback',()=>{
+test('flat terrain is rendered with one UV quad; slopes and shores retain fine strips',()=>{
  const view=readFileSync('src/field/elevation-view.js','utf8');
- assert.match(view,/const compact=new WeakMap\(\),pad=16/);
- assert.match(view,/surface\.width=im\.width\+pad\*2/);
- assert.match(view,/if\(inside\)c\.drawImage\(compactPadding\(im\),-pad,-pad\)/);
- assert.match(view,/else c\.drawImage\(repeatPadding\(im\),-im\.width,-im\.height\)/);
- assert.doesNotMatch(view,/function repeatingPattern/);
+ assert.match(view,/const band=options\.groundTile && !m\.ramps\?\.\[ty\]\?\.\[tx\] && !E\.outline\(m,tx,ty\)\.cuts\.length && !shoreSides\(m,tx,ty\)\.length/);
+ assert.match(view,/\?32:options\.groundTile\?\(center\.y<280\?32:16\):8/);
+ assert.match(view,/function repeatPadding\(im\)/);
+ assert.doesNotMatch(view,/function compactPadding|function repeatingPattern/);
 });

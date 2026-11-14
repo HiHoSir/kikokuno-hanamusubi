@@ -56,10 +56,14 @@ export function createTileLayerPrototype(context,map,drawHero,chips,hero){
  let land=null, stripsWidth, stripsHeight, strips=[];
  const waterPatterns=new WeakMap();
  const zoom=1.4;
+ // Use an upper bound only to limit the foot-sorted search. Visibility of
+ // each prop is then tested on its full projected sprite, including its top.
+ const maxSpriteHeight=chips?objects.reduce((max,o)=>Math.max(max,o.height),0):0;
+ const outerScale=chips?landscape.unproject(0,800,{x:0,y:0,foregroundGrowth:true},zoom).scale:0;
  function projectionStrips(width,height){
   if(stripsWidth===width&&stripsHeight===height)return strips;
   stripsWidth=width;stripsHeight=height;strips=[];
-  const view={x:0,y:0,preset:0,centerX:width/2,foregroundEase:!!chips};
+  const view={x:0,y:0,preset:0,centerX:width/2,foregroundGrowth:!!chips};
   for(let sy=136;sy<Math.min(544,height);sy+=4){
    const sh=Math.min(4,height-sy);
    const left=landscape.unproject(0,sy,view,zoom);
@@ -179,7 +183,7 @@ export function createTileLayerPrototype(context,map,drawHero,chips,hero){
  }
  function draw(c,actor,time,viewWidth=c.canvas.width){
   prepare();
-  const height=c.canvas.height,cam={x:actor.x,y:actor.foot,preset:0,centerX:viewWidth/2,foregroundEase:!!chips};
+  const height=c.canvas.height,cam={x:actor.x,y:actor.foot,preset:0,centerX:viewWidth/2,foregroundGrowth:!!chips};
   c.save();c.imageSmoothingEnabled=false;c.clearRect(0,0,viewWidth,height);
   c.fillStyle='#192f3c';c.fillRect(0,0,viewWidth,height);
   // Match the normal Momotaro-style sky, including mirrored panorama sides.
@@ -222,8 +226,8 @@ export function createTileLayerPrototype(context,map,drawHero,chips,hero){
   };
   // Objects are already sorted by their world foot. In the chip renderer
   // height is baked into the land, so this range is exact before projection.
-  const minFoot=chips?landscape.unproject(0,60,cam,zoom).y:-Infinity;
-  const maxFoot=chips?landscape.unproject(0,Math.min(800,height+100),cam,zoom).y:Infinity;
+  const minFoot=chips?landscape.unproject(0,136,cam,zoom).y:-Infinity;
+  const maxFoot=chips?landscape.unproject(0,Math.min(800,height+maxSpriteHeight*outerScale),cam,zoom).y:Infinity;
   let first=0,last=objects.length;
   while(first<last){
    const mid=(first+last)>>1;
@@ -236,9 +240,11 @@ export function createTileLayerPrototype(context,map,drawHero,chips,hero){
    const foot=o.foot??o.y;
    if(!player&&playerFoot<=foot){drawPlayer();player=true;}
    const cx=o.x+o.width/2,p=project(cx,foot,chips?0:o.supportHeight??elevation.height(map,cx,foot));
-   if(!p||p.x< -120||p.x>viewWidth+120||p.y<60||p.y>height+100)continue;
-   if(!landscape.specs[o.kind])continue;
+   if(!p||!landscape.specs[o.kind])continue;
    const w=o.width*p.scale,h=o.height*p.scale,x=p.x-w/2,y=p.y-h;
+   if(chips){
+    if(x+w<=0||x>=viewWidth||y>=height||p.y<=136)continue;
+   }else if(p.x< -120||p.x>viewWidth+120||p.y<60||p.y>height+100)continue;
    const fadeTree=player&&playerPosition&&overlapsHero&&treeKinds.has(o.kind)
     &&overlapsHero(o.kind,x,y,w,h,playerPosition);
    c.globalAlpha=Math.min(1,Math.max(0,(p.y-136)/70))*(fadeTree?treeOverlapAlpha:1);

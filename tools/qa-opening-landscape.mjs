@@ -52,6 +52,25 @@ try{
       snap.screen.bottom>h+eps||!snap.visible)
      issues.push(name+' video clipped or footer outside viewport: '+JSON.stringify(snap));
    await page.screenshot({path:'artifacts/opening-'+name+'.png',fullPage:true});
+   if(name==='iphone-landscape'){
+     const needsTap=await page.evaluate(()=>document.querySelector('#opening-video').paused);
+     if(needsTap){
+       await page.locator('#play-opening').click();
+     }
+     try{
+       await page.waitForFunction(()=>{
+         const v=document.querySelector('#opening-video');
+         return v.videoWidth>0&&v.videoHeight>0&&!v.paused&&v.currentTime>.6;
+       },null,{timeout:15000});
+       await page.screenshot({path:'artifacts/opening-playing-landscape.png',fullPage:true});
+       const intrinsic=await page.evaluate(()=>{
+         const v=document.querySelector('#opening-video');
+         const r=v.getBoundingClientRect();
+         return {width:v.videoWidth,height:v.videoHeight,display:[r.width,r.height],fit:getComputedStyle(v).objectFit};
+       });
+       results.push({name:'actual-playing-frame',intrinsic});
+     }catch(error){issues.push('live MP4 did not render and advance after user gesture: '+error.message);}
+   }
  }
  // Reorient while staying in the same opening document; don't lose the movie element/time.
  await page.evaluate(()=>{window.__movieBefore=document.querySelector('#opening-video');});

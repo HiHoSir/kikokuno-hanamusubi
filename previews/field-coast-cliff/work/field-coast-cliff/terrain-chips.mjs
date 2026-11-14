@@ -1,6 +1,7 @@
 const cell = 32, offset = cell / 2;
 const atlasNames = ['coast-mask','coast-sand-0','coast-sand-1','coast-sand-2',
-  'coast-sand-3','coast-river','coast-rock','coast-shallow','cliff-1','cliff-2','cliff-3'];
+  'coast-sand-3','coast-river','coast-rock','coast-shallow','cliff-1','cliff-2','cliff-3',
+  'cliff-forest-1','cliff-forest-2','cliff-forest-3'];
 const isWater = t => t === 'sea' || t === 'river' || t === undefined;
 
 export async function loadTerrainChips() {
@@ -154,15 +155,15 @@ function cliffContacts(map, paintedCliffs, art) {
     const tx=Math.floor((x-offset)/cell),ty=Math.floor((y-offset)/cell);
     const list=paintedCliffs.get(tx+','+ty);
     if(!list)return false;
-    for(const [drop,index] of list){
-      if(!alpha.has(drop)){
+    for(const [id,index] of list){
+      if(!alpha.has(id)){
         sprite.clearRect(0,0,128,128);
-        sprite.drawImage(art['cliff-'+drop],0,0);
-        alpha.set(drop,sprite.getImageData(0,0,128,128).data);
+        sprite.drawImage(art[id],0,0);
+        alpha.set(id,sprite.getImageData(0,0,128,128).data);
       }
       const u=(index%4)*cell+x-(tx*cell+offset);
       const v=Math.floor(index/4)*cell+y-(ty*cell+offset);
-      if(alpha.get(drop)[(v*128+u)*4+3]===255)return true;
+      if(alpha.get(id)[(v*128+u)*4+3]===255)return true;
     }
     return false;
   }
@@ -255,8 +256,11 @@ export function composeTerrainChips(map,landscape,art,cliffMask) {
     projectedHeights:true,shoreRelief:false,paths:map.paths,textureOrigin:map.textureOrigin});
   ground.drawImage(landscape.groundLayer(paint),0,0);
   const shoreline=[];
-  let waterCells=0,cliffTiles=0;
+  let waterCells=0,cliffTiles=0,forestCliffTiles=0;
   const paintedCliffs=new Map();
+  const forestCells=new Set(map.decorations.filter(o=>o.kind==='newTrees'||o.kind==='sacredTree')
+    .flatMap(o=>o.contactTiles.map(c=>c.join())));
+  const ladderCells=new Set((map.ladders||[]).flatMap(({lower,upper})=>[lower.join(),upper.join()]));
 
   // The four samples are the logical cell centres. Draw each 32px tile on the
   // offset grid so a diagonal shore crosses a whole logical tile corner.
@@ -275,14 +279,20 @@ export function composeTerrainChips(map,landscape,art,cliffMask) {
     const count=mask(local,s=>s.dry);
     if(maximum<=minimum||count===0)continue;
     const px=x*cell+offset,py=y*cell+offset;
+    const corners=[[x,y],[x+1,y],[x+1,y+1],[x,y+1]];
+    const forestEdge=count===15&&corners.some((pos,i)=>
+      forestCells.has(pos.join())||local[i].terrain==='forest')&&
+      corners.every((pos,i)=>!local[i].ramp&&!ladderCells.has(pos.join()));
     let previousCover=0,drop=0;
     const place=()=>{
       if(!previousCover||previousCover===15||!drop)return;
-      chip(ground,art['cliff-'+drop],previousCover,px,py);
-      if(cliffMask)chip(cliffMask,art['cliff-'+drop],previousCover,px,py);
+      const id=(forestEdge?'cliff-forest-':'cliff-')+drop;
+      chip(ground,art[id],previousCover,px,py);
+      if(cliffMask)chip(cliffMask,art[id],previousCover,px,py);
+      if(forestEdge)forestCliffTiles++;
       const key=x+','+y;
       if(!paintedCliffs.has(key))paintedCliffs.set(key,[]);
-      paintedCliffs.get(key).push([drop,previousCover]);
+      paintedCliffs.get(key).push([id,previousCover]);
       cliffTiles++;
     };
     for(let level=minimum+1;level<=maximum;level++){
@@ -333,6 +343,6 @@ export function composeTerrainChips(map,landscape,art,cliffMask) {
     const [x,y]=ladder.lower;
     landscape.drawAsset(ground,'ladder',x*cell+8,y*cell-18,16,29);
   }
-  return {canvas:ground.canvas,coastTiles:shoreline.length-waterCells,cliffTiles,waterCells,
+  return {canvas:ground.canvas,coastTiles:shoreline.length-waterCells,cliffTiles,forestCliffTiles,waterCells,
     buildMs:performance.now()-started,...contacts};
 }

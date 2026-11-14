@@ -31,7 +31,7 @@ export function villageArrival(){return placeArrival('village');}
 export async function loadFieldArt() {
   if(!window.__FIELD_COAST_CLIFF_CHIPS&&typeof location!=='undefined'&&
      new URLSearchParams(location.search).get('renderer')==='coast-cliff-chips'){
-    const {loadTerrainChips,placeShoreTrees,composeTerrainChips}=await import('../../work/field-coast-cliff/terrain-chips.mjs');
+    const {loadTerrainChips,placeShoreTrees,composeTerrainChips}=await import('../../work/field-coast-cliff/terrain-chips.mjs?v=forest-cliff-1');
     const chips=await loadTerrainChips();
     const changes=placeShoreTrees(world,chips['coast-mask']);
     window.YK_FIELD_ELEVATION.refreshCollision(world.mapData);

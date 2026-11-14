@@ -4,10 +4,55 @@
 const wet=(map,x,y)=>!map[y]?.[x]||['sea','river'].includes(map[y][x])||map.bridgeWaterCells?.has(x+','+y);
 const canvas=(w,h)=>{const el=document.createElement('canvas');el.width=w;el.height=h;el.getContext('2d').imageSmoothingEnabled=false;return el};
 
-export function createTileLayerPrototype(context,map,drawHero,chips){
+const treeKinds=new Set(['newTrees','sacredTree']);
+const spriteSize=32;
+const treeOverlapAlpha=.5;
+
+function readSpriteAlpha(width,height,draw){
+ const target=canvas(width,height).getContext('2d');
+ draw(target);
+ return target.getImageData(0,0,width,height).data;
+}
+
+function createTreeOcclusion(landscape,hero){
+ const {image,anchor,frame}=hero;
+ const trees=new Map(),frames=new Map();
+ return (kind,x,y,w,h,player)=>{
+  const heroWidth=spriteSize*player.scale;
+  const left=player.x-anchor[0]*player.scale,top=player.y-anchor[1]*player.scale;
+  if(x>=left+heroWidth||x+w<=left||y>=top+heroWidth||y+h<=top)return false;
+  if(!trees.has(kind)){
+   const [width,height]=landscape.specs[kind];
+   const alpha=readSpriteAlpha(width,height,c=>landscape.drawAsset(c,kind,0,0,width,height));
+   trees.set(kind,{width,height,alpha});
+  }
+  const {width,height,alpha}=trees.get(kind);
+  const {row,column}=frame();
+  const key=row*spriteSize+column;
+  if(!frames.has(key)){
+   const pixels=readSpriteAlpha(spriteSize,spriteSize,c=>c.drawImage(image,
+    column*spriteSize,row*spriteSize,spriteSize,spriteSize,0,0,spriteSize,spriteSize));
+   const opaque=[];
+   for(let v=0;v<spriteSize;v++)for(let u=0;u<spriteSize;u++){
+    if(pixels[(v*spriteSize+u)*4+3]>=128)opaque.push([u+.5,v+.5]);
+   }
+   frames.set(key,opaque);
+  }
+  // Compare the current hero frame with the foliage's opaque pixels.
+  // Both alpha masks are cached. Canvas readback happens only on first use.
+  return frames.get(key).some(([u,v])=>{
+   const tx=Math.floor((left+u*player.scale-x)*width/w);
+   const ty=Math.floor((top+v*player.scale-y)*height/h);
+   return tx>=0&&tx<width&&ty>=0&&ty<height&&alpha[(ty*width+tx)*4+3]>=128;
+  });
+ };
+}
+
+export function createTileLayerPrototype(context,map,drawHero,chips,hero){
  const landscape=window.YK_LANDSCAPE,elevation=window.YK_ELEVATION;
  const elevationView=window.YK_ELEVATION_VIEW;
  const objects=landscape.objects(map);
+ const overlapsHero=chips&&hero?createTreeOcclusion(landscape,hero):null;
  let land=null, stripsWidth, stripsHeight, strips=[];
  const waterPatterns=new WeakMap();
  const zoom=1.4;
@@ -171,9 +216,9 @@ export function createTileLayerPrototype(context,map,drawHero,chips){
   // Movement and camera use the cell centre. In the chip scene the visible
   // contact point follows the same near edge as a one-cell object's foot.
   const playerFoot=chips?actor.foot+16:actor.foot;
+  const playerPosition=project(actor.x,playerFoot,chips?0:actor.height??elevation.height(map,actor.x,actor.foot));
   const drawPlayer=()=>{
-   const p=project(actor.x,playerFoot,chips?0:actor.height??elevation.height(map,actor.x,actor.foot));
-   if(p)drawHero(c,p.x,p.y,p.scale);
+   if(playerPosition)drawHero(c,playerPosition.x,playerPosition.y,playerPosition.scale);
   };
   // Objects are already sorted by their world foot. In the chip renderer
   // height is baked into the land, so this range is exact before projection.
@@ -193,8 +238,10 @@ export function createTileLayerPrototype(context,map,drawHero,chips){
    const cx=o.x+o.width/2,p=project(cx,foot,chips?0:o.supportHeight??elevation.height(map,cx,foot));
    if(!p||p.x< -120||p.x>viewWidth+120||p.y<60||p.y>height+100)continue;
    if(!landscape.specs[o.kind])continue;
-   c.globalAlpha=Math.min(1,Math.max(0,(p.y-136)/70));
-   const x=p.x-o.width*p.scale/2,y=p.y-o.height*p.scale,w=o.width*p.scale,h=o.height*p.scale;
+   const w=o.width*p.scale,h=o.height*p.scale,x=p.x-w/2,y=p.y-h;
+   const fadeTree=player&&playerPosition&&overlapsHero&&treeKinds.has(o.kind)
+    &&overlapsHero(o.kind,x,y,w,h,playerPosition);
+   c.globalAlpha=Math.min(1,Math.max(0,(p.y-136)/70))*(fadeTree?treeOverlapAlpha:1);
    if(chips&&o.kind==='waterfall'&&fall)c.drawImage(fall,x,y,w,h);
    else landscape.drawAsset(c,o.kind,x,y,w,h);
    c.globalAlpha=1;

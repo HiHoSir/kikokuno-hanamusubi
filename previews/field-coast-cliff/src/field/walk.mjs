@@ -1,4 +1,4 @@
-import {contact, createFieldRenderer, fieldStep, loadFieldArt, villageArrival, placeArrival, world} from './runtime.mjs?v=field-coast-comparison-1';
+import {contact, createFieldRenderer, fieldStep, loadFieldArt, villageArrival, placeArrival, world} from './runtime.mjs?v=field-tree-occlusion-1';
 import {BATTLE_REQUEST_KEY,FIELD_RETURN_KEY,chooseFieldEncounter} from '../game/battle/rules.mjs';
 
 const scene = document.querySelector('#scene');

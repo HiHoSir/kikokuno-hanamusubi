@@ -1,5 +1,5 @@
 import {fieldViewportDimensions} from './viewport.mjs';
-import {createTileLayerPrototype} from './tile-layer-prototype.mjs';
+import {createTileLayerPrototype} from './tile-layer-prototype.mjs?v=field-tree-occlusion-1';
 const {YK_WORLD: world, YK_LANDSCAPE: landscape, YK_AUTOTILE: autotile,
   YK_ELEVATION: elevation, YK_CAMERA: camera, YK_MOVEMENT: movement,
   YK_AREA_TRANSITIONS: transitions, YK_FIELD_ASSETS: assets} = window;
@@ -80,7 +80,9 @@ export function createFieldRenderer(context, hero) {
   const preview=(typeof location!=='undefined'&&new URLSearchParams(location.search).get('renderer')==='tile-layers')||!!window.__FIELD_COAST_CLIFF_CHIPS;
   let trialState={row:0,column:0};
   const trial=preview?createTileLayerPrototype(context,world.mapData,
-    (c,px,py,z)=>drawHero(px,py,z,trialState.row,trialState.column,c,!!window.__FIELD_COAST_CLIFF_CHIPS),window.__FIELD_COAST_CLIFF_CHIPS):null;
+    (c,px,py,z)=>drawHero(px,py,z,trialState.row,trialState.column,c,!!window.__FIELD_COAST_CLIFF_CHIPS),
+    window.__FIELD_COAST_CLIFF_CHIPS,
+    {image:hero,anchor:assets.heroFootAnchorPx,frame:()=>trialState}):null;
   if(preview)window.__FIELD_TILE_LAYER_TRIAL=trial;
   // Profiling is opt-in for reproducible browser QA; gameplay never pays
   // timing/allocation costs or displays a debug overlay.

@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<script src="../navigation/entry.js" data-entry="game"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="鬼哭の花結び">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="../app.webmanifest">
+<meta name="theme-color" content="#19251e">
+<title>鬼灯村｜鬼哭の花結び</title>
+<style>
+:root{color-scheme:dark;background:#19251e;color:#f7efdb;font:16px system-ui,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;overscroll-behavior:none}
+main{width:min(100%,880px);height:100vh;height:100dvh;margin:auto;padding:max(8px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));display:grid;grid-template-rows:minmax(0,1fr) auto;gap:8px}
+header{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0}
+h1{font-size:17px;line-height:1.25;margin:0}
+#status{-webkit-user-select:none;user-select:none;font-size:12px;color:#dbdec6;text-align:right;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.viewport{position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;border:1px solid #73785c;border-radius:8px;background:#243322}
+canvas{display:block;image-rendering:pixelated;touch-action:none}
+.controls{display:flex;align-items:center;justify-content:center;gap:8px}
+.dpad{display:grid;grid-template-columns:repeat(3,47px);grid-template-rows:repeat(2,42px);gap:3px}
+button{border:1px solid #777d62;border-radius:8px;background:#314337;color:inherit;font:inherit;min-height:40px;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;cursor:pointer}
+button:active,button.held,button[aria-pressed=true]{background:#e8cc8b;color:#272d22}
+.dpad button{font-size:19px}
+[data-dir=up]{grid-column:2}
+[data-dir=left]{grid-column:1;grid-row:2}
+[data-dir=down]{grid-column:2;grid-row:2}
+[data-dir=right]{grid-column:3;grid-row:2}
+
+
+#load{position:absolute;inset:0;display:grid;place-items:center;margin:0;background:#243322;text-align:center;padding:10px}
+#load[hidden]{display:none}
+@media(orientation:landscape) and (max-height:520px){
+ main{grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto minmax(0,1fr)}
+ header{grid-column:1/-1}
+ .controls{flex-direction:column;justify-content:center}
+}
+.screen-reader{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+.village-hud{position:absolute;z-index:2;top:8px;left:8px;max-width:min(80%,340px);padding:7px 11px;border:1px solid #81785c;border-radius:5px;background:rgba(18,25,20,.83);display:grid;gap:3px;pointer-events:none;font-size:12px}
+.village-hud span{font-weight:bold;color:#e8cc8b}
+.village-hud #objective{margin:0;font-size:12px;line-height:1.4;color:#f1ead9}
+</style>
+<link rel="stylesheet" href="./dialogue.css?v=dotgothic16">
+<link rel="stylesheet" href="../ui/controls.css?v=dotgothic16">
+<script type="module" src="../ui/selection-guard.mjs"></script>
+<link rel="stylesheet" href="../audio/audio.css">
+<script type="module" src="../audio/boot.mjs"></script>
+</head>
+<body>
+<main data-bgm="village">
+<h1 class="screen-reader">鬼灯村</h1>
+<section class="viewport" aria-label="鬼灯村">
+<div class="village-hud"><span>鬼灯村</span><output id="status" aria-live="polite">村の中</output><p id="objective" aria-live="polite">里長の話を聞こう</p></div>
+<canvas id="scene"></canvas><p id="load">鬼灯村を読み込んでいます</p>
+<button id="talk" type="button" hidden>話す</button>
+<section id="dialogue" aria-labelledby="speaker" hidden>
+  <div class="dialog-window" role="dialog" aria-modal="false">
+    <strong id="speaker"></strong>
+    <p id="line"></p>
+    <button id="next" type="button" aria-label="次のセリフへ">▼</button>
+  </div>
+</section>
+</section>
+<section id="pad" class="controls" aria-label="ゲーム操作">
+  <div class="dpad" aria-label="十字キー・4方向移動" role="group">
+    <button id="up" type="button" data-dir="up" aria-label="上">▲</button>
+    <button id="left" type="button" data-dir="left" aria-label="左">◀</button>
+    <button id="right" type="button" data-dir="right" aria-label="右">▶</button>
+    <button id="down" type="button" data-dir="down" aria-label="下">▼</button>
+  </div>
+  <button id="action-b" class="round sub" type="button" aria-label="B 戻る">B<small>戻る</small></button>
+  <button id="action-a" class="round main" type="button" aria-label="A 決定・話す">A<small>決定</small></button>
+</section>
+<button id="sound-toggle" type="button" aria-label="サウンドを再生" aria-pressed="false">♪ 再生</button>
+</main>
+<script type="module" src="./walk.mjs?v=fb40c1b-20261112-village-speed-288-armory-signs-1"></script>
+</body>
+</html>

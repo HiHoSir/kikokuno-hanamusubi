@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>鬼哭の花結び｜フィールド描画比較</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#172226;color:#f4ebd9;font:14px system-ui,sans-serif}
+main{height:100dvh;display:grid;grid-template-rows:auto minmax(0,1fr)}
+.toolbar{display:flex;align-items:center;gap:8px;padding:5px max(8px,env(safe-area-inset-right)) 5px max(8px,env(safe-area-inset-left));background:#192729;border-bottom:1px solid #59604b}
+.modes{display:flex;gap:4px}
+button,select{min-height:44px;border:1px solid #8a8f71;border-radius:5px;background:#263636;color:inherit;font:600 13px system-ui,sans-serif;padding:0 9px;white-space:nowrap}
+button[aria-pressed=true]{background:#d6bd78;color:#202619;border-color:#d6bd78}
+button:disabled,select:disabled{opacity:.55}
+output{margin-inline-start:auto;text-align:right;font-variant-numeric:tabular-nums;line-height:1.25}
+output span{display:block}
+iframe{display:block;border:0;width:100%;height:100%;background:#102635}
+#rotate{display:none;position:fixed;inset:0;place-content:center;text-align:center;padding:2rem;background:#192729;font-size:18px}
+@media (orientation:portrait){#rotate{display:grid}}
+@media (max-width:560px){button,select{padding-inline:5px;font-size:12px}.toolbar{gap:4px}output{font-size:11px}}
+</style>
+</head>
+<body>
+<main>
+<div class="toolbar" aria-label="フィールド描画比較">
+  <div class="modes" role="group" aria-label="描画方式">
+    <button id="current" aria-pressed="false" disabled>従来版</button>
+    <button id="tiles" aria-pressed="true" disabled>海岸・崖チップ版</button>
+  </div>
+  <select id="location" aria-label="確認地点" disabled>
+    <option value="">確認地点へ移動</option>
+    <option value="37,71,0">鬼灯村の水際</option>
+    <option value="37,43,1">川沿いの山裾</option>
+    <option value="40,8,1">九尾の祠への参道</option>
+  </select>
+  <output id="info"><span id="position">読み込み中</span><span id="timing"></span></output>
+</div>
+<iframe id="game" title="鬼哭の花結び フィールド比較" allow="autoplay"></iframe>
+</main>
+<div id="rotate">横画面に回転して比較してください</div>
+<script>
+(()=>{
+  const frame=document.querySelector('#game');
+  const position=document.querySelector('#position'),timing=document.querySelector('#timing');
+  const current=document.querySelector('#current'),tiles=document.querySelector('#tiles');
+  const locations=document.querySelector('#location');
+  const root=new URL('./',location.href);
+  let selection='tiles',host,sceneFrame,lastFieldPosition=null;
+  const scene=()=>sceneFrame?.contentDocument?.querySelector('#scene[data-x][data-y]');
+  function fieldPosition(){
+    const data=scene()?.dataset;
+    return data?[data.x,data.y,data.row||0].join(','):null;
+  }
+  function open(at){
+    const target=new URL('src/field/',root);
+    target.searchParams.set('from',at?'preview':'village');
+    if(at)target.searchParams.set('at',at);
+    try{
+      host.setFieldRenderer(selection==='tiles'?'coast-cliff-chips':null);
+      host.navigate(target);
+      position.textContent='読み込み中';
+      timing.textContent='';
+    }catch(error){
+      position.textContent=error.message;
+    }
+  }
+  function select(mode){
+    if(mode===selection)return;
+    const at=fieldPosition()??lastFieldPosition;
+    selection=mode;
+    current.setAttribute('aria-pressed',String(mode==='current'));
+    tiles.setAttribute('aria-pressed',String(mode==='tiles'));
+    open(at);
+  }
+  function update(){
+    const field=scene();
+    if(!field){
+      const loading=sceneFrame?.contentDocument?.querySelector('#load:not([hidden])');
+      if(loading)position.textContent=loading.textContent.includes('読み込めません')
+        ?'フィールドを読み込めませんでした':'フィールドを準備中';
+      else if(sceneFrame?.contentWindow?.location.pathname.includes('/battle/'))
+        position.textContent='戦闘中';
+      else position.textContent='フィールド外';
+      timing.textContent='';
+      return;
+    }
+    lastFieldPosition=fieldPosition();
+    position.textContent='マス '+field.dataset.x+', '+field.dataset.y;
+    const profile=sceneFrame.contentWindow.__FIELD_RENDER_PROFILE;
+    const samples=profile?.samples.slice(-30);
+    if(samples?.length>1){
+      // The first draw includes one-time asset preparation.
+      if(profile.frames<=30)samples.shift();
+      samples.sort((a,b)=>a-b);
+      const middle=samples.length>>1;
+      const ms=samples.length%2?samples[middle]:(samples[middle-1]+samples[middle])/2;
+      timing.textContent=ms.toFixed(1)+' ms／描画';
+    }
+  }
+  current.addEventListener('click',()=>select('current'));
+  tiles.addEventListener('click',()=>select('tiles'));
+  locations.addEventListener('change',()=>{
+    if(locations.value)open(locations.value);
+    locations.selectedIndex=0;
+  });
+  const shellUrl=new URL('src/game/?field-renderer-preview=1',root);
+  frame.addEventListener('load',()=>{
+    host=frame.contentWindow.KIKOKU_GAME;
+    if(!host){position.textContent='ゲームを読み込めませんでした';return;}
+    sceneFrame=frame.contentDocument.querySelector('#game-scene');
+    current.disabled=tiles.disabled=locations.disabled=false;
+    sceneFrame.addEventListener('load',update);
+    open(null);
+    setInterval(update,250);
+  },{once:true});
+  try{
+    sessionStorage.setItem('kikokuno-hanamusubi-field-comparison-next-entry',JSON.stringify({
+      route:shellUrl.pathname+shellUrl.search,expiresAt:Date.now()+120000
+    }));
+    frame.src=shellUrl.href;
+  }catch{
+    position.textContent='Safariでページを開いてください';
+  }
+})();
+</script>
+</body>
+</html>

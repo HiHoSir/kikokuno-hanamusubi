@@ -1,0 +1,105 @@
+{
+  "schemaVersion": 1,
+  "characterId": "hizuki",
+  "movementGridPx": 32,
+  "defaultForArea": {
+    "field": "sd",
+    "village": "4dir-80x112"
+  },
+  "variants": {
+    "sd": {
+      "assetId": "hizuki-walk-sd",
+      "path": "assets/characters/hizuki/walk-sd-32.png",
+      "sourceOriginalPath": "hizuki-field-walk-32.png",
+      "gitBlobSha": "e044a0a70e44b0cd682ddc2b39c779b0e60ba777",
+      "editorPath": "source-assets/characters/hizuki/walk-sd-editor.json",
+      "editorGitBlobSha": "96edaf10aec0edc89c13d52f2387f02a78161180",
+      "atlasPx": [
+        96,
+        128
+      ],
+      "framePx": [
+        32,
+        32
+      ],
+      "rows": [
+        "front",
+        "back",
+        "right",
+        "left"
+      ],
+      "columns": [
+        "idle",
+        "stepA",
+        "stepB"
+      ],
+      "runtimeFrameToColumn": [
+        1,
+        0,
+        2
+      ],
+      "editorRowOrder": [
+        "front",
+        "back",
+        "left",
+        "right"
+      ],
+      "footAnchorPx": [
+        16,
+        30
+      ],
+      "neutralVisibleHeightPxByRow": [
+        24,
+        24,
+        23,
+        23
+      ]
+    },
+    "4dir-80x112": {
+      "assetId": "hizuki-walk-4dir-80x112",
+      "path": "assets/characters/hizuki/walk-4dir-80x112.png",
+      "sourceOriginalPath": "青髪と赤衣装の12フレーム歩行スプライト.png",
+      "gitBlobSha": "fb40c1b034c744077a928362bbd4aa6da84104ab",
+      "atlasPx": [
+        240,
+        448
+      ],
+      "framePx": [
+        80,
+        112
+      ],
+      "rows": [
+        "front",
+        "back",
+        "right",
+        "left"
+      ],
+      "columns": [
+        "idle",
+        "stepA",
+        "stepB"
+      ],
+      "runtimeFrameToColumn": [
+        1,
+        0,
+        2
+      ],
+      "footAnchorPx": [
+        40,
+        106
+      ],
+      "neutralVisibleHeightPxByRow": [
+        87,
+        87,
+        86,
+        88
+      ],
+      "nominalRenderedVisibleHeightPx": 44,
+      "legacyRuntimeNote": "Foot y=106 is the drawing origin one past last opaque y=105, not a 32px collision anchor; rendered size is independent of the 32px movement grid."
+    }
+  },
+  "sourceRepository": "HiHoSir/yaksha-hanamusubi",
+  "sourceCommit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+  "runtimeIntegration": "FIELD",
+  "remark": "The field renderer loads the SD atlas from its registered path. The 80×112 atlas is the village default in this specification."
+}

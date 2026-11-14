@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <script src="./navigation/entry.js" data-entry="shell"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="鬼哭の花結び">
+  <meta name="theme-color" content="#07101e">
+  <link rel="manifest" href="./app.webmanifest">
+  <link rel="stylesheet" href="./audio/audio.css">
+  <link rel="stylesheet" href="./ui/landscape-only.css?v=1">
+  <script type="module" src="./ui/landscape-only.mjs?v=1"></script>
+  <link rel="stylesheet" href="./ui/field-menu.css?v=gamepad-1">
+  <title>鬼哭の花結び｜本編</title>
+  <style>
+    html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#07101e;overscroll-behavior:none}
+    body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+    #game-shell{position:fixed;inset:0;width:100%;height:100vh;height:100dvh;overflow:hidden;background:#07101e}
+    #game-scene{display:block;width:100%;height:100%;border:0;background:#07101e;touch-action:manipulation}
+    #scene-transition{position:absolute;inset:0;z-index:8;background:#07101e;pointer-events:none}
+    #scene-transition[hidden]{display:none}
+    #sound-toggle{z-index:50}
+  </style>
+  <script type="module" src="./navigation/game-shell.mjs?v=field-coast-comparison-1"></script>
+  <script type="module" src="./ui/field-menu.mjs?v=gamepad-field-pause-1"></script>
+</head>
+<body>
+  <main id="game-shell">
+    <iframe id="game-scene" title="鬼哭の花結び ゲーム画面" allow="autoplay" loading="eager"></iframe>
+    <div id="scene-transition" aria-hidden="true"></div>
+  </main>
+  <button id="field-menu-toggle" type="button" aria-haspopup="dialog" aria-controls="field-menu-backdrop" aria-expanded="false" hidden>メニュー</button>
+  <div id="field-menu-backdrop" hidden>
+    <section id="field-menu-window" role="dialog" aria-modal="true" aria-labelledby="field-menu-heading">
+      <header><strong id="field-menu-heading">緋月の旅支度</strong><button id="field-menu-close" type="button" aria-label="閉じる">×</button></header>
+      <p id="field-menu-summary"></p>
+      <div class="field-menu-grid"><nav id="field-menu-commands" aria-label="コマンド"></nav><section id="field-menu-detail"></section></div>
+      <p id="field-menu-message" role="status" aria-live="polite"></p>
+    </section>
+    <div id="field-menu-controller" role="group" aria-label="コマンド操作">
+      <div id="field-menu-dpad" role="group" aria-label="選択方向">
+        <button type="button" data-menu-dir="up" aria-label="上">▲</button>
+        <button type="button" data-menu-dir="left" aria-label="左">◀</button>
+        <button type="button" data-menu-dir="right" aria-label="右">▶</button>
+        <button type="button" data-menu-dir="down" aria-label="下">▼</button>
+      </div>
+      <button id="field-menu-action-b" type="button" aria-label="B 戻る">B</button>
+      <button id="field-menu-action-a" type="button" aria-label="A 決定">A</button>
+    </div>
+  </div>
+  <aside id="landscape-required" class="landscape-required" role="status" aria-live="polite" aria-hidden="true">
+  <span class="landscape-required-icon" aria-hidden="true">▯</span>
+  <strong>横画面でプレイしてください</strong>
+  <p>端末を横向きにすると、そのまま遊べます。</p>
+</aside>
+  <button id="sound-toggle" type="button" aria-label="サウンドを再生" aria-pressed="false">♪ 再生</button>
+</body>
+</html>

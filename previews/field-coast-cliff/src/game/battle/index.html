@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<script src="../navigation/entry.js?v=battle-1" data-entry="game"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#101c22">
+<link rel="manifest" href="../app.webmanifest">
+<title>接敵｜鬼哭の花結び</title>
+<link rel="stylesheet" href="../ui/controls.css?v=dotgothic16">
+<link rel="stylesheet" href="../audio/audio.css">
+<link rel="stylesheet" href="./battle.css?v=onibi-float-1">
+<script type="module" src="../ui/selection-guard.mjs"></script>
+<script type="module" src="../audio/boot.mjs"></script>
+</head>
+<body>
+<main data-bgm="battle" data-battle-terrain="grassland" aria-label="鬼哭の花結びの戦闘">
+<section class="viewport" aria-label="戦闘画面">
+ <div class="battle-backdrop" aria-hidden="true"><div class="moonlight"></div><div class="horizon"></div><div class="earth"></div></div>
+ <div class="field-hud"><h1>接敵</h1><output id="battle-area">花霞野</output></div>
+ <div id="battle-stage" class="battle-stage" aria-label="戦っているキャラクター">
+  <figure id="hero-figure" class="actor hero"><img id="hero-image" src="../../../assets/characters/hizuki/battle/idle.png" alt="後ろ姿の緋月" draggable="false"><span class="impact-effect" aria-hidden="true"></span><figcaption>緋月</figcaption></figure>
+  <figure id="enemy-figure" class="actor enemy" role="button" tabindex="-1" aria-label="敵を選ぶ"><img id="enemy-image" alt="敵の姿" draggable="false"><span class="impact-effect" aria-hidden="true"></span><figcaption id="enemy-label"></figcaption></figure>
+  <figure id="enemy-figure-2" class="actor enemy secondary" role="button" tabindex="-1" aria-label="敵を選ぶ" hidden><img id="enemy-image-2" alt="敵の姿" draggable="false"><span class="impact-effect" aria-hidden="true"></span><figcaption id="enemy-label-2"></figcaption></figure>
+ </div>
+ <section class="battle-message" aria-live="polite" aria-atomic="true"><p id="battle-message">敵が現れた！</p></section>
+ <div class="battle-panels">
+  <section class="battle-window command-window" aria-label="戦闘コマンド">
+   <h2 id="command-title">緋月の行動</h2><div id="command-list" class="command-grid" role="group" aria-label="コマンド選択">
+    <button type="button" data-command="attack">たたかう</button>
+    <button type="button" data-command="magic">術</button>
+    <button type="button" data-command="items">道具</button>
+    <button type="button" data-command="guard">防御</button>
+    <button type="button" data-command="flee">にげる</button>
+   </div>
+  </section>
+  <section class="battle-window status-window" aria-label="緋月の状態">
+   <h2>緋月 <span id="level-label">一段</span></h2>
+   <div class="stat-row"><span>体力</span><strong id="hp-label"></strong></div>
+   <div class="meter"><div id="hp-meter" class="meter-fill health"></div></div>
+   <div class="stat-row"><span>技</span><strong id="mp-label"></strong></div>
+   <div class="meter"><div id="mp-meter" class="meter-fill magic"></div></div>
+   <p class="battle-sub" id="resource-label"></p>
+  </section>
+ </div>
+ <div id="encounter" class="encounter-overlay" aria-label="接敵演出"><strong>接 敵</strong></div>
+</section>
+<section id="pad" class="controls" aria-label="ゲーム操作">
+  <div class="dpad" aria-label="コマンド選択" role="group">
+    <button id="up" type="button" data-dir="up" aria-label="上">▲</button>
+    <button id="left" type="button" data-dir="left" aria-label="左">◀</button>
+    <button id="right" type="button" data-dir="right" aria-label="右">▶</button>
+    <button id="down" type="button" data-dir="down" aria-label="下">▼</button>
+  </div>
+  <button id="action-b" class="round sub" type="button" aria-label="B 戻る">B<small>戻る</small></button>
+  <button id="action-a" class="round main" type="button" aria-label="A 決定">A<small>決定</small></button>
+</section>
+<button id="sound-toggle" type="button" aria-label="サウンドを再生" aria-pressed="false">♪ 再生</button>
+</main>
+<script type="module" src="./walk.mjs?v=approved-onibi-pixel-sprite-1"></script>
+</body>
+</html>

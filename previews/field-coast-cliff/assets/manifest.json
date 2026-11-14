@@ -1,0 +1,2165 @@
+{
+  "schemaVersion": 1,
+  "assets": [
+    {
+      "id": "opening-movie",
+      "type": "other",
+      "path": "assets/prologue/opening.mp4",
+      "status": "approved",
+      "usage": "prologue-video"
+    },
+    {
+      "id": "title-logo",
+      "type": "ui",
+      "path": "assets/ui/title/logo.webp",
+      "status": "approved"
+    },
+    {
+      "id": "title-village",
+      "type": "ui",
+      "path": "assets/ui/title/village.webp",
+      "status": "approved"
+    },
+    {
+      "id": "title-field",
+      "type": "ui",
+      "path": "assets/ui/title/field.webp",
+      "status": "approved"
+    },
+    {
+      "id": "field-water-motion",
+      "type": "effect",
+      "path": "assets/field/effects/water-motion.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/animation/fluid-v1/field-water.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-waterfall-motion",
+      "type": "effect",
+      "path": "assets/field/effects/waterfall-motion.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/animation/fluid-v1/waterfall.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-cloud-overlay",
+      "type": "effect",
+      "path": "assets/field/effects/cloud-overlay.png",
+      "status": "approved",
+      "origin": {
+        "path": "assets/field/objects/horizon.png",
+        "gitBlobSha": "3dd94be0382a85ea67143cf487d34e07117f3de5"
+      },
+      "usage": "field-weather-overlay"
+    },
+    {
+      "id": "field-village",
+      "type": "object",
+      "path": "assets/field/objects/village.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/field-map-objects-v3/village.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-house",
+      "type": "object",
+      "path": "assets/field/objects/house.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/field-map-objects-v3/house.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-torii",
+      "type": "object",
+      "path": "assets/field/objects/torii.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/field-map-objects-v3/torii.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-cave-large",
+      "type": "object",
+      "path": "assets/field/objects/cave-large.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/field-map-objects-v3/cave-large.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-fort",
+      "type": "object",
+      "path": "assets/field/objects/fort.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/field-map-objects-v3/fort.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-pagoda",
+      "type": "object",
+      "path": "assets/field/objects/pagoda.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/field-map-objects-v3/pagoda.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-trees",
+      "type": "object",
+      "path": "assets/field/objects/trees.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/field-map-objects-v3/trees.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-mountain-small",
+      "type": "object",
+      "path": "assets/field/objects/mountain-small.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/field-map-objects-v3/mountain-small.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-mountain-large",
+      "type": "object",
+      "path": "assets/field/objects/mountain-large.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/field-map-objects-v3/mountain-large.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-bridge-ns",
+      "type": "object",
+      "path": "assets/field/objects/bridge-ns.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/quarter-v1/bridgeNS.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-castle",
+      "type": "object",
+      "path": "assets/field/objects/castle.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/field-map-objects-v3/castle.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-sacred-tree",
+      "type": "object",
+      "path": "assets/field/objects/sacred-tree.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/field-map-objects-v3/sacred-tree.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-stone-monument",
+      "type": "object",
+      "path": "assets/field/objects/stone-monument.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/field-map-objects-v3/stone-monument.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-waterfall",
+      "type": "object",
+      "path": "assets/field/objects/waterfall.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/quarter-v1/waterfall.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-horizon",
+      "type": "object",
+      "path": "assets/field/objects/horizon.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/quarter-v1/horizon.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-grass",
+      "type": "map",
+      "path": "assets/field/terrain/grass.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/grass-v1/grass.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-grass-cliff",
+      "type": "map",
+      "path": "assets/field/terrain/grass-cliff.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/cliffs-v1/grass-cliff-32.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-ladder",
+      "type": "object",
+      "path": "assets/field/objects/ladder.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/ladder-v1/wood-ladder-32x96.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-water",
+      "type": "map",
+      "path": "assets/field/terrain/water.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/landscape-v1/water.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-snow",
+      "type": "map",
+      "path": "assets/field/terrain/snow.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/landscape-v1/snow.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-barren",
+      "type": "map",
+      "path": "assets/field/terrain/barren.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/landscape-v1/barren.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-sand",
+      "type": "map",
+      "path": "assets/field/terrain/sand.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/landscape-v1/sand.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-shrine",
+      "type": "object",
+      "path": "assets/field/objects/shrine.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/field-map-objects-v3/shrine.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-lantern",
+      "type": "object",
+      "path": "assets/field/objects/lantern.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/landscape-v2/lantern.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-bridge",
+      "type": "object",
+      "path": "assets/field/objects/bridge.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/landscape-v2/bridge.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-flowers",
+      "type": "object",
+      "path": "assets/field/objects/flowers.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/landscape-v2/flowers.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-wildflowers",
+      "type": "object",
+      "path": "assets/field/objects/wildflowers.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlements/common-v1/wildflowers-4x4.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-road",
+      "type": "map",
+      "path": "assets/field/terrain/road.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/landscape-v3/road.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-town",
+      "type": "object",
+      "path": "assets/field/objects/town.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/places-v1/town.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-hermit",
+      "type": "object",
+      "path": "assets/field/objects/hermit.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/places-v1/hermit.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "field-jizo",
+      "type": "object",
+      "path": "assets/field/objects/jizo.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/places-v1/jizo.png"
+      },
+      "usage": "legacy-field-loader"
+    },
+    {
+      "id": "village-building-inn",
+      "type": "object",
+      "path": "assets/village/objects/building-inn.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/chips/building_inn.png"
+      },
+      "catalogTemplate": "building_inn",
+      "placedCount": 1,
+      "usage": "hozuki-village-layout"
+    },
+    {
+      "id": "village-building-shop",
+      "type": "object",
+      "path": "assets/village/objects/building-shop.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/chips/building_shop_inn.png"
+      },
+      "catalogTemplate": "building_shop",
+      "placedCount": 1,
+      "usage": "hozuki-village-layout"
+    },
+    {
+      "id": "village-building-west-home",
+      "type": "object",
+      "path": "assets/village/objects/building-west-home.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/chips/building_west_home.png"
+      },
+      "catalogTemplate": "building_west_home",
+      "placedCount": 1,
+      "usage": "hozuki-village-layout"
+    },
+    {
+      "id": "village-building-tea",
+      "type": "object",
+      "path": "assets/village/objects/building-tea.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/chips/building_tea.png"
+      },
+      "catalogTemplate": "building_tea",
+      "placedCount": 1,
+      "usage": "hozuki-village-layout"
+    },
+    {
+      "id": "village-building-southwest-home",
+      "type": "object",
+      "path": "assets/village/objects/building-southwest-home.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/chips/building_southwest_home.png"
+      },
+      "catalogTemplate": "building_southwest_home",
+      "placedCount": 1,
+      "usage": "hozuki-village-layout"
+    },
+    {
+      "id": "village-building-south-home",
+      "type": "object",
+      "path": "assets/village/objects/building-south-home.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/chips/building_south_home.png"
+      },
+      "catalogTemplate": "building_south_home",
+      "placedCount": 1,
+      "usage": "hozuki-village-layout"
+    },
+    {
+      "id": "village-tree-broadleaf",
+      "type": "object",
+      "path": "assets/village/objects/tree-broadleaf.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/chips/tree_broadleaf.png"
+      },
+      "catalogTemplate": "tree_broadleaf",
+      "placedCount": 43,
+      "usage": "hozuki-village-layout"
+    },
+    {
+      "id": "village-garden-crop",
+      "type": "map",
+      "path": "assets/village/terrain/garden-crop.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/terrain-v1/farm-source.png"
+      },
+      "catalogTemplate": "garden_crop",
+      "placedCount": 10,
+      "usage": "hozuki-village-layout"
+    },
+    {
+      "id": "village-ground-grass",
+      "type": "map",
+      "path": "assets/village/terrain/ground-grass.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/terrain-v1/grass-source.png"
+      },
+      "catalogTemplate": "ground_grass",
+      "placedCount": 377,
+      "usage": "hozuki-village-layout"
+    },
+    {
+      "id": "village-auto-road",
+      "type": "map",
+      "path": "assets/village/terrain/auto-road.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/terrain-v1/road-47.png"
+      },
+      "catalogTemplate": "auto_road",
+      "placedCount": 67,
+      "usage": "hozuki-village-layout"
+    },
+    {
+      "id": "village-auto-river",
+      "type": "map",
+      "path": "assets/village/terrain/auto-river.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/animation/fluid-v1/river-47.png"
+      },
+      "catalogTemplate": "auto_river",
+      "placedCount": 54,
+      "usage": "hozuki-village-layout"
+    },
+    {
+      "id": "village-flowers-white",
+      "type": "object",
+      "path": "assets/village/objects/flowers-white.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/chips/flowers_white.png"
+      },
+      "catalogTemplate": "flowers_white",
+      "placedCount": 4,
+      "usage": "hozuki-village-layout"
+    },
+    {
+      "id": "village-flowers-orange",
+      "type": "object",
+      "path": "assets/village/objects/flowers-orange.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/chips/flowers_orange.png"
+      },
+      "catalogTemplate": "flowers_orange",
+      "placedCount": 14,
+      "usage": "hozuki-village-layout"
+    },
+    {
+      "id": "village-crate",
+      "type": "object",
+      "path": "assets/village/objects/crate.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/chips/crate.png"
+      },
+      "catalogTemplate": "crate",
+      "placedCount": 3,
+      "usage": "hozuki-village-layout"
+    },
+    {
+      "id": "village-pot",
+      "type": "object",
+      "path": "assets/village/objects/pot.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/chips/pot.png"
+      },
+      "catalogTemplate": "pot",
+      "placedCount": 2,
+      "usage": "hozuki-village-layout"
+    },
+    {
+      "id": "village-well",
+      "type": "object",
+      "path": "assets/village/objects/well.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/chips/well.png"
+      },
+      "catalogTemplate": "well",
+      "placedCount": 2,
+      "usage": "hozuki-village-layout"
+    },
+    {
+      "id": "village-rocks",
+      "type": "object",
+      "path": "assets/village/objects/rocks.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/chips/rocks.png"
+      },
+      "catalogTemplate": "rocks",
+      "placedCount": 3,
+      "usage": "hozuki-village-layout"
+    },
+    {
+      "id": "village-grass-tuft",
+      "type": "map",
+      "path": "assets/village/terrain/grass-tuft.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/chips/grass_tuft.png"
+      },
+      "catalogTemplate": "grass_tuft",
+      "placedCount": 5,
+      "usage": "hozuki-village-layout"
+    },
+    {
+      "id": "village-shrub",
+      "type": "object",
+      "path": "assets/village/objects/shrub.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/chips/shrub.png"
+      },
+      "catalogTemplate": "shrub",
+      "placedCount": 21,
+      "usage": "hozuki-village-layout"
+    },
+    {
+      "id": "village-auto-bridge",
+      "type": "map",
+      "path": "assets/village/terrain/auto-bridge.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/terrain-v1/bridge-v2-17.png"
+      },
+      "catalogTemplate": "auto_bridge",
+      "placedCount": 1,
+      "usage": "hozuki-village-layout"
+    },
+    {
+      "id": "village-tree-conifer",
+      "type": "object",
+      "path": "assets/village/objects/tree-conifer.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/chips/tree_conifer.png"
+      },
+      "catalogTemplate": "tree_conifer",
+      "placedCount": 13,
+      "usage": "hozuki-village-layout"
+    },
+    {
+      "id": "village-decor-pebbles",
+      "type": "map",
+      "path": "assets/village/terrain/decor-pebbles.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/pack-v1/pebbles.png"
+      },
+      "catalogTemplate": "decor_pebbles",
+      "placedCount": 1,
+      "usage": "hozuki-village-layout"
+    },
+    {
+      "id": "village-auto-fence",
+      "type": "map",
+      "path": "assets/village/terrain/auto-fence.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/pack-v1/fence-16.png"
+      },
+      "catalogTemplate": "auto_fence",
+      "placedCount": 12,
+      "usage": "hozuki-village-layout"
+    },
+    {
+      "id": "village-barrel",
+      "type": "object",
+      "path": "assets/village/objects/barrel.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/pack-v1/barrel.png"
+      },
+      "catalogTemplate": "barrel",
+      "placedCount": 1,
+      "usage": "hozuki-village-layout"
+    },
+    {
+      "id": "village-stairs-stone",
+      "type": "map",
+      "path": "assets/village/terrain/stairs-stone.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/pack-v1/stairs.png"
+      },
+      "catalogTemplate": "stairs_stone",
+      "placedCount": 1,
+      "usage": "hozuki-village-layout"
+    },
+    {
+      "id": "village-rice-bale",
+      "type": "object",
+      "path": "assets/village/objects/rice-bale.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/pack-v1/rice_bale.png"
+      },
+      "catalogTemplate": "rice_bale",
+      "placedCount": 2,
+      "usage": "hozuki-village-layout"
+    },
+    {
+      "id": "village-building-belltower",
+      "type": "object",
+      "path": "assets/village/objects/building-belltower.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/religious-v1/building_belltower.png"
+      },
+      "catalogTemplate": "building_belltower",
+      "placedCount": 1,
+      "usage": "hozuki-village-layout"
+    },
+    {
+      "id": "village-ground-gravel",
+      "type": "map",
+      "path": "assets/village/terrain/ground-gravel.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/pack-v1/gravel-47.png"
+      },
+      "catalogTemplate": "ground_gravel",
+      "placedCount": 12,
+      "usage": "hozuki-village-layout"
+    },
+    {
+      "id": "village-ground-cobble",
+      "type": "map",
+      "path": "assets/village/terrain/ground-cobble.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/pack-v1/cobble-47.png"
+      },
+      "catalogTemplate": "ground_cobble",
+      "placedCount": 3,
+      "usage": "hozuki-village-layout"
+    },
+    {
+      "id": "village-basket",
+      "type": "object",
+      "path": "assets/village/objects/basket.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/pack-v1/basket.png"
+      },
+      "catalogTemplate": "basket",
+      "placedCount": 4,
+      "usage": "hozuki-village-layout"
+    },
+    {
+      "id": "village-tree-sakura-pale",
+      "type": "object",
+      "path": "assets/village/objects/tree-sakura-pale.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/seasonal-trees-v1/tree_sakura_pale.png"
+      },
+      "catalogTemplate": "tree_sakura_pale",
+      "placedCount": 16,
+      "usage": "hozuki-village-layout"
+    },
+    {
+      "id": "village-ground",
+      "type": "map",
+      "path": "assets/village/ground.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/maps/hozuki-village-v1/ground.png"
+      },
+      "usage": "hozuki-village-ground"
+    },
+    {
+      "id": "hizuki-walk-sd",
+      "type": "character",
+      "path": "assets/characters/hizuki/walk-sd-32.png",
+      "status": "approved",
+      "sourcePath": "source-assets/characters/hizuki/walk-sd-editor.json",
+      "origin": {
+        "path": "hizuki-field-walk-32.png",
+        "libraryFileId": "libfile_ae69516025c08191b2c39619a036d019",
+        "gitBlobSha": "e044a0a70e44b0cd682ddc2b39c779b0e60ba777"
+      },
+      "usage": "field-default"
+    },
+    {
+      "id": "hizuki-walk-4dir-80x112",
+      "type": "character",
+      "path": "assets/characters/hizuki/walk-4dir-80x112.png",
+      "status": "approved",
+      "origin": {
+        "path": "青髪と赤衣装の12フレーム歩行スプライト.png",
+        "sourceSha256": "697fac848e3ed639eee45a7b0ba0380a8ae9cf72d4a7b527728d4890e39cd47e",
+        "gitBlobSha": "fb40c1b034c744077a928362bbd4aa6da84104ab"
+      },
+      "usage": "village;interiors;tenyo-sanctuary"
+    },
+    {
+      "id": "battle-background-grassland",
+      "type": "ui",
+      "path": "assets/battle/backgrounds/grassland.png",
+      "status": "approved",
+      "usage": "battle-background",
+      "terrain": "grassland",
+      "dimensions": {
+        "width": 384,
+        "height": 216
+      },
+      "approvalNote": "Created from the grassland pixel-art image selected for in-game battle background trial; 64-color pixel-sized PNG."
+    },
+    {
+      "id": "hizuki-battle-idle",
+      "type": "character",
+      "path": "assets/characters/hizuki/battle/idle.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/characters/hizuki/hana-20261107/battle/battle-idle-512.png",
+        "gitBlobSha": "62d18d12c3ae7d6d2478d93a766ffb7d0c1d4a3f"
+      },
+      "usage": "battle-hero"
+    },
+    {
+      "id": "hizuki-battle-attack",
+      "type": "character",
+      "path": "assets/characters/hizuki/battle/attack.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/characters/hizuki/hana-20261107/battle/battle-attack-512.png",
+        "gitBlobSha": "0fc9054cb922588ea22d25a55ab437c6c308dd22"
+      },
+      "usage": "battle-hero"
+    },
+    {
+      "id": "hizuki-battle-skill",
+      "type": "character",
+      "path": "assets/characters/hizuki/battle/skill.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/characters/hizuki/hana-20261107/battle/battle-skill-512.png",
+        "gitBlobSha": "043e439ae0909cfa14bce4a05fda0c3c7e6eb1ff"
+      },
+      "usage": "battle-hero"
+    },
+    {
+      "id": "hizuki-battle-hit",
+      "type": "character",
+      "path": "assets/characters/hizuki/battle/hit.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/characters/hizuki/hana-20261107/battle/battle-hit-512.png",
+        "gitBlobSha": "df720210159a9e9fccb479198cf588be0648e555"
+      },
+      "usage": "battle-hero"
+    },
+    {
+      "id": "hizuki-battle-guard",
+      "type": "character",
+      "path": "assets/characters/hizuki/battle/guard.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/characters/hizuki/hana-20261107/battle/battle-guard-512.png",
+        "gitBlobSha": "0bfbdb72c3023b264ca784f6f1abde02d630609c"
+      },
+      "usage": "battle-hero"
+    },
+    {
+      "id": "hizuki-battle-victory",
+      "type": "character",
+      "path": "assets/characters/hizuki/battle/victory.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/characters/hizuki/hana-20261107/battle/battle-victory-512.png",
+        "gitBlobSha": "b0b1c05561ba6bae132ba481938227e7b19b52f6"
+      },
+      "usage": "battle-hero"
+    },
+    {
+      "id": "enemy-field-oni",
+      "type": "character",
+      "path": "assets/enemies/field-oni.png",
+      "status": "approved",
+      "name": "野の小鬼",
+      "origin": {
+        "kind": "generated-single-enemy-sprite",
+        "source": "approved mischievous imp sprite 2026-11-13"
+      },
+      "usage": "battle-enemy",
+      "dimensions": {
+        "width": 128,
+        "height": 128
+      },
+      "approvalNote": "2026-11-13: user approved mischievous, non-villainous oni pixel sprite after visual revision; 128x128 RGBA PNG with limited palette, original preserved in Git history."
+    },
+    {
+      "id": "enemy-tanuki",
+      "type": "character",
+      "path": "assets/enemies/tanuki.png",
+      "status": "approved",
+      "name": "化け狸",
+      "origin": {
+        "kind": "generated-single-enemy-sprite",
+        "source": "approved tanuki_sprite_pixel_candidate_128.png"
+      },
+      "usage": "battle-enemy",
+      "dimensions": {
+        "width": 128,
+        "height": 128
+      },
+      "approvalNote": "2026-11-13: user approved previously generated standalone 128x128 transparent pixel art; replaces original at identical stable path, recoverable via Git history."
+    },
+    {
+      "id": "enemy-onibi",
+      "type": "character",
+      "path": "assets/enemies/onibi.png",
+      "status": "approved",
+      "name": "鬼火",
+      "origin": {
+        "kind": "generated-single-enemy-sprite",
+        "source": "approved blue-flame onibi pixel sprite 2026-11-13"
+      },
+      "usage": "battle-enemy",
+      "dimensions": {
+        "width": 128,
+        "height": 128
+      },
+      "approvalNote": "2026-11-13: user approved the 128x128 transparent blue-flame onibi sprite with yellow eyes, grin, and floating embers. Replaces existing PNG in place; original remains in Git history."
+    },
+    {
+      "id": "enemy-isoy",
+      "type": "character",
+      "path": "assets/enemies/isoy.png",
+      "status": "approved",
+      "name": "磯妖",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/enemies/redesign-v1/004-isoy/isoy-intact-512.png",
+        "gitBlobSha": "363707b431de540588f7f52000f25b9236264dfb"
+      },
+      "usage": "battle-enemy"
+    },
+    {
+      "id": "enemy-awakurage",
+      "type": "character",
+      "path": "assets/enemies/awakurage.png",
+      "status": "approved",
+      "name": "泡くらげ",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/enemies/redesign-v1/005-awakurage/awakurage-intact-512.png",
+        "gitBlobSha": "d5d6fe72cd7e0850462cec7f9df36a49da2a4b30"
+      },
+      "usage": "battle-enemy"
+    },
+    {
+      "id": "enemy-kodama",
+      "type": "character",
+      "path": "assets/enemies/kodama.png",
+      "status": "approved",
+      "name": "木霊",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/enemies/redesign-v1/006-kodama/kodama-intact-512.png",
+        "gitBlobSha": "397ed4a0b85bfdbb96f2a404545e54b1c7fc56af"
+      },
+      "usage": "battle-enemy"
+    },
+    {
+      "id": "enemy-mayoi-gumo",
+      "type": "character",
+      "path": "assets/enemies/mayoi-gumo.png",
+      "status": "approved",
+      "name": "迷い蜘蛛",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/enemies/redesign-v1/007-mayoi-gumo/mayoi-gumo-intact-512.png",
+        "gitBlobSha": "c4fa5edc4cf9943c7703c3be7ff1cf66939fb26f"
+      },
+      "usage": "battle-enemy"
+    },
+    {
+      "id": "enemy-mizuhebi",
+      "type": "character",
+      "path": "assets/enemies/mizuhebi.png",
+      "status": "approved",
+      "name": "水蛇",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/enemies/redesign-v1/008-mizuhebi/mizuhebi-intact-512.png",
+        "gitBlobSha": "865daf6e1a16d32be388575d47cded0a2bafea90"
+      },
+      "usage": "battle-enemy"
+    },
+    {
+      "id": "enemy-takiwarashi",
+      "type": "character",
+      "path": "assets/enemies/takiwarashi.png",
+      "status": "approved",
+      "name": "滝童",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/enemies/redesign-v1/009-takiwarashi/takiwarashi-intact-512.png",
+        "gitBlobSha": "96ba1c2f19d243257d09669246981a59aa91a171"
+      },
+      "usage": "battle-enemy"
+    },
+    {
+      "id": "enemy-youko",
+      "type": "character",
+      "path": "assets/enemies/youko.png",
+      "status": "approved",
+      "name": "妖狐",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/enemies/redesign-v1/010-youko/youko-intact-512.png",
+        "gitBlobSha": "737fe6c1d326b21f31de69651b27abad85744a32"
+      },
+      "usage": "battle-enemy"
+    },
+    {
+      "id": "enemy-kagekyubi",
+      "type": "character",
+      "path": "assets/enemies/kagekyubi.png",
+      "status": "approved",
+      "name": "影九尾",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/enemies/redesign-v1/011-kagekyubi/kagekyubi-intact-512.png",
+        "gitBlobSha": "b68e670c88f6923a6772b0d3993f091d88cd85db"
+      },
+      "usage": "battle-enemy"
+    },
+    {
+      "id": "chief-walk-4dir-80x112",
+      "type": "character",
+      "path": "assets/characters/npc/chief-walk-4dir-80x112.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "commit": "a5e62b83cf875be37c3560d10c07ee546cd26b72",
+        "path": "docs/characters/hozuki-npc/sprites/npc-chief-walk.png",
+        "gitBlobSha": "e451380c8fd91da9c7102cb67b47d1348ffcc029"
+      },
+      "usage": "hozuki-village-npc"
+    },
+    {
+      "id": "satoko-walk-4dir-80x112",
+      "type": "character",
+      "path": "assets/characters/npc/satoko-walk-4dir-80x112.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "commit": "a5e62b83cf875be37c3560d10c07ee546cd26b72",
+        "path": "docs/characters/hozuki-npc/sprites/npc-satoko-walk.png",
+        "gitBlobSha": "2b258944be5f8f94d42d81a8045ef4a275b45ed3"
+      },
+      "usage": "hozuki-village-npc"
+    },
+    {
+      "id": "osumi-walk-4dir-80x112",
+      "type": "character",
+      "path": "assets/characters/npc/osumi-walk-4dir-80x112.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "commit": "a5e62b83cf875be37c3560d10c07ee546cd26b72",
+        "path": "docs/characters/hozuki-npc/sprites/npc-osumi-walk.png",
+        "gitBlobSha": "9dfec7fd16a270dc8e12c9084dc7f62226c931cb"
+      },
+      "usage": "hozuki-village-npc"
+    },
+    {
+      "id": "shop-clerk-walk-4dir-80x112",
+      "type": "character",
+      "path": "assets/characters/npc/shop-clerk-walk-4dir-80x112.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "commit": "a5e62b83cf875be37c3560d10c07ee546cd26b72",
+        "path": "docs/characters/hozuki-npc/sprites/npc-shop-clerk-walk.png",
+        "gitBlobSha": "664cb123199078be3314774aacdf5d146d191222"
+      },
+      "usage": "hozuki-village-interior-npc"
+    },
+    {
+      "id": "farm-worker-walk-4dir-80x112",
+      "type": "character",
+      "path": "assets/characters/npc/farm-worker-walk-4dir-80x112.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "commit": "a5e62b83cf875be37c3560d10c07ee546cd26b72",
+        "path": "docs/characters/hozuki-npc/sprites/npc-farm-worker-walk.png",
+        "gitBlobSha": "022fa6057a19a69aa38603e44a44b2e497bd876d"
+      },
+      "usage": "hozuki-village-interior-npc"
+    },
+    {
+      "id": "villager-walk-4dir-80x112",
+      "type": "character",
+      "path": "assets/characters/npc/villager-walk-4dir-80x112.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "commit": "a5e62b83cf875be37c3560d10c07ee546cd26b72",
+        "path": "docs/characters/hozuki-npc/sprites/npc-villager-walk.png",
+        "gitBlobSha": "5bf33dd8e55496134cff809ff4059f3a9f27e19f"
+      },
+      "usage": "hozuki-village-interior-npc"
+    },
+    {
+      "id": "elder-walk-4dir-80x112",
+      "type": "character",
+      "path": "assets/characters/npc/elder-walk-4dir-80x112.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "commit": "a5e62b83cf875be37c3560d10c07ee546cd26b72",
+        "path": "docs/characters/hozuki-npc/sprites/npc-elder-walk.png",
+        "gitBlobSha": "efb23065c62f9d9526fd9ffcd8a0ed452fd8c358"
+      },
+      "usage": "hozuki-village-interior-npc"
+    },
+    {
+      "id": "field-forest-crown-64",
+      "type": "object",
+      "path": "assets/field/objects/forest-crown-64.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/forest-crown-v3.png"
+      },
+      "usage": "field-renderer"
+    },
+    {
+      "id": "field-forest-core",
+      "type": "map",
+      "path": "assets/field/terrain/forest-core.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/original-32-v2/forest_core.png"
+      },
+      "usage": "field-renderer"
+    },
+    {
+      "id": "field-forest-corner-bl",
+      "type": "map",
+      "path": "assets/field/terrain/forest-corner-bl.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/original-32-v2/forest_corner_bl.png"
+      },
+      "usage": "field-renderer"
+    },
+    {
+      "id": "field-forest-corner-br",
+      "type": "map",
+      "path": "assets/field/terrain/forest-corner-br.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/original-32-v2/forest_corner_br.png"
+      },
+      "usage": "field-renderer"
+    },
+    {
+      "id": "field-forest-corner-tl",
+      "type": "map",
+      "path": "assets/field/terrain/forest-corner-tl.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/original-32-v2/forest_corner_tl.png"
+      },
+      "usage": "field-renderer"
+    },
+    {
+      "id": "field-forest-corner-tr",
+      "type": "map",
+      "path": "assets/field/terrain/forest-corner-tr.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/original-32-v2/forest_corner_tr.png"
+      },
+      "usage": "field-renderer"
+    },
+    {
+      "id": "field-forest-edge-bottom",
+      "type": "map",
+      "path": "assets/field/terrain/forest-edge-bottom.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/original-32-v2/forest_edge_bottom.png"
+      },
+      "usage": "field-renderer"
+    },
+    {
+      "id": "field-forest-edge-left",
+      "type": "map",
+      "path": "assets/field/terrain/forest-edge-left.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/original-32-v2/forest_edge_left.png"
+      },
+      "usage": "field-renderer"
+    },
+    {
+      "id": "field-forest-edge-right",
+      "type": "map",
+      "path": "assets/field/terrain/forest-edge-right.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/original-32-v2/forest_edge_right.png"
+      },
+      "usage": "field-renderer"
+    },
+    {
+      "id": "field-forest-edge-top",
+      "type": "map",
+      "path": "assets/field/terrain/forest-edge-top.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/original-32-v2/forest_edge_top.png"
+      },
+      "usage": "field-renderer"
+    },
+    {
+      "id": "field-grass-base",
+      "type": "map",
+      "path": "assets/field/terrain/grass-base.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/original-32-v2/grass_base.png"
+      },
+      "usage": "field-renderer"
+    },
+    {
+      "id": "field-cave-entrance-80x64",
+      "type": "object",
+      "path": "assets/field/objects/cave-entrance-80x64.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/places-v1/cave.png"
+      },
+      "usage": "field-renderer"
+    },
+    {
+      "id": "field-torii-64x64",
+      "type": "object",
+      "path": "assets/field/objects/torii-64x64.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/places-v1/torii.png"
+      },
+      "usage": "field-renderer"
+    },
+    {
+      "id": "field-village-112x80",
+      "type": "object",
+      "path": "assets/field/objects/village-112x80.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/terrain/places-v1/village.png"
+      },
+      "usage": "field-renderer"
+    },
+    {
+      "id": "village-interior-furniture",
+      "type": "object",
+      "path": "assets/village/interiors/furniture.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "ref": "gh-pages",
+        "path": "previews/village-interiors/furniture.png"
+      }
+    },
+    {
+      "id": "village-scene-belltower",
+      "type": "map",
+      "path": "assets/village/scene/belltower.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "ref": "gh-pages",
+        "path": "previews/village-walk/map/belltower.png"
+      }
+    },
+    {
+      "id": "village-scene-collision",
+      "type": "map",
+      "path": "assets/village/scene/collision.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "ref": "gh-pages",
+        "path": "previews/village-walk/map/collision.png"
+      }
+    },
+    {
+      "id": "village-scene-ground-decor",
+      "type": "map",
+      "path": "assets/village/scene/ground-decor.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "ref": "gh-pages",
+        "path": "previews/village-walk/map/ground-decor.png"
+      }
+    },
+    {
+      "id": "village-scene-house-thatch",
+      "type": "map",
+      "path": "assets/village/scene/house-thatch.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "ref": "gh-pages",
+        "path": "previews/village-walk/map/house-thatch.png"
+      }
+    },
+    {
+      "id": "village-scene-house-tile",
+      "type": "map",
+      "path": "assets/village/scene/house-tile.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "ref": "gh-pages",
+        "path": "previews/village-walk/map/house-tile.png"
+      }
+    },
+    {
+      "id": "village-scene-inn",
+      "type": "map",
+      "path": "assets/village/scene/inn.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "ref": "gh-pages",
+        "path": "previews/village-walk/map/inn.png"
+      }
+    },
+    {
+      "id": "village-scene-path-soil",
+      "type": "map",
+      "path": "assets/village/scene/path-soil.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "ref": "gh-pages",
+        "path": "previews/village-walk/map/path-soil.png"
+      }
+    },
+    {
+      "id": "village-scene-sprite-08",
+      "type": "map",
+      "path": "assets/village/scene/sprite-08.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "ref": "gh-pages",
+        "path": "previews/village-walk/map/sprite-08.png"
+      }
+    },
+    {
+      "id": "village-scene-sprite-36",
+      "type": "map",
+      "path": "assets/village/scene/sprite-36.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "ref": "gh-pages",
+        "path": "previews/village-walk/map/sprite-36.png"
+      }
+    },
+    {
+      "id": "village-scene-sprite-46",
+      "type": "map",
+      "path": "assets/village/scene/sprite-46.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "ref": "gh-pages",
+        "path": "previews/village-walk/map/sprite-46.png"
+      }
+    },
+    {
+      "id": "village-scene-sprite-53",
+      "type": "map",
+      "path": "assets/village/scene/sprite-53.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "ref": "gh-pages",
+        "path": "previews/village-walk/map/sprite-53.png"
+      }
+    },
+    {
+      "id": "village-scene-sprite-54",
+      "type": "map",
+      "path": "assets/village/scene/sprite-54.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "ref": "gh-pages",
+        "path": "previews/village-walk/map/sprite-54.png"
+      }
+    },
+    {
+      "id": "village-scene-sprite-55",
+      "type": "map",
+      "path": "assets/village/scene/sprite-55.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "ref": "gh-pages",
+        "path": "previews/village-walk/map/sprite-55.png"
+      }
+    },
+    {
+      "id": "village-scene-sprite-56",
+      "type": "map",
+      "path": "assets/village/scene/sprite-56.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "ref": "gh-pages",
+        "path": "previews/village-walk/map/sprite-56.png"
+      }
+    },
+    {
+      "id": "village-scene-sprite-57",
+      "type": "map",
+      "path": "assets/village/scene/sprite-57.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "ref": "gh-pages",
+        "path": "previews/village-walk/map/sprite-57.png"
+      }
+    },
+    {
+      "id": "village-scene-sprite-58",
+      "type": "map",
+      "path": "assets/village/scene/sprite-58.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "ref": "gh-pages",
+        "path": "previews/village-walk/map/sprite-58.png"
+      }
+    },
+    {
+      "id": "village-scene-sprite-60",
+      "type": "map",
+      "path": "assets/village/scene/sprite-60.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "ref": "gh-pages",
+        "path": "previews/village-walk/map/sprite-60.png"
+      }
+    },
+    {
+      "id": "village-scene-teahouse",
+      "type": "map",
+      "path": "assets/village/scene/teahouse.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "ref": "gh-pages",
+        "path": "previews/village-walk/map/teahouse.png"
+      }
+    },
+    {
+      "id": "village-scene-terrain",
+      "type": "map",
+      "path": "assets/village/scene/terrain.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "ref": "gh-pages",
+        "path": "previews/village-walk/map/terrain.png"
+      }
+    },
+    {
+      "id": "bgm-title",
+      "type": "audio",
+      "path": "assets/audio/bgm/title.ogg",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "ref": "main",
+        "path": "review/audio/bgm-pack/title_bgm_v1.ogg"
+      },
+      "usage": "bgm-title"
+    },
+    {
+      "id": "bgm-field",
+      "type": "audio",
+      "path": "assets/audio/bgm/field.ogg",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "ref": "main",
+        "path": "review/audio/bgm-pack/theme_sfc_v10.ogg"
+      },
+      "usage": "bgm-field"
+    },
+    {
+      "id": "bgm-village",
+      "type": "audio",
+      "path": "assets/audio/bgm/village.ogg",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "ref": "main",
+        "path": "review/audio/bgm-pack/mura_bgm_v1.ogg"
+      },
+      "usage": "bgm-village"
+    },
+    {
+      "id": "bgm-dungeon",
+      "type": "audio",
+      "path": "assets/audio/bgm/dungeon.ogg",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "ref": "main",
+        "path": "review/audio/bgm-pack/dungeon_bgm_v1.ogg"
+      },
+      "usage": "bgm-dungeon"
+    },
+    {
+      "id": "bgm-battle",
+      "type": "audio",
+      "path": "assets/audio/bgm/battle.ogg",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "ref": "main",
+        "path": "review/audio/bgm-pack/battle_bgm_v2.ogg"
+      },
+      "usage": "bgm-battle"
+    },
+    {
+      "id": "bgm-prologue-theme",
+      "type": "audio",
+      "path": "assets/audio/bgm/prologue-theme.ogg",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "ref": "main",
+        "path": "review/audio/bgm-pack/theme_sfc_v8rev.ogg"
+      },
+      "usage": "bgm-prologue-theme"
+    },
+    {
+      "id": "se-battle-encounter",
+      "type": "audio",
+      "path": "assets/audio/se/battle-encounter.ogg",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "ref": "main",
+        "path": "review/audio/bgm-pack/battle_se_v2.ogg"
+      },
+      "usage": "se-battle-encounter"
+    },
+    {
+      "id": "tenyo-shirotae",
+      "type": "character",
+      "path": "assets/characters/npc/shirotae-walk-4dir-80x112.png",
+      "status": "approved",
+      "usage": "tenyo-sanctuary-production",
+      "sourceDescription": "Approved in conversation on 2026-11-12; cut into 12 frames from the displayed sprite sheet, nearest-neighbour rescaled, alpha retained, indexed-color PNG; no copyrighted game sprites copied",
+      "frame": [
+        80,
+        112
+      ],
+      "directions": [
+        "down",
+        "up",
+        "right",
+        "left"
+      ],
+      "framesPerDirection": 3,
+      "footAnchor": [
+        40,
+        106
+      ],
+      "gitBlobSha": "5aa9d4af450057d467c61b8b32db2592945bd504"
+    },
+    {
+      "id": "tenyo-guardian",
+      "type": "character",
+      "path": "assets/characters/npc/shrine-guardian-walk-4dir-80x112.png",
+      "status": "approved",
+      "usage": "tenyo-sanctuary-production",
+      "sourceDescription": "Approved in conversation on 2026-11-12; cut into 12 frames from the displayed sprite sheet, nearest-neighbour rescaled, alpha retained, indexed-color PNG; no copyrighted game sprites copied",
+      "frame": [
+        80,
+        112
+      ],
+      "directions": [
+        "down",
+        "up",
+        "right",
+        "left"
+      ],
+      "framesPerDirection": 3,
+      "footAnchor": [
+        40,
+        106
+      ],
+      "gitBlobSha": "b09af3bb30c83dabaa3d74fa5b1686be7dd8952d"
+    },
+    {
+      "id": "tenyo-stepping-stone",
+      "type": "object",
+      "path": "assets/tenyo/stepping-stone.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/pack-v1/stepping_stone.png"
+      },
+      "usage": "tenyo-water-sanctuary-production",
+      "gitBlobSha": "9b92634327cd4978d3ed813e4dd33114f3d604c9"
+    },
+    {
+      "id": "tenyo-tenyo-water-gate",
+      "type": "object",
+      "path": "assets/tenyo/tenyo-water-gate.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/tenyo-gate-v1/tenyo_gate_6x4_v3.png"
+      },
+      "usage": "tenyo-water-sanctuary-production",
+      "gitBlobSha": "aab305c01876c6a7f0c1a5d2ee3fc789ffb3a7ea"
+    },
+    {
+      "id": "tenyo-torii-gate-v2",
+      "type": "object",
+      "path": "assets/tenyo/torii-gate-v2.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/tenyo-gate-v1/torii_gate_v2_4x3.png"
+      },
+      "usage": "tenyo-water-sanctuary-production",
+      "gitBlobSha": "0d3900405a4e0785a2d6b529574ceac2b30b5c44"
+    },
+    {
+      "id": "tenyo-tenyo-stone-lantern",
+      "type": "object",
+      "path": "assets/tenyo/tenyo-stone-lantern.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/tenyo-gate-v1/stone_lantern_1x2.png"
+      },
+      "usage": "tenyo-water-sanctuary-production",
+      "gitBlobSha": "b12adaa9ab2dfcf728a1dcc015a0a2b3e548ca65"
+    },
+    {
+      "id": "tenyo-rock-island-lantern-base",
+      "type": "object",
+      "path": "assets/tenyo/rock-island-lantern-base.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/rock-island-v1/stone-island-96x64.png"
+      },
+      "usage": "tenyo-water-sanctuary-production",
+      "gitBlobSha": "17eb998500f97183b8916ef73d99982a1d142b7b"
+    },
+    {
+      "id": "tenyo-rock-island-lantern-base-mirror",
+      "type": "object",
+      "path": "assets/tenyo/rock-island-lantern-base-mirror.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/rock-island-v1/stone-island-mirror-96x64.png"
+      },
+      "usage": "tenyo-water-sanctuary-production",
+      "gitBlobSha": "ae05d94b57cd214fe0d037852cb2c9f7815f1f9d"
+    },
+    {
+      "id": "tenyo-sanctuary-forest-frame-v3",
+      "type": "object",
+      "path": "assets/tenyo/sanctuary-forest-frame-v3.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/sanctuary-frame-v1/forest-frame.png"
+      },
+      "usage": "tenyo-water-sanctuary-production",
+      "gitBlobSha": "3f4eb4e30ef7ba1cc81d2b811a4ebb1810c9b1d5"
+    },
+    {
+      "id": "tenyo-sanctuary-horizon-v1",
+      "type": "object",
+      "path": "assets/tenyo/sanctuary-horizon-v1.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/sanctuary-horizon-v1/horizon.png"
+      },
+      "usage": "tenyo-water-sanctuary-production",
+      "gitBlobSha": "285d263effd171e5195f61d83bc944ce197ce2fb"
+    },
+    {
+      "id": "tenyo-sanctuary-fall-v2",
+      "type": "object",
+      "path": "assets/tenyo/sanctuary-fall-v2.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/sanctuary-horizon-v1/waterfall.png"
+      },
+      "usage": "tenyo-water-sanctuary-production",
+      "gitBlobSha": "168c1b7110be6b623daff927b8c70d98dc005849"
+    },
+    {
+      "id": "tenyo-tenyo-ripple-fx",
+      "type": "effect",
+      "path": "assets/tenyo/tenyo-ripple-fx.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/tenyo-water-v1/shallow_ripple_32x4.png"
+      },
+      "usage": "tenyo-water-sanctuary-production",
+      "gitBlobSha": "3dfed2544761d675f124c00b41ff85a70958176c"
+    },
+    {
+      "id": "tenyo-tenyo-lotus-1",
+      "type": "object",
+      "path": "assets/tenyo/tenyo-lotus-1.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/tenyo-water-v1/lotus_leaf_1.png"
+      },
+      "usage": "tenyo-water-sanctuary-production",
+      "gitBlobSha": "6be7e58966d85da189676225c70e324ec47e7b4b"
+    },
+    {
+      "id": "tenyo-tenyo-lotus-2",
+      "type": "object",
+      "path": "assets/tenyo/tenyo-lotus-2.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/tenyo-water-v1/lotus_leaf_2.png"
+      },
+      "usage": "tenyo-water-sanctuary-production",
+      "gitBlobSha": "9bddbf2305db05a16893ea3480a28607e12f6fbd"
+    },
+    {
+      "id": "tenyo-tenyo-lotus-3",
+      "type": "object",
+      "path": "assets/tenyo/tenyo-lotus-3.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/tenyo-water-v1/lotus_leaf_3.png"
+      },
+      "usage": "tenyo-water-sanctuary-production",
+      "gitBlobSha": "48df8316008667f53cae85c542d6474f604482e2"
+    },
+    {
+      "id": "tenyo-clear-water-shallow",
+      "type": "effect",
+      "path": "assets/tenyo/clear-water-shallow.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/clear-water-v1/shallow.png"
+      },
+      "usage": "tenyo-water-sanctuary-production",
+      "gitBlobSha": "9d618cdc389331c94b755a50342d910c216e384e"
+    },
+    {
+      "id": "tenyo-clear-water-mid",
+      "type": "effect",
+      "path": "assets/tenyo/clear-water-mid.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/clear-water-v1/mid.png"
+      },
+      "usage": "tenyo-water-sanctuary-production",
+      "gitBlobSha": "48c80abf55c3eb505cbb69993a519404b7a6424d"
+    },
+    {
+      "id": "tenyo-clear-water-deep",
+      "type": "effect",
+      "path": "assets/tenyo/clear-water-deep.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/clear-water-v1/deep.png"
+      },
+      "usage": "tenyo-water-sanctuary-production",
+      "gitBlobSha": "1fa52c35472553f588a1b1c632a8c2121dbf1ddc"
+    },
+    {
+      "id": "tenyo-clear-water-shore-deep-mid-n",
+      "type": "effect",
+      "path": "assets/tenyo/clear-water-shore-deep-mid-n.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/clear-water-v1/shore_deep_mid_N.png"
+      },
+      "usage": "tenyo-water-sanctuary-production",
+      "gitBlobSha": "6d9790d191f796879d5c86ba989f22947b192e04"
+    },
+    {
+      "id": "tenyo-clear-water-shore-deep-mid-e",
+      "type": "effect",
+      "path": "assets/tenyo/clear-water-shore-deep-mid-e.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/clear-water-v1/shore_deep_mid_E.png"
+      },
+      "usage": "tenyo-water-sanctuary-production",
+      "gitBlobSha": "f0a7ab2d125eb016ce04890e96ad2cf6d1640f3f"
+    },
+    {
+      "id": "tenyo-clear-water-shore-deep-mid-s",
+      "type": "effect",
+      "path": "assets/tenyo/clear-water-shore-deep-mid-s.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/clear-water-v1/shore_deep_mid_S.png"
+      },
+      "usage": "tenyo-water-sanctuary-production",
+      "gitBlobSha": "e4fd10515d5618729853ce5bf5e0e9c186972267"
+    },
+    {
+      "id": "tenyo-clear-water-shore-deep-mid-w",
+      "type": "effect",
+      "path": "assets/tenyo/clear-water-shore-deep-mid-w.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/clear-water-v1/shore_deep_mid_W.png"
+      },
+      "usage": "tenyo-water-sanctuary-production",
+      "gitBlobSha": "6d5ecb78b2915fb1c21217c22a687d75ffb39e98"
+    },
+    {
+      "id": "tenyo-clear-water-shore-mid-shallow-n",
+      "type": "effect",
+      "path": "assets/tenyo/clear-water-shore-mid-shallow-n.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/clear-water-v1/shore_mid_shallow_N.png"
+      },
+      "usage": "tenyo-water-sanctuary-production",
+      "gitBlobSha": "838985ffc685dc15f5f98aef780feac6b1513ef2"
+    },
+    {
+      "id": "tenyo-clear-water-shore-mid-shallow-e",
+      "type": "effect",
+      "path": "assets/tenyo/clear-water-shore-mid-shallow-e.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/clear-water-v1/shore_mid_shallow_E.png"
+      },
+      "usage": "tenyo-water-sanctuary-production",
+      "gitBlobSha": "c1f076111bdf4679372b3fdcc9d652f6c54aedb9"
+    },
+    {
+      "id": "tenyo-clear-water-shore-mid-shallow-s",
+      "type": "effect",
+      "path": "assets/tenyo/clear-water-shore-mid-shallow-s.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/clear-water-v1/shore_mid_shallow_S.png"
+      },
+      "usage": "tenyo-water-sanctuary-production",
+      "gitBlobSha": "f233303b43fb5d84404013c414a66b8ad2628f80"
+    },
+    {
+      "id": "tenyo-clear-water-shore-mid-shallow-w",
+      "type": "effect",
+      "path": "assets/tenyo/clear-water-shore-mid-shallow-w.png",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/clear-water-v1/shore_mid_shallow_W.png"
+      },
+      "usage": "tenyo-water-sanctuary-production",
+      "gitBlobSha": "d1bd7ad730596161b6ffc09d5e751e2a59b3d4c6"
+    },
+    {
+      "id": "tenyo-waterfall-loop",
+      "type": "audio",
+      "path": "assets/tenyo/waterfall-loop.m4a",
+      "status": "approved",
+      "origin": {
+        "repo": "HiHoSir/yaksha-hanamusubi",
+        "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
+        "path": "assets/settlement-editor/sanctuary-audio-v1/waterfall-loop.m4a"
+      },
+      "usage": "tenyo-water-sanctuary-production"
+    },
+    {
+      "id": "village-shop-sign-teahouse",
+      "type": "object",
+      "path": "assets/village/scene/sign-teahouse.png",
+      "status": "approved",
+      "name": "茶の木札",
+      "usage": "village-storefront-sign",
+      "buildingId": "teahouse-northeast",
+      "dimensions": {
+        "width": 96,
+        "height": 120
+      },
+      "origin": {
+        "kind": "generated-pixel-signboard-and-rasterized-kanji"
+      },
+      "approvalNote": "2026-11-14: produced for requested Momotaro-style legible shop signage; visual implementation pending iPhone review."
+    },
+    {
+      "id": "village-shop-sign-inn",
+      "type": "object",
+      "path": "assets/village/scene/sign-inn.png",
+      "status": "approved",
+      "name": "宿の木札",
+      "usage": "village-storefront-sign",
+      "buildingId": "inn-southeast",
+      "dimensions": {
+        "width": 96,
+        "height": 120
+      },
+      "origin": {
+        "kind": "generated-pixel-signboard-and-rasterized-kanji"
+      },
+      "approvalNote": "2026-11-14: produced for requested Momotaro-style legible shop signage; visual implementation pending iPhone review."
+    },
+    {
+      "id": "village-shop-sign-armory",
+      "type": "object",
+      "path": "assets/village/scene/sign-armory.png",
+      "status": "approved",
+      "name": "兵具屋の木札",
+      "usage": "village-storefront-sign",
+      "buildingId": "house-southeast-tile",
+      "dimensions": {
+        "width": 96,
+        "height": 120
+      },
+      "origin": {
+        "kind": "generated-pixel-signboard-and-rasterized-kanji"
+      },
+      "gitBlobSha": "fa77275647a701055a6998418ecc73b4b52ea076",
+      "approvalNote": "2026-11-14: user authorized repurposing one low-story-role house as armory; same exterior dimensions, original tile house art, existing entrance and collision, with separate 96x120px sign sprite."
+    }
+  ],
+  "designReferences": [
+    {
+      "id": "hizuki-character-design",
+      "path": "source-assets/characters/hizuki/character-design.jpg",
+      "status": "approved",
+      "role": "character-appearance-reference",
+      "format": "JPEG",
+      "width": 1448,
+      "height": 1086,
+      "bytes": 965821,
+      "sha256": "d5060c5da9f1c049c74bc1ef181d55fa1a3867b41fbdf2f931d506dc15d7d232",
+      "gitBlobSha": "27e2ed96a7f3644fb09dad0fe79a213c1f666394",
+      "characterId": "hizuki",
+      "note": "User-provided official four-view character sheet. This is a reference image, not a game runtime sprite."
+    }
+  ]
+}

@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<script src="../game/navigation/entry.js" data-entry="game"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="鬼哭の花結び">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="../game/app.webmanifest">
+<meta name="theme-color" content="#19251e">
+<title>花霞野｜鬼哭の花結び</title>
+<style>
+:root{color-scheme:dark;background:#19251e;color:#f7efdb;font:16px system-ui,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;overscroll-behavior:none}
+main{width:min(100%,880px);height:100vh;height:100dvh;margin:auto;padding:max(8px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));display:grid;grid-template-rows:auto minmax(0,1fr) auto;gap:8px}
+header{display:flex;align-items:center;justify-content:space-between;gap:8px}
+h1{font-size:17px;margin:0}
+output{font-size:12px;color:#dbdec6;text-align:right}
+.viewport{position:relative;display:block;overflow:hidden;border:1px solid #73785c;border-radius:8px;background:#243322}
+canvas{position:absolute;inset:0;display:block;width:100%;height:100%;min-width:0;min-height:0;object-fit:fill;object-position:center center;image-rendering:pixelated;touch-action:none}
+.field-weather{display:none}
+@supports (width:1cqw) and (mask-image:url("")){
+ /* Cover the new full-width landscape camera with drifting clouds. */
+ .field-weather{
+  display:block;position:absolute;grid-area:1/1/2/2;inset:0;container-type:size;
+  pointer-events:none;
+ }
+ .field-weather-scene{
+  position:absolute;overflow:hidden;inset:0;width:100%;height:100%;
+ }
+ .cloud-track{
+  --cloud-texture:url("../../assets/field/effects/cloud-overlay.png?v=9039b78");
+  position:absolute;inset:0 auto 0 0;width:200%;
+  animation:cloud-drift 48s linear infinite;
+ }
+ .cloud-shadows,.foreground-clouds{position:absolute;left:0;width:100%;image-rendering:pixelated}
+ .cloud-shadows{
+  top:36%;height:38%;background:#192939;opacity:.32;
+  mask:var(--cloud-texture) repeat-x 3% 0 / 50% 100%;
+ }
+ .foreground-clouds{
+  top:23%;height:45%;opacity:.62;
+  background:var(--cloud-texture) repeat-x 0 0 / 50% 100%;
+ }
+ @keyframes cloud-drift{to{transform:translateX(-50%)}}
+ @media(prefers-reduced-motion:reduce){.cloud-track{animation:none}}
+}
+.dpad{display:grid;grid-template-columns:repeat(3,47px);grid-template-rows:repeat(2,42px);gap:3px;justify-self:center}
+button{border:1px solid #777d62;border-radius:8px;background:#314337;color:inherit;font:19px system-ui;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+button.held{background:#e8cc8b;color:#272d22}
+[data-dir=up]{grid-column:2}
+[data-dir=left]{grid-column:1;grid-row:2}
+[data-dir=down]{grid-column:2;grid-row:2}
+[data-dir=right]{grid-column:3;grid-row:2}
+#load{position:absolute;inset:0;display:grid;place-items:center;margin:0;background:#243322;text-align:center}
+#load[hidden]{display:none}
+@media(orientation:landscape) and (max-height:520px){
+ main{grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto minmax(0,1fr)}
+ header{grid-column:1/-1}
+ .dpad{align-self:center}
+}
+</style>
+<link rel="stylesheet" href="../game/ui/controls.css?v=dotgothic16">
+<style>
+/* Landscape-only: the world owns the full screen, and controls overlay it.
+   There is no 108px opaque bottom strip and no secondary CSS crop. */
+@media (orientation:landscape){
+ main.field-screen{
+  grid-template-columns:minmax(0,1fr);
+  grid-template-rows:minmax(0,1fr);
+  gap:0;
+ }
+ main.field-screen > .viewport{
+  grid-area:1/1/2/2;
+  min-width:0;min-height:0;display:block;
+ }
+ main.field-screen .viewport canvas{object-fit:fill}
+ main.field-screen #pad{
+  grid-area:auto;position:absolute;inset:auto 0 0;
+  width:100%;height:calc(135px + env(safe-area-inset-bottom));
+  padding:0;margin:0;background:transparent;border:0;pointer-events:none;
+ }
+ main.field-screen #pad .dpad{
+  left:max(12px,env(safe-area-inset-left));
+  bottom:calc(6px + env(safe-area-inset-bottom));
+  transform:scale(.85);transform-origin:left bottom;
+ }
+ main.field-screen #pad #action-a{
+  right:max(14px,env(safe-area-inset-right));
+  bottom:calc(16px + env(safe-area-inset-bottom));
+ }
+ main.field-screen #pad #action-b{
+  right:max(108px,calc(env(safe-area-inset-right) + 100px));
+  bottom:calc(41px + env(safe-area-inset-bottom));
+ }
+}
+</style>
+<script type="module" src="../game/ui/selection-guard.mjs"></script>
+<link rel="stylesheet" href="../game/audio/audio.css">
+<script type="module" src="../game/audio/boot.mjs"></script>
+</head>
+<body>
+<main class="field-screen" data-bgm="field">
+
+<section class="viewport" aria-label="フィールド">
+<header class="field-hud"><h1>花霞野</h1><output id="status">鬼灯村の南口</output></header>
+<canvas id="scene" width="768" height="768"></canvas>
+<div class="field-weather" aria-hidden="true">
+ <div class="field-weather-scene">
+  <div class="cloud-track">
+   <div class="cloud-shadows"></div>
+   <div class="foreground-clouds"></div>
+  </div>
+ </div>
+</div>
+<p id="load">フィールドを読み込んでいます</p>
+</section>
+<section id="pad" class="controls" aria-label="ゲーム操作">
+  <div class="dpad" aria-label="十字キー・4方向移動" role="group">
+    <button id="up" type="button" data-dir="up" aria-label="上">▲</button>
+    <button id="left" type="button" data-dir="left" aria-label="左">◀</button>
+    <button id="right" type="button" data-dir="right" aria-label="右">▶</button>
+    <button id="down" type="button" data-dir="down" aria-label="下">▼</button>
+  </div>
+  <button id="action-b" class="round sub" type="button" aria-label="B 戻る">B<small>戻る</small></button>
+  <button id="action-a" class="round main" type="button" aria-label="A 決定・話す">A<small>決定</small></button>
+</section>
+<button id="sound-toggle" type="button" aria-label="サウンドを再生" aria-pressed="false">♪ 再生</button>
+</main>
+<script src="./assets.js?v=e044a0a"></script>
+<script src="../../data/maps/field/terrain.js?v=26136fe"></script>
+<script src="./elevation-model.js?v=26136fe"></script>
+<script src="./field-elevation.js?v=26136fe"></script>
+<script src="./world.js?v=26136fe"></script>
+<script src="./landscape.js?v=water-motion-clock-1"></script>
+<script src="./autotile.js?v=26136fe"></script>
+<script src="./elevation-view.js?v=field-shore-cache-1"></script>
+<script src="./camera-position.js?v=26136fe"></script>
+<script src="./movement-rules.js?v=26136fe"></script>
+<script src="./area-transitions.js?v=26136fe"></script>
+<script type="module" src="./walk.mjs?v=field-coast-comparison-1"></script>
+</body>
+</html>

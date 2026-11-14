@@ -1,0 +1,12 @@
+{
+  "name": "鬼哭の花結び",
+  "short_name": "鬼哭の花結び",
+  "description": "和風RPG『鬼哭の花結び』",
+  "lang": "ja",
+  "start_url": "../../",
+  "scope": "../../",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#07101e",
+  "theme_color": "#07101e"
+}

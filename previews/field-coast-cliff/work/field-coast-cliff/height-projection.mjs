@@ -3,6 +3,7 @@ const cell=32;
 export const risePerLevel=30;
 export const terrainY=(y,height,rise=risePerLevel)=>y-height*rise;
 const samplesPerLevel=64;
+const clipBucketWidth=32;
 
 export function sampleHeights(map,elevation) {
  const width=map[0].length*cell;
@@ -26,20 +27,30 @@ export function sampleHeights(map,elevation) {
 // Depth is the unshifted map row of the visible surface. Horizontal runs
 // retain the cliff silhouettes for sprite clipping without a per-frame readback.
 function depthRuns(depth,width,height,originY) {
- const rows=[];
+ const rows=[],columns=Math.ceil(width/clipBucketWidth);
+ const maxDepth=new Uint16Array(columns*Math.ceil(height/clipBucketWidth));
  for(let v=0;v<height;v++){
-  const row=[],start=v*width;
-  let max=0;
+  const start=v*width,buckets=[],block=Math.floor(v/clipBucketWidth)*columns;
   for(let x=0;x<width;){
    const foot=depth[start+x];
    let end=x+1;
    while(end<width&&depth[start+end]===foot)end++;
-   if(foot>v+originY+1&&foot>0){row.push(x,end,foot);max=Math.max(max,foot);}
+   if(foot>v+originY+1&&foot>0){
+    for(let part=x;part<end;){
+     const column=Math.floor(part/clipBucketWidth);
+     const stop=Math.min(end,(column+1)*clipBucketWidth);
+     const bucket=buckets[column]??(buckets[column]={max:0,runs:[]});
+     bucket.runs.push(part,stop,foot);
+     bucket.max=Math.max(bucket.max,foot);
+     maxDepth[block+column]=Math.max(maxDepth[block+column],foot);
+     part=stop;
+    }
+   }
    x=end;
   }
-  rows.push({max,runs:row});
+  rows.push(buckets);
  }
- return rows;
+ return {rows,columns,maxDepth};
 }
 
 export function bakeHeightProjection({width,height,data},levels,rock,rise,maxLevel,levelScale=1) {
@@ -71,7 +82,7 @@ export function bakeHeightProjection({width,height,data},levels,rock,rise,maxLev
    }
   }
  }
- return {pixels,width,height:projectedHeight,originY,depthRows:depthRuns(depth,width,projectedHeight,originY)};
+ return {pixels,width,height:projectedHeight,originY,terrainDepth:depthRuns(depth,width,projectedHeight,originY)};
 }
 
 export function composeRaisedTerrain(map,landscape,art,compose,elevation) {
@@ -99,35 +110,59 @@ export function composeRaisedTerrain(map,landscape,art,compose,elevation) {
   const foot=terrainY(y*cell,elevation.level(map,x,y));
   landscape.drawAsset(out,'ladder',x*cell+8,lip-baked.originY-3,16,foot-lip+13);
  }
- return {...base,canvas,originY:baked.originY,depthRows:baked.depthRows,buildMs:performance.now()-started};
+ return {...base,canvas,originY:baked.originY,terrainDepth:baked.terrainDepth,buildMs:performance.now()-started};
 }
 
 // Apply the same strip projection as the terrain texture. Each rectangle
 // removes just the area where a nearer surface covers the sprite.
-export function clipAtTerrain(context,depthRows,originY,strips,{x,y,width,height,foot}) {
+export function clipAtTerrain(context,terrainDepth,originY,strips,{x,y,width,height,foot}) {
+ const {rows,columns,maxDepth}=terrainDepth;
+ const firstStrip=Math.max(0,Math.floor((y-strips[0].sy)/4));
+ const lastStrip=Math.min(strips.length-1,Math.ceil((y+height-strips[0].sy)/4)-1);
+ if(firstStrip>lastStrip)return false;
+ // Perspective widens monotonically. The outer strips bound the sprite's
+ // world rectangle so most sprites can skip checking individual depth runs.
+ const top=strips[firstStrip],bottom=strips[lastStrip];
+ const leftEdge=Math.min(top.ax+x/top.sx,bottom.ax+x/bottom.sx);
+ const rightEdge=Math.max(top.ax+(x+width)/top.sx,bottom.ax+(x+width)/bottom.sx);
+ const leftColumn=Math.max(0,Math.floor(leftEdge/clipBucketWidth));
+ const rightColumn=Math.min(columns,Math.ceil(rightEdge/clipBucketWidth));
+ const topRow=Math.max(0,Math.floor((top.ay-originY)/clipBucketWidth));
+ const bottomRow=Math.min(maxDepth.length/columns,Math.ceil((bottom.dy-originY)/clipBucketWidth));
+ let mayBeHidden=false;
+ for(let row=topRow;row<bottomRow&&!mayBeHidden;row++)for(let column=leftColumn;column<rightColumn;column++){
+  if(maxDepth[row*columns+column]>foot){mayBeHidden=true;break;}
+ }
+ if(!mayBeHidden)return false;
  let clipped=false;
- for(let i=Math.max(0,Math.floor((y-strips[0].sy)/4));i<strips.length;i++){
+ for(let i=firstStrip;i<=lastStrip;i++){
   const {ax,ay,dy,sx,ys,sy,sh}=strips[i];
-  if(sy>=y+height)break;
   const left=ax+x/sx,right=ax+(x+width)/sx;
   const first=Math.max(originY,Math.floor(ay+(Math.max(y,sy)-sy)/ys));
-  const end=Math.min(originY+depthRows.length,Math.ceil(ay+(Math.min(y+height,sy+sh)-sy)/ys),Math.ceil(dy));
+  const end=Math.min(originY+rows.length,Math.ceil(ay+(Math.min(y+height,sy+sh)-sy)/ys),Math.ceil(dy));
+  const startColumn=Math.max(0,Math.floor(left/clipBucketWidth));
+  const endColumn=Math.ceil(right/clipBucketWidth);
   for(let v=first;v<end;v++){
-   const row=depthRows[v-originY];
-   if(row.max<=foot)continue;
-   for(let j=0;j<row.runs.length;j+=3){
-    const a=row.runs[j],b=row.runs[j+1],depth=row.runs[j+2];
-    if(a>=right)break;
-    if(b<=left||depth<=foot)continue;
-    if(!clipped){
-     context.save();
-     context.beginPath();
-     context.rect(x,y,width,height);
-     clipped=true;
+   const row=rows[v-originY];
+   const columns=Math.min(endColumn,row.length);
+   for(let column=startColumn;column<columns;column++){
+    const bucket=row[column];
+    if(!bucket||bucket.max<=foot)continue;
+    for(let j=0;j<bucket.runs.length;j+=3){
+     const a=bucket.runs[j],b=bucket.runs[j+1],depth=bucket.runs[j+2];
+     if(a>=right)break;
+     if(b<=left||depth<=foot)continue;
+     const x0=(Math.max(a,left)-ax)*sx,x1=(Math.min(b,right)-ax)*sx;
+     const y0=Math.max(y,sy,sy+(v-ay)*ys),y1=Math.min(y+height,sy+sh,sy+(v+1-ay)*ys);
+     if(y1<=y0)continue;
+     if(!clipped){
+      context.save();
+      context.beginPath();
+      context.rect(x,y,width,height);
+      clipped=true;
+     }
+     context.rect(x0,y0,x1-x0,y1-y0);
     }
-    const x0=(Math.max(a,left)-ax)*sx,x1=(Math.min(b,right)-ax)*sx;
-    const y0=Math.max(y,sy,sy+(v-ay)*ys),y1=Math.min(y+height,sy+sh,sy+(v+1-ay)*ys);
-    if(y1>y0)context.rect(x0,y0,x1-x0,y1-y0);
    }
   }
  }

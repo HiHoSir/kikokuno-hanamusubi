@@ -53,7 +53,7 @@ export function createTileLayerPrototype(context,map,drawHero,chips,hero){
  const elevationView=window.YK_ELEVATION_VIEW;
  const objects=landscape.objects(map);
  const overlapsHero=chips&&hero?createTreeOcclusion(landscape,hero):null;
- let land=null, originY=0, depthRows, stripsWidth, stripsHeight, strips=[];
+ let land=null, originY=0, terrainDepth, stripsWidth, stripsHeight, strips=[];
  const raisedTerrain=chips?.terrainY;
  const waterPatterns=new WeakMap();
  const zoom=1.4;
@@ -85,10 +85,10 @@ export function createTileLayerPrototype(context,map,drawHero,chips,hero){
   if(land)return;
   if(chips){
    const baked=chips.composeTerrainChips(map,landscape,chips.art);
-   const {canvas:staticLand,depthRows:rows,...stats}=baked;
+   const {canvas:staticLand,terrainDepth:depth,...stats}=baked;
    land=staticLand;
    originY=stats.originY??0;
-   depthRows=rows;
+   terrainDepth=depth;
    Object.assign(info,stats,{builds:1,staticBytes:land.width*land.height*4});
    return;
   }
@@ -205,7 +205,7 @@ export function createTileLayerPrototype(context,map,drawHero,chips,hero){
   skyBand(0,240);
   const frame=landscape.motionArt('water',time),pattern=waterPattern(c,frame);
   const fall=landscape.motionArt('waterfall',time);
-  const projectedStrips=depthRows?[]:null;
+  const projectedStrips=terrainDepth?[]:null;
   for(const {sy,sh,left,right,next} of projectionStrips(viewWidth,height)){
    const ax=cam.x+left.x,ay=cam.y+left.y,bx=cam.x+right.x,dy=cam.y+next.y;
    if(bx<=ax||dy<=ay)continue;
@@ -230,7 +230,7 @@ export function createTileLayerPrototype(context,map,drawHero,chips,hero){
   const playerFoot=chips?actor.foot+16:actor.foot;
   const playerPosition=project(actor.x,playerFoot,raisedTerrain?actorHeight:chips?0:actor.height??elevation.height(map,actor.x,actor.foot));
   const clipSprite=(x,y,width,height,foot)=>projectedStrips?.length&&
-   chips.clipAtTerrain(c,depthRows,originY,projectedStrips,{x,y,width,height,foot});
+   chips.clipAtTerrain(c,terrainDepth,originY,projectedStrips,{x,y,width,height,foot});
   const drawPlayer=()=>{
    if(!playerPosition)return;
    const {x,y,scale}=playerPosition;

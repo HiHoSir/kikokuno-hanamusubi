@@ -1,4 +1,4 @@
-import {contact, createFieldRenderer, fieldStep, loadFieldArt, villageArrival, placeArrival, world} from './runtime.mjs?v=plateau-1';
+import {contact, createFieldRenderer, fieldStep, loadFieldArt, villageArrival, placeArrival, world} from './runtime.mjs?v=cliff-cell-1';
 import {BATTLE_REQUEST_KEY,FIELD_RETURN_KEY,chooseFieldEncounter} from '../game/battle/rules.mjs?v=field-balance-1';
 
 const scene = document.querySelector('#scene');
@@ -60,8 +60,14 @@ function comparisonPosition(params){
   const [tx,ty,row]=at.split(',').map(Number);
   const {tileSize}=world;
   const x=(tx+.5)*tileSize,y=(ty+.5)*tileSize;
-  return world.mapData.travelReachable.has(tx+','+ty)&&world.walkable(x,y)&&!contact(x,y)
-    ?[x,y,row]:null;
+  if(world.mapData.travelReachable.has(tx+','+ty)&&world.walkable(x,y)&&!contact(x,y))return [x,y,row];
+  // When comparing modes from a newly occupied cliff cell, step back to
+  // nearby reachable floor instead of jumping to the other end of the map.
+  if(world.mapData.cliffCells?.has(tx+','+ty)){
+    const nearby=world.safePosition([x,y]);
+    if(!contact(...nearby))return [...nearby,row];
+  }
+  return null;
 }
 
 async function start() {

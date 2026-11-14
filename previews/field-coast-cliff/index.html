@@ -18,7 +18,7 @@ output span{display:block}
 iframe{display:block;border:0;width:100%;height:100%;background:#102635}
 #rotate{display:none;position:fixed;inset:0;place-content:center;text-align:center;padding:2rem;background:#192729;font-size:18px}
 @media (orientation:portrait){#rotate{display:grid}}
-@media (max-width:560px){button,select{padding-inline:5px;font-size:12px}.toolbar{gap:4px}output{font-size:11px}}
+@media (max-width:620px){button,select{padding-inline:5px;font-size:12px}.toolbar{gap:4px;flex-wrap:wrap}output{font-size:11px}}
 </style>
 </head>
 <body>
@@ -27,18 +27,19 @@ iframe{display:block;border:0;width:100%;height:100%;background:#102635}
   <div class="modes" role="group" aria-label="描画方式">
     <button id="current" aria-pressed="false" disabled>従来版</button>
     <button id="tiles" aria-pressed="false" disabled>本編の崖</button>
-    <button id="plateau" aria-pressed="true" disabled>高原の崖を高く</button>
+    <button id="plateau" aria-pressed="false" disabled>高原の崖を高く</button>
+    <button id="cliffs" aria-pressed="true" disabled>崖面1マス</button>
   </div>
   <select id="location" aria-label="確認地点" disabled>
     <option value="">確認地点へ移動</option>
-    <option value="28,35,1">西の高原</option>
+    <option value="25,38,1">西の高原</option>
     <option value="40,10,1">九尾の祠の崖下</option>
     <option value="37,71,0">鬼灯村の水際</option>
     <option value="37,43,1">川沿いの山裾</option>
     <option value="40,8,1">九尾の祠への参道</option>
     <option value="39,72,0">鬼灯村東側の木</option>
     <option value="59,37,0">忘れの森の南</option>
-    <option value="41,14,1">九尾の祠南側の段差</option>
+    <option value="41,15,1">九尾の祠南側の段差</option>
   </select>
   <output id="info"><span id="position">読み込み中</span><span id="timing"></span></output>
 </div>
@@ -50,9 +51,10 @@ iframe{display:block;border:0;width:100%;height:100%;background:#102635}
   const frame=document.querySelector('#game');
   const position=document.querySelector('#position'),timing=document.querySelector('#timing');
   const current=document.querySelector('#current'),tiles=document.querySelector('#tiles'),plateau=document.querySelector('#plateau');
-  const locations=document.querySelector('#location');
+  const cliffs=document.querySelector('#cliffs'),locations=document.querySelector('#location');
   const root=new URL('./',location.href);
-  let selection='plateau',host,sceneFrame,lastFieldPosition=null,visit=0;
+  let selection='cliffs',host,sceneFrame,lastFieldPosition=null,visit=0;
+  const modes={current:null,tiles:'coast-cliff-chips',plateau:'tall-plateaus',cliffs:'cliff-cells'};
   const scene=()=>sceneFrame?.contentDocument?.querySelector('.field-screen #scene[data-x][data-y]');
   function fieldPosition(){
     const data=scene()?.dataset;
@@ -66,7 +68,7 @@ iframe{display:block;border:0;width:100%;height:100%;background:#102635}
       target.searchParams.set('visit',String(++visit));
     }
     try{
-      host.setFieldRenderer(selection==='plateau'?'tall-plateaus':selection==='tiles'?'coast-cliff-chips':null);
+      host.setFieldRenderer(modes[selection]);
       host.navigate(target);
       position.textContent='読み込み中';
       timing.textContent='';
@@ -81,6 +83,7 @@ iframe{display:block;border:0;width:100%;height:100%;background:#102635}
     current.setAttribute('aria-pressed',String(mode==='current'));
     tiles.setAttribute('aria-pressed',String(mode==='tiles'));
     plateau.setAttribute('aria-pressed',String(mode==='plateau'));
+    cliffs.setAttribute('aria-pressed',String(mode==='cliffs'));
     open(at);
   }
   function update(){
@@ -111,18 +114,19 @@ iframe{display:block;border:0;width:100%;height:100%;background:#102635}
   current.addEventListener('click',()=>select('current'));
   tiles.addEventListener('click',()=>select('tiles'));
   plateau.addEventListener('click',()=>select('plateau'));
+  cliffs.addEventListener('click',()=>select('cliffs'));
   locations.addEventListener('change',()=>{
     if(locations.value)open(locations.value);
     locations.selectedIndex=0;
   });
-  const shellUrl=new URL('src/game/?field-renderer-preview=1&v=plateau-1',root);
+  const shellUrl=new URL('src/game/?field-renderer-preview=1&v=cliff-cell-1',root);
   frame.addEventListener('load',()=>{
     host=frame.contentWindow.KIKOKU_GAME;
     if(!host){position.textContent='ゲームを読み込めませんでした';return;}
     sceneFrame=frame.contentDocument.querySelector('#game-scene');
-    current.disabled=tiles.disabled=plateau.disabled=locations.disabled=false;
+    current.disabled=tiles.disabled=plateau.disabled=cliffs.disabled=locations.disabled=false;
     sceneFrame.addEventListener('load',update);
-    open('40,10,1');
+    open('39,15,1');
     setInterval(update,250);
   },{once:true});
   try{

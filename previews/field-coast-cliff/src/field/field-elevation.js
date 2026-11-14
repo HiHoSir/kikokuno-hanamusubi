@@ -154,6 +154,7 @@ window.YK_FIELD_ELEVATION=(()=>{
  }
  function refreshCollision(m){
   m.occupiedTiles=new Set(m.decorations.flatMap(o=>o.occupiedTiles.map(c=>c.join(','))));
+  for(const cell of m.cliffCells?.keys()||[])m.occupiedTiles.add(cell);
   m.travelReachable=reachable(m);return m;
  }
  return {prepare,refreshCollision};

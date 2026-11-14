@@ -110,7 +110,7 @@ try{
         });
         await page.screenshot({path:'artifacts/rotate-game-portrait.png'});
         await page.setViewportSize({width,height});
-        await page.waitForFunction(()=>getComputedStyle(document.querySelector('#landscape-required')).display==='none');
+        await page.waitForFunction(()=>getComputedStyle(document.querySelector('#landscape-required')).display==='none' && !document.querySelector('#game-shell').inert);
         const rotated=await page.evaluate(()=>{
           const b=window.__gameBeforeRotation,frame=document.querySelector('#game-scene');
           return frame===b.frame&&frame.src===b.src &&

@@ -121,6 +121,17 @@ test('village entry evaluates the quest objective before loading map assets',()=
  execFileSync(process.execPath,['--input-type=module','-e',script],{timeout:10000,stdio:'pipe'});
 });
 
+test('opening video is bound to one clipped-free landscape viewport, not intrinsic grid height',()=>{
+ const page=readFileSync('src/opening/index.html','utf8');
+ assert.match(page,/body\.opening-screen\{[^}]*height:100dvh/);
+ assert.match(page,/body\.opening-screen\{[^}]*min-height:0/);
+ assert.match(page,/body\.opening-screen\{[^}]*box-sizing:border-box/);
+ assert.match(page,/#opening-video \{[^}]*position:absolute/);
+ assert.match(page,/#opening-video \{[^}]*object-fit:contain/);
+ assert.match(page,/#opening-video \{[^}]*object-position:center center/);
+ assert.match(page,/id="opening-video" playsinline webkit-playsinline/);
+});
+
 test('all three top-level pages show the shared landscape-only gate; PWA prefers landscape',()=>{
   for(const [path,css,js] of [
     ['index.html','./src/game/ui/landscape-only.css','./src/game/ui/landscape-only.mjs'],

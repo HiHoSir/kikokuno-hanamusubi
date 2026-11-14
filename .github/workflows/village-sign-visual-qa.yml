@@ -14,6 +14,7 @@ on:
       - 'src/game/battle/rules.mjs'
       - 'src/opening/index.html'
       - 'src/opening/opening.js'
+      - 'tools/qa-opening-landscape.mjs'
       - 'src/game/ui/landscape-only.css'
       - 'src/game/ui/landscape-only.mjs'
       - 'src/game/app.webmanifest'
@@ -34,6 +35,8 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Inspect storefront signs and door return paths at both orientations
         run: node tools/qa-village-shop-signs.mjs
+      - name: Verify opening video fits the landscape screen without cropping
+        run: node tools/qa-opening-landscape.mjs
       - name: Upload actual Chromium screenshots
         if: always()
         uses: actions/upload-artifact@v4

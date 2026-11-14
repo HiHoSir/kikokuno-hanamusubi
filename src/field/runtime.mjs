@@ -110,7 +110,7 @@ export function createFieldRenderer(context, hero) {
     landscape.drawQuarter(context,world.mapData,{
       x,foot:y,height,
       draw:(px,py,z)=>drawHero(px,py,z,state.row,state.column),
-    },1.4,{oceanOutside:true,elevationTerrain:true,viewportWidth:dims.width});
+    },1.4,{oceanOutside:true,elevationTerrain:true,viewportWidth:dims.width,motionTime:frameTime});
     display.dataset.fieldViewportWidth=String(dims.width);
     display.dataset.fieldViewportHeight=String(dims.height);
     // Deliberately no fieldCropTop: there is no source crop.

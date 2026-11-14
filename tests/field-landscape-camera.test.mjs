@@ -42,3 +42,25 @@ test('coastline shapes and beach strips cache in world coordinates only',()=>{
  assert.match(source,/shore\.sand/);
  assert.match(source,/shore\.darkEdges/);
 });
+
+test('production water/river/waterfall motion uses the same RAF phase as field scheduling',()=>{
+ const landscape=readFileSync('src/field/landscape.js','utf8');
+ const runtime=readFileSync('src/field/runtime.mjs','utf8');
+ const walk=readFileSync('src/field/walk.mjs','utf8');
+ const tenyo=readFileSync('src/game/tenyo/rendering/render.js','utf8');
+ assert.match(landscape,/Number\.isFinite\(settings\.motionTime\)\?settings\.motionTime/);
+ assert.match(landscape,/movingWater=motionArt\('water',motionTime\)/);
+ assert.match(landscape,/sea:movingWater,river:movingWater,waterfall:movingFall/);
+ assert.match(runtime,/motionTime:frameTime/);
+ assert.match(walk,/Math\.floor\(now \/ 360\)/);
+ assert.match(tenyo,/waterKinds=\['shallow','mid','deep'\]/);
+ assert.match(tenyo,/Math\.floor\(\(o\.animationTime\|\|0\)\/360\)%4/);
+});
+
+test('animated water atlas uses HALF the atlas width per frame; second frame is not out of range',()=>{
+ const code=readFileSync('src/field/landscape.js','utf8');
+ assert.match(code,/const \[atlasWidth,h\]=specs\[kind\+'Motion'\]/);
+ assert.match(code,/frameWidth=atlasWidth\/frames/);
+ assert.match(code,/ctx\.drawImage\(atlas,i\*frameWidth,0,frameWidth,h,0,0,frameWidth,h\)/);
+ assert.doesNotMatch(code,/ctx\.drawImage\(atlas,i\*w,0,w,h,0,0,w,h\)/);
+});

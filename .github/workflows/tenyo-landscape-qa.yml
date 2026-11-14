@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - 'src/game/tenyo/**'
+      - 'src/game/index.html'
       - 'src/game/ui/controls.css'
       - 'src/game/ui/landscape-only.css'
       - 'src/game/ui/landscape-only.mjs'

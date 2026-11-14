@@ -6,6 +6,7 @@ on:
       - 'data/maps/hozuki-village/scene.json'
       - 'assets/village/scene/sign-*.png'
       - 'src/game/village/**'
+      - 'src/game/ui/controls.css'
       - 'src/game/interiors/**'
       - 'tools/qa-village-shop-signs.mjs'
       - 'src/game/index.html'

@@ -4,6 +4,10 @@ on:
     branches: [main]
     paths:
       - 'src/field/**'
+      - 'src/game/index.html'
+      - 'src/game/ui/controls.css'
+      - 'src/game/ui/landscape-only.css'
+      - 'src/game/ui/landscape-only.mjs'
       - 'tools/qa-field-browser.mjs'
       - '.github/workflows/field-visual-qa.yml'
   workflow_dispatch:
@@ -22,7 +26,7 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Inspect actual field rendering in Chromium
         run: node tools/qa-field-browser.mjs
-      - name: Upload portrait and landscape screenshots even on failure
+      - name: Upload landscape screenshots even on failure
         if: always()
         uses: actions/upload-artifact@v4
         with:

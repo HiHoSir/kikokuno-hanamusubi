@@ -4,6 +4,10 @@ on:
     branches: [main]
     paths:
       - 'src/game/battle/**'
+      - 'src/game/index.html'
+      - 'src/game/ui/controls.css'
+      - 'src/game/ui/landscape-only.css'
+      - 'src/game/ui/landscape-only.mjs'
       - 'tools/qa-battle-browser.mjs'
       - '.github/workflows/battle-visual-qa.yml'
   workflow_dispatch:
@@ -20,7 +24,7 @@ jobs:
         run: |
           npm install --no-save playwright@1.62.1
           npx playwright install --with-deps chromium
-      - name: Inspect portrait and landscape battles in Chromium
+      - name: Inspect landscape battles and portrait rotation gate in Chromium
         run: node tools/qa-battle-browser.mjs
       - name: Upload screenshots on success or failure
         if: always()

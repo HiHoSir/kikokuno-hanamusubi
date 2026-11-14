@@ -1,0 +1,32 @@
+@import url("https://fonts.googleapis.com/css2?family=DotGothic16&display=swap");
+#field-menu-toggle{position:fixed;z-index:48;top:max(9px,calc(env(safe-area-inset-top) + 8px));right:max(82px,calc(env(safe-area-inset-right) + 82px));min-width:74px;min-height:42px;padding:5px 8px;border:1px solid #c5a878;border-radius:7px;background:#102237ef;color:#f8e5bf;font:14px "DotGothic16",sans-serif;touch-action:manipulation}
+#field-menu-toggle[hidden],#field-menu-backdrop[hidden]{display:none!important}
+#field-menu-backdrop{position:fixed;inset:0;z-index:49;display:grid;place-items:start center;padding:max(62px,calc(env(safe-area-inset-top) + 53px)) max(12px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));box-sizing:border-box;background:#030911ad;font-family:"DotGothic16","Hiragino Kaku Gothic ProN",sans-serif}
+#field-menu-window{box-sizing:border-box;width:min(100%,520px);max-height:calc(100dvh - 100px);overflow:auto;padding:12px;border:3px double #c5aa79;background:#102238;color:#f4e8d2;box-shadow:0 0 0 3px #06101a,0 12px 24px #000a;touch-action:pan-y}
+#field-menu-window header{display:flex;justify-content:space-between;align-items:center;font-size:17px;color:#f6dba7}
+#field-menu-close{width:42px;min-height:42px;font-size:22px;background:#1a324b;color:#ffefc2;border:1px solid #af946a}
+#field-menu-summary{font-size:13px;color:#e7d0b3;margin:8px 0}
+.field-menu-grid{display:grid;grid-template-columns:minmax(110px,40%) minmax(0,1fr);gap:8px}
+#field-menu-commands,#field-menu-detail{min-width:0;box-sizing:border-box;border:2px solid #927d5f;background:#071624;padding:8px}
+#field-menu-commands{display:grid;align-content:start;gap:2px}
+#field-menu-commands button{min-height:38px;padding:6px 5px;text-align:left;border:1px solid transparent;background:transparent;color:#f6e7cf;font:15px "DotGothic16",sans-serif}
+#field-menu-commands button.selected{border-color:#b69b63;background:#273c51;color:#ffe9a5}
+#field-menu-commands button:disabled{opacity:.4}
+#field-menu-detail{min-height:250px;font-size:14px;line-height:1.55}
+#field-menu-detail h2{font-size:16px;color:#f5d79c;margin:0 0 8px}
+#field-menu-detail p{margin:5px 0 9px}
+#field-menu-detail button{display:block;width:100%;min-height:44px;margin:6px 0;padding:6px;text-align:left;background:#1b3449;color:#f4ebd6;border:1px solid #968060;font:13px "DotGothic16",sans-serif}
+#field-menu-detail button:disabled{opacity:.45}
+#field-menu-detail dl{display:grid;grid-template-columns:1fr auto;gap:4px 8px;margin:0}
+#field-menu-detail dd{margin:0;text-align:right}
+#field-menu-message{font-size:12px;min-height:18px;color:#dcc79b;margin:8px 0 0}
+#field-menu-window button:focus-visible,#field-menu-toggle:focus-visible{outline:2px solid #ffe6a9}
+@media(orientation:landscape) and (max-height:520px){
+#field-menu-backdrop{padding-top:max(40px,calc(env(safe-area-inset-top) + 40px))}
+#field-menu-window{max-height:calc(100dvh - 50px);padding:6px 12px}
+#field-menu-commands button{min-height:30px}
+#field-menu-detail{min-height:160px}
+#field-menu-detail button{min-height:34px;margin:3px 0}
+#field-menu-toggle{min-height:38px;top:max(4px,env(safe-area-inset-top))}
+}
+@media(max-width:360px){#field-menu-window{padding:7px}#field-menu-commands button{font-size:13px}#field-menu-detail{padding:5px;font-size:13px}}

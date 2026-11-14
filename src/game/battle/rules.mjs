@@ -89,6 +89,25 @@ export function savePlayer(player,storage=globalThis.localStorage){
   try{storage?.setItem(PLAYER_KEY,JSON.stringify(value));}catch{}
   return value;
 }
+// Field consumables share the official battle recovery amounts.
+export function useExplorationResource(player,kind,id=''){
+  const hero=normalizePlayer(player);
+  if(hero.hp>=hero.maxhp)return {accepted:false,player:hero,message:'体力は満ちている。'};
+  let heal=0,source='';
+  if(kind==='herb'){
+    if(hero.potions===0)return {accepted:false,player:hero,message:'薬草がない。'};
+    hero.potions--;heal=26;source='薬草';
+  }else if(kind==='food'&&Object.hasOwn(FOOD_ITEMS,id)){
+    if(hero.foods[id]===0)return {accepted:false,player:hero,message:'持っていない。'};
+    hero.foods[id]--;heal=FOOD_ITEMS[id].heal;source=FOOD_ITEMS[id].name;
+  }else if(kind==='heal'){
+    if(hero.mp<5)return {accepted:false,player:hero,message:'技が足りません。'};
+    hero.mp-=5;heal=Math.ceil(hero.maxhp*.3);source='つむぎ';
+  }else return {accepted:false,player:hero,message:'使用できません。'};
+  const amount=Math.min(heal,hero.maxhp-hero.hp);
+  hero.hp+=amount;
+  return {accepted:true,player:hero,message:source+'で体力を'+amount+'回復した。'};
+}
 export function purchaseFood(player,id){
   const hero=normalizePlayer(player),item=FOOD_ITEMS[id];
   if(!Object.hasOwn(FOOD_ITEMS,id))return {accepted:false,player:hero,message:'商品を選んでください。'};

@@ -7,19 +7,17 @@ const plateauFeet = ['cliff-1-foot','cliff-2-foot','cliff-3-foot',
 const footChipHeight = cell * 2;
 const isWater = t => t === 'sea' || t === 'river' || t === undefined;
 
-export async function loadTerrainChips({tallPlateaus = false, cliffCells = false} = {}) {
+export async function loadTerrainChips({tallPlateaus = false} = {}) {
   const names = [...atlasNames];
   if(tallPlateaus)names.push(...plateauFeet);
-  if(cliffCells)names.push('cliff-cell');
   return Object.fromEntries(await Promise.all(names.map(async id => {
     const foot = plateauFeet.includes(id);
     const image = new Image();
     const url = new URL('./atlas/'+id+'-32.png',import.meta.url);
-    if(id==='cliff-cell')url.search = '?v=cliff-cell-3';
     if(foot)url.search = '?v=plateau-1';
     image.src = url.href;
     await image.decode();
-    if (image.width !== 128 || image.height !== (id==='cliff-cell' ? 96 : foot ? footChipHeight * 4 : 128)) throw Error('Invalid terrain atlas: '+id);
+    if (image.width !== 128 || image.height !== (foot ? footChipHeight * 4 : 128)) throw Error('Invalid terrain atlas: '+id);
     return [id,image];
   })));
 }
@@ -377,5 +375,5 @@ export function composeTerrainChips(map,landscape,art,cliffMask) {
     landscape.drawAsset(ground,'ladder',x*cell+8,y*cell-18,16,29);
   }
   return {canvas:ground.canvas,coastTiles:shoreline.length-waterCells,cliffTiles,forestCliffTiles,waterCells,
-    plateauCliffTiles:cliffFeet.length,cliffCells:map.cliffCells?.size||0,buildMs:performance.now()-started,...contacts};
+    plateauCliffTiles:cliffFeet.length,buildMs:performance.now()-started,...contacts};
 }

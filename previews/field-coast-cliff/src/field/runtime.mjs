@@ -1,5 +1,5 @@
 import {fieldViewportDimensions} from './viewport.mjs';
-import {createTileLayerPrototype} from './tile-layer-prototype.mjs?v=field-foreground-exit-2';
+import {createTileLayerPrototype} from './tile-layer-prototype.mjs?v=forest-cliffs-1';
 const {YK_WORLD: world, YK_LANDSCAPE: landscape, YK_AUTOTILE: autotile,
   YK_ELEVATION: elevation, YK_CAMERA: camera, YK_MOVEMENT: movement,
   YK_AREA_TRANSITIONS: transitions, YK_FIELD_ASSETS: assets} = window;
@@ -30,15 +30,17 @@ export function villageArrival(){return placeArrival('village');}
 
 export async function loadFieldArt() {
   const mode = typeof location==='undefined'?null:new URLSearchParams(location.search).get('renderer');
-  if(!window.__FIELD_COAST_CLIFF_CHIPS&&(mode==='coast-cliff-chips'||mode==='tall-plateaus'||mode==='cliff-cells')){
-    const {loadTerrainChips,placeShoreTrees,composeTerrainChips}=await import('../../work/field-coast-cliff/terrain-chips.mjs?v=cliff-cell-3');
-    const chips=await loadTerrainChips({tallPlateaus:mode==='tall-plateaus',cliffCells:mode==='cliff-cells'});
+  if(!window.__FIELD_COAST_CLIFF_CHIPS&&(mode==='coast-cliff-chips'||mode==='tall-plateaus'||mode==='forest-cliffs')){
+    const {loadTerrainChips,placeShoreTrees,composeTerrainChips}=await import('../../work/field-coast-cliff/terrain-chips.mjs?v=forest-cliffs-1');
+    const chips=await loadTerrainChips({tallPlateaus:mode==='tall-plateaus'});
     const changes=placeShoreTrees(world,chips['coast-mask']);
     window.YK_FIELD_ELEVATION.refreshCollision(world.mapData);
-    const prepare=mode==='cliff-cells'
-      ? (await import('../../work/field-coast-cliff/cliff-cells.mjs?v=cliff-cell-3')).prepareCliffCells
-      : null;
-    window.__FIELD_COAST_CLIFF_CHIPS={art:chips,composeTerrainChips,shoreTreeChanges:changes,prepare};
+    let compose = composeTerrainChips;
+    if(mode==='forest-cliffs'){
+      const {composeForestCliffs}=await import('../../work/field-coast-cliff/forest-cliff.mjs?v=1');
+      compose=(map,landscape,art)=>composeForestCliffs(map,landscape,art,composeTerrainChips);
+    }
+    window.__FIELD_COAST_CLIFF_CHIPS={art:chips,composeTerrainChips:compose,shoreTreeChanges:changes};
   }
   const hero = new Image();
   hero.src = assets.url(assets.hero);
@@ -55,13 +57,6 @@ export async function loadFieldArt() {
       check();
     }),
   ]);
-  const fieldChips=window.__FIELD_COAST_CLIFF_CHIPS;
-  if(fieldChips?.prepare){
-    const baked=fieldChips.prepare(world,window.YK_FIELD_TERRAIN.referenceComposition,landscape,fieldChips.art,
-      fieldChips.composeTerrainChips,()=>window.YK_FIELD_ELEVATION.refreshCollision(world.mapData));
-    fieldChips.composeTerrainChips=()=>baked;
-    fieldChips.prepare=null;
-  }
   return hero;
 }
 

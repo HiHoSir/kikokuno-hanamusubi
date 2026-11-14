@@ -53,7 +53,7 @@ export function createTileLayerPrototype(context,map,drawHero,chips,hero){
  const elevationView=window.YK_ELEVATION_VIEW;
  const objects=landscape.objects(map);
  const overlapsHero=chips&&hero?createTreeOcclusion(landscape,hero):null;
- let land=null, stripsWidth, stripsHeight, strips=[];
+ let land=null, crests, stripsWidth, stripsHeight, strips=[];
  const waterPatterns=new WeakMap();
  const zoom=1.4;
  // Use an upper bound only to limit the foot-sorted search. Visibility of
@@ -85,7 +85,8 @@ export function createTileLayerPrototype(context,map,drawHero,chips,hero){
   if(chips){
    const baked=chips.composeTerrainChips(map,landscape,chips.art);
    land=baked.canvas;
-   Object.assign(info,baked,{canvas:undefined,builds:1,staticBytes:land.width*land.height*4});
+   crests=baked.forestCliffCrests;
+   Object.assign(info,baked,{canvas:undefined,forestCliffCrests:crests?.size||0,builds:1,staticBytes:land.width*land.height*4});
    return;
   }
   const start=performance.now();
@@ -199,7 +200,8 @@ export function createTileLayerPrototype(context,map,drawHero,chips,hero){
   skyBand(0,240);
   const frame=landscape.motionArt('water',time),pattern=waterPattern(c,frame);
   const fall=landscape.motionArt('waterfall',time);
-  for(const {sy,sh,left,right,next} of projectionStrips(viewWidth,height)){
+  const projectedRows=projectionStrips(viewWidth,height);
+  for(const {sy,sh,left,right,next} of projectedRows){
    const ax=cam.x+left.x,ay=cam.y+left.y,bx=cam.x+right.x,dy=cam.y+next.y;
    if(bx<=ax||dy<=ay)continue;
    const sx=viewWidth/(bx-ax),ys=sh/(dy-ay);
@@ -250,6 +252,38 @@ export function createTileLayerPrototype(context,map,drawHero,chips,hero){
    c.globalAlpha=Math.min(1,Math.max(0,(p.y-136)/70))*(fadeTree?treeOverlapAlpha:1);
    if(chips&&o.kind==='waterfall'&&fall)c.drawImage(fall,x,y,w,h);
    else landscape.drawAsset(c,o.kind,x,y,w,h);
+   const crest=crests?.get(o);
+   if(crest&&!fadeTree){
+    // The existing rim can hide only the top of a lower tree crown.
+    // Re-use the land projection and leave trunks, feet and depth sorting intact.
+    const crownBottom=y+h*.47;
+    c.save();
+    c.beginPath();
+    c.rect(x,y,w,h*.47);
+    if(player&&playerPosition){
+     const size=spriteSize*playerPosition.scale;
+     c.rect(playerPosition.x-hero.anchor[0]*playerPosition.scale,
+       playerPosition.y-hero.anchor[1]*playerPosition.scale,size,size);
+     c.clip('evenodd');
+     c.beginPath();c.rect(x,y,w,h*.47);
+    }
+    c.clip();
+    c.globalAlpha*=.85;
+    for(const {sy,sh,left,right,next} of projectedRows){
+     if(sy+sh<=y||sy>=crownBottom)continue;
+     const ax=cam.x+left.x,ay=cam.y+left.y,bx=cam.x+right.x,dy=cam.y+next.y;
+     if(dy<=crest.top||ay>=crest.bottom||bx<=ax||dy<=ay)continue;
+     const sx=viewWidth/(bx-ax),ys=sh/(dy-ay);
+     const x0=Math.max(crest.left,Math.floor(ax)-1),x1=Math.min(crest.right,Math.ceil(bx)+1);
+     const y0=Math.max(crest.top,Math.floor(ay)-1),y1=Math.min(crest.bottom,Math.ceil(dy)+1);
+     if(x1<=x0||y1<=y0)continue;
+     c.save();c.beginPath();c.rect(x,sy,w,sh);c.clip();
+     c.drawImage(crest.image,x0-crest.left,y0-crest.top,x1-x0,y1-y0,
+      (x0-ax)*sx,sy+(y0-ay)*ys,(x1-x0)*sx,(y1-y0)*ys+.5);
+     c.restore();
+    }
+    c.restore();
+   }
    c.globalAlpha=1;
   }
   if(!player)drawPlayer();

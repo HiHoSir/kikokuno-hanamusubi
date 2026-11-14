@@ -38,6 +38,12 @@
 - 画面間移動は `window.KIKOKU_ROUTE.go(遷移先)` のみ使用。親ページにいる場合は `window.KIKOKU_GAME.navigate` へ移譲する。 `location.assign` による画面切替は禁止。
 - 新規の本編画面は `src/game/navigation/game-shell.mjs` の許可ルート・BGM割当、`src/game/navigation/entry.js`、`tests/entry-routing.test.mjs`、`tests/game-shell.test.mjs` を一緒に更新する。直URLと更新はタイトルへ戻す。検査専用 `previews/` は対象外。詳細は `docs/GAME_ENTRY.md`。
 
+## 横画面専用の現行ルール
+- 本編は横画面のみ。縦向きでは親の回転案内を出し、画面回転では再読み込み・BGMリセット・移動入力保持を行わない。
+- フィールドは正方形からの切り抜きではなく投影レンダラーに横画面幅を渡して描画する。旧 fieldViewportCrop、object-fit:cover、下108pxの不透明な操作帯は復活させない。
+- 村・室内・天妖の社・戦闘でも横画面の縦横比を崩さず、地形・建物・緋月の個別アセットを引き伸ばさない。
+- 横画面基準・画面別の検査状況は docs/LANDSCAPE_LAYOUT_REVIEW.md を参照。未検査を実機合格としない。
+
 ## 実装・検査・公開
 - コード変更前は現行実装と原因を調査してから最小範囲を修正する。
 - `npm test` とゲーム固有の検査を行う。GitHub Actions、Pages、iPhone実機Safariは独立した検査として扱い、未実施を成功と報告しない。

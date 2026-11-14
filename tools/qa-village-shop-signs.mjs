@@ -82,6 +82,30 @@ try{
         issues.push(label+' '+building+' native sign placement mismatch '+JSON.stringify(data));
       }
       await page.screenshot({path:'artifacts/village-sign-'+label+'-'+room+'.png',fullPage:true});
+      if(room==='teahouse'){
+        const before=await page.evaluate(()=>window.KIKOKU_GAME?.audio?.trackName);
+        const toggle=page.locator('#field-menu-toggle');
+        await toggle.waitFor({state:'visible'});
+        await toggle.click();
+        await page.waitForFunction(()=>{
+          const m=document.querySelector('#field-menu-backdrop');
+          return m && !m.hidden && m.querySelectorAll('#field-menu-commands button').length===6;
+        },null,{timeout:5000});
+        const menu=await page.evaluate(()=>({
+          status:document.querySelector('#field-menu-summary').textContent,
+          items:document.querySelector('#field-menu-detail').textContent,
+          bgm:window.KIKOKU_GAME?.audio?.trackName,
+          scene:document.querySelector('#game-scene').src
+        }));
+        if(!menu.status.includes('緋月')||!menu.items.includes('薬草')||menu.bgm!==before||
+           !menu.scene.includes('/village/'))issues.push(label+' menu contract failed '+JSON.stringify(menu));
+        await page.screenshot({path:'artifacts/field-menu-'+label+'.png',fullPage:true});
+        await page.locator('#field-menu-commands button').filter({hasText:'強さ'}).click();
+        const detailText=await page.locator('#field-menu-detail').innerText();
+        if(!detailText.includes('攻撃')||!detailText.includes('守備'))issues.push(label+' status menu missing combat stats');
+        await page.locator('#field-menu-close').click();
+        await page.waitForFunction(()=>document.querySelector('#field-menu-backdrop').hidden);
+      }
       // Verify enter/leave from real contact movement, not a direct room URL.
       await page.evaluate(()=>{
         const child=document.querySelector('iframe').contentWindow;

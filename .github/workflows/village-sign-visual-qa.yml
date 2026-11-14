@@ -8,6 +8,10 @@ on:
       - 'src/game/village/**'
       - 'src/game/interiors/**'
       - 'tools/qa-village-shop-signs.mjs'
+      - 'src/game/index.html'
+      - 'src/game/ui/field-menu.mjs'
+      - 'src/game/ui/field-menu.css'
+      - 'src/game/battle/rules.mjs'
       - '.github/workflows/village-sign-visual-qa.yml'
   workflow_dispatch:
 jobs:

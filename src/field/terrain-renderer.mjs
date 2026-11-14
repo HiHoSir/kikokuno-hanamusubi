@@ -1,4 +1,7 @@
-import {composeTerrainChips} from "./terrain-chips.mjs";
+import {composeCoast} from './terrain-chips.mjs?v=field-height-1';
+import {clipAtTerrain,composeRaisedTerrain,terrainY} from './height-projection.mjs?v=field-height-1';
+
+const zoom=1.55;
 
 const canvas=(w,h)=>{const el=document.createElement('canvas');el.width=w;el.height=h;el.getContext('2d').imageSmoothingEnabled=false;return el};
 
@@ -47,12 +50,16 @@ function createTreeOcclusion(landscape,hero){
 }
 
 export function createFieldTerrainRenderer(map,drawHero,art,hero){
- const landscape=window.YK_LANDSCAPE;
- const objects=landscape.objects(map);
+ const landscape=window.YK_LANDSCAPE,elevation=window.YK_ELEVATION;
+ const objects=landscape.objects(map).map(o=>{
+  const foot=o.foot??o.y;
+  const center=o.x+o.width/2;
+  const level=o.supportHeight??elevation.height(map,center,foot-1);
+  return {...o,foot,center,projectedFoot:terrainY(foot,level)};
+ });
  const overlapsHero=createTreeOcclusion(landscape,hero);
- let land=null, stripsWidth, stripsHeight, strips=[];
+ let land=null, originY=0, terrainDepth, stripsWidth, stripsHeight, strips=[];
  const waterPatterns=new WeakMap();
- const zoom=1.4;
  // Use an upper bound only to limit the foot-sorted search. Visibility of
  // each prop is then tested on its full projected sprite, including its top.
  const maxSpriteHeight=objects.reduce((max,o)=>Math.max(max,o.height),0);
@@ -76,16 +83,20 @@ export function createFieldTerrainRenderer(map,drawHero,art,hero){
   if(!patterns.has(frame))patterns.set(frame,c.createPattern(frame,'repeat'));
   return patterns.get(frame);
  }
- const info={builds:0,waterFrames:0,draws:0,staticLand:true,animatedWater:true};
+ const info={zoom,builds:0,waterFrames:0,draws:0,staticLand:true,animatedWater:true};
  function prepare(){
   if(land)return;
-  const {canvas,...stats}=composeTerrainChips(map,landscape,art);
-  land=canvas;
-  Object.assign(info,stats,{builds:1,staticBytes:land.width*land.height*4});
+  const started=performance.now();
+  const {canvas:staticLand,terrainDepth:depth,...stats}=composeRaisedTerrain(map,landscape,composeCoast(map,landscape,art),elevation);
+  land=staticLand;
+  originY=stats.originY;
+  terrainDepth=depth;
+  Object.assign(info,stats,{builds:1,buildMs:performance.now()-started,staticBytes:land.width*land.height*4});
  }
  function draw(c,actor,time,viewWidth=c.canvas.width){
   prepare();
-  const height=c.canvas.height,cam={x:actor.x,y:actor.foot,preset:0,centerX:viewWidth/2,foregroundGrowth:true};
+  const actorLevel=actor.height??elevation.height(map,actor.x,actor.foot);
+  const height=c.canvas.height,cam={x:actor.x,y:terrainY(actor.foot,actorLevel),preset:0,centerX:viewWidth/2,foregroundGrowth:true};
   c.save();c.imageSmoothingEnabled=false;c.clearRect(0,0,viewWidth,height);
   c.fillStyle='#192f3c';c.fillRect(0,0,viewWidth,height);
   // Match the normal Momotaro-style sky, including mirrored panorama sides.
@@ -101,52 +112,67 @@ export function createFieldTerrainRenderer(map,drawHero,art,hero){
   skyBand(0,240);
   const frame=landscape.motionArt('water',time),pattern=waterPattern(c,frame);
   const fall=landscape.motionArt('waterfall',time);
+  const projectedStrips=[];
   for(const {sy,sh,left,right,next} of projectionStrips(viewWidth,height)){
    const ax=cam.x+left.x,ay=cam.y+left.y,bx=cam.x+right.x,dy=cam.y+next.y;
    if(bx<=ax||dy<=ay)continue;
    const sx=viewWidth/(bx-ax),ys=sh/(dy-ay);
+   projectedStrips.push({ax,ay,dy,sx,ys,sy,sh});
    c.save();c.beginPath();c.rect(0,sy,viewWidth,sh);c.clip();
    // Lower moving sea layer: the static land never receives a water frame.
    c.save();c.transform(sx,0,0,ys,-ax*sx,sy-ay*ys);
    c.fillStyle=pattern;c.fillRect(ax-4,ay-4,bx-ax+8,dy-ay+8);c.restore();
    const x0=Math.max(0,Math.floor(ax)-1),x1=Math.min(land.width,Math.ceil(bx)+1);
-   const y0=Math.max(0,Math.floor(ay)-1),y1=Math.min(land.height,Math.ceil(dy)+1);
-   if(x1>x0&&y1>y0)c.drawImage(land,x0,y0,x1-x0,y1-y0,
+   const y0=Math.max(originY,Math.floor(ay)-1),y1=Math.min(originY+land.height,Math.ceil(dy)+1);
+   if(x1>x0&&y1>y0)c.drawImage(land,x0,y0-originY,x1-x0,y1-y0,
     (x0-ax)*sx,sy+(y0-ay)*ys,(x1-x0)*sx,(y1-y0)*ys+.5);
    c.restore();
   }
   // The camera follows the cell center. Use the near edge of the same
   // cell for the visible foot and for depth sorting.
   const playerFoot=actor.foot+16;
-  const playerPosition=landscape.project(actor.x,playerFoot,cam,zoom);
+  const playerPosition=landscape.project(actor.x,terrainY(playerFoot,actorLevel),cam,zoom);
+  const clipSprite=(x,y,width,height,foot)=>projectedStrips.length>0&&
+   clipAtTerrain(c,terrainDepth,originY,projectedStrips,{x,y,width,height,foot});
   const drawPlayer=()=>{
-   if(playerPosition)drawHero(c,playerPosition.x,playerPosition.y,playerPosition.scale);
+   if(!playerPosition)return;
+   const {x,y,scale}=playerPosition;
+   const [anchorX,anchorY]=hero.anchor;
+   const clipped=clipSprite(x-anchorX*scale,y-anchorY*scale,spriteSize*scale,35*scale,playerFoot);
+   drawHero(c,x,y,scale);
+   if(clipped)c.restore();
   };
   const minFoot=landscape.unproject(0,136,cam,zoom).y;
-  const maxFoot=landscape.unproject(0,Math.min(landscape.foregroundProjectionLimit,height+maxSpriteHeight*outerScale),cam,zoom).y;
+  const maxFoot=landscape.unproject(0,Math.min(landscape.foregroundProjectionLimit,height+maxSpriteHeight*outerScale),cam,zoom).y-originY;
   let first=0,last=objects.length;
   while(first<last){
    const mid=(first+last)>>1;
    if(objects[mid].foot<minFoot)first=mid+1;
    else last=mid;
   }
+  // Sprites and the terrain share the same horizon. A tall distant sprite
+  // can otherwise rise above the first row of the fog overlay.
+  c.save();c.beginPath();c.rect(0,136,viewWidth,Math.max(0,height-136));c.clip();
   let player=false;
   for(let i=first;i<objects.length&&objects[i].foot<=maxFoot;i++){
    const o=objects[i];
-   const foot=o.foot??o.y;
+   const foot=o.foot;
    if(!player&&playerFoot<=foot){drawPlayer();player=true;}
-   const cx=o.x+o.width/2,p=landscape.project(cx,foot,cam,zoom);
+   const p=landscape.project(o.center,o.projectedFoot,cam,zoom);
    if(!p||!landscape.specs[o.kind])continue;
    const w=o.width*p.scale,h=o.height*p.scale,x=p.x-w/2,y=p.y-h;
    if(x+w<=0||x>=viewWidth||y>=height||p.y<=136)continue;
    const fadeTree=player&&playerPosition&&treeKinds.has(o.kind)
     &&overlapsHero(o.kind,x,y,w,h,playerPosition);
    c.globalAlpha=Math.min(1,Math.max(0,(p.y-136)/70))*(fadeTree?treeOverlapAlpha:1);
+   const clipped=clipSprite(x,y,w,h,foot);
    if(o.kind==='waterfall'&&fall)c.drawImage(fall,x,y,w,h);
    else landscape.drawAsset(c,o.kind,x,y,w,h);
+   if(clipped)c.restore();
    c.globalAlpha=1;
   }
   if(!player)drawPlayer();
+  c.restore();
   // Original projection fades the terrain into the same sky between y136-208.
   for(let y=136;y<208;y+=4){
    const t=(y-136)/72;c.globalAlpha=1-t*t*(3-2*t);skyBand(y,4);

@@ -51,7 +51,7 @@ test('production water/river/waterfall motion uses the same RAF phase as field s
  assert.match(landscape,/Number\.isFinite\(settings\.motionTime\)\?settings\.motionTime/);
  assert.match(landscape,/movingWater=motionArt\('water',motionTime\)/);
  assert.match(landscape,/sea:movingWater,river:movingWater,waterfall:movingFall/);
- assert.match(runtime,/renderer\.draw\(context,\{x,foot:y\},frameTime/);
+ assert.match(runtime,/renderer\.draw\(context,\{x,foot:y,height\},frameTime/);
  assert.match(walk,/Math\.floor\(now \/ 360\)/);
  assert.match(tenyo,/waterKinds=\['shallow','mid','deep'\]/);
  assert.match(tenyo,/Math\.floor\(\(o\.animationTime\|\|0\)\/360\)%4/);
@@ -65,13 +65,14 @@ test('animated water atlas uses HALF the atlas width per frame; second frame is 
  assert.doesNotMatch(code,/ctx\.drawImage\(atlas,i\*w,0,w,h,0,0,w,h\)/);
 });
 
-test('the normal field loads approved coast and cliff chips with animated water',()=>{
+test('the normal field loads approved coast chips and projected terrain with animated water',()=>{
  const renderer=readFileSync('src/field/terrain-renderer.mjs','utf8');
  const runtime=readFileSync('src/field/runtime.mjs','utf8');
  const chips=readFileSync('src/field/terrain-chips.mjs','utf8');
  assert.match(runtime,/createFieldTerrainRenderer\(world\.mapData/);
  assert.doesNotMatch(runtime,/get\('renderer'\)|drawQuarter/);
  assert.match(chips,/destination-in/);
+ assert.match(renderer,/composeRaisedTerrain/);
  assert.match(renderer,/motionArt\('water',time\)/);
  assert.match(renderer,/landscape\.unproject/);
  assert.match(renderer,/staticLand:true,animatedWater:true/);

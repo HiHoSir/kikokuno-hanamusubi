@@ -191,11 +191,13 @@ test('landscape field draws directly into a wider viewport without a portrait cr
  landscape.objects=()=>[];
  landscape.groundLayer=()=>({width:2560,height:2560});
  landscape.motionArt=()=>({width:640,height:240});
- worldContext.YK_WORLD.mapData=Object.assign([['grass']],{decorations:[]});
+ worldContext.YK_WORLD.mapData=Object.assign([['grass']],{decorations:[],heights:[[0]],ramps:[[null]]});
+ globalThis.ImageData=class {constructor(data,width,height){Object.assign(this,{data,width,height});}};
  const terrain=new Proxy({}, {get:()=>({})});
  globalThis.document={createElement:()=>{
    const canvas={width:0,height:0};
-   canvas.getContext=()=>({canvas,clearRect(){},drawImage(){},fillRect(){}});
+   canvas.getContext=()=>({canvas,clearRect(){},drawImage(){},fillRect(){},putImageData(){},
+     getImageData(){return new ImageData(new Uint8ClampedArray(canvas.width*canvas.height*4),canvas.width,canvas.height);}});
    return canvas;
  }};
  globalThis.window=worldContext;
@@ -220,8 +222,9 @@ test('landscape field draws directly into a wider viewport without a portrait cr
      assert.equal(args.length,9);
      assert.ok(Math.abs(args[5]+args[7]/2-expected/2)<40,'hero stays horizontally centered');
      const camera={x:1200,y:2256,centerX:expected/2,foregroundGrowth:true};
-     const foot=landscape.project(1200,2272,camera).y;
-     assert.equal(Number(display.dataset.fieldHeroFoot),Math.round(foot));
+     const projected=landscape.project(1200,2272,camera,1.55);
+     assert.equal(Number(display.dataset.fieldHeroFoot),Math.round(projected.y));
+     assert.equal(args[7],32*projected.scale);
    }
- }finally{delete globalThis.window;delete globalThis.document;}
+ }finally{delete globalThis.window;delete globalThis.document;delete globalThis.ImageData;}
 });

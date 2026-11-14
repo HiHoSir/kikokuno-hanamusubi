@@ -85,6 +85,17 @@ try{
    }
    const firstWater=tctx.getImageData(0,0,width,height).data.slice();
    const landBefore=test.staticLand,landBuilds=test.info.builds;
+   const landPixels=landBefore.getContext('2d');
+   const decks=map.decorations.filter(o=>o.ground&&['bridge','bridgeNS'].includes(o.kind)).map(o=>{
+     const deck=document.createElement('canvas');
+     deck.width=o.width;deck.height=o.height;
+     const pixels=deck.getContext('2d');
+     w.YK_LANDSCAPE.drawAsset(pixels,o.kind,0,0,o.width,o.height);
+     const x=o.width/2,y=o.height/2;
+     const art=pixels.getImageData(x,y,1,1).data;
+     const rendered=landPixels.getImageData(o.x+x,o.y+y-test.info.originY,1,1).data;
+     return art[3]===255&&art.every((channel,i)=>channel===rendered[i]);
+   });
    test.draw(tctx,actor,frameTime+360,width);
    const nextWater=tctx.getImageData(0,0,width,height).data;
    let animatedPixels=0;
@@ -94,7 +105,7 @@ try{
    }
    return {viewport:[width,height],referenceMs:+referenceMs.toFixed(1),candidateMs:+candidateMs.toFixed(1),
     ratio:+(candidateMs/referenceMs).toFixed(3),differentPercent:+(100*diff/(width*height)).toFixed(2),
-    differentPixels:diff,animatedPixels,
+    differentPixels:diff,animatedPixels,decks,
     fixedLand:test.staticLand===landBefore&&test.info.builds===landBuilds,
     info:{...test.info},refPNG:reference.toDataURL('image/png').split(',')[1],
     candidatePNG:testImg.toDataURL('image/png').split(',')[1],
@@ -162,11 +173,14 @@ try{
     const values=field.document.querySelector('#scene').dataset;
     return {url:frame.src,track:window.KIKOKU_GAME.audio.trackName,
       sameCell:Number(values.x)===Math.floor(x/32)&&Number(values.y)===Math.floor(y/32),
+      zoom:field.__FIELD_TERRAIN_RENDERER.info.zoom,
       water:field.__FIELD_TERRAIN_RENDERER.info.animatedWater};
   });
   results.push(result);
   if(errors.length||!result.battleReturn.water||!result.battleReturn.sameCell||
-     result.battleReturn.track!=='field'||result.info.forestCliffTiles<1||
+     result.battleReturn.track!=='field'||result.info.cliffPixels<1||
+     result.info.zoom!==1.55||result.battleReturn.zoom!==result.info.zoom||
+     result.decks.length!==4||!result.decks.every(Boolean)||
      result.animatedPixels<100||!result.fixedLand||
      result.info.waterCells<1||result.info.builds!==1||result.info.waterFrames!==Math.floor((120000+360)/360)%2||
      result.info.staticBytes<100000||!Number.isFinite(result.ratio)||

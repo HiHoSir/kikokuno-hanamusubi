@@ -168,22 +168,26 @@ try{
   await page.waitForFunction(()=>{
     const f=document.querySelector('iframe'),w=f?.contentWindow;
     return f?.src.includes('/src/field/')&&!f?.src.includes('renderer=')&&
-      w?.document.querySelector('#load')?.hidden===true;
+      w?.location.href===f.src&&w?.KIKOKU_ROUTE?.admitted===true&&
+      w.document.querySelector('#load')?.hidden===true;
   },null,{timeout:60000});
   await page.evaluate(()=>{
-    document.querySelector('iframe').contentWindow.KIKOKU_ROUTE.go(new URL('/src/game/battle/',location.href));
+    const child=document.querySelector('iframe').contentWindow;
+    child.KIKOKU_ROUTE.go(new URL('../game/battle/',child.location.href));
   });
   await page.waitForFunction(()=>{
     const f=document.querySelector('iframe'),w=f?.contentWindow;
     return f?.src.includes('/src/game/battle/')&&w?.KIKOKU_ROUTE?.admitted===true;
   },null,{timeout:20000});
   await page.evaluate(()=>{
-    document.querySelector('iframe').contentWindow.KIKOKU_ROUTE.go(new URL('/src/field/?from=battle',location.href));
+    const child=document.querySelector('iframe').contentWindow;
+    child.KIKOKU_ROUTE.go(new URL('../../field/?from=battle',child.location.href));
   });
   await page.waitForFunction(()=>{
     const f=document.querySelector('iframe'),w=f?.contentWindow;
     return f?.src.includes('/src/field/')&&f?.src.includes('from=battle')&&
-      !f?.src.includes('renderer=')&&w?.document.querySelector('#load')?.hidden===true;
+      !f?.src.includes('renderer=')&&w?.location.href===f.src&&
+      w?.KIKOKU_ROUTE?.admitted===true&&w.document.querySelector('#load')?.hidden===true;
   },null,{timeout:60000});
   const returnToOriginal=await page.evaluate(()=>({
     url:document.querySelector('iframe').src,track:window.KIKOKU_GAME.audio.trackName,

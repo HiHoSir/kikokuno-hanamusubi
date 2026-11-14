@@ -30,3 +30,27 @@
 #field-menu-toggle{min-height:38px;top:max(4px,env(safe-area-inset-top))}
 }
 @media(max-width:360px){#field-menu-window{padding:7px}#field-menu-commands button{font-size:13px}#field-menu-detail{padding:5px;font-size:13px}}
+
+/* Matching menu-only pad. It receives taps while the scene iframe is blocked;
+   no movement key leaks through to the walking or battle scene. */
+#field-menu-window{position:relative;z-index:2}
+#field-menu-controller{position:absolute;inset:0;z-index:3;pointer-events:none}
+#field-menu-dpad{position:absolute;left:max(12px,env(safe-area-inset-left));bottom:max(12px,env(safe-area-inset-bottom));width:126px;height:126px;pointer-events:auto;touch-action:manipulation}
+#field-menu-dpad::before{content:"";position:absolute;left:42px;top:42px;width:42px;height:42px;background:#17324fcc;border:2px solid #b79a62b3;border-radius:5px;pointer-events:none}
+#field-menu-dpad button{position:absolute;width:42px;height:42px;min-height:42px;padding:0;border:2px solid #b79a62b3;border-radius:5px;background:#17324fdf;color:white;font:18px system-ui,sans-serif;touch-action:manipulation;pointer-events:auto}
+#field-menu-dpad button[data-menu-dir=up]{top:0;left:42px}
+#field-menu-dpad button[data-menu-dir=down]{top:84px;left:42px}
+#field-menu-dpad button[data-menu-dir=left]{top:42px;left:0}
+#field-menu-dpad button[data-menu-dir=right]{top:42px;left:84px}
+#field-menu-action-a,#field-menu-action-b{position:absolute;display:grid;place-items:center;border:1px solid #b79a62b3;border-radius:50%;color:#fff;font:700 20px system-ui,sans-serif;touch-action:manipulation;pointer-events:auto}
+#field-menu-action-a{right:max(14px,env(safe-area-inset-right));bottom:max(16px,env(safe-area-inset-bottom));width:68px;height:68px;background:#903d60cc}
+#field-menu-action-b{right:max(102px,calc(env(safe-area-inset-right) + 94px));bottom:max(42px,calc(env(safe-area-inset-bottom) + 25px));width:54px;height:54px;background:#244b72cc}
+#field-menu-controller button:active{filter:brightness(1.2)}
+#field-menu-commands button.menu-focus,#field-menu-detail button.menu-focus{border-color:#ffe39b;background:#3a536a;color:#ffedbd;box-shadow:inset 3px 0 #f0d187}
+#field-menu-commands[data-menu-pane=detail] button.selected{border-color:#a58c64}
+@media(orientation:landscape) and (max-height:520px){
+  #field-menu-controller{bottom:0}
+  #field-menu-dpad{transform:scale(.87);transform-origin:left bottom}
+  #field-menu-action-a{width:65px;height:65px}
+  #field-menu-action-b{width:52px;height:52px}
+}

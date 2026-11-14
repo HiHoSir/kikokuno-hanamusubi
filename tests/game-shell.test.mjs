@@ -78,3 +78,16 @@ test('world menu is hosted by the persistent game shell, not duplicated in the s
  assert.match(menu,/dispatchEvent\(new Event\('blur'\)\)/);
  assert.doesNotMatch(menu,/location.assign|location.replace/);
 });
+
+test('field menu has its own on-screen gamepad with no duplicate scene control IDs',()=>{
+  const js=readFileSync('src/game/ui/field-menu.mjs','utf8');
+  const css=readFileSync('src/game/ui/field-menu.css','utf8');
+  for(const dir of ['up','down','left','right'])assert.match(html,new RegExp('data-menu-dir="'+dir+'"'));
+  for(const id of ['field-menu-action-a','field-menu-action-b','field-menu-controller'])assert.ok(html.includes('id="'+id+'"'));
+  for(const code of ['function direction(dir)','function confirm()','function back()','pane=','frame.style.pointerEvents','data-menu-command'])
+    assert.ok(js.includes(code),code);
+  assert.match(css,/#field-menu-dpad/);
+  assert.match(css,/\.menu-focus/);
+  assert.doesNotMatch(html,/\sid="action-a"/);
+  assert.doesNotMatch(html,/\sid="action-b"/);
+});

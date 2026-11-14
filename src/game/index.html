@@ -12,7 +12,7 @@
   <link rel="stylesheet" href="./audio/audio.css">
   <link rel="stylesheet" href="./ui/landscape-only.css?v=1">
   <script type="module" src="./ui/landscape-only.mjs?v=1"></script>
-  <link rel="stylesheet" href="./ui/field-menu.css?v=1">
+  <link rel="stylesheet" href="./ui/field-menu.css?v=gamepad-1">
   <title>鬼哭の花結び｜本編</title>
   <style>
     html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#07101e;overscroll-behavior:none}
@@ -24,7 +24,7 @@
     #sound-toggle{z-index:50}
   </style>
   <script type="module" src="./navigation/game-shell.mjs?v=battle-1"></script>
-  <script type="module" src="./ui/field-menu.mjs?v=1"></script>
+  <script type="module" src="./ui/field-menu.mjs?v=gamepad-1"></script>
 </head>
 <body>
   <main id="game-shell">
@@ -39,6 +39,16 @@
       <div class="field-menu-grid"><nav id="field-menu-commands" aria-label="コマンド"></nav><section id="field-menu-detail"></section></div>
       <p id="field-menu-message" role="status" aria-live="polite"></p>
     </section>
+    <div id="field-menu-controller" role="group" aria-label="コマンド操作">
+      <div id="field-menu-dpad" role="group" aria-label="選択方向">
+        <button type="button" data-menu-dir="up" aria-label="上">▲</button>
+        <button type="button" data-menu-dir="left" aria-label="左">◀</button>
+        <button type="button" data-menu-dir="right" aria-label="右">▶</button>
+        <button type="button" data-menu-dir="down" aria-label="下">▼</button>
+      </div>
+      <button id="field-menu-action-b" type="button" aria-label="B 戻る">B</button>
+      <button id="field-menu-action-a" type="button" aria-label="A 決定">A</button>
+    </div>
   </div>
   <aside id="landscape-required" class="landscape-required" role="status" aria-live="polite" aria-hidden="true">
   <span class="landscape-required-icon" aria-hidden="true">▯</span>

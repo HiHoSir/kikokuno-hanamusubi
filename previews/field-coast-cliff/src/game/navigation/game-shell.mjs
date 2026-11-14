@@ -51,6 +51,7 @@ function navigate(target, sourceWindow) {
     // Battle and shrine routes omit renderer=...; the host must restore the
     // selected preview renderer when returning to the field.
     next.searchParams.set('profile','1');
+    next.searchParams.set('v','plateau-1');
     if (fieldRenderer) next.searchParams.set('renderer',fieldRenderer);
     else next.searchParams.delete('renderer');
   }

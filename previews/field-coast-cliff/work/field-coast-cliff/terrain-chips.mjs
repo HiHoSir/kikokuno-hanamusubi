@@ -249,7 +249,7 @@ function fitCliffContacts(ground, map, paintedCliffs, art, cliffMask){
   return {adjusted};
 }
 
-export function composeTerrainChips(map,landscape,art,cliffMask) {
+export function composeTerrainChips(map,landscape,art,cliffMask,{relief=true}={}) {
   const started=performance.now();
   const width=map[0].length,height=map.length;
   const ground=surface(width*cell,height*cell);
@@ -280,7 +280,7 @@ export function composeTerrainChips(map,landscape,art,cliffMask) {
     shoreline.push({x,y,px,py,cover,local});
     if(cover===0)waterCells++;
   }
-  for(let y=-1;y<height;y++)for(let x=-1;x<width;x++){
+  if(relief)for(let y=-1;y<height;y++)for(let x=-1;x<width;x++){
     const local=edgeSamples(get,x,y);
     const minimum=Math.min(...local.map(s=>s.level));
     const maximum=Math.min(3,Math.max(...local.map(s=>s.level)));
@@ -342,9 +342,11 @@ export function composeTerrainChips(map,landscape,art,cliffMask) {
     chip(ground,image,index,px,py);
     if(cliffMask)chip(cliffMask,image,index,px,py);
   }
-  const contacts=fitCliffContacts(ground,map,paintedCliffs,art,cliffMask);
-  fitTrailCliffJoin(ground,map);
-  if(cliffMask)fitTrailCliffJoin(cliffMask,map);
+  const contacts=relief?fitCliffContacts(ground,map,paintedCliffs,art,cliffMask):{};
+  if(relief){
+    fitTrailCliffJoin(ground,map);
+    if(cliffMask)fitTrailCliffJoin(cliffMask,map);
+  }
   // Cut the coast with one mask composite. This avoids an expensive
   // destination-in layer per cell on browsers and software canvases.
   const coverage=surface(width*cell,height*cell);
@@ -365,12 +367,12 @@ export function composeTerrainChips(map,landscape,art,cliffMask) {
     const raised=!local.some(s=>s.terrain==='sand')&&local.some(s=>s.dry&&s.level>0);
     const phase=((x%2+2)%2)+2*((y%2+2)%2);
     chip(ground,art['coast-shallow'],cover,px,py);
-    if(raised)chip(ground,art['coast-rock'],cover,px,py);
+    if(raised){if(relief)chip(ground,art['coast-rock'],cover,px,py);}
     else chip(ground,art[ocean?'coast-sand-'+phase:'coast-river'],cover,px,py);
   }
 
 
-  for(const ladder of map.ladders||[]){
+  if(relief)for(const ladder of map.ladders||[]){
     const [x,y]=ladder.lower;
     landscape.drawAsset(ground,'ladder',x*cell+8,y*cell-18,16,29);
   }

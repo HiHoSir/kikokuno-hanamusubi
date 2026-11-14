@@ -1,5 +1,5 @@
 import {fieldViewportDimensions} from './viewport.mjs';
-import {createTileLayerPrototype} from './tile-layer-prototype.mjs?v=forest-cliffs-2';
+import {createTileLayerPrototype} from './tile-layer-prototype.mjs?v=terrain-heights-1';
 const {YK_WORLD: world, YK_LANDSCAPE: landscape, YK_AUTOTILE: autotile,
   YK_ELEVATION: elevation, YK_CAMERA: camera, YK_MOVEMENT: movement,
   YK_AREA_TRANSITIONS: transitions, YK_FIELD_ASSETS: assets} = window;
@@ -30,16 +30,18 @@ export function villageArrival(){return placeArrival('village');}
 
 export async function loadFieldArt() {
   const mode = typeof location==='undefined'?null:new URLSearchParams(location.search).get('renderer');
-  if(!window.__FIELD_COAST_CLIFF_CHIPS&&(mode==='coast-cliff-chips'||mode==='tall-plateaus'||mode==='forest-cliffs')){
-    const {loadTerrainChips,placeShoreTrees,composeTerrainChips}=await import('../../work/field-coast-cliff/terrain-chips.mjs?v=forest-cliffs-2');
+  if(!window.__FIELD_COAST_CLIFF_CHIPS&&(mode==='coast-cliff-chips'||mode==='tall-plateaus'||mode==='projected-heights')){
+    const {loadTerrainChips,placeShoreTrees,composeTerrainChips}=await import('../../work/field-coast-cliff/terrain-chips.mjs?v=terrain-heights-1');
     const chips=await loadTerrainChips({tallPlateaus:mode==='tall-plateaus'});
     const changes=placeShoreTrees(world,chips['coast-mask']);
     window.YK_FIELD_ELEVATION.refreshCollision(world.mapData);
-    let cliffUnderstoryTrees;
-    if(mode==='forest-cliffs'){
-      ({cliffUnderstoryTrees}=await import('../../work/field-coast-cliff/forest-cliff.mjs?v=2'));
+    if(mode==='projected-heights'){
+      const {clipAtTerrain,composeRaisedTerrain,terrainY}=await import('../../work/field-coast-cliff/height-projection.mjs?v=terrain-heights-1');
+      window.__FIELD_COAST_CLIFF_CHIPS={art:chips,terrainY,clipAtTerrain,shoreTreeChanges:changes,
+        composeTerrainChips:(map,ground,art)=>composeRaisedTerrain(map,ground,art,composeTerrainChips,elevation)};
+    }else{
+      window.__FIELD_COAST_CLIFF_CHIPS={art:chips,composeTerrainChips,shoreTreeChanges:changes};
     }
-    window.__FIELD_COAST_CLIFF_CHIPS={art:chips,composeTerrainChips,cliffUnderstoryTrees,shoreTreeChanges:changes};
   }
   const hero = new Image();
   hero.src = assets.url(assets.hero);

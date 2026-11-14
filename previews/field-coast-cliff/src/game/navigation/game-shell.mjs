@@ -20,7 +20,7 @@ const routes = new Map([
 // approved Momotaro-style renderer, including after a battle.
 const rendererPreview = new URL(location.href).searchParams.get('field-renderer-preview') === '1';
 const fieldPath = new URL('src/field/', root).pathname;
-const fieldRenderers = new Set(['tile-layers','coast-cliff-chips','tall-plateaus','forest-cliffs']);
+const fieldRenderers = new Set(['tile-layers','coast-cliff-chips','tall-plateaus','projected-heights']);
 let fieldRenderer = null;
 let active = '';
 function setFieldRenderer(value) {
@@ -51,7 +51,7 @@ function navigate(target, sourceWindow) {
     // Battle and shrine routes omit renderer=...; the host must restore the
     // selected preview renderer when returning to the field.
     next.searchParams.set('profile','1');
-    next.searchParams.set('v','forest-cliffs-2');
+    next.searchParams.set('v','terrain-heights-1');
     if (fieldRenderer) next.searchParams.set('renderer',fieldRenderer);
     else next.searchParams.delete('renderer');
   }

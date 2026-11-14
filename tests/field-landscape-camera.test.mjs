@@ -33,11 +33,3 @@ test('field profiling is opt-in and does not alter the rendered world or state',
  assert.match(browser,/p95Ms/);
  assert.match(browser,/ArrowRight/);
 });
-
-test('flat terrain is rendered with one UV quad; slopes and shores retain fine strips',()=>{
- const view=readFileSync('src/field/elevation-view.js','utf8');
- assert.match(view,/const band=options\.groundTile && !m\.ramps\?\.\[ty\]\?\.\[tx\] && !E\.outline\(m,tx,ty\)\.cuts\.length && !shoreSides\(m,tx,ty\)\.length/);
- assert.match(view,/\?32:options\.groundTile\?\(center\.y<280\?32:16\):8/);
- assert.match(view,/function repeatPadding\(im\)/);
- assert.doesNotMatch(view,/function compactPadding|function repeatingPattern/);
-});

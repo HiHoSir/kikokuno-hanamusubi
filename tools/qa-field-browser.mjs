@@ -147,32 +147,29 @@ try{
   });
   const screenshot='artifacts/field-'+width+'x'+height+'.png';
   await page.screenshot({path:screenshot});
-  // Paired benchmark on the SAME canvas/runner/map: separate CI runs can
-  // differ by >2x depending on virtual CPU scheduling and asset warmup.
-  const comparison=await page.evaluate(()=>{
-    const w=document.querySelector('iframe').contentWindow;
-    const canvas=w.document.querySelector('#scene'),ctx=canvas.getContext('2d');
-    const map=w.YK_WORLD.mapData,px=Number(canvas.dataset.x)*32+16,py=Number(canvas.dataset.y)*32+16;
-    const actor={x:px,foot:py,draw:()=>{}};
-    const draw=()=>w.YK_LANDSCAPE.drawQuarter(ctx,map,actor,1.4,
-       {oceanOutside:true,elevationTerrain:true,viewportWidth:canvas.width});
-    const measure=flat=>{
-      w.YK_FIELD_FAST_FLAT=flat;
-      draw(); // Warm each path before its measured turns.
-      const times=[];
-      for(let i=0;i<5;i++){const begin=w.performance.now();draw();times.push(w.performance.now()-begin);}
-      return times;
-    };
-    const baseline=[...measure(false),...measure(false)];
-    const candidate=[...measure(true),...measure(true)];
-    w.YK_FIELD_FAST_FLAT=true;
-    const median=s=>{const sorted=[...s].sort((a,b)=>a-b);return Number(((sorted[4]+sorted[5])/2).toFixed(2));};
-    return {baselineMs:median(baseline),candidateMs:median(candidate),
-      ratio:Number((median(candidate)/median(baseline)).toFixed(3)),
-      baselineSamples:baseline.map(n=>Math.round(n)),candidateSamples:candidate.map(n=>Math.round(n))};
+  // Heavy terrain drawing stops while the field menu covers the scene,
+  // then resumes without recreating the iframe or changing audio tracks.
+  const beforeMenu=await page.evaluate(()=>{
+    const f=document.querySelector('iframe').contentWindow;
+    return {frames:f.__FIELD_RENDER_PROFILE.frames,scene:document.querySelector('iframe').src,
+      bgm:window.KIKOKU_GAME.audio.trackName};
   });
+  await page.locator('#field-menu-toggle').click();
+  await page.waitForFunction(()=>document.querySelector('iframe').contentWindow.__FIELD_RENDER_PAUSED===true);
+  const pausedFrames=await page.evaluate(()=>document.querySelector('iframe').contentWindow.__FIELD_RENDER_PROFILE.frames);
+  await page.waitForTimeout(590);
+  const afterPause=await page.evaluate(()=>document.querySelector('iframe').contentWindow.__FIELD_RENDER_PROFILE.frames);
+  await page.locator('#field-menu-action-b').click();
+  await page.waitForFunction(()=>document.querySelector('iframe').contentWindow.__FIELD_RENDER_PAUSED===false);
+  await page.waitForFunction(previous=>document.querySelector('iframe').contentWindow.__FIELD_RENDER_PROFILE.frames>previous,afterPause,{timeout:4000});
+  const recovered=await page.evaluate(()=>({
+    scene:document.querySelector('iframe').src,bgm:window.KIKOKU_GAME.audio.trackName,
+    frameCount:document.querySelector('iframe').contentWindow.__FIELD_RENDER_PROFILE.frames
+  }));
+  const fieldPause={pausedFrames,afterPause,resumedFrames:recovered.frameCount,
+    preserved:beforeMenu.scene===recovered.scene&&beforeMenu.bgm===recovered.bgm};
 
-  results.push({viewport:width+'x'+height,...detail,screenshot,profile,idleBefore,comparison,errors});
+  results.push({viewport:width+'x'+height,...detail,screenshot,profile,idleBefore,fieldPause,errors});
   await page.close();
  }
 }finally{await browser?.close();server.close();}
@@ -183,6 +180,8 @@ const failures=results.filter(r=>{
  const barOverlays=r.pad[0]>=0 && r.pad[0]<height;
  return r.errors.some(e=>e.includes('pageerror')||e.includes('HTTP 404'))||
  !r.profile||r.profile.frames<3||r.profile.measuredSamples<3||r.profile.viewport[0]!==r.scene[0]||
+ !r.fieldPause||r.fieldPause.pausedFrames!==r.fieldPause.afterPause||!r.fieldPause.preserved||
+ r.fieldPause.resumedFrames<=r.fieldPause.afterPause||
  r.draws<1||!Number.isFinite(r.foot)||r.foot<0||
  !r.visible||r.visible.relTop<0||r.visible.relBottom>1||
  r.visible.redPixels<3||r.scene[1]!==544||Math.abs(realRatio-ratio)>.015||

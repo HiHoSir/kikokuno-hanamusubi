@@ -74,6 +74,24 @@ async function start() {
   const render = createFieldRenderer(scene.getContext('2d', {alpha: false}), hero);
   let phase = 0;
   let lastWaterFrame = -1;
+  // The menu and rotation gate cover the world. Keep logical movement state
+  // and parent's BGM intact, but skip 100ms terrain draws while invisible.
+  const portraitMedia=typeof matchMedia==='function'
+    ?matchMedia('(orientation: portrait)'):{matches:false,addEventListener(){}};
+  const profileEnabled=new URLSearchParams(location.search).get('profile')==='1';
+  let menuPaused=false,renderPaused=portraitMedia.matches;
+  if(profileEnabled)window.__FIELD_RENDER_PAUSED=renderPaused;
+  function updateSuspension(){
+    const next=menuPaused||portraitMedia.matches;
+    if(next===renderPaused)return;
+    renderPaused=next;
+    if(renderPaused)clearInput();
+    else lastWaterFrame=-1; // First resumed RAF must repaint immediately.
+    if(profileEnabled)window.__FIELD_RENDER_PAUSED=renderPaused;
+  }
+  portraitMedia.addEventListener?.('change',updateSuspension);
+  addEventListener('game-menu-open',()=>{menuPaused=true;updateSuspension()});
+  addEventListener('game-menu-close',()=>{menuPaused=false;updateSuspension()});
 
   function updatePosition() {
     scene.dataset.x = String(Math.floor(state.x / world.tileSize));
@@ -133,7 +151,7 @@ async function start() {
       }
     }
     const waterFrame = Math.floor(now / 360);
-    if (dirty || waterFrame !== lastWaterFrame) {
+    if (!renderPaused && (dirty || waterFrame !== lastWaterFrame)) {
       render(state, now);
       lastWaterFrame = waterFrame;
     }

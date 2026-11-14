@@ -19,12 +19,14 @@ function isBattle(){return frame.src.includes('/src/game/battle/')}
 function hide(){
   if(!opened)return;
   opened=false;backdrop.hidden=true;frame.style.pointerEvents='';
+  try{frame.contentWindow?.dispatchEvent(new Event('game-menu-close'))}catch{}
   opener.setAttribute('aria-expanded','false');
   if(!opener.hidden)opener.focus();
 }
 function show(){
   if(opened||isBattle()||opener.hidden||matchMedia('(orientation: portrait)').matches)return;
   try{frame.contentWindow?.dispatchEvent(new Event('blur'))}catch{}
+  try{frame.contentWindow?.dispatchEvent(new Event('game-menu-open'))}catch{}
   opened=true;selected='items';pane='commands';detailIndex=0;
   frame.style.pointerEvents='none';backdrop.hidden=false;
   opener.setAttribute('aria-expanded','true');message.textContent='';

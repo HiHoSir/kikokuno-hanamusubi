@@ -18,7 +18,7 @@ output span{display:block}
 iframe{display:block;border:0;width:100%;height:100%;background:#102635}
 #rotate{display:none;position:fixed;inset:0;place-content:center;text-align:center;padding:2rem;background:#192729;font-size:18px}
 @media (orientation:portrait){#rotate{display:grid}}
-@media (max-width:620px){button,select{padding-inline:5px;font-size:12px}.toolbar{gap:4px;flex-wrap:wrap}output{font-size:11px}}
+@media (max-width:760px){button,select{padding-inline:5px;font-size:12px}.toolbar{gap:4px;flex-wrap:wrap}output{font-size:11px}}
 </style>
 </head>
 <body>
@@ -30,6 +30,10 @@ iframe{display:block;border:0;width:100%;height:100%;background:#102635}
     <button id="plateau" aria-pressed="false" disabled>高原の崖を高く</button>
     <button id="cliffs" aria-pressed="true" disabled>高さのある地形</button>
   </div>
+  <select id="zoom" aria-label="カメラ倍率" disabled>
+    <option value="1.4">従来倍率 1.40×</option>
+    <option value="1.55" selected>少し寄る 1.55×</option>
+  </select>
   <select id="location" aria-label="確認地点" disabled>
     <option value="">確認地点へ移動</option>
     <option value="25,40,1">西の高原</option>
@@ -54,6 +58,7 @@ iframe{display:block;border:0;width:100%;height:100%;background:#102635}
   const position=document.querySelector('#position'),timing=document.querySelector('#timing');
   const current=document.querySelector('#current'),tiles=document.querySelector('#tiles'),plateau=document.querySelector('#plateau');
   const cliffs=document.querySelector('#cliffs'),locations=document.querySelector('#location');
+  const zoom=document.querySelector('#zoom');
   const root=new URL('./',location.href);
   let selection='cliffs',host,sceneFrame,lastFieldPosition=null,visit=0;
   const modes={current:null,tiles:'coast-cliff-chips',plateau:'tall-plateaus',cliffs:'projected-heights'};
@@ -71,6 +76,7 @@ iframe{display:block;border:0;width:100%;height:100%;background:#102635}
     }
     try{
       host.setFieldRenderer(modes[selection]);
+      host.setFieldZoom(zoom.value);
       host.navigate(target);
       position.textContent='読み込み中';
       timing.textContent='';
@@ -117,16 +123,17 @@ iframe{display:block;border:0;width:100%;height:100%;background:#102635}
   tiles.addEventListener('click',()=>select('tiles'));
   plateau.addEventListener('click',()=>select('plateau'));
   cliffs.addEventListener('click',()=>select('cliffs'));
+  zoom.addEventListener('change',()=>open(fieldPosition()??lastFieldPosition));
   locations.addEventListener('change',()=>{
     if(locations.value)open(locations.value);
     locations.selectedIndex=0;
   });
-  const shellUrl=new URL('src/game/?field-renderer-preview=1&v=terrain-rim-1',root);
+  const shellUrl=new URL('src/game/?field-renderer-preview=1&v=field-zoom-1',root);
   frame.addEventListener('load',()=>{
     host=frame.contentWindow.KIKOKU_GAME;
     if(!host){position.textContent='ゲームを読み込めませんでした';return;}
     sceneFrame=frame.contentDocument.querySelector('#game-scene');
-    current.disabled=tiles.disabled=plateau.disabled=cliffs.disabled=locations.disabled=false;
+    current.disabled=tiles.disabled=plateau.disabled=cliffs.disabled=zoom.disabled=locations.disabled=false;
     sceneFrame.addEventListener('load',update);
     open('33,44,1');
     setInterval(update,250);

@@ -22,11 +22,17 @@ const rendererPreview = new URL(location.href).searchParams.get('field-renderer-
 const fieldPath = new URL('src/field/', root).pathname;
 const fieldRenderers = new Set(['tile-layers','coast-cliff-chips','tall-plateaus','projected-heights']);
 let fieldRenderer = null;
+let fieldZoom = '1.4';
 let active = '';
 function setFieldRenderer(value) {
   if (!rendererPreview) throw new Error('描画方式の変更は比較プレビュー専用です');
   if (value !== null && !fieldRenderers.has(value)) throw new Error('未対応の描画方式です');
   fieldRenderer = value;
+}
+function setFieldZoom(value) {
+  if (!rendererPreview) throw new Error('倍率の変更は比較プレビュー専用です');
+  if (value !== '1.4' && value !== '1.55') throw new Error('未対応の倍率です');
+  fieldZoom = value;
 }
 function normalize(url) {
   const target = new URL(url, location.href);
@@ -51,7 +57,8 @@ function navigate(target, sourceWindow) {
     // Battle and shrine routes omit renderer=...; the host must restore the
     // selected preview renderer when returning to the field.
     next.searchParams.set('profile','1');
-    next.searchParams.set('v','terrain-rim-1');
+    next.searchParams.set('zoom',fieldZoom);
+    next.searchParams.set('v','field-zoom-1');
     if (fieldRenderer) next.searchParams.set('renderer',fieldRenderer);
     else next.searchParams.delete('renderer');
   }
@@ -64,7 +71,7 @@ function navigate(target, sourceWindow) {
   if (audio.trackName !== nextTrack) audio.switchTrack(nextTrack);
   frame.src = next.href;
 }
-window.KIKOKU_GAME = Object.freeze({acceptsChild, navigate, setFieldRenderer, rendererPreview, audio});
+window.KIKOKU_GAME = Object.freeze({acceptsChild, navigate, setFieldRenderer, setFieldZoom, rendererPreview, audio});
 frame.addEventListener('load', () => {
   try {
     const target = normalize(frame.contentWindow.location.href);

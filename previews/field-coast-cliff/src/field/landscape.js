@@ -454,7 +454,7 @@ window.YK_LANDSCAPE=(()=>{
   if(settings.elevationTerrain&&map.elevationEnabled){
    const fieldArt={...art,waterAnimated:true,sea:movingWater,river:movingWater,waterfall:movingFall,rock:art.barren,grassCliff:art.grassCliff,ladder:art.ladder,forest:art.grass,mountain:art.grass,snowMountain:art.snow,rockMountain:art.barren};
    return !!window.YK_ELEVATION_VIEW.render(c,map,fieldArt,{x:actor.x,y:actor.foot,height:actor.height,draw:actor.draw},{
-    camera:{x:settings.cameraX??actor.x,y:actor.foot,preset:settings.preset||0,centerX:(settings.viewportWidth??640)/2},viewportWidth:settings.viewportWidth??640,rise:map.elevationRise||20,
+    camera:{x:settings.cameraX??actor.x,y:actor.foot,preset:settings.preset||0,centerX:(settings.viewportWidth??640)/2},viewportWidth:settings.viewportWidth??640,rise:map.elevationRise||20,zoom,
     groundTile:(tx,ty)=>elevationTexture(map,tx,ty),objects:objects(map)
    });
   }

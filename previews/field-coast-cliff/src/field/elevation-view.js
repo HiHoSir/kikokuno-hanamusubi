@@ -140,7 +140,7 @@ window.YK_ELEVATION_VIEW=(()=>{
   tile.getContext('2d').drawImage(surface,tx*32,ty*32,32,32,0,0,32,32);cache.set(key,tile);return tile;
  }
  function render(c,m,art,actor,options={}){
-  const rise=options.rise||20,zoom=1.4,viewWidth=options.viewportWidth||640,camera=options.camera||{x:256,y:options.cameraY||400,preset:0,centerX:viewWidth/2},items=[];
+  const rise=options.rise||20,zoom=options.zoom??1.4,viewWidth=options.viewportWidth||640,camera=options.camera||{x:256,y:options.cameraY||400,preset:0,centerX:viewWidth/2},items=[];
   const bounds=[];for(const sy of [120,240,400,700])for(const sx of [-160,viewWidth+160])bounds.push(YK_LANDSCAPE.unproject(sx,sy,camera,zoom));
   const minX=Math.max(0,Math.floor(Math.min(...bounds.map(p=>p.x))/32)-2),maxX=Math.min(m[0].length-1,Math.ceil(Math.max(...bounds.map(p=>p.x))/32)+2);
   const minY=Math.max(0,Math.floor(Math.min(...bounds.map(p=>p.y))/32)-2),maxY=Math.min(m.length-1,Math.ceil(Math.max(...bounds.map(p=>p.y))/32)+2);

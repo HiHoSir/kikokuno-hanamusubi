@@ -1,5 +1,5 @@
 import {fieldViewportDimensions} from './viewport.mjs';
-import {createTileLayerPrototype} from './tile-layer-prototype.mjs?v=terrain-rim-1';
+import {createTileLayerPrototype} from './tile-layer-prototype.mjs?v=field-zoom-1';
 const {YK_WORLD: world, YK_LANDSCAPE: landscape, YK_AUTOTILE: autotile,
   YK_ELEVATION: elevation, YK_CAMERA: camera, YK_MOVEMENT: movement,
   YK_AREA_TRANSITIONS: transitions, YK_FIELD_ASSETS: assets} = window;
@@ -83,16 +83,18 @@ export function fieldStep(state, dx, dy, at) {
 export function createFieldRenderer(context, hero) {
   const [anchorX,anchorY]=assets.heroFootAnchorPx;
   const display=context.canvas;
-  const preview=(typeof location!=='undefined'&&new URLSearchParams(location.search).get('renderer')==='tile-layers')||!!window.__FIELD_COAST_CLIFF_CHIPS;
+  const params=typeof location!=='undefined'?new URLSearchParams(location.search):null;
+  const zoom=params?.get('zoom')==='1.55'?1.55:1.4;
+  const preview=params?.get('renderer')==='tile-layers'||!!window.__FIELD_COAST_CLIFF_CHIPS;
   let trialState={row:0,column:0};
   const trial=preview?createTileLayerPrototype(context,world.mapData,
     (c,px,py,z)=>drawHero(px,py,z,trialState.row,trialState.column,c,!!window.__FIELD_COAST_CLIFF_CHIPS),
     window.__FIELD_COAST_CLIFF_CHIPS,
-    {image:hero,anchor:assets.heroFootAnchorPx,frame:()=>trialState}):null;
+    {image:hero,anchor:assets.heroFootAnchorPx,frame:()=>trialState},zoom):null;
   if(preview)window.__FIELD_TILE_LAYER_TRIAL=trial;
   // Profiling is opt-in for reproducible browser QA; gameplay never pays
   // timing/allocation costs or displays a debug overlay.
-  const profile=typeof location!=='undefined'&&new URLSearchParams(location.search).get('profile')==='1';
+  const profile=params?.get('profile')==='1';
   const stats=profile?{frames:0,samples:[],totalMs:0,maxMs:0,viewport:[],lastAt:0}:null;
   if(profile)window.__FIELD_RENDER_PROFILE=stats;
   function drawHero(px,py,projection,row,column,target=context,projectedContact=false) {
@@ -136,7 +138,7 @@ export function createFieldRenderer(context, hero) {
     }else landscape.drawQuarter(context,world.mapData,{
       x,foot:y,height,
       draw:(px,py,z)=>drawHero(px,py,z,state.row,state.column),
-    },1.4,{oceanOutside:true,elevationTerrain:true,viewportWidth:dims.width,motionTime:frameTime});
+    },zoom,{oceanOutside:true,elevationTerrain:true,viewportWidth:dims.width,motionTime:frameTime});
     display.dataset.fieldViewportWidth=String(dims.width);
     display.dataset.fieldViewportHeight=String(dims.height);
     // Deliberately no fieldCropTop: there is no source crop.

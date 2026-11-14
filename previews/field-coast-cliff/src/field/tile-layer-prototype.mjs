@@ -48,7 +48,7 @@ function createTreeOcclusion(landscape,hero){
  };
 }
 
-export function createTileLayerPrototype(context,map,drawHero,chips,hero){
+export function createTileLayerPrototype(context,map,drawHero,chips,hero,zoom=1.4){
  const landscape=window.YK_LANDSCAPE,elevation=window.YK_ELEVATION;
  const elevationView=window.YK_ELEVATION_VIEW;
  const objects=landscape.objects(map);
@@ -56,7 +56,6 @@ export function createTileLayerPrototype(context,map,drawHero,chips,hero){
  let land=null, originY=0, terrainDepth, stripsWidth, stripsHeight, strips=[];
  const raisedTerrain=chips?.terrainY;
  const waterPatterns=new WeakMap();
- const zoom=1.4;
  // Use an upper bound only to limit the foot-sorted search. Visibility of
  // each prop is then tested on its full projected sprite, including its top.
  const maxSpriteHeight=chips?objects.reduce((max,o)=>Math.max(max,o.height),0):0;

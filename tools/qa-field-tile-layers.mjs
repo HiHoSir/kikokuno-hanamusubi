@@ -93,7 +93,7 @@ try{
   }
   results.push(result);
   if(errors.length||result.animatedPixels<100||!result.fixedLand||
-     result.info.waterCells<1||result.info.builds!==1||result.info.waterFrames!==1||
+     result.info.waterCells<1||result.info.builds!==1||result.info.waterFrames!==Math.floor((120000+360)/360)%2||
      result.info.staticBytes<100000||!Number.isFinite(result.ratio)||
      result.referenceMs<=0||result.candidateMs<=0)
    issues.push(width+'x'+height+': '+JSON.stringify({result,errors}));

@@ -36,6 +36,9 @@ export function createTileLayerPrototype(context,map,drawHero){
    g.drawImage(mask(n,d),x*32,y*32);info.waterCells++;
   }
   g.globalCompositeOperation='source-over';
+  // Land/water masks must not erase south-facing cliff walls that extend
+  // past the shore. Repaint the already-authored height faces on top.
+  landscape.drawHeightFaces(g,flat);
   info.builds++;info.masks=masks.size;info.buildMs=+(performance.now()-start).toFixed(2);
   info.staticBytes=land.width*land.height*4;
  }
@@ -44,7 +47,17 @@ export function createTileLayerPrototype(context,map,drawHero){
   const height=c.canvas.height,cam={x:actor.x,y:actor.foot,preset:0,centerX:viewWidth/2},zoom=1.4;
   c.save();c.imageSmoothingEnabled=false;c.clearRect(0,0,viewWidth,height);
   c.fillStyle='#192f3c';c.fillRect(0,0,viewWidth,height);
-  landscape.drawAsset(c,'horizon',0,0,viewWidth,240);
+  // Match the normal Momotaro-style sky, including mirrored panorama sides.
+  // Stretching a 640px horizon across the screen produced a harsh seam.
+  const horizon=landscape.motionArt('horizon',time);
+  const left=Math.floor((viewWidth-640)/2),right=viewWidth-left-640;
+  function skyBand(y,h){
+   if(left>0){c.save();c.translate(left,0);c.scale(-1,1);c.drawImage(horizon,0,y,left,h,0,y,left,h);c.restore();}
+   c.drawImage(horizon,0,y,640,h,left,y,640,h);
+   if(right>0){c.save();c.translate(left+640+right,0);c.scale(-1,1);
+    c.drawImage(horizon,640-right,y,right,h,0,y,right,h);c.restore();}
+  }
+  skyBand(0,240);
   const frame=landscape.motionArt('water',time),pattern=c.createPattern(frame,'repeat');
   for(let sy=136;sy<Math.min(544,height);sy+=4){
    const sh=Math.min(4,height-sy);
@@ -82,6 +95,11 @@ export function createTileLayerPrototype(context,map,drawHero){
    c.globalAlpha=1;
   }
   if(!player)drawPlayer();
+  // Original projection fades the terrain into the same sky between y136-208.
+  for(let y=136;y<208;y+=4){
+   const t=(y-136)/72;c.globalAlpha=1-t*t*(3-2*t);skyBand(y,4);
+  }
+  c.globalAlpha=1;
   c.restore();info.draws++;info.waterFrames=Math.floor(time/360)%2;
   return info;
  }

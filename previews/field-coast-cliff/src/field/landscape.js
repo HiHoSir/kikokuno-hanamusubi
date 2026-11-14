@@ -370,22 +370,29 @@ window.YK_LANDSCAPE=(()=>{
  }
  function mode7LikeMatrix(angle,scale){const c=Math.cos(angle)*scale,s=Math.sin(angle)*scale;return {a:c,b:s,c:-s,d:c};}
  const curves=new Map();
+ const foregroundProjectionLimit=1024;
  function cameraCurve(zoom=1.4,preset=0){
   const key=zoom+':'+preset;if(curves.has(key))return curves.get(key);
-  const p=cameraPresets[preset]||cameraPresets[0],offset=new Float64Array(801),anchor=354;
-  for(let y=1;y<=800;y++)offset[y]=offset[y-1]+1/(.65*zoom*perspectiveScale((y-.5)/543,p));
-  const origin=offset[anchor];for(let y=0;y<=800;y++)offset[y]-=origin;
+  const p=cameraPresets[preset]||cameraPresets[0],offset=new Float64Array(foregroundProjectionLimit+1),anchor=354;
+  for(let y=1;y<offset.length;y++)offset[y]=offset[y-1]+1/(.65*zoom*perspectiveScale((y-.5)/543,p));
+  const origin=offset[anchor];for(let y=0;y<offset.length;y++)offset[y]-=origin;
   const curve={offset,p,zoom,anchor};curves.set(key,curve);return curve;
  }
  function lineAt(y,zoom=1.4,preset=0,foregroundGrowth=false){
-  const c=cameraCurve(zoom,preset),i=Math.max(0,Math.min(799,Math.floor(y))),f=Math.max(0,Math.min(1,y-i));
+  const c=cameraCurve(zoom,preset),i=Math.max(0,Math.min(c.offset.length-2,Math.floor(y))),f=Math.max(0,Math.min(1,y-i));
   const screenDepth=y/543;
   let size=perspectiveScale(screenDepth,c.p);
-  // Continue expanding below the frame while the top of a sprite is visible.
-  // Match the slope at the bottom, then ease it so tall props can leave.
-  if(foregroundGrowth&&screenDepth>1){
-   const beyond=screenDepth-1;
-   size+=((c.p.near-c.p.far)*c.p.gamma)*beyond/(1+beyond);
+  // Increase foreground magnification gradually below the hero. Continue
+  // with the same slope at the edge, then ease so even tall props can leave.
+  const foregroundStart=380/543,extraScale=.25;
+  if(foregroundGrowth&&screenDepth>foregroundStart){
+   const progress=(Math.min(1,screenDepth)-foregroundStart)/(1-foregroundStart);
+   size*=1+extraScale*progress*progress;
+   if(screenDepth>1){
+    const beyond=screenDepth-1,p=c.p;
+    const edgeSlope=(p.near-p.far)*p.gamma*(1+extraScale)+p.near*2*extraScale/(1-foregroundStart);
+    size+=edgeSlope*beyond/(1+5*beyond);
+   }
   }
   const scale=zoom*size,xScale=c.p.softNear?scale:scale*(.94+.06*Math.max(0,Math.min(1,screenDepth)));
   return {offset:c.offset[i]*(1-f)+c.offset[i+1]*f,scale,xScale};
@@ -393,14 +400,15 @@ window.YK_LANDSCAPE=(()=>{
  function project(x,y,camera,zoom=1.4){
   const angle=camera.angle||0,cs=Math.cos(angle),sn=Math.sin(angle),dx=x-camera.x,dy=y-camera.y;
   const vx=cs*dx+sn*dy,vy=-sn*dx+cs*dy,c=cameraCurve(zoom,camera.preset||0);
-  if(vy<c.offset[0]||vy>c.offset[800])return null;
+  const lastRow=camera.foregroundGrowth?foregroundProjectionLimit:800;
+  if(vy<c.offset[0]||vy>c.offset[lastRow])return null;
   // Invert the cached piecewise-linear curve directly. Avoid 24 scale/power
   // evaluations per object and terrain vertex on every animation frame.
-  let lo=0,hi=800;while(hi-lo>1){const mid=(lo+hi)>>1;if(c.offset[mid]<=vy)lo=mid;else hi=mid;}
+  let lo=0,hi=lastRow;while(hi-lo>1){const mid=(lo+hi)>>1;if(c.offset[mid]<=vy)lo=mid;else hi=mid;}
   const sy=lo+(vy-c.offset[lo])/(c.offset[hi]-c.offset[lo]),l=lineAt(sy,zoom,camera.preset||0,camera.foregroundGrowth),xs=camera.horizontalScale||l.xScale;return {x:(camera.centerX??320)+vx*xs,y:sy,scale:l.scale,xScale:xs};
  }
  function unproject(x,y,camera,zoom=1.4){
-  if(y<0||y>800)return null;const l=lineAt(y,zoom,camera.preset||0,camera.foregroundGrowth),vx=(x-(camera.centerX??320))/(camera.horizontalScale||l.xScale),vy=l.offset,a=camera.angle||0,cs=Math.cos(a),sn=Math.sin(a);
+  if(y<0||y>(camera.foregroundGrowth?foregroundProjectionLimit:800))return null;const l=lineAt(y,zoom,camera.preset||0,camera.foregroundGrowth),vx=(x-(camera.centerX??320))/(camera.horizontalScale||l.xScale),vy=l.offset,a=camera.angle||0,cs=Math.cos(a),sn=Math.sin(a);
   return {x:camera.x+cs*vx-sn*vy,y:camera.y+sn*vx+cs*vy,scale:l.scale};
  }
  // Build only small visible ground chunks. Avoid several 2560² temporary
@@ -504,7 +512,7 @@ window.YK_LANDSCAPE=(()=>{
   c.restore();return true;
  }
  function drawAsset(c,k,x,y,w,h){if(!ready())return false;c.imageSmoothingEnabled=false;c.drawImage(art[k],x,y,w,h);return true;}
- return {cameraPresets,perspectiveScale,mode7LikeMatrix,groundLayer,drawHeightFaces,drawQuarter,project,unproject,quarterFixture,footprints,shadowLayer,walkable,floorLayer,specs,keys,placeKeys,placesFixture,errors,load,ready,fixture,draw,objects,drawAsset,motionArt,contains,adjacent,roadAllowed,roadLayer,groundInside,elevationChunkStats};
+ return {foregroundProjectionLimit,cameraPresets,perspectiveScale,mode7LikeMatrix,groundLayer,drawHeightFaces,drawQuarter,project,unproject,quarterFixture,footprints,shadowLayer,walkable,floorLayer,specs,keys,placeKeys,placesFixture,errors,load,ready,fixture,draw,objects,drawAsset,motionArt,contains,adjacent,roadAllowed,roadLayer,groundInside,elevationChunkStats};
 })();
 
 

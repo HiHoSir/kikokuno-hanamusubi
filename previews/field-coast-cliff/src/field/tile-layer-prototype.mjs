@@ -59,7 +59,7 @@ export function createTileLayerPrototype(context,map,drawHero,chips,hero){
  // Use an upper bound only to limit the foot-sorted search. Visibility of
  // each prop is then tested on its full projected sprite, including its top.
  const maxSpriteHeight=chips?objects.reduce((max,o)=>Math.max(max,o.height),0):0;
- const outerScale=chips?landscape.unproject(0,800,{x:0,y:0,foregroundGrowth:true},zoom).scale:0;
+ const outerScale=chips?landscape.unproject(0,landscape.foregroundProjectionLimit,{x:0,y:0,foregroundGrowth:true},zoom).scale:0;
  function projectionStrips(width,height){
   if(stripsWidth===width&&stripsHeight===height)return strips;
   stripsWidth=width;stripsHeight=height;strips=[];
@@ -227,7 +227,7 @@ export function createTileLayerPrototype(context,map,drawHero,chips,hero){
   // Objects are already sorted by their world foot. In the chip renderer
   // height is baked into the land, so this range is exact before projection.
   const minFoot=chips?landscape.unproject(0,136,cam,zoom).y:-Infinity;
-  const maxFoot=chips?landscape.unproject(0,Math.min(800,height+maxSpriteHeight*outerScale),cam,zoom).y:Infinity;
+  const maxFoot=chips?landscape.unproject(0,Math.min(landscape.foregroundProjectionLimit,height+maxSpriteHeight*outerScale),cam,zoom).y:Infinity;
   let first=0,last=objects.length;
   while(first<last){
    const mid=(first+last)>>1;

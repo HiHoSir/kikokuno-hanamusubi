@@ -33,3 +33,12 @@ test('field profiling is opt-in and does not alter the rendered world or state',
  assert.match(browser,/p95Ms/);
  assert.match(browser,/ArrowRight/);
 });
+
+test('coastline shapes and beach strips cache in world coordinates only',()=>{
+ const source=readFileSync('src/field/elevation-view.js','utf8');
+ assert.match(source,/const shoreCache=new WeakMap\(\)/);
+ assert.match(source,/function shoreGeometry\(m,tx,ty,shape\)/);
+ assert.match(source,/window\.YK_FIELD_SHORE_CACHE!==false/);
+ assert.match(source,/shore\.sand/);
+ assert.match(source,/shore\.darkEdges/);
+});

@@ -52,6 +52,39 @@ window.YK_ELEVATION_VIEW=(()=>{
    );
   }).map(([side])=>side);
  };
+ // Immutable terrain topology is expensive to recompute every time the
+ // camera moves. Keep source-space coastline shapes, never screen positions.
+ const shoreCache=new WeakMap();
+ function shoreGeometry(m,tx,ty,shape){
+  const useCache=window.YK_FIELD_SHORE_CACHE!==false;
+  let cache=shoreCache.get(m);
+  if(useCache){
+   if(!cache){cache=new Map();shoreCache.set(m,cache);}
+   const result=cache.get(ty*m[0].length+tx);
+   if(result)return result;
+  }
+  const sides=shape.cuts.length?[]:shoreSides(m,tx,ty);
+  const outline=sides.length?shoreOutline(sides,tx,ty):null;
+  const sand=[],darkEdges=[];
+  if(outline){
+   const edge=outline.poly,flags=outline.boundary,center=[16,16];
+   for(let i=0;i<edge.length;i++){
+    const j=(i+1)%edge.length;
+    if(!flags[i]||!flags[j])continue;
+    const a=edge[i],b=edge[j],dx=b[0]-a[0],dy=b[1]-a[1];
+    darkEdges.push([a,b]);
+    const len=Math.hypot(dx,dy);if(len<.01)continue;
+    const inward=[-dy/len,dx/len],mid=[(a[0]+b[0])/2,(a[1]+b[1])/2];
+    if((center[0]-mid[0])*inward[0]+(center[1]-mid[1])*inward[1]<0){inward[0]*=-1;inward[1]*=-1;}
+    const width=8+1.2*Math.sin((tx*32+mid[0])*.11+(ty*32+mid[1])*.17);
+    const poly=[a,b,[b[0]+inward[0]*width,b[1]+inward[1]*width],[a[0]+inward[0]*width,a[1]+inward[1]*width]];
+    sand.push({a,b,width,poly});
+   }
+  }
+  const value={sides,outline,sand,darkEdges};
+  if(useCache)cache.set(ty*m[0].length+tx,value);
+  return value;
+ }
  // Shared shoreline mask for the visible land surface and its sand overlay.
  // Round convex land corners only when both orthogonal neighbours are water.
  // The removed corner reveals the already rendered water below; collision
@@ -172,7 +205,7 @@ window.YK_ELEVATION_VIEW=(()=>{
     }
    if(diagnostic)cliffReport.tiles++;
    const band=options.groundTile?(center.y<280?32:16):8;
-   const kind=m[ty][tx],im=art[kind]||art.grass,road=m.roads?.has(tx+','+ty),texture=art.waterAnimated&&waterKind(kind)?im:options.groundTile?(()=>{const t=options.groundTile(tx,ty);return groundTile(t.surface,t.x/32,t.y/32);})():options.groundTexture?groundTile(options.groundTexture,tx,ty):road?art.road:im,shape=E.outline(m,tx,ty),shores=!shape.cuts.length?shoreSides(m,tx,ty):[],shoreShape=shores.length?shoreOutline(shores,tx,ty):null;
+   const kind=m[ty][tx],im=art[kind]||art.grass,road=m.roads?.has(tx+','+ty),texture=art.waterAnimated&&waterKind(kind)?im:options.groundTile?(()=>{const t=options.groundTile(tx,ty);return groundTile(t.surface,t.x/32,t.y/32);})():options.groundTexture?groundTile(options.groundTexture,tx,ty):road?art.road:im,shape=E.outline(m,tx,ty),shore=shoreGeometry(m,tx,ty,shape),shores=shore.sides,shoreShape=shore.outline;
    for(let v=0;v<32;v+=band){const py=ty*32+v;
     items.push({depth:py+band,order:0,draw:()=>{
      const p=[[0,v],[32,v],[32,v+band],[0,v+band]].map(([u,w])=>point(tx*32+u,ty*32+w,E.level(m,tx,ty,u/32,w/32)));
@@ -198,21 +231,8 @@ window.YK_ELEVATION_VIEW=(()=>{
    // Overlay shoreline sand on the LAND side. No water expansion, collision
    // changes or tile-specific coordinate lists. All edges use world geometry.
    if(shores.length){
-    // Sand follows the SAME water-facing polygon segments as the shoreline.
-    // A thin inward band replaces the former 4px square-cell overlay.
-    const edge=shoreShape.poly,flags=shoreShape.boundary;
-    const center=[16,16];
-    for(let i=0;i<edge.length;i++){
-     const j=(i+1)%edge.length;
-     if(!flags[i]||!flags[j])continue;
-     const a=edge[i],b=edge[j],dx=b[0]-a[0],dy=b[1]-a[1];
-     const len=Math.hypot(dx,dy);if(len<.01)continue;
-     // Clockwise polygon: interior is on the right side of each segment.
-     const inward=[-dy/len,dx/len];
-     const mid=[(a[0]+b[0])/2,(a[1]+b[1])/2];
-     if((center[0]-mid[0])*inward[0]+(center[1]-mid[1])*inward[1]<0){inward[0]*=-1;inward[1]*=-1;}
-     const width=8+1.2*Math.sin((tx*32+mid[0])*.11+(ty*32+mid[1])*.17);
-     const poly=[a,b,[b[0]+inward[0]*width,b[1]+inward[1]*width],[a[0]+inward[0]*width,a[1]+inward[1]*width]];
+    // Sand polygons are stable in world space; only projection changes.
+    for(const {a,b,width,poly} of shore.sand){
      items.push({depth:ty*32+Math.max(a[1],b[1])+width,order:.25,draw:()=>{
       c.save();
       if(!clipShore(c,shoreShape.poly,tx,ty,point,m)){c.restore();return;}
@@ -325,14 +345,9 @@ window.YK_ELEVATION_VIEW=(()=>{
   // Stroke the SAME polygon used to clip land and sand, instead of the old
   // independent square-edge coastline. No dark outline on the inland sand edge.
   for(let ty=minY;ty<=maxY;ty++)for(let tx=minX;tx<=maxX;tx++){
-   if(E.outline(m,tx,ty).cuts.length)continue;
-   const shores=shoreSides(m,tx,ty);
-   if(!shores.length)continue;
-   const shore=shoreOutline(shores,tx,ty),poly=shore.poly,edges=[];
-   for(let i=0;i<poly.length;i++){
-    if(shore.boundary[i]&&shore.boundary[(i+1)%poly.length])
-     edges.push([poly[i],poly[(i+1)%poly.length]]);
-   }
+   const shape=E.outline(m,tx,ty);
+   if(shape.cuts.length)continue;
+   const shore=shoreGeometry(m,tx,ty,shape),edges=shore.darkEdges;
    if(!edges.length)continue;
    items.push({depth:ty*32+32,order:.5,draw:()=>{
     c.save();c.strokeStyle='rgba(27,36,29,.76)';

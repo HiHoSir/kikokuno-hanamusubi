@@ -6,6 +6,7 @@ const canvas=(w,h)=>{const el=document.createElement('canvas');el.width=w;el.hei
 
 export function createTileLayerPrototype(context,map,drawHero){
  const landscape=window.YK_LANDSCAPE,elevation=window.YK_ELEVATION;
+ const elevationView=window.YK_ELEVATION_VIEW;
  let land=null;
  const info={name:'tile-layers-experiment',builds:0,waterFrames:0,waterCells:0,draws:0,staticLand:true,animatedWater:true};
  function prepare(){
@@ -16,26 +17,59 @@ export function createTileLayerPrototype(context,map,drawHero){
   const source=landscape.groundLayer(flat);
   land=canvas(map[0].length*32,map.length*32);
   const g=land.getContext('2d');g.drawImage(source,0,0);
-  // Cut alpha holes out of the already baked landscape. Sand outside each
-  // existing water mask is retained, so independently animated sea shows below.
-  const masks=new Map();
-  function mask(n,d){
-   const key=Object.values(n).concat(Object.values(d)).map(Number).join('');
-   if(masks.has(key))return masks.get(key);
-   const tile=canvas(32,32),t=tile.getContext('2d'),data=t.createImageData(32,32);
-   for(let y=0;y<32;y++)for(let x=0;x<32;x++){
-    if(landscape.contains(x,y,n,d))data.data[(y*32+x)*4+3]=255;
-   }
-   t.putImageData(data,0,0);masks.set(key,tile);return tile;
-  }
+  // Transparent SEA tiles are a separate, animated bottom layer. A 32px
+  // ground tile has a fixed alpha coastline and may draw over moving water.
+  // Keep the existing world-space curvy shore geometry (not the old blocky
+  // legacy 16-mask silhouette) and paint its inland sand band once.
+  g.save();
   g.globalCompositeOperation='destination-out';
+  g.fillStyle='#000';
   for(let y=0;y<map.length;y++)for(let x=0;x<map[0].length;x++){
    if(!['sea','river'].includes(map[y][x])&&!map.bridgeWaterCells?.has(x+','+y))continue;
-   const n={n:wet(map,x,y-1),e:wet(map,x+1,y),s:wet(map,x,y+1),w:wet(map,x-1,y)};
-   const d={nw:wet(map,x-1,y-1),ne:wet(map,x+1,y-1),sw:wet(map,x-1,y+1),se:wet(map,x+1,y+1)};
-   g.drawImage(mask(n,d),x*32,y*32);info.waterCells++;
+   g.fillRect(x*32,y*32,32,32);info.waterCells++;
   }
-  g.globalCompositeOperation='source-over';
+  g.restore();
+  const coastTiles=[];
+  const sand=g.createPattern(landscape.motionArt('sand',0),'repeat');
+  for(let y=0;y<map.length;y++)for(let x=0;x<map[0].length;x++){
+   if(wet(map,x,y))continue;
+   const shape=elevation.outline(map,x,y);
+   if(shape.cuts.length)continue;
+   const shore=elevationView.shoreGeometry(map,x,y,shape);
+   if(!shore.outline)continue;
+   coastTiles.push({x,y,shore});
+   const points=shore.outline.poly;
+   function path(points){
+    g.moveTo(x*32+points[0][0],y*32+points[0][1]);
+    for(let i=1;i<points.length;i++)g.lineTo(x*32+points[i][0],y*32+points[i][1]);
+    g.closePath();
+   }
+   // Cut only the outside of the authored curved land polygon. The sea beneath
+   // remains visible through its alpha holes, even between water animation frames.
+   g.save();
+   g.beginPath();g.rect(x*32,y*32,32,32);path(points);
+   g.globalCompositeOperation='destination-out';g.fillStyle='#000';g.fill('evenodd');
+   g.restore();
+   g.save();g.beginPath();path(points);g.clip();
+   for(const band of shore.sand){
+    g.save();g.beginPath();path(band.poly);g.clip();
+    g.fillStyle=sand;g.fillRect(x*32,y*32,32,32);g.restore();
+   }
+   g.restore();
+  }
+  // Ink belongs to the static terrain layer. Wavy coast borders no longer
+  // require per-frame calculations or additional projected triangles.
+  g.save();g.strokeStyle='rgba(27,36,29,.76)';g.lineWidth=1;g.lineJoin='round';
+  for(const {x,y,shore} of coastTiles){
+   g.beginPath();
+   for(const [a,b] of shore.darkEdges){
+    g.moveTo(x*32+a[0],y*32+a[1]);g.lineTo(x*32+b[0],y*32+b[1]);
+   }
+   g.stroke();
+  }
+  g.restore();
+  info.coastTiles=coastTiles.length;
+  info.masks=coastTiles.length;
   // Land/water masks must not erase south-facing cliff walls that extend
   // past the shore. Repaint the already-authored height faces on top.
   landscape.drawHeightFaces(g,flat);

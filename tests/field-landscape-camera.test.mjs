@@ -88,3 +88,14 @@ test('terrain rework QA judges camera, height and shoreline fidelity rather than
  assert.match(qa,/animatedPixels<100/);
  assert.match(qa,/fixedLand/);
 });
+
+test('static tilemap trial shares the live curved shoreline polygon over animated sea',()=>{
+ const source=readFileSync('src/field/tile-layer-prototype.mjs','utf8');
+ const elevation=readFileSync('src/field/elevation-view.js','utf8');
+ assert.match(elevation,/return \{load,render,sources,shoreGeometry\}/);
+ assert.match(source,/elevationView\.shoreGeometry\(map,x,y,shape\)/);
+ assert.match(source,/g\.fill\('evenodd'\)/);
+ assert.match(source,/const sand=g\.createPattern\(landscape\.motionArt\('sand',0\),'repeat'\)/);
+ assert.match(source,/for\(const band of shore\.sand\)/);
+ assert.match(source,/landscape\.motionArt\('water',time\)/);
+});

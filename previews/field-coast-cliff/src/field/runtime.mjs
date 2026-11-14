@@ -1,5 +1,5 @@
 import {fieldViewportDimensions} from './viewport.mjs';
-import {createTileLayerPrototype} from './tile-layer-prototype.mjs?v=forest-cliffs-1';
+import {createTileLayerPrototype} from './tile-layer-prototype.mjs?v=forest-cliffs-2';
 const {YK_WORLD: world, YK_LANDSCAPE: landscape, YK_AUTOTILE: autotile,
   YK_ELEVATION: elevation, YK_CAMERA: camera, YK_MOVEMENT: movement,
   YK_AREA_TRANSITIONS: transitions, YK_FIELD_ASSETS: assets} = window;
@@ -31,16 +31,15 @@ export function villageArrival(){return placeArrival('village');}
 export async function loadFieldArt() {
   const mode = typeof location==='undefined'?null:new URLSearchParams(location.search).get('renderer');
   if(!window.__FIELD_COAST_CLIFF_CHIPS&&(mode==='coast-cliff-chips'||mode==='tall-plateaus'||mode==='forest-cliffs')){
-    const {loadTerrainChips,placeShoreTrees,composeTerrainChips}=await import('../../work/field-coast-cliff/terrain-chips.mjs?v=forest-cliffs-1');
+    const {loadTerrainChips,placeShoreTrees,composeTerrainChips}=await import('../../work/field-coast-cliff/terrain-chips.mjs?v=forest-cliffs-2');
     const chips=await loadTerrainChips({tallPlateaus:mode==='tall-plateaus'});
     const changes=placeShoreTrees(world,chips['coast-mask']);
     window.YK_FIELD_ELEVATION.refreshCollision(world.mapData);
-    let compose = composeTerrainChips;
+    let cliffUnderstoryTrees;
     if(mode==='forest-cliffs'){
-      const {composeForestCliffs}=await import('../../work/field-coast-cliff/forest-cliff.mjs?v=1');
-      compose=(map,landscape,art)=>composeForestCliffs(map,landscape,art,composeTerrainChips);
+      ({cliffUnderstoryTrees}=await import('../../work/field-coast-cliff/forest-cliff.mjs?v=2'));
     }
-    window.__FIELD_COAST_CLIFF_CHIPS={art:chips,composeTerrainChips:compose,shoreTreeChanges:changes};
+    window.__FIELD_COAST_CLIFF_CHIPS={art:chips,composeTerrainChips,cliffUnderstoryTrees,shoreTreeChanges:changes};
   }
   const hero = new Image();
   hero.src = assets.url(assets.hero);

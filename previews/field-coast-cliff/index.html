@@ -28,7 +28,7 @@ iframe{display:block;border:0;width:100%;height:100%;background:#102635}
     <button id="current" aria-pressed="false" disabled>従来版</button>
     <button id="tiles" aria-pressed="false" disabled>本編の崖</button>
     <button id="plateau" aria-pressed="false" disabled>高原の崖を高く</button>
-    <button id="cliffs" aria-pressed="true" disabled>森に隠れる崖</button>
+    <button id="cliffs" aria-pressed="true" disabled>崖下の低木</button>
   </div>
   <select id="location" aria-label="確認地点" disabled>
     <option value="">確認地点へ移動</option>
@@ -121,7 +121,7 @@ iframe{display:block;border:0;width:100%;height:100%;background:#102635}
     if(locations.value)open(locations.value);
     locations.selectedIndex=0;
   });
-  const shellUrl=new URL('src/game/?field-renderer-preview=1&v=forest-cliffs-1',root);
+  const shellUrl=new URL('src/game/?field-renderer-preview=1&v=forest-cliffs-2',root);
   frame.addEventListener('load',()=>{
     host=frame.contentWindow.KIKOKU_GAME;
     if(!host){position.textContent='ゲームを読み込めませんでした';return;}

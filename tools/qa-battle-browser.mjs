@@ -183,7 +183,7 @@ try{
      await page.waitForFunction(()=>{
        const gate=document.querySelector('#landscape-required');
        return getComputedStyle(gate).display==='grid' &&
-         document.querySelector('#game-scene').inert;
+         document.querySelector('#game-shell').inert;
      });
      await page.screenshot({path:'artifacts/battle-rotate-portrait.png'});
      await page.setViewportSize({width,height});

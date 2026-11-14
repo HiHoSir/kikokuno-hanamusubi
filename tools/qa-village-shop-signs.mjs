@@ -106,7 +106,7 @@ try{
         await page.waitForFunction(()=>{
           const gate=document.querySelector('#landscape-required');
           return getComputedStyle(gate).display==='grid' &&
-            document.querySelector('#game-scene').inert;
+            document.querySelector('#game-shell').inert;
         });
         await page.screenshot({path:'artifacts/rotate-game-portrait.png'});
         await page.setViewportSize({width,height});
@@ -116,7 +116,7 @@ try{
           return frame===b.frame&&frame.src===b.src &&
             window.KIKOKU_GAME.audio.player===b.player &&
             window.KIKOKU_GAME.audio.trackName===b.track &&
-            !frame.inert;
+            !document.querySelector('#game-shell').inert;
         });
         if(!rotated)issues.push('portrait rotation reloaded game or interrupted BGM');
       }

@@ -24,11 +24,8 @@ const browser=await chromium.launch({headless:true,args:['--no-sandbox','--disab
 const issues=[],results=[];
 try{
   for(const [width,height,label,building,room,filename,expectedPoint] of [
-    [390,844,'portrait','teahouse-northeast','teahouse','sign-teahouse.png',[1614,548]],
     [900,390,'landscape','teahouse-northeast','teahouse','sign-teahouse.png',[1614,548]],
-    [390,844,'portrait','inn-southeast','inn','sign-inn.png',[2004,1885]],
     [900,390,'landscape','inn-southeast','inn','sign-inn.png',[2004,1885]],
-    [390,844,'portrait','house-southeast-tile','armory','sign-armory.png',[1500,1254]],
     [900,390,'landscape','house-southeast-tile','armory','sign-armory.png',[1500,1254]],
   ]){
     const page=await browser.newPage({viewport:{width,height},deviceScaleFactor:1,hasTouch:true,isMobile:true});
@@ -49,6 +46,29 @@ try{
     });
     try{
       await page.goto(origin+'/',{waitUntil:'domcontentloaded'});
+      if(room==='teahouse'){
+        // One browser context turns portrait -> landscape on the real title.
+        await page.setViewportSize({width:390,height:844});
+        await page.waitForFunction(()=>{
+          const gate=document.querySelector('#landscape-required');
+          return getComputedStyle(gate).display==='grid' &&
+            document.querySelector('.title-screen').inert;
+        });
+        await page.screenshot({path:'artifacts/rotate-title-portrait.png'});
+        // Verify video cannot silently finish while holding the phone upright.
+        await page.evaluate(()=>sessionStorage.setItem('kikokuno-hanamusubi-next-entry',
+          JSON.stringify({route:'/src/opening/',expiresAt:Date.now()+120000})));
+        await page.goto(origin+'/src/opening/',{waitUntil:'domcontentloaded'});
+        await page.waitForFunction(()=>{
+          const video=document.querySelector('#opening-video');
+          return getComputedStyle(document.querySelector('#landscape-required')).display==='grid' &&
+            video?.paused===true;
+        });
+        await page.screenshot({path:'artifacts/rotate-opening-portrait.png'});
+        await page.setViewportSize({width,height});
+        await page.waitForFunction(()=>getComputedStyle(document.querySelector('#landscape-required')).display==='none');
+        await page.goto(origin+'/',{waitUntil:'domcontentloaded'});
+      }
       if(room==='teahouse'||room==='armory')await page.evaluate(()=>{
         localStorage.setItem('kikokuno-hanamusubi-battle-player',JSON.stringify({
           lv:1,balanceVersion:2,gold:250,hp:26,maxhp:26,mp:12,maxmp:12,
@@ -76,6 +96,30 @@ try{
           loading:d.querySelector('#load').hidden,canvas:[d.querySelector('#scene').width,d.querySelector('#scene').height],
           url:frame.src,status:d.querySelector('#status').textContent};
       },filename);
+      if(room==='teahouse'){
+        // An orientation change must never navigate or recreate the world.
+        await page.evaluate(()=>{window.__gameBeforeRotation={
+          frame:document.querySelector('#game-scene'),src:document.querySelector('#game-scene').src,
+          player:window.KIKOKU_GAME.audio.player,track:window.KIKOKU_GAME.audio.trackName
+        };});
+        await page.setViewportSize({width:390,height:844});
+        await page.waitForFunction(()=>{
+          const gate=document.querySelector('#landscape-required');
+          return getComputedStyle(gate).display==='grid' &&
+            document.querySelector('#game-shell').inert;
+        });
+        await page.screenshot({path:'artifacts/rotate-game-portrait.png'});
+        await page.setViewportSize({width,height});
+        await page.waitForFunction(()=>getComputedStyle(document.querySelector('#landscape-required')).display==='none');
+        const rotated=await page.evaluate(()=>{
+          const b=window.__gameBeforeRotation,frame=document.querySelector('#game-scene');
+          return frame===b.frame&&frame.src===b.src &&
+            window.KIKOKU_GAME.audio.player===b.player &&
+            window.KIKOKU_GAME.audio.trackName===b.track &&
+            !document.querySelector('#game-shell').inert;
+        });
+        if(!rotated)issues.push('portrait rotation reloaded game or interrupted BGM');
+      }
       const sign=data.rendered[0];
       if(!sign || sign.arguments!==3 || sign.smoothed || JSON.stringify(sign.world)!==JSON.stringify(expectedPoint) ||
         JSON.stringify(sign.size)!==JSON.stringify([96,120])){

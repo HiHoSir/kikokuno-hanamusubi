@@ -12,6 +12,11 @@ on:
       - 'src/game/ui/field-menu.mjs'
       - 'src/game/ui/field-menu.css'
       - 'src/game/battle/rules.mjs'
+      - 'src/opening/index.html'
+      - 'src/opening/opening.js'
+      - 'src/game/ui/landscape-only.css'
+      - 'src/game/ui/landscape-only.mjs'
+      - 'src/game/app.webmanifest'
       - '.github/workflows/village-sign-visual-qa.yml'
   workflow_dispatch:
 jobs:

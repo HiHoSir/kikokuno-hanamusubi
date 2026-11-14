@@ -14,7 +14,7 @@ const el=(tag,txt)=>{const node=document.createElement(tag);node.textContent=txt
 function isBattle(){return frame.src.includes('/src/game/battle/');}
 function hide(){if(!opened)return;opened=false;backdrop.hidden=true;frame.style.pointerEvents='';opener.setAttribute('aria-expanded','false');opener.focus();}
 function show(){
-  if(opened||isBattle()||opener.hidden)return;
+  if(opened||isBattle()||opener.hidden||matchMedia('(orientation: portrait)').matches)return;
   try{frame.contentWindow?.dispatchEvent(new Event('blur'));}catch{}
   opened=true;selected='items';frame.style.pointerEvents='none';backdrop.hidden=false;
   opener.setAttribute('aria-expanded','true');message.textContent='';render();closer.focus();
@@ -85,5 +85,6 @@ document.addEventListener('keydown',event=>{
     selected=ids[(ids.indexOf(selected)+(event.key==='ArrowUp'?-1:1)+ids.length)%ids.length];render();
   }
 });
+document.addEventListener('landscape-blocked',hide);
 frame.addEventListener('load',refreshScene);
 refreshScene();

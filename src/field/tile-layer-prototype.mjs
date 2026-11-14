@@ -73,7 +73,7 @@ export function createTileLayerPrototype(context,map,drawHero){
   // Land/water masks must not erase south-facing cliff walls that extend
   // past the shore. Repaint the already-authored height faces on top.
   landscape.drawHeightFaces(g,flat);
-  info.builds++;info.masks=masks.size;info.buildMs=+(performance.now()-start).toFixed(2);
+  info.builds++;info.buildMs=+(performance.now()-start).toFixed(2);
   info.staticBytes=land.width*land.height*4;
  }
  function draw(c,actor,time,viewWidth=c.canvas.width){

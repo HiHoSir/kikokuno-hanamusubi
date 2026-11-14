@@ -30,7 +30,7 @@ let browser;
 const results=[];
 try{
  browser=await chromium.launch({headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
- for(const [width,height] of [[1536,706],[900,390],[390,844]]){
+ for(const [width,height] of [[1536,706],[900,390],[844,390]]){
   const errors=[];
   const page=await browser.newPage({viewport:{width,height},deviceScaleFactor:1});
   page.on('pageerror',e=>errors.push('pageerror: '+e.message));
@@ -90,22 +90,20 @@ try{
    const scene=doc.querySelector('#scene'),viewport=doc.querySelector('.viewport');
    const pad=doc.querySelector('#pad'),css=doc.defaultView.getComputedStyle(scene);
    const draws=doc.defaultView.__fieldHeroDraws||[];
-   const last=draws.at(-1),top=scene.dataset.fieldCropTop===undefined?0:Number(scene.dataset.fieldCropTop);
+   const last=draws.at(-1);
    const foot=scene.dataset.fieldHeroFoot===undefined?null:Number(scene.dataset.fieldHeroFoot);
    const box=scene.getBoundingClientRect(),field=viewport.getBoundingClientRect();
    const bar=pad.getBoundingClientRect(),w=scene.width,h=scene.height;
    let visible=null;
    const aspect=box.width/Math.max(1,box.height);
-   const wide=aspect>1.35;
    if(last){
     const [a,b,c,d,e,f]=last.matrix;
     const spriteTop=last.y*d+f,spriteBottom=(last.y+last.h)*d+f;
-    const cropHeight=wide?768/aspect:768;
-    const relTop=(spriteTop-top)/cropHeight,relBottom=(spriteBottom-top)/cropHeight;
+    const relTop=spriteTop/h,relBottom=spriteBottom/h;
     const ctx=scene.getContext('2d');
     const x0=Math.max(0,Math.floor((last.x*a+e)));
     const x1=Math.min(w,Math.ceil((last.x+last.w)*a+e));
-    const y0=Math.max(0,Math.floor(relTop*h)),y1=Math.min(h,Math.ceil(relBottom*h));
+    const y0=Math.max(0,Math.floor(spriteTop)),y1=Math.min(h,Math.ceil(spriteBottom));
     let red=0,solid=0;
     if(x1>x0&&y1>y0){
      const pixels=ctx.getImageData(x0,y0,x1-x0,y1-y0).data;
@@ -118,7 +116,8 @@ try{
     visible={spriteTop,spriteBottom,relTop,relBottom,redPixels:red,solidPixels:solid,rect:[x0,y0,x1-x0,y1-y0]};
    }
    return {window:[innerWidth,innerHeight],scene:[w,h],field:[field.width,field.height],canvasRect:[box.x,box.y,box.width,box.height],
-    pad:[bar.y,bar.height],cropTop:top,foot,draws:draws.length,
+    pad:[bar.y,bar.height],foot,draws:draws.length,
+    panorama:[scene.dataset.fieldViewportWidth,scene.dataset.fieldViewportHeight],
     imageFit:css.objectFit,visible,loadHidden:doc.querySelector('#load')?.hidden,
     sceneURL:doc.location.href};
   });
@@ -129,11 +128,15 @@ try{
  }
 }finally{await browser?.close();server.close();}
 console.log(JSON.stringify(results,null,2));
-const failures=results.filter(r=>
- r.errors.some(e=>e.includes('pageerror'))||
- r.draws<1||(r.viewport!=='390x844'&&(!Number.isFinite(r.foot)||r.foot<0))||
- !r.visible||r.visible.relTop<0||r.visible.relBottom>1.05||
- r.visible.redPixels<3||r.canvasRect[2]>r.field[0]+1||r.canvasRect[3]>r.field[1]+1||
- (r.viewport!=='390x844'&&r.pad[0]<r.field[1]-4)
-);
-if(failures.length)throw Error('Actual Chrome field render QA failed: '+failures.map(x=>x.viewport+' red='+x.visible?.redPixels+' range='+x.visible?.relTop+','+x.visible?.relBottom+' errors='+x.errors.join(';')).join(' | '));
+const failures=results.filter(r=>{
+ const [width,height]=r.window;
+ const ratio=width/height,realRatio=r.scene[0]/r.scene[1];
+ const barOverlays=r.pad[0]>=0 && r.pad[0]<height;
+ return r.errors.some(e=>e.includes('pageerror')||e.includes('HTTP 404'))||
+ r.draws<1||!Number.isFinite(r.foot)||r.foot<0||
+ !r.visible||r.visible.relTop<0||r.visible.relBottom>1||
+ r.visible.redPixels<3||r.scene[1]!==544||Math.abs(realRatio-ratio)>.015||
+ r.canvasRect[2]>r.field[0]+1||r.canvasRect[3]>r.field[1]+1||
+ r.imageFit!=='fill'||!barOverlays||r.pad[1]<100||r.pad[1]>170;
+});
+if(failures.length)throw Error('Panoramic Chrome field render QA failed: '+failures.map(x=>x.viewport+' scene='+x.scene+' red='+x.visible?.redPixels+' hero='+x.visible?.relTop+','+x.visible?.relBottom+' errors='+x.errors.join(';')).join(' | '));

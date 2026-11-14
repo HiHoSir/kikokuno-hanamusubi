@@ -132,8 +132,16 @@ window.YK_ELEVATION_VIEW=(()=>{
   c.save();c.beginPath();c.rect(0,0,viewWidth,544);c.clip();c.imageSmoothingEnabled=false;c.clearRect(0,0,viewWidth,544);
    // The existing horizon art is 640px wide. Repeat at native pixel scale
    // rather than stretching its mountains/clouds to fill panoramic screens.
-   const horizonStart=(viewWidth-640)/2-640;
-   for(let hx=horizonStart;hx<viewWidth;hx+=640)c.drawImage(art.horizon,Math.round(hx),0,640,240);
+   const horizonLeft=Math.floor((viewWidth-640)/2);
+   const horizonRight=viewWidth-horizonLeft-640;
+   // Extend the same 1px boundary columns of the authored horizon into the
+   // peripheral sky. This avoids obvious repeated mountain/cloud cut seams.
+   function drawHorizonBand(sy,sh){
+     if(horizonLeft>0)c.drawImage(art.horizon,0,sy,1,sh,0,sy,horizonLeft,sh);
+     c.drawImage(art.horizon,0,sy,640,sh,horizonLeft,sy,640,sh);
+     if(horizonRight>0)c.drawImage(art.horizon,639,sy,1,sh,horizonLeft+640,sy,horizonRight,sh);
+   }
+   drawHorizonBand(0,240);
   // Continue the same sea texture beyond the test map, as in the main field.
   const ocean=c.createPattern(art.sea,'repeat');
   for(let sy=136;sy<544;sy+=4){
@@ -373,7 +381,7 @@ window.YK_ELEVATION_VIEW=(()=>{
    cliffReport.xrayFaces=xrayFaces.length;
   }
   c.restore();
-  for(let y=136;y<208;y+=4){const t=(y-136)/72;c.globalAlpha=1-t*t*(3-2*t);for(let hx=horizonStart;hx<viewWidth;hx+=640)c.drawImage(art.horizon,0,y,640,4,Math.round(hx),y,640,4);}c.globalAlpha=1;
+  for(let y=136;y<208;y+=4){const t=(y-136)/72;c.globalAlpha=1-t*t*(3-2*t);drawHorizonBand(y,4);}c.globalAlpha=1;
   if(options.grid){for(let ty=minY;ty<=maxY;ty++)for(let tx=minX;tx<=maxX;tx++){
    for(const cut of E.outline(m,tx,ty).cuts){
     const blocked=[cut.corner,...cut.ends].map(([u,v])=>point(tx*32+u,ty*32+v,cut.lower));if(!blocked.every(Boolean))continue;

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {fieldViewportDimensions} from '../src/field/runtime.mjs';
+import {fieldViewportDimensions} from '../src/field/viewport.mjs';
 
 test('landscape field camera expands world width without cropping portrait raster',()=>{
   assert.deepEqual(fieldViewportDimensions(900,390),{width:1255,height:544});

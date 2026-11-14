@@ -1,3 +1,4 @@
+import {fieldViewportDimensions} from './viewport.mjs';
 const {YK_WORLD: world, YK_LANDSCAPE: landscape, YK_AUTOTILE: autotile,
   YK_ELEVATION: elevation, YK_CAMERA: camera, YK_MOVEMENT: movement,
   YK_AREA_TRANSITIONS: transitions, YK_FIELD_ASSETS: assets} = window;
@@ -64,13 +65,6 @@ export function fieldStep(state, dx, dy, at) {
 // more world to the LEFT and RIGHT. No portrait square, CSS cover or crop bar.
 // Logical height is the original field renderer's 544px; changing width only
 // leaves the 32px world grid, camera zoom, pixel-density and Y-perspective intact.
-export function fieldViewportDimensions(cssWidth,cssHeight){
-  const ratio=Number.isFinite(cssWidth)&&Number.isFinite(cssHeight)&&cssHeight>0
-    ?Math.max(1,cssWidth/cssHeight):640/544;
-  const height=544;
-  return {width:Math.max(640,Math.min(2048,Math.round(height*ratio))),height};
-}
-
 export function createFieldRenderer(context, hero) {
   const [anchorX,anchorY]=assets.heroFootAnchorPx;
   const display=context.canvas;
@@ -92,7 +86,7 @@ export function createFieldRenderer(context, hero) {
     display.dataset.fieldHeroFoot=String(Math.round(foot));
   }
   return function drawField(state,frameTime){
-    const box=display.getBoundingClientRect();
+    const box=display?.getBoundingClientRect?.()||{width:display?.width||640,height:display?.height||544};
     const dims=fieldViewportDimensions(box.width,box.height);
     if(display.width!==dims.width||display.height!==dims.height){
       display.width=dims.width;

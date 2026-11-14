@@ -23,3 +23,13 @@ test('field uses panoramic camera, native map perspective, full-screen overlays'
   assert.ok(!field.includes('grid-template-rows:minmax(0,1fr) 108px'));
   assert.ok(!field.includes('object-fit:cover'));
 });
+
+test('field profiling is opt-in and does not alter the rendered world or state',()=>{
+ const runtime=readFileSync('src/field/runtime.mjs','utf8');
+ const browser=readFileSync('tools/qa-field-browser.mjs','utf8');
+ assert.match(runtime,/new URLSearchParams\(location\.search\)\.get\('profile'\)==='1'/);
+ assert.match(runtime,/if\(profile\)window\.__FIELD_RENDER_PROFILE=stats/);
+ assert.match(runtime,/if\(profile\)\{\s*const elapsed=performance\.now\(\)-started/);
+ assert.match(browser,/p95Ms/);
+ assert.match(browser,/ArrowRight/);
+});

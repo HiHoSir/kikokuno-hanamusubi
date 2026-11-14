@@ -68,6 +68,11 @@ export function fieldStep(state, dx, dy, at) {
 export function createFieldRenderer(context, hero) {
   const [anchorX,anchorY]=assets.heroFootAnchorPx;
   const display=context.canvas;
+  // Profiling is opt-in for reproducible browser QA; gameplay never pays
+  // timing/allocation costs or displays a debug overlay.
+  const profile=typeof location!=='undefined'&&new URLSearchParams(location.search).get('profile')==='1';
+  const stats=profile?{frames:0,samples:[],totalMs:0,maxMs:0,viewport:[],lastAt:0}:null;
+  if(profile)window.__FIELD_RENDER_PROFILE=stats;
   function drawHero(px,py,projection,row,column) {
     const z=.56*projection;
     const foot=py+(14-9*.56)*projection+9*z;
@@ -86,6 +91,7 @@ export function createFieldRenderer(context, hero) {
     display.dataset.fieldHeroFoot=String(Math.round(foot));
   }
   return function drawField(state,frameTime){
+    const started=profile?performance.now():0;
     const box=display?.getBoundingClientRect?.()||{width:display?.width||640,height:display?.height||544};
     const dims=fieldViewportDimensions(box.width,box.height);
     if(display.width!==dims.width||display.height!==dims.height){
@@ -109,5 +115,15 @@ export function createFieldRenderer(context, hero) {
     display.dataset.fieldViewportHeight=String(dims.height);
     // Deliberately no fieldCropTop: there is no source crop.
     delete display.dataset.fieldCropTop;
+    if(profile){
+      const elapsed=performance.now()-started;
+      stats.frames++;
+      stats.totalMs+=elapsed;
+      stats.maxMs=Math.max(stats.maxMs,elapsed);
+      stats.lastAt=frameTime;
+      stats.viewport=[dims.width,dims.height];
+      stats.samples.push(Math.round(elapsed*100)/100);
+      if(stats.samples.length>240)stats.samples.shift();
+    }
   };
 }

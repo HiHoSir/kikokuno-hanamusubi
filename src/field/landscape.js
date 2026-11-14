@@ -431,7 +431,7 @@ window.YK_LANDSCAPE=(()=>{
   const {surface,ox,oy}=entry;return {surface,x:(tx-ox)*32,y:(ty-oy)*32};
  }
  const motionFrames={};
- function motionArt(kind,time=typeof performance==='object'?performance.now():0){const atlas=art[kind+'Motion'];if(!atlas?.complete||!atlas.naturalWidth)return art[kind];if(!motionFrames[kind]){const [w,h]=specs[kind];motionFrames[kind]=[0,1].map(i=>{const cv=document.createElement('canvas');cv.width=w;cv.height=h;cv.getContext('2d').drawImage(atlas,i*w,0,w,h,0,0,w,h);return cv})}return motionFrames[kind][Math.floor(time/360)%2]}
+ function motionArt(kind,time=typeof performance==='object'?performance.now():0){const atlas=art[kind+'Motion'];if(!atlas?.complete||!atlas.naturalWidth)return art[kind];if(!motionFrames[kind]){const [atlasWidth,h]=specs[kind+'Motion'];const frames=2,frameWidth=atlasWidth/frames;motionFrames[kind]=Array.from({length:frames},(_,i)=>{const cv=document.createElement('canvas');cv.width=frameWidth;cv.height=h;const ctx=cv.getContext('2d');ctx.imageSmoothingEnabled=false;ctx.drawImage(atlas,i*frameWidth,0,frameWidth,h,0,0,frameWidth,h);return cv;});}return motionFrames[kind][Math.floor(time/360)%motionFrames[kind].length]}
  function drawQuarter(c,map,actor,zoom=1.4,settings={}){
   if(!ready())return false;
   const motionTime=Number.isFinite(settings.motionTime)?settings.motionTime:typeof performance==='object'?performance.now():0,movingWater=motionArt('water',motionTime),movingFall=motionArt('waterfall',motionTime);

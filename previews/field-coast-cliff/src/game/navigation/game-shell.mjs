@@ -20,7 +20,7 @@ const routes = new Map([
 // approved Momotaro-style renderer, including after a battle.
 const rendererPreview = new URL(location.href).searchParams.get('field-renderer-preview') === '1';
 const fieldPath = new URL('src/field/', root).pathname;
-const fieldRenderers = new Set(['tile-layers','coast-cliff-chips']);
+const fieldRenderers = new Set(['tile-layers','coast-cliff-chips','tall-plateaus']);
 let fieldRenderer = null;
 let active = '';
 function setFieldRenderer(value) {

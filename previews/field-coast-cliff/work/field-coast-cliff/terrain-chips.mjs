@@ -2,14 +2,21 @@ const cell = 32, offset = cell / 2;
 const atlasNames = ['coast-mask','coast-sand-0','coast-sand-1','coast-sand-2',
   'coast-sand-3','coast-river','coast-rock','coast-shallow','cliff-1','cliff-2','cliff-3',
   'cliff-forest-1','cliff-forest-2','cliff-forest-3'];
+const plateauFeet = ['cliff-1-foot','cliff-2-foot','cliff-3-foot',
+  'cliff-forest-1-foot','cliff-forest-2-foot','cliff-forest-3-foot'];
+const footChipHeight = cell * 2;
 const isWater = t => t === 'sea' || t === 'river' || t === undefined;
 
-export async function loadTerrainChips() {
-  return Object.fromEntries(await Promise.all(atlasNames.map(async id => {
+export async function loadTerrainChips({tallPlateaus = false} = {}) {
+  const names = tallPlateaus ? [...atlasNames,...plateauFeet] : atlasNames;
+  return Object.fromEntries(await Promise.all(names.map(async id => {
+    const foot = plateauFeet.includes(id);
     const image = new Image();
-    image.src = new URL('./atlas/'+id+'-32.png',import.meta.url);
+    const url = new URL('./atlas/'+id+'-32.png',import.meta.url);
+    if(foot)url.search = '?v=plateau-1';
+    image.src = url.href;
     await image.decode();
-    if (image.width !== 128 || image.height !== 128) throw Error('Invalid terrain atlas: '+id);
+    if (image.width !== 128 || image.height !== (foot ? footChipHeight * 4 : 128)) throw Error('Invalid terrain atlas: '+id);
     return [id,image];
   })));
 }
@@ -257,7 +264,7 @@ export function composeTerrainChips(map,landscape,art,cliffMask) {
   ground.drawImage(landscape.groundLayer(paint),0,0);
   const shoreline=[];
   let waterCells=0,cliffTiles=0,forestCliffTiles=0;
-  const paintedCliffs=new Map();
+  const paintedCliffs=new Map(), cliffFaces=[], cliffFeet=[];
   const forestCells=new Set(map.decorations.filter(o=>o.kind==='newTrees'||o.kind==='sacredTree')
     .flatMap(o=>o.contactTiles.map(c=>c.join())));
   const ladderCells=new Set((map.ladders||[]).flatMap(({lower,upper})=>[lower.join(),upper.join()]));
@@ -287,8 +294,18 @@ export function composeTerrainChips(map,landscape,art,cliffMask) {
     const place=()=>{
       if(!previousCover||previousCover===15||!drop)return;
       const id=(forestEdge?'cliff-forest-':'cliff-')+drop;
-      chip(ground,art[id],previousCover,px,py);
-      if(cliffMask)chip(cliffMask,art[id],previousCover,px,py);
+      cliffFaces.push({image:art[id],index:previousCover,px,py});
+      const foot=art[id+'-foot'];
+      // A single drop only grows when the upper terrain continues into a
+      // plateau. The lower shore is still clipped by its normal water mask.
+      const upperRow=[get(x,y-1),get(x+1,y-1)];
+      const flatTop=[...upperRow,...local.slice(0,2)].every(s=>s.dry&&!s.ramp&&s.level===maximum);
+      const crossing=corners.some((pos,i)=>local[i].ramp||ladderCells.has(pos.join()));
+      const lowerCrossing=[x,x+1].some(tx=>get(tx,y+2).ramp||ladderCells.has([tx,y+2].join()));
+      if(foot&&count===15&&!crossing&&!lowerCrossing&&(drop>=2||flatTop)&&
+         (previousCover&3)&&previousCover!==6&&previousCover!==9&&previousCover!==12){
+        cliffFeet.push({image:foot,index:previousCover,px,py});
+      }
       if(forestEdge)forestCliffTiles++;
       const key=x+','+y;
       if(!paintedCliffs.has(key))paintedCliffs.set(key,[]);
@@ -311,6 +328,18 @@ export function composeTerrainChips(map,landscape,art,cliffMask) {
       drop=1;
     }
     place();
+  }
+  // On a narrow terrace, the existing rim in the next row stays above
+  // any cliff-foot art. Apply root shelf corrections to the whole join.
+  for(const {image,index,px,py} of cliffFeet){
+    const u=(index%4)*cell,v=Math.floor(index/4)*footChipHeight;
+    const visibleHeight=cell+14;
+    ground.drawImage(image,u,v,cell,visibleHeight,px,py,cell,visibleHeight);
+    if(cliffMask)cliffMask.drawImage(image,u,v,cell,visibleHeight,px,py,cell,visibleHeight);
+  }
+  for(const {image,index,px,py} of cliffFaces){
+    chip(ground,image,index,px,py);
+    if(cliffMask)chip(cliffMask,image,index,px,py);
   }
   const contacts=fitCliffContacts(ground,map,paintedCliffs,art,cliffMask);
   fitTrailCliffJoin(ground,map);
@@ -344,5 +373,5 @@ export function composeTerrainChips(map,landscape,art,cliffMask) {
     landscape.drawAsset(ground,'ladder',x*cell+8,y*cell-18,16,29);
   }
   return {canvas:ground.canvas,coastTiles:shoreline.length-waterCells,cliffTiles,forestCliffTiles,waterCells,
-    buildMs:performance.now()-started,...contacts};
+    plateauCliffTiles:cliffFeet.length,buildMs:performance.now()-started,...contacts};
 }

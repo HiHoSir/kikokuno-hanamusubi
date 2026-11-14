@@ -26,10 +26,13 @@ iframe{display:block;border:0;width:100%;height:100%;background:#102635}
 <div class="toolbar" aria-label="フィールド描画比較">
   <div class="modes" role="group" aria-label="描画方式">
     <button id="current" aria-pressed="false" disabled>従来版</button>
-    <button id="tiles" aria-pressed="true" disabled>海岸・崖チップ版</button>
+    <button id="tiles" aria-pressed="false" disabled>本編の崖</button>
+    <button id="plateau" aria-pressed="true" disabled>高原の崖を高く</button>
   </div>
   <select id="location" aria-label="確認地点" disabled>
     <option value="">確認地点へ移動</option>
+    <option value="28,35,1">西の高原</option>
+    <option value="40,10,1">九尾の祠の崖下</option>
     <option value="37,71,0">鬼灯村の水際</option>
     <option value="37,43,1">川沿いの山裾</option>
     <option value="40,8,1">九尾の祠への参道</option>
@@ -46,10 +49,10 @@ iframe{display:block;border:0;width:100%;height:100%;background:#102635}
 (()=>{
   const frame=document.querySelector('#game');
   const position=document.querySelector('#position'),timing=document.querySelector('#timing');
-  const current=document.querySelector('#current'),tiles=document.querySelector('#tiles');
+  const current=document.querySelector('#current'),tiles=document.querySelector('#tiles'),plateau=document.querySelector('#plateau');
   const locations=document.querySelector('#location');
   const root=new URL('./',location.href);
-  let selection='tiles',host,sceneFrame,lastFieldPosition=null,visit=0;
+  let selection='plateau',host,sceneFrame,lastFieldPosition=null,visit=0;
   const scene=()=>sceneFrame?.contentDocument?.querySelector('#scene[data-x][data-y]');
   function fieldPosition(){
     const data=scene()?.dataset;
@@ -63,7 +66,7 @@ iframe{display:block;border:0;width:100%;height:100%;background:#102635}
       target.searchParams.set('visit',String(++visit));
     }
     try{
-      host.setFieldRenderer(selection==='tiles'?'coast-cliff-chips':null);
+      host.setFieldRenderer(selection==='plateau'?'tall-plateaus':selection==='tiles'?'coast-cliff-chips':null);
       host.navigate(target);
       position.textContent='読み込み中';
       timing.textContent='';
@@ -77,6 +80,7 @@ iframe{display:block;border:0;width:100%;height:100%;background:#102635}
     selection=mode;
     current.setAttribute('aria-pressed',String(mode==='current'));
     tiles.setAttribute('aria-pressed',String(mode==='tiles'));
+    plateau.setAttribute('aria-pressed',String(mode==='plateau'));
     open(at);
   }
   function update(){
@@ -106,6 +110,7 @@ iframe{display:block;border:0;width:100%;height:100%;background:#102635}
   }
   current.addEventListener('click',()=>select('current'));
   tiles.addEventListener('click',()=>select('tiles'));
+  plateau.addEventListener('click',()=>select('plateau'));
   locations.addEventListener('change',()=>{
     if(locations.value)open(locations.value);
     locations.selectedIndex=0;
@@ -115,9 +120,9 @@ iframe{display:block;border:0;width:100%;height:100%;background:#102635}
     host=frame.contentWindow.KIKOKU_GAME;
     if(!host){position.textContent='ゲームを読み込めませんでした';return;}
     sceneFrame=frame.contentDocument.querySelector('#game-scene');
-    current.disabled=tiles.disabled=locations.disabled=false;
+    current.disabled=tiles.disabled=plateau.disabled=locations.disabled=false;
     sceneFrame.addEventListener('load',update);
-    open(null);
+    open('40,10,1');
     setInterval(update,250);
   },{once:true});
   try{

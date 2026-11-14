@@ -91,6 +91,34 @@ try{
      Buffer.from(result[key],'base64'));
    delete result[key];
   }
+  // The pixel-difference number is diagnostic ONLY: distinct authored tile
+  // art must not be automatically rejected for looking different pixel-by-pixel.
+  // Compare actual landscape silhouettes from three representative positions.
+  if(width===900){
+   const views=await page.evaluate(()=>{
+    const w=document.querySelector('iframe').contentWindow;
+    const src=w.document.querySelector('#scene'),map=w.YK_WORLD.mapData;
+    const context=w.__FIELD_TILE_LAYER_TRIAL;
+    const width=src.width,height=src.height,ref=document.createElement('canvas'),
+      candidate=document.createElement('canvas');
+    ref.width=candidate.width=width;ref.height=candidate.height=height;
+    const r=ref.getContext('2d'),c=candidate.getContext('2d');
+    return [[37,71,'village-coast'],[40,8,'raised-shrine'],[28,35,'mountain-cliffs']].map(([tx,ty,label])=>{
+     const actor={x:tx*32+16,foot:ty*32+16};
+     w.YK_LANDSCAPE.drawQuarter(r,map,{...actor,draw:()=>{}},1.4,{
+      oceanOutside:true,elevationTerrain:true,viewportWidth:width,motionTime:120000});
+     context.draw(c,actor,120000,width);
+     return {label,oldPNG:ref.toDataURL('image/png').split(',')[1],
+       newPNG:candidate.toDataURL('image/png').split(',')[1]};
+    });
+   });
+   for(const view of views){
+    for(const [key,name] of [['oldPNG','current'],['newPNG','tile-layer']]){
+      await writeFile('artifacts/field-layer-'+view.label+'-'+name+'.png',Buffer.from(view[key],'base64'));
+    }
+   }
+   result.landscapeCheckpoints=views.map(v=>v.label);
+  }
   results.push(result);
   if(errors.length||result.animatedPixels<100||!result.fixedLand||
      result.info.waterCells<1||result.info.builds!==1||result.info.waterFrames!==Math.floor((120000+360)/360)%2||

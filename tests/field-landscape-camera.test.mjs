@@ -77,3 +77,14 @@ test('opt-in tile-layer experiment keeps shipped field perspective as the defaul
  assert.match(trial,/groundLayer\(flat\)/);
  assert.match(trial,/staticLand:true,animatedWater:true/);
 });
+
+test('terrain rework QA judges camera, height and shoreline fidelity rather than pixel identity',()=>{
+ const qa=readFileSync('tools/qa-field-tile-layers.mjs','utf8');
+ assert.match(qa,/The pixel-difference number is diagnostic ONLY/);
+ assert.match(qa,/village-coast/);
+ assert.match(qa,/raised-shrine/);
+ assert.match(qa,/mountain-cliffs/);
+ assert.doesNotMatch(qa,/differentPercent\s*[><=]/);
+ assert.match(qa,/animatedPixels<100/);
+ assert.match(qa,/fixedLand/);
+});

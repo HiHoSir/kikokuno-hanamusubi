@@ -37,7 +37,6 @@ try{
   const w=document.querySelector('#game-scene').contentWindow;
   const floor=w.YK_LANDSCAPE.floorLayer;
   const makeFixture=(center,mask)=>{
-   const land=center==='sea'?'grass':'grass',water=center==='sea'?'sea':'sea';
    const base=center==='sea'?'sea':'grass';
    const map=Array.from({length:3},()=>Array(3).fill(base));
    map[1][1]=center;
@@ -59,6 +58,10 @@ try{
   };
   const sheets={};
   const stats={};
+  const tiles=Array.from({length:16},(_,mask)=>({
+    mask,sourceX:(mask%4)*32,sourceY:Math.floor(mask/4)*32,
+    neighborBits:{north:!!(mask&1),east:!!(mask&2),south:!!(mask&4),west:!!(mask&8)}
+  }));
   const hash=bytes=>{let h=2166136261;for(let i=0;i<bytes.length;i++){h^=bytes[i];h=Math.imul(h,16777619);}return h>>>0;};
   for(const kind of ['sea','sand']){
    const sheet=document.createElement('canvas');sheet.width=sheet.height=4*32;
@@ -88,14 +91,14 @@ try{
   const q=view.getContext('2d');q.imageSmoothingEnabled=false;
   q.drawImage(sampleCanvas,0,0,view.width,view.height);
   sheets['shore-grid-preview']=view.toDataURL('image/png').split(',')[1];
-  return {sheets,stats,sampleTiles:[sample[0].length,sample.length],
+  return {sheets,stats,tiles,tileSize:[32,32],sampleTiles:[sample[0].length,sample.length],
    note:'N=1 E=2 S=4 W=8. Atlas position x=(mask%4)*32,y=floor(mask/4)*32.'};
  });
  for(const [key,data] of Object.entries(results.sheets)){
    await writeFile('artifacts/field-map-parts-'+key+'.png',Buffer.from(data,'base64'));
  }
  delete results.sheets;
- if(results.stats.sea.unique<8||results.stats.sand.unique<8)
+ if(results.stats.sea.unique!==16||results.stats.sand.unique!==16)
    throw Error('Expected at least 8 distinct mask tiles per approved terrain: '+JSON.stringify(results.stats));
  await writeFile('artifacts/field-map-parts-metadata.json',JSON.stringify(results,null,2));
  console.log('MAP CHIP PROTOTYPE '+JSON.stringify({seaVariants:results.stats.sea.unique,

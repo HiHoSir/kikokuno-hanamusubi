@@ -434,7 +434,7 @@ window.YK_LANDSCAPE=(()=>{
  function motionArt(kind,time=typeof performance==='object'?performance.now():0){const atlas=art[kind+'Motion'];if(!atlas?.complete||!atlas.naturalWidth)return art[kind];if(!motionFrames[kind]){const [w,h]=specs[kind];motionFrames[kind]=[0,1].map(i=>{const cv=document.createElement('canvas');cv.width=w;cv.height=h;cv.getContext('2d').drawImage(atlas,i*w,0,w,h,0,0,w,h);return cv})}return motionFrames[kind][Math.floor(time/360)%2]}
  function drawQuarter(c,map,actor,zoom=1.4,settings={}){
   if(!ready())return false;
-  const motionTime=typeof performance==='object'?performance.now():0,movingWater=motionArt('water',motionTime),movingFall=motionArt('waterfall',motionTime);
+  const motionTime=Number.isFinite(settings.motionTime)?settings.motionTime:typeof performance==='object'?performance.now():0,movingWater=motionArt('water',motionTime),movingFall=motionArt('waterfall',motionTime);
   if(settings.elevationTerrain&&map.elevationEnabled){
    const fieldArt={...art,waterAnimated:true,sea:movingWater,river:movingWater,waterfall:movingFall,rock:art.barren,grassCliff:art.grassCliff,ladder:art.ladder,forest:art.grass,mountain:art.grass,snowMountain:art.snow,rockMountain:art.barren};
    return !!window.YK_ELEVATION_VIEW.render(c,map,fieldArt,{x:actor.x,y:actor.foot,height:actor.height,draw:actor.draw},{

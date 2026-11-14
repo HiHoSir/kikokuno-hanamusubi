@@ -42,3 +42,17 @@ test('coastline shapes and beach strips cache in world coordinates only',()=>{
  assert.match(source,/shore\.sand/);
  assert.match(source,/shore\.darkEdges/);
 });
+
+test('production water/river/waterfall motion uses the same RAF phase as field scheduling',()=>{
+ const landscape=readFileSync('src/field/landscape.js','utf8');
+ const runtime=readFileSync('src/field/runtime.mjs','utf8');
+ const walk=readFileSync('src/field/walk.mjs','utf8');
+ const tenyo=readFileSync('src/game/tenyo/rendering/render.js','utf8');
+ assert.match(landscape,/Number\.isFinite\(settings\.motionTime\)\?settings\.motionTime/);
+ assert.match(landscape,/movingWater=motionArt\('water',motionTime\)/);
+ assert.match(landscape,/sea:movingWater,river:movingWater,waterfall:movingFall/);
+ assert.match(runtime,/motionTime:frameTime/);
+ assert.match(walk,/Math\.floor\(now \/ 360\)/);
+ assert.match(tenyo,/waterKinds=\['shallow','mid','deep'\]/);
+ assert.match(tenyo,/Math\.floor\(\(o\.animationTime\|\|0\)\/360\)%4/);
+});

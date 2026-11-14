@@ -10,6 +10,7 @@ on:
       - 'src/game/ui/landscape-only.mjs'
       - 'tools/qa-field-browser.mjs'
       - 'tools/qa-field-map-parts.mjs'
+      - 'tools/qa-field-water-animation.mjs'
       - '.github/workflows/field-visual-qa.yml'
   workflow_dispatch:
 jobs:
@@ -29,6 +30,8 @@ jobs:
         run: node tools/qa-field-browser.mjs
       - name: Generate coast connection tile atlas from approved assets
         run: node tools/qa-field-map-parts.mjs
+      - name: Verify animated coastal masks and live field water playback
+        run: node tools/qa-field-water-animation.mjs
       - name: Upload landscape screenshots even on failure
         if: always()
         uses: actions/upload-artifact@v4
@@ -38,4 +41,6 @@ jobs:
             artifacts/field-*.png
             artifacts/field-map-parts-*.png
             artifacts/field-map-parts-metadata.json
+            artifacts/water-animation-*.png
+            artifacts/water-animation-metadata.json
           if-no-files-found: warn

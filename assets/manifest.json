@@ -326,6 +326,160 @@
       "usage": "legacy-field-loader"
     },
     {
+      "id": "field-cliff-1-32",
+      "type": "map",
+      "path": "assets/field/terrain/atlas/cliff-1-32.png",
+      "status": "approved",
+      "usage": "field-terrain-atlas",
+      "dimensions": {
+        "width": 128,
+        "height": 128
+      }
+    },
+    {
+      "id": "field-cliff-2-32",
+      "type": "map",
+      "path": "assets/field/terrain/atlas/cliff-2-32.png",
+      "status": "approved",
+      "usage": "field-terrain-atlas",
+      "dimensions": {
+        "width": 128,
+        "height": 128
+      }
+    },
+    {
+      "id": "field-cliff-3-32",
+      "type": "map",
+      "path": "assets/field/terrain/atlas/cliff-3-32.png",
+      "status": "approved",
+      "usage": "field-terrain-atlas",
+      "dimensions": {
+        "width": 128,
+        "height": 128
+      }
+    },
+    {
+      "id": "field-cliff-forest-1-32",
+      "type": "map",
+      "path": "assets/field/terrain/atlas/cliff-forest-1-32.png",
+      "status": "approved",
+      "usage": "field-terrain-atlas",
+      "dimensions": {
+        "width": 128,
+        "height": 128
+      }
+    },
+    {
+      "id": "field-cliff-forest-2-32",
+      "type": "map",
+      "path": "assets/field/terrain/atlas/cliff-forest-2-32.png",
+      "status": "approved",
+      "usage": "field-terrain-atlas",
+      "dimensions": {
+        "width": 128,
+        "height": 128
+      }
+    },
+    {
+      "id": "field-cliff-forest-3-32",
+      "type": "map",
+      "path": "assets/field/terrain/atlas/cliff-forest-3-32.png",
+      "status": "approved",
+      "usage": "field-terrain-atlas",
+      "dimensions": {
+        "width": 128,
+        "height": 128
+      }
+    },
+    {
+      "id": "field-coast-mask-32",
+      "type": "map",
+      "path": "assets/field/terrain/atlas/coast-mask-32.png",
+      "status": "approved",
+      "usage": "field-terrain-atlas",
+      "dimensions": {
+        "width": 128,
+        "height": 128
+      }
+    },
+    {
+      "id": "field-coast-river-32",
+      "type": "map",
+      "path": "assets/field/terrain/atlas/coast-river-32.png",
+      "status": "approved",
+      "usage": "field-terrain-atlas",
+      "dimensions": {
+        "width": 128,
+        "height": 128
+      }
+    },
+    {
+      "id": "field-coast-rock-32",
+      "type": "map",
+      "path": "assets/field/terrain/atlas/coast-rock-32.png",
+      "status": "approved",
+      "usage": "field-terrain-atlas",
+      "dimensions": {
+        "width": 128,
+        "height": 128
+      }
+    },
+    {
+      "id": "field-coast-sand-0-32",
+      "type": "map",
+      "path": "assets/field/terrain/atlas/coast-sand-0-32.png",
+      "status": "approved",
+      "usage": "field-terrain-atlas",
+      "dimensions": {
+        "width": 128,
+        "height": 128
+      }
+    },
+    {
+      "id": "field-coast-sand-1-32",
+      "type": "map",
+      "path": "assets/field/terrain/atlas/coast-sand-1-32.png",
+      "status": "approved",
+      "usage": "field-terrain-atlas",
+      "dimensions": {
+        "width": 128,
+        "height": 128
+      }
+    },
+    {
+      "id": "field-coast-sand-2-32",
+      "type": "map",
+      "path": "assets/field/terrain/atlas/coast-sand-2-32.png",
+      "status": "approved",
+      "usage": "field-terrain-atlas",
+      "dimensions": {
+        "width": 128,
+        "height": 128
+      }
+    },
+    {
+      "id": "field-coast-sand-3-32",
+      "type": "map",
+      "path": "assets/field/terrain/atlas/coast-sand-3-32.png",
+      "status": "approved",
+      "usage": "field-terrain-atlas",
+      "dimensions": {
+        "width": 128,
+        "height": 128
+      }
+    },
+    {
+      "id": "field-coast-shallow-32",
+      "type": "map",
+      "path": "assets/field/terrain/atlas/coast-shallow-32.png",
+      "status": "approved",
+      "usage": "field-terrain-atlas",
+      "dimensions": {
+        "width": 128,
+        "height": 128
+      }
+    },
+    {
       "id": "field-shrine",
       "type": "object",
       "path": "assets/field/objects/shrine.png",

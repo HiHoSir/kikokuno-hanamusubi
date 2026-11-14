@@ -1,5 +1,5 @@
-import {contact, createFieldRenderer, fieldStep, loadFieldArt, villageArrival, placeArrival, world} from './runtime.mjs?v=tile-layer-trial-1';
-import {BATTLE_REQUEST_KEY,FIELD_RETURN_KEY,chooseFieldEncounter} from '../game/battle/rules.mjs';
+import {contact, createFieldRenderer, fieldStep, loadFieldArt, villageArrival, placeArrival, world} from './runtime.mjs?v=field-terrain-atlas-1';
+import {BATTLE_REQUEST_KEY,FIELD_RETURN_KEY,chooseFieldEncounter} from '../game/battle/rules.mjs?v=field-balance-1';
 
 const scene = document.querySelector('#scene');
 const load = document.querySelector('#load');
@@ -54,6 +54,7 @@ function shrineReturnPosition(){
   return placeArrival('shrine');
 }
 async function start() {
+  const art=await loadFieldArt();
   const from=new URLSearchParams(location.search).get('from');
   const [x, y] = from==='shrine' ? shrineReturnPosition() : from==='battle' ? battleReturnPosition() : villageArrival();
   const state = {x, y, row: from==='village' ? 0 : 1, column: 0};
@@ -70,8 +71,7 @@ async function start() {
     }catch{}
     window.KIKOKU_ROUTE.go(new URL('../game/battle/', import.meta.url));
   }
-  const hero = await loadFieldArt();
-  const render = createFieldRenderer(scene.getContext('2d', {alpha: false}), hero);
+  const render = createFieldRenderer(scene.getContext('2d', {alpha: false}), art);
   let phase = 0;
   let lastWaterFrame = -1;
   // The menu and rotation gate cover the world. Keep logical movement state

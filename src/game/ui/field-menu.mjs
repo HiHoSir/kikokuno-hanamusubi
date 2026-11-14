@@ -1,6 +1,6 @@
 // Single parent-owned landscape command menu; neither scene iframe nor BGM is replaced.
 // The on-screen D-pad/A/B is menu-local. Scene controls cannot receive input behind it.
-import {readPlayer,savePlayer,useExplorationResource,FOOD_ITEMS,nextLevelXp} from '../battle/rules.mjs';
+import {readPlayer,savePlayer,useExplorationResource,FOOD_ITEMS,nextLevelXp} from '../battle/rules.mjs?v=field-balance-1';
 
 const frame=document.querySelector('#game-scene');
 const opener=document.querySelector('#field-menu-toggle');

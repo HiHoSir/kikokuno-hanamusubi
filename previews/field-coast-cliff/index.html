@@ -119,7 +119,7 @@ iframe{display:block;border:0;width:100%;height:100%;background:#102635}
     if(locations.value)open(locations.value);
     locations.selectedIndex=0;
   });
-  const shellUrl=new URL('src/game/?field-renderer-preview=1&v=cliff-cell-1',root);
+  const shellUrl=new URL('src/game/?field-renderer-preview=1&v=cliff-cell-2',root);
   frame.addEventListener('load',()=>{
     host=frame.contentWindow.KIKOKU_GAME;
     if(!host){position.textContent='ゲームを読み込めませんでした';return;}

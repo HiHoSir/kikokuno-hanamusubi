@@ -1,61 +1,86 @@
-// A south-facing cliff can take the first lower cell where there is room
-// for its face and a landing. Its appearance and collision share this list.
-const walkableTerrain = new Set(['grass','forest','barren','snow']);
+const land = tile => tile !== undefined && !['sea','river','bridge'].includes(tile);
 const key = (x,y) => x+','+y;
 
-export function placeCliffCells(map,geography,elevation,refreshCollision) {
-  const reachable = new Set(map.travelReachable);
+// The direction names the face as seen from the lower terrain.
+const faces = [
+  {direction:'s', dx:0, dy:1},
+  {direction:'e', dx:1, dy:0},
+  {direction:'w', dx:-1, dy:0},
+  {direction:'n', dx:0, dy:-1},
+];
+
+export function placeCliffCells(map, geography, refreshCollision, world) {
   const reserved = new Set([
     ...geography.roads.flat(),
     ...Object.values(geography.places),
-    ...geography.restStops.map(stop=>stop.cell),
-    ...map.ladders.flatMap(({lower,upper})=>[lower,upper]),
-    ...map.decorations.flatMap(object=>object.contactTiles),
-  ].map(([x,y])=>key(x,y)));
-  for (const cell of map.bridgeWaterCells) reserved.add(cell);
-  const originallyOccupied = new Set(map.occupiedTiles);
+    ...geography.restStops.map(stop => stop.cell),
+    ...map.ladders.flatMap(({lower,upper}) => [lower,upper]),
+    ...map.decorations.flatMap(object => object.contactTiles),
+  ].map(([x,y]) => key(x,y)));
+  for (let y=0;y<map.length;y++)for(let x=0;x<map[y].length;x++){
+    const direction=map.ramps[y][x];
+    if(!direction)continue;
+    const {dx,dy}=faces.find(face=>face.direction===direction);
+    for(let i=-1;i<=1;i++)reserved.add(key(x+i*dx,y+i*dy));
+  }
+  // Keep the authored apron in front of the two shrine approach slopes.
+  for(let x=39;x<=41;x++)reserved.add(key(x,12));
+  for (const k of map.bridgeWaterCells) reserved.add(k);
+  for (const k of map.occupiedTiles) reserved.add(k);
   const walls = new Map();
   map.cliffCells = walls;
-  const width = map[0].length;
+  const width = map[0].length, height = map.length;
+  const reachable = new Set(map.travelReachable);
+  const walking = walkingNetwork(world);
 
-  function protectedCell(x,y) {
-    return reserved.has(key(x,y)) || map.ramps[y]?.[x];
+  function candidate(x,y,{direction,dx,dy}) {
+    const k=key(x,y), ux=x-dx, uy=y-dy;
+    const drop=map.heights[uy][ux]-map.heights[y][x];
+    if(drop<1||drop>3||reserved.has(k)||walls.has(k)||!land(map[y][x])||map[y][x]==='sand'||
+       !land(map[uy][ux])||map.ramps[y][x]||map.ramps[uy][ux]||map.ramps[y+dy][x+dx])return null;
+    return {x,y,drop,direction};
   }
 
-  function candidate(x,y) {
-    const k=key(x,y);
-    const drop=map.heights[y-1][x]-map.heights[y][x];
-    if(drop<1||drop>3||!reachable.has(k)||originallyOccupied.has(k)||!walkableTerrain.has(map[y][x])||
-       protectedCell(x,y)||map.ramps[y-1][x]||map.ramps[y+1][x]||
-       !reachable.has(key(x,y+1))||!walkableTerrain.has(map[y+1][x])||
-       !elevation.connected(map,x,y,x,y+1))return null;
-    return {x,y,drop};
+  const preserves = (before,after) => [...before].every(k=>walls.has(k)||after.has(k));
+
+  function tryRun(run) {
+    if(run.length<2)return;
+    for(const wall of run)walls.set(key(wall.x,wall.y),wall);
+    if(run.every(({x,y})=>!reachable.has(key(x,y))))return;
+    refreshCollision();
+    if(preserves(reachable,map.travelReachable)&&preserves(walking,walkingNetwork(world)))return;
+    for(const wall of run)walls.delete(key(wall.x,wall.y));
+    refreshCollision();
   }
 
-  // Submit contiguous runs and retain any existing route around them. If a
-  // run isolates terrain, omit the whole run instead of leaving holes in it.
-  for(let y=1;y<map.length-1;y++){
-    const runs=[];
-    let run=[];
-    for(let x=1;x<width-1;x++){
-      const wall=candidate(x,y);
-      if(wall){run.push(wall);continue;}
-      if(run.length>=2)runs.push(run);
-      run=[];
-    }
-    if(run.length>=2)runs.push(run);
-    for(const section of runs){
-      for(const wall of section){
-        const k=key(wall.x,wall.y);
-        walls.set(k,wall);
-        map.occupiedTiles.add(k);
+  for(const face of faces){
+    // Parallel faces join along their shared edge, never along their depth.
+    const horizontal = face.dx===0;
+    for(let row=1;row<(horizontal?height:width)-1;row++){
+      let run=[];
+      for(let along=1;along<(horizontal?width:height)-1;along++){
+        const wall = candidate(horizontal?along:row,horizontal?row:along,face);
+        if(wall){run.push(wall);continue;}
+        tryRun(run);
+        run=[];
       }
-      refreshCollision();
-      if([...reachable].some(k=>!walls.has(k)&&!map.travelReachable.has(k))){
-        for(const wall of section)walls.delete(key(wall.x,wall.y));
-        refreshCollision();
-      }
+      tryRun(run);
     }
   }
+  refreshCollision();
   return walls;
+}
+
+function walkingNetwork(world) {
+  const queue=[world.start], seen=new Set([key(...world.start)]);
+  for(let i=0;i<queue.length;i++){
+    const [x,y]=queue[i];
+    for(const [dx,dy] of [[0,-32],[32,0],[0,32],[-32,0]]){
+      const nx=x+dx,ny=y+dy,k=key(nx,ny);
+      if(seen.has(k)||!world.canMove(x,y,nx,ny))continue;
+      seen.add(k);
+      queue.push([nx,ny]);
+    }
+  }
+  return new Set(queue.map(([x,y])=>key(Math.floor(x/32),Math.floor(y/32))));
 }

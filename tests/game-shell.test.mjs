@@ -66,3 +66,15 @@ test('game shell navigation is delegated and validates scene and frame identity'
   host.navigate(new URL('src/field/?from=battle',base),frame.contentWindow);
   assert.deepEqual(transitions,['field','battle','field']);
 });
+
+test('world menu is hosted by the persistent game shell, not duplicated in the scenes',()=>{
+ const menu=readFileSync('src/game/ui/field-menu.mjs','utf8');
+ assert.match(html,/id="field-menu-toggle"/);
+ assert.match(html,/id="field-menu-backdrop" hidden/);
+ assert.match(html,/field-menu.mjs/);
+ assert.match(menu,/readPlayer/);
+ assert.match(menu,/useExplorationResource/);
+ assert.match(menu,/isBattle/);
+ assert.match(menu,/dispatchEvent\(new Event\('blur'\)\)/);
+ assert.doesNotMatch(menu,/location.assign|location.replace/);
+});

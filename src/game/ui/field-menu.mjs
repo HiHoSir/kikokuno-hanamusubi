@@ -1,0 +1,89 @@
+// Single parent-owned world menu. BGM and scene navigation are untouched.
+import {readPlayer,savePlayer,useExplorationResource,FOOD_ITEMS,nextLevelXp} from '../battle/rules.mjs';
+const frame=document.querySelector('#game-scene');
+const opener=document.querySelector('#field-menu-toggle');
+const backdrop=document.querySelector('#field-menu-backdrop');
+const closer=document.querySelector('#field-menu-close');
+const summary=document.querySelector('#field-menu-summary');
+const commands=document.querySelector('#field-menu-commands');
+const detail=document.querySelector('#field-menu-detail');
+const message=document.querySelector('#field-menu-message');
+const entries=[['items','道具'],['magic','術'],['equipment','装備'],['status','強さ'],['record','記録'],['settings','設定']];
+let selected='items',opened=false;
+const el=(tag,txt)=>{const node=document.createElement(tag);node.textContent=txt;return node;};
+function isBattle(){return frame.src.includes('/src/game/battle/');}
+function hide(){if(!opened)return;opened=false;backdrop.hidden=true;frame.style.pointerEvents='';opener.setAttribute('aria-expanded','false');opener.focus();}
+function show(){
+  if(opened||isBattle()||opener.hidden)return;
+  try{frame.contentWindow?.dispatchEvent(new Event('blur'));}catch{}
+  opened=true;selected='items';frame.style.pointerEvents='none';backdrop.hidden=false;
+  opener.setAttribute('aria-expanded','true');message.textContent='';render();closer.focus();
+}
+function refreshScene(){
+  opener.hidden=isBattle();
+  if(opener.hidden)hide();
+  try{frame.contentWindow?.addEventListener('keydown',e=>{
+    if(e.key?.toLowerCase()==='m'&&!e.repeat&&!e.ctrlKey&&!e.altKey&&!e.metaKey&&!isBattle()){
+      e.preventDefault();if(!opened)show();
+    }
+  },true);}catch{}
+}
+function addAction(label,callback,disabled=false){
+  const b=el('button',label);b.type='button';b.disabled=disabled;
+  b.addEventListener('click',callback);detail.append(b);
+}
+function use(kind,id){
+  const outcome=useExplorationResource(readPlayer(),kind,id);
+  if(outcome.accepted)savePlayer(outcome.player);
+  message.textContent=outcome.message;
+  window.KIKOKU_GAME?.audio?.se?.(outcome.accepted?'confirm':'cancel');
+  render();
+}
+function change(id){if(id==='record')return;selected=id;message.textContent='';render();}
+function render(){
+  const hero=readPlayer();
+  summary.textContent='緋月 '+hero.lv+'段　 体 '+hero.hp+'/'+hero.maxhp+'　 技 '+hero.mp+'/'+hero.maxmp+'　 '+hero.gold+'両';
+  commands.replaceChildren();detail.replaceChildren();
+  for(const [id,name] of entries){
+    const b=el('button',(id===selected?'▶ ':'　')+name);
+    b.type='button';b.disabled=id==='record';b.classList.toggle('selected',id===selected);
+    if(id==='record')b.title='セーブ機能は未実装です';
+    b.addEventListener('click',()=>change(id));commands.append(b);
+  }
+  detail.append(el('h2',entries.find(row=>row[0]===selected)[1]));
+  if(selected==='items'){
+    addAction('薬草 ×'+hero.potions+' 体力+26',()=>use('herb'),hero.potions===0);
+    for(const item of Object.values(FOOD_ITEMS)){
+      addAction(item.name+' ×'+hero.foods[item.id]+' 体力+'+item.heal,()=>use('food',item.id),hero.foods[item.id]===0);
+    }
+    detail.append(el('p','選んだ道具をその場で使います。'));
+  }else if(selected==='magic'){
+    addAction('つむぎ 技5 体力回復',()=>use('heal'),hero.mp<5);
+    detail.append(el('p','糸遊：3段で習得（戦闘用）'));
+  }else if(selected==='equipment'){
+    detail.append(el('p',hero.equipmentTier==='T0'?'初期の兵具':'旅の兵具一式 '+hero.equipmentTier));
+    detail.append(el('p','兵具屋で買った装備は自動装備です。'));
+  }else if(selected==='status'){
+    const dl=document.createElement('dl');detail.append(dl);
+    for(const [key,value] of [['段',hero.lv],['体',hero.hp+'/'+hero.maxhp],['技',hero.mp+'/'+hero.maxmp],['攻撃',hero.attack],['守備',hero.defense],['速さ',hero.speed],['心',hero.xp+'/'+nextLevelXp(hero.lv)],['両',hero.gold]]){
+      dl.append(el('dt',key),el('dd',String(value)));
+    }
+  }else if(selected==='settings'){
+    const audio=window.KIKOKU_GAME?.audio;
+    addAction('音声 '+(audio?.enabled?'ON':'OFF'),()=>{audio?.setEnabled(!audio.enabled);render();},!audio);
+    detail.append(el('p','詳細設定は今後追加します。'));
+  }
+}
+opener.addEventListener('click',()=>opened?hide():show());
+closer.addEventListener('click',hide);
+backdrop.addEventListener('click',event=>{if(event.target===backdrop)hide();});
+document.addEventListener('keydown',event=>{
+  if(!opened)return;
+  if(event.key==='Escape'||event.key==='Backspace'){event.preventDefault();hide();}
+  else if(['ArrowUp','ArrowDown'].includes(event.key)){
+    event.preventDefault();const ids=entries.filter(row=>row[0]!=='record').map(row=>row[0]);
+    selected=ids[(ids.indexOf(selected)+(event.key==='ArrowUp'?-1:1)+ids.length)%ids.length];render();
+  }
+});
+frame.addEventListener('load',refreshScene);
+refreshScene();

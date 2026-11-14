@@ -34,11 +34,24 @@ try{
   await page.waitForFunction(()=>typeof window.KIKOKU_GAME?.navigate==='function',{timeout:15000});
   await page.evaluate(()=>window.KIKOKU_GAME.navigate(
     new URL('/src/field/?from=village&renderer=tile-layers&profile=1',location.href).href));
-  await page.waitForFunction(()=>{
-   const w=document.querySelector('iframe')?.contentWindow;
-   return !!w?.__FIELD_TILE_LAYER_TRIAL?.info?.builds &&
-      w.document.querySelector('#load')?.hidden===true;
-  },null,{timeout:90000});
+  try{
+    await page.waitForFunction(()=>{
+      const w=document.querySelector('iframe')?.contentWindow;
+      return !!w?.__FIELD_TILE_LAYER_TRIAL?.info?.builds &&
+        w.document.querySelector('#load')?.hidden===true;
+    },null,{timeout:35000});
+  }catch(err){
+    const details=await page.evaluate(()=>{
+      const f=document.querySelector('iframe'),w=f?.contentWindow;
+      return {route:f?.src,body:w?.document?.body?.innerText?.slice(0,300),
+        ready:w?.YK_LANDSCAPE?.ready?.(),trial:w?.__FIELD_TILE_LAYER_TRIAL?.info,
+        loadHidden:w?.document?.querySelector('#load')?.hidden,
+        frameLoaded:w?.document?.readyState};
+    });
+    console.error('TILE LAYER BOOT FAILURE '+JSON.stringify({viewport:[width,height],details,errors},null,2));
+    await page.screenshot({path:'artifacts/field-layer-load-failure-'+width+'x'+height+'.png'});
+    throw err;
+  }
   const result=await page.evaluate(()=>{
    const w=document.querySelector('iframe').contentWindow;
    const scene=w.document.querySelector('#scene'),ctx=scene.getContext('2d');

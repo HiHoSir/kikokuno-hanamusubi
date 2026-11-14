@@ -13,7 +13,7 @@ export function createTileLayerPrototype(context,map,drawHero){
   if(land)return;
   const start=performance.now();
   const flat=map.slice();
-  Object.assign(flat,map,{projectedHeights:false,shoreRelief:false});
+  Object.assign(flat,map,{projectedHeights:true,shoreRelief:false});
   const source=landscape.groundLayer(flat);
   land=canvas(map[0].length*32,map.length*32);
   const g=land.getContext('2d');g.drawImage(source,0,0);
@@ -70,9 +70,37 @@ export function createTileLayerPrototype(context,map,drawHero){
   g.restore();
   info.coastTiles=coastTiles.length;
   info.masks=coastTiles.length;
-  // Land/water masks must not erase south-facing cliff walls that extend
-  // past the shore. Repaint the already-authored height faces on top.
-  landscape.drawHeightFaces(g,flat);
+  // Bake the authored 0..3 level height steps as *textured map pieces*
+  // ONCE, not as moving 2D rectangles or perspective triangles each frame.
+  // The earlier test used flat grey legacy walls, which failed the actual
+  // Momotaro-style visual criterion despite being quick.
+  const elevationRise=map.elevationRise||20;
+  for(let y=0;y<map.length;y++)for(let x=0;x<map[y].length;x++){
+    const h=map.heights[y]?.[x]||0;
+    if(h<=0||wet(map,x,y))continue;
+    const px=x*32,py=y*32,raisedY=py-h*elevationRise;
+    const south=map.heights[y+1]?.[x]||0;
+    const west=map.heights[y]?.[x-1]||0;
+    const east=map.heights[y]?.[x+1]||0;
+    if(h>south){
+      const wallHeight=(h-south)*elevationRise;
+      // Existing approved cliff graphic is 32x32. Repeat 20px pieces
+      // vertically, preserving its original pixel density.
+      for(let offset=0;offset<wallHeight;offset+=elevationRise){
+        landscape.drawAsset(g,'grassCliff',px,raisedY+32+offset,32,
+          Math.min(elevationRise,wallHeight-offset));
+      }
+      g.fillStyle='rgba(19,25,20,.16)';
+      g.fillRect(px,raisedY+32,32,wallHeight);
+    }
+    if(h>west){g.fillStyle='rgba(17,26,29,.4)';g.fillRect(px,raisedY+2,3,29);}
+    if(h>east){g.fillStyle='rgba(27,33,31,.26)';g.fillRect(px+29,raisedY+2,3,29);}
+    g.drawImage(source,px,py,32,32,px,raisedY,32,32);
+    if(h>south){
+      g.fillStyle='rgba(209,188,143,.5)';
+      g.fillRect(px,raisedY+30,32,2);
+    }
+  }
   info.builds++;info.buildMs=+(performance.now()-start).toFixed(2);
   info.staticBytes=land.width*land.height*4;
  }

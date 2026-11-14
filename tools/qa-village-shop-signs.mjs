@@ -96,7 +96,8 @@ try{
         const w=frame.contentWindow,d=frame.contentDocument;
         return {rendered:w.__signDraws.filter(x=>x.name===filename),all:w.__signDraws.map(x=>x.name),
           loading:d.querySelector('#load').hidden,canvas:[d.querySelector('#scene').width,d.querySelector('#scene').height],
-          url:frame.src,status:d.querySelector('#status').textContent};
+          url:frame.src,hud:d.querySelector('.village-hud').innerText.trim(),
+          objective:d.getElementById('objective').innerText.trim()};
       },filename);
       if(room==='teahouse'){
         // An orientation change must never navigate or recreate the world.
@@ -122,6 +123,7 @@ try{
         });
         if(!rotated)issues.push('portrait rotation reloaded game or interrupted BGM');
       }
+      if(!data.objective||data.hud!==data.objective)issues.push(label+' '+building+' unexpected village HUD text: '+data.hud);
       const sign=data.rendered[0];
       if(!sign || sign.arguments!==3 || sign.smoothed || JSON.stringify(sign.world)!==JSON.stringify(expectedPoint) ||
         JSON.stringify(sign.size)!==JSON.stringify([96,120])){

@@ -7,7 +7,7 @@ import {readStoryStage,advanceStoryStage,objectiveForStage} from '../story/chapt
 const {SMModel,SMRender}=globalThis;
 const scene=document.querySelector('#scene');
 const ctx=scene.getContext('2d',{alpha:false});
-const status=document.querySelector('#status');
+const interactionHint=document.querySelector('#interaction-hint');
 const objective=document.querySelector('#objective');
 const load=document.querySelector('#load');
 const buttons=[...document.querySelectorAll('[data-dir]')];
@@ -192,7 +192,8 @@ async function start(){
     const foot=center([state.x,state.y]);
     const npc=residentInFront(foot.x,foot.y,state.face,residents);
     dialogue.update(npc,foot.x,foot.y);
-    status.textContent=npc?'Aで話す':state.y>=map.height-3?'南へ進むとフィールドへ':'境内';
+    const hint=npc?'Aで話す':state.y>=map.height-3?'南へ進むとフィールドへ':'';
+    if(interactionHint.textContent!==hint)interactionHint.textContent=hint;
     scene.dataset.x=String(state.x);
     scene.dataset.y=String(state.y);
   }
@@ -257,6 +258,5 @@ async function start(){
 }
 start().catch(error=>{
   console.error(error);
-  status.textContent='読み込み失敗';
   load.textContent='天妖の社を読み込めませんでした。ページを再読み込みしてください。';
 });

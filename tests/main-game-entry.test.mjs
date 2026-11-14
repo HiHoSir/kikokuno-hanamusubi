@@ -103,7 +103,6 @@ test('village entry evaluates the quest objective before loading map assets',()=
    const objective={textContent:''};
    const nodes={
      '#scene':{getContext(){return {};}},
-     '#status':{textContent:''},
      '#load':{hidden:false,textContent:''},
      '#objective':objective,
    };

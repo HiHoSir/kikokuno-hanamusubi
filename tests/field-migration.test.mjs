@@ -147,17 +147,16 @@ test('a direction tap between animation frames still moves one cell', async () =
     addEventListener: (type, listener) => listeners.set(type, listener)};
   const scene = {dataset: {}, getContext() {}};
   const loading = {hidden: false};
-  const status = {};
   const frames = [];
   const controller = source('src/field/walk.mjs').replace(/^import .*;\n/gm, '')
     .replaceAll('import.meta.url', '"https://example.test/src/field/walk.mjs"');
   const context = createContext({
-    document: {querySelector: selector => ({'#scene': scene, '#load': loading, '#status': status}[selector]),
+    document: {querySelector: selector => ({'#scene': scene, '#load': loading}[selector]),
       querySelectorAll: () => [button], addEventListener() {}},
     location: {search: ''}, URL, URLSearchParams, console, performance: {now: () => 0},
     addEventListener() {}, requestAnimationFrame: frame => frames.push(frame),
     contact: () => null, createFieldRenderer: () => () => {}, loadFieldArt: async () => ({}),
-    villageArrival: () => [1200, 2256], world: {tileSize: 32, near: () => null},
+    villageArrival: () => [1200, 2256], world: {tileSize: 32},
     fieldStep: ({x, y}, dx, dy, at) => ({x: x + dx * 32, y: y + dy * 32, motion: {x, y, at, duration: 192}}),
   });
   runInContext(controller, context);

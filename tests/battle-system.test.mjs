@@ -317,7 +317,6 @@ test('two approved enemies render and can be targeted independently in the produ
     const node=id=>nodes.get(id);
     if(node('enemy-figure-2').hidden)throw Error('second enemy hidden');
     if(!node('enemy-label-2').textContent.includes('化け狸'))throw Error('second enemy not drawn');
-    if(node('battle-area').textContent!=='天妖の社への道')throw Error('field encounter zone label not restored');
     node('command-list').children[0].listeners.click();
     const targets=node('command-list').children;
     if(targets.length!==3)throw Error('two-target command menu not shown');

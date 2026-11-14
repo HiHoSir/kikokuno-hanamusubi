@@ -98,7 +98,6 @@ export const rooms = {
       ['teaTable',140,292], ['cushion',368,324],
     ],
     destinations:[[220,452],[480,300],[584,300]],
-    find:{id:'hozuki-northwest-house-tansu',building:'house-northwest-tile',asset:'tansu',item:'onigiri'},
     resident:{asset:'villager',name:'民家の住人',at:[448,330],lines:['緋月さま、いらっしゃい。どうぞ上がっていって。']},
   },
   'house-craft': {

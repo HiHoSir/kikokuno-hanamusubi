@@ -2,7 +2,9 @@ import { HIZUKI_WALK_SPEED, makeWalk, touchedEntrance, crossesSouthExit } from '
 import { villageRooms } from '../interiors/rooms.mjs';
 import { pixelViewport, DEFAULT_CAMERA_ZOOM, canopyOpacity, riverRipples, paintRiverRipples } from './render.mjs';
 import { advanceResident, drawCharacter, makeResident, residentInFront, RESIDENT_RADIUS } from './residents.mjs';
-import { bindDialogue } from './dialogue.mjs';
+import { bindDialogue } from './dialogue.mjs?v=field-menu-1';
+import {collectFind,readPlayer,savePlayer} from '../battle/rules.mjs?v=village-finds-1';
+import {VILLAGE_FINDS} from '../../../data/maps/hozuki-village/finds.mjs';
 import {readStoryStage,advanceStoryStage,objectiveForStage} from '../story/chapter-one.mjs';
 
 const scene = document.querySelector('#scene');
@@ -73,6 +75,10 @@ async function start() {
     clearInput();
     for(const npc of residents) npc.moving=false;
   }, completeStoryDialogue);
+  const finds=Object.entries(VILLAGE_FINDS).filter(([,site])=>site.sprite).map(([id,site])=>{
+    const [x,y]=data.sprites.find(sprite=>sprite.id===site.sprite).feet;
+    return {id,x,y};
+  });
   const entrances=data.markers.filter(marker=>marker.entrance && Object.hasOwn(villageRooms,marker.id));
   const fieldExit=data.markers.find(marker=>marker.southExit);
   const paths = new Set(data.sprites.flatMap(p => [p.file,p.eave,p.sway].filter(Boolean)));
@@ -294,11 +300,19 @@ async function start() {
     }
     button.addEventListener('contextmenu',event=>event.preventDefault());
   }
+  function interact(){
+    if(dialogue.open())return;
+    const find=residentInFront(x,y,face,finds);
+    if(!find)return;
+    const result=collectFind(readPlayer(),find.id);
+    if(result.accepted)savePlayer(result.player);
+    dialogue.openMessage(result.message);
+  }
   const actionA=document.querySelector('#action-a');
   const actionB=document.querySelector('#action-b');
   actionA.addEventListener('click',()=>{
     if(dialogue.active)dialogue.advance();
-    else dialogue.open();
+    else interact();
   });
   actionB.addEventListener('click',()=>{
     if(dialogue.active)dialogue.advance();
@@ -314,7 +328,8 @@ async function start() {
       return;
     }
     if ((event.key==='Enter'||event.key===' ') && event.target===document.body) {
-      dialogue.open();
+      event.preventDefault();
+      if(!event.repeat)interact();
       return;
     }
     const direction=keys[event.key];

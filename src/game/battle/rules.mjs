@@ -1,5 +1,7 @@
 // First-game one-hero B-formula v2 rules. Pure game logic: no DOM, timers, or assets.
 // Approved base/growth/T0–T6 values must match data/characters/hizuki-status.json.
+import {VILLAGE_FINDS} from '../../../data/maps/hozuki-village/finds.mjs';
+
 export const PLAYER_KEY='kikokuno-hanamusubi-battle-player';
 export const BATTLE_REQUEST_KEY='kikokuno-hanamusubi-battle-request';
 export const FIELD_RETURN_KEY='kikokuno-hanamusubi-battle-field-return';
@@ -55,7 +57,6 @@ export const FOOD_ITEMS=Object.freeze({
 // Price and item name are playtest values, not a final equipment catalog.
 export const ARMORY_STOCK=Object.freeze({id:'starter-gear',name:'旅の兵具一式',price:200,tier:'T1'});
 export const HERB=Object.freeze({name:'薬草',heal:26});
-const ROOM_FIND_IDS=['hozuki-northwest-house-tansu'];
 export const ENEMIES=Object.freeze({
   // Initial field only. These are provisional first-area numbers, not the planned late regions.
   'field-oni':Object.freeze({id:'field-oni',name:'野の小鬼',asset:'assets/enemies/field-oni.png',hp:12,attack:7,defense:2,xp:8,gold:8}),
@@ -76,12 +77,13 @@ export function normalizePlayer(input={}){
   // No completed user-facing save system exists. Old battle-only data must not
   // import v1 combat stats into the approved v2 formula.
   const v2=input?.balanceVersion===2;
+  const savedFinds=input?.foundItems??input?.roomFinds;
   return {
     lv,...stats, hp:v2?clamp(nonNegative(input.hp,stats.maxhp),0,stats.maxhp):stats.maxhp,
     mp:v2?clamp(nonNegative(input.mp,stats.maxmp),0,stats.maxmp):stats.maxmp,
     equipmentTier,awakening,balanceVersion:2,
     ownsArmoryGear:input?.ownsArmoryGear===true||equipmentTier===ARMORY_STOCK.tier,
-    roomFinds:ROOM_FIND_IDS.filter(id=>Array.isArray(input?.roomFinds)&&input.roomFinds.includes(id)),
+    foundItems:Array.isArray(savedFinds)?Object.keys(VILLAGE_FINDS).filter(id=>savedFinds.includes(id)):[],
     xp:nonNegative(input?.xp,0),gold:nonNegative(input?.gold,0),
     potions:nonNegative(input?.potions,3),
     foods:Object.fromEntries(Object.keys(FOOD_ITEMS).map(id=>[id,clamp(nonNegative(input?.foods?.[id],0),0,99)])),
@@ -102,18 +104,29 @@ export function carriedConsumables(hero){
     ...Object.values(FOOD_ITEMS).map(item=>({...item,kind:'food',count:hero.foods[item.id]}))
   ].filter(item=>item.count>0);
 }
-export function findRoomItem(player,findId,itemId){
+export function collectFind(player,id){
   const hero=normalizePlayer(player);
-  if(!ROOM_FIND_IDS.includes(findId)||!Object.hasOwn(FOOD_ITEMS,itemId))
+  if(!Object.hasOwn(VILLAGE_FINDS,id))
     return {accepted:false,player:hero,message:'何も見つからなかった。'};
-  const item=FOOD_ITEMS[itemId];
-  if(hero.roomFinds.includes(findId))
-    return {accepted:false,player:hero,message:'もう何も入っていない。'};
-  if(hero.foods[itemId]>=99)
-    return {accepted:false,player:hero,message:item.name+'を見つけた。持ちきれない。'};
-  hero.foods[itemId]++;
-  hero.roomFinds.push(findId);
-  return {accepted:true,player:hero,message:item.name+'を見つけた！'};
+  const site=VILLAGE_FINDS[id];
+  if(hero.foundItems.includes(id)){
+    return {accepted:false,player:hero,message:site.building?'もう何も入っていない。':'もう何も見つからない。'};
+  }
+  let name;
+  if(site.gold){
+    hero.gold+=site.gold;
+    name=site.gold+'両';
+  }else if(site.item==='herb'){
+    ++hero.potions;
+    name=HERB.name;
+  }else{
+    name=FOOD_ITEMS[site.item].name;
+    if(hero.foods[site.item]>=99)
+      return {accepted:false,player:hero,message:name+'を見つけた。持ちきれない。'};
+    ++hero.foods[site.item];
+  }
+  hero.foundItems.push(id);
+  return {accepted:true,player:hero,message:name+'を見つけた！'};
 }
 // Field consumables share the official battle recovery amounts.
 export function useExplorationResource(player,kind,id=''){

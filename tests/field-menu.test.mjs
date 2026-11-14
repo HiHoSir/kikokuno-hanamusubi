@@ -58,16 +58,46 @@ test('previously auto-equipped armory gear stays equipped and can be put back in
 });
 
 test('an interior find is recorded once alongside the consumable count and can be retried when full',async()=>{
-  const {findRoomItem}=await import('../src/game/battle/rules.mjs');
+  const {collectFind}=await import('../src/game/battle/rules.mjs');
   const id='hozuki-northwest-house-tansu';
   const full=normalizePlayer({...DEFAULT_PLAYER,foods:{onigiri:99}});
-  assert.equal(findRoomItem(full,id,'onigiri').accepted,false);
+  assert.equal(collectFind(full,id).accepted,false);
   const used=useExplorationResource({...full,hp:7},'food','onigiri');
-  const first=findRoomItem(used.player,id,'onigiri');
+  const first=collectFind(used.player,id);
   assert.equal(first.accepted,true);
   assert.equal(first.player.foods.onigiri,99);
   const next=useExplorationResource({...first.player,hp:7},'food','onigiri');
-  const again=findRoomItem(next.player,id,'onigiri');
+  const again=collectFind(next.player,id);
   assert.equal(again.accepted,false);
   assert.equal(again.player.foods.onigiri,98);
+});
+
+test('discoveries grant their authored item or coins exactly once across reloads',async()=>{
+  const rules=await import('../src/game/battle/rules.mjs');
+  const state=new Map();
+  const storage={getItem:key=>state.get(key),setItem:(key,value)=>state.set(key,value)};
+  const herb=rules.collectFind(DEFAULT_PLAYER,'hozuki-bridge-shrub');
+  assert.equal(herb.accepted,true);
+  assert.equal(herb.player.potions,4);
+  const coins=rules.collectFind(herb.player,'hozuki-southeast-tree');
+  assert.equal(coins.player.gold,8);
+  const indoorCoins=rules.collectFind(coins.player,'hozuki-southwest-house-tansu');
+  assert.equal(indoorCoins.player.gold,20);
+  const dango=rules.collectFind(indoorCoins.player,'hozuki-northeast-house-tansu');
+  assert.equal(dango.player.foods.dango,1);
+  rules.savePlayer(dango.player,storage);
+  const restored=rules.readPlayer(storage);
+  for(const id of ['hozuki-bridge-shrub','hozuki-southeast-tree','hozuki-southwest-house-tansu','hozuki-northeast-house-tansu']){
+    const repeat=rules.collectFind(restored,id);
+    assert.equal(repeat.accepted,false);
+    assert.deepEqual(repeat.player,restored);
+  }
+});
+
+test('the previously collected northwest find stays collected when opening old player data',async()=>{
+  const {collectFind}=await import('../src/game/battle/rules.mjs');
+  const old={...DEFAULT_PLAYER,roomFinds:['hozuki-northwest-house-tansu'],foods:{onigiri:2}};
+  const result=collectFind(old,'hozuki-northwest-house-tansu');
+  assert.equal(result.accepted,false);
+  assert.equal(result.player.foods.onigiri,2);
 });

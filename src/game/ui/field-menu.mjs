@@ -3,7 +3,7 @@
 import {
   ARMORY_STOCK, carriedConsumables, changeEquipment, levelStats, nextLevelXp,
   readPlayer, savePlayer, useExplorationResource
-} from '../battle/rules.mjs?v=field-menu-1';
+} from '../battle/rules.mjs?v=village-finds-1';
 import {readStoryStage} from '../story/chapter-one.mjs';
 
 const frame=document.querySelector('#game-scene');

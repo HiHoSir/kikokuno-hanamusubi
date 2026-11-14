@@ -2,9 +2,10 @@ import {HIZUKI_INTERIOR_WALK_SPEED, makeWalk} from '../village/movement.mjs?v=vi
 import {DEFAULT_CAMERA_ZOOM, pixelViewport} from '../village/render.mjs';
 import {drawCharacter, RESIDENT_RADIUS, residentInFront} from '../village/residents.mjs';
 import {bindDialogue} from '../village/dialogue.mjs?v=field-menu-1';
-import {rooms, resolveInterior, prepareInterior} from './rooms.mjs?v=field-menu-1';
+import {rooms, resolveInterior, prepareInterior} from './rooms.mjs?v=village-finds-1';
 import {paintRoom, paintPartition, paintContactShadow} from './room-art.mjs';
-import {FOOD_ITEMS,ARMORY_STOCK,purchaseFood,purchaseArmory,findRoomItem,readPlayer,savePlayer} from '../battle/rules.mjs?v=field-menu-1';
+import {FOOD_ITEMS,ARMORY_STOCK,purchaseFood,purchaseArmory,collectFind,readPlayer,savePlayer} from '../battle/rules.mjs?v=village-finds-1';
+import {VILLAGE_FINDS} from '../../../data/maps/hozuki-village/finds.mjs';
 
 const scene = document.querySelector('#scene');
 const context = scene.getContext('2d', {alpha:false});
@@ -118,13 +119,12 @@ async function start() {
     shopActive=false;shopPanel.hidden=true;
     plan = prepareInterior(room);
     plan.resident.bitmap=residentArt.get(plan.resident.asset);
-    const find=room.find;
-    const furniture=find&&initial.returnFocus===find.building
-      ?plan.depthSorted.find(object=>object.asset===find.asset):null;
+    const find=Object.entries(VILLAGE_FINDS).find(([,site])=>site.building&&site.building===initial.returnFocus);
+    const furniture=find&&plan.depthSorted.find(object=>object.asset===find[1].furniture);
     roomFind=null;
     if(furniture){
       const [left,top,width,height]=furniture.footprint;
-      roomFind={...find,talkPoint:[left+width/2,top+height-4]};
+      roomFind={id:find[0],talkPoint:[left+width/2,top+height-4]};
     }
     walk = makeWalk(room.width,room.height,plan.blocked,8);
     [x,y] = plan.spawn;
@@ -239,7 +239,7 @@ async function start() {
   }
   function interact(){
     if(dialogue.open()||!roomFind||!residentInFront(x,y,face,[roomFind]))return;
-    const result=findRoomItem(readPlayer(),roomFind.id,roomFind.item);
+    const result=collectFind(readPlayer(),roomFind.id);
     if(result.accepted)savePlayer(result.player);
     dialogue.openMessage(result.message);
   }

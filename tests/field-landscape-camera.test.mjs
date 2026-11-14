@@ -42,3 +42,15 @@ test('coastline shapes and beach strips cache in world coordinates only',()=>{
  assert.match(source,/shore\.sand/);
  assert.match(source,/shore\.darkEdges/);
 });
+
+test('prototype combines only static flat inland tiles within existing 8x8 chunk boundaries',()=>{
+ const source=readFileSync('src/field/elevation-view.js','utf8');
+ assert.match(source,/const rowChunks=new WeakMap\(\),MAX_ROW_CHUNKS=64/);
+ assert.match(source,/function rowChunk\(map,tx,ty,count,getTile\)/);
+ assert.match(source,/function flatInteriorHeight\(m,x,y\)/);
+ assert.match(source,/useRowChunks=window\.YK_FIELD_ROW_CHUNKS===true/);
+ assert.match(source,/const limit=Math\.min\(maxX-tx\+1,8-\(tx%8\)\)/);
+ assert.match(source,/if\(count>=3\)/);
+ assert.match(source,/rowStats\.runs\+\+;rowStats\.tiles\+=count/);
+ assert.match(source,/if\(p\.every\(Boolean\)\)quad\(c,atlas,0,v0,width,band,p\)/);
+});

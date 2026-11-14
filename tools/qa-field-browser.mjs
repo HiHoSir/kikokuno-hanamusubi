@@ -3,7 +3,7 @@
 // Requires Playwright only in CI; no production runtime dependency.
 import { chromium } from 'playwright';
 import { createServer } from 'node:http';
-import { readFile, mkdir } from 'node:fs/promises';
+import { readFile, mkdir, writeFile } from 'node:fs/promises';
 import { resolve, join, extname, relative } from 'node:path';
 const root=resolve('.');
 const types={'.html':'text/html;charset=utf-8','.js':'text/javascript;charset=utf-8',
@@ -189,6 +189,64 @@ try{
       mismatchedPixels,
       baselineSamples:baseline.map(Math.round),cachedSamples:cached.map(Math.round)};
   });
+  // Compare real projected 8x8-composite row chunks against the shipped
+  // per-tile projection. Both draws use the same actor, viewport and water time.
+  const chunkExperiment=await page.evaluate(()=>{
+    const w=document.querySelector('iframe').contentWindow;
+    const canvas=w.document.querySelector('#scene'),c=canvas.getContext('2d');
+    const map=w.YK_WORLD.mapData;
+    const actor={x:w.YK_WORLD.start[0],foot:w.YK_WORLD.start[1],draw:()=>{}};
+    const draw=()=>w.YK_LANDSCAPE.drawQuarter(c,map,actor,1.4,
+      {oceanOutside:true,elevationTerrain:true,viewportWidth:canvas.width});
+    const measure=enabled=>{
+      w.YK_FIELD_ROW_CHUNKS=enabled;
+      draw();
+      const times=[];
+      for(let i=0;i<5;i++){
+        const begin=w.performance.now();draw();times.push(w.performance.now()-begin);
+      }
+      return times;
+    };
+    const baselineFirst=measure(false),chunkFirst=measure(true);
+    const chunkSecond=measure(true),baselineSecond=measure(false);
+    const a=[...baselineFirst,...baselineSecond].sort((a,b)=>a-b);
+    const b=[...chunkFirst,...chunkSecond].sort((a,b)=>a-b);
+    const median=s=>Number(((s[4]+s[5])/2).toFixed(2));
+    const base=median(a),fast=median(b);
+    const ownNow=Object.getOwnPropertyDescriptor(w.performance,'now');
+    let different=0,checked=0,stats=null,baselineImage=null,chunkImage=null;
+    try{
+      Object.defineProperty(w.performance,'now',{configurable:true,value:()=>120000});
+      w.YK_FIELD_ROW_CHUNKS=false;draw();
+      const pixels=c.getImageData(0,0,canvas.width,canvas.height).data.slice();
+      if(canvas.width>=1200&&canvas.width<=1300)baselineImage=canvas.toDataURL('image/png').split(',')[1];
+      w.YK_FIELD_ROW_CHUNKS=true;draw();
+      stats={...w.YK_FIELD_ROW_CHUNK_STATS};
+      const compare=c.getImageData(0,0,canvas.width,canvas.height).data;
+      if(canvas.width>=1200&&canvas.width<=1300)chunkImage=canvas.toDataURL('image/png').split(',')[1];
+      for(let i=0;i<pixels.length;i+=4){
+        if(pixels[i]!==compare[i]||pixels[i+1]!==compare[i+1]||
+           pixels[i+2]!==compare[i+2]||pixels[i+3]!==compare[i+3])different++;
+        checked++;
+      }
+    }finally{
+      if(ownNow)Object.defineProperty(w.performance,'now',ownNow);
+      else delete w.performance.now;
+      w.YK_FIELD_ROW_CHUNKS=false; // Never alter normal play after measuring.
+    }
+    return {baselineMs:base,chunkMs:fast,ratio:Number((fast/base).toFixed(3)),
+      differingPixels:different,totalPixels:checked,percentDifferent:Number((100*different/checked).toFixed(3)),
+      stats,baselineSamples:a.map(v=>Math.round(v)),chunkSamples:b.map(v=>Math.round(v)),
+      baselineImage,chunkImage};
+  });
+  if(chunkExperiment.baselineImage){
+   await writeFile('artifacts/field-rowchunks-baseline-'+width+'x'+height+'.png',
+     Buffer.from(chunkExperiment.baselineImage,'base64'));
+   await writeFile('artifacts/field-rowchunks-candidate-'+width+'x'+height+'.png',
+     Buffer.from(chunkExperiment.chunkImage,'base64'));
+  }
+  delete chunkExperiment.baselineImage;
+  delete chunkExperiment.chunkImage;
   // Heavy terrain drawing stops while the field menu covers the scene,
   // then resumes without recreating the iframe or changing audio tracks.
   const beforeMenu=await page.evaluate(()=>{
@@ -231,7 +289,7 @@ try{
       window.KIKOKU_GAME.audio.trackName===data.bgm,beforeMenu)};
 
 
-  results.push({viewport:width+'x'+height,...detail,screenshot,profile,idleBefore,shoreComparison,fieldPause,portraitPause,errors});
+  results.push({viewport:width+'x'+height,...detail,screenshot,profile,idleBefore,shoreComparison,chunkExperiment,fieldPause,portraitPause,errors});
   await page.close();
  }
 }finally{await browser?.close();server.close();}
@@ -241,6 +299,7 @@ const failures=results.filter(r=>{
  const ratio=width/height,realRatio=r.scene[0]/r.scene[1];
  const barOverlays=r.pad[0]>=0 && r.pad[0]<height;
  return r.errors.some(e=>e.includes('pageerror')||e.includes('HTTP 404'))||
+ !r.chunkExperiment||r.chunkExperiment.totalPixels<100000||
  !r.shoreComparison||r.shoreComparison.mismatchedPixels!==0||
  !r.profile||r.profile.frames<3||r.profile.measuredSamples<3||r.profile.viewport[0]!==r.scene[0]||
  !r.fieldPause||r.fieldPause.pausedFrames!==r.fieldPause.afterPause||!r.fieldPause.preserved||
@@ -253,3 +312,5 @@ const failures=results.filter(r=>{
  r.imageFit!=='fill'||!barOverlays||r.pad[1]<100||r.pad[1]>170;
 });
 if(failures.length)throw Error('Panoramic Chrome field render QA failed: '+failures.map(x=>x.viewport+' scene='+x.scene+' red='+x.visible?.redPixels+' hero='+x.visible?.relTop+','+x.visible?.relBottom+' errors='+x.errors.join(';')).join(' | '));
+
+await writeFile('artifacts/field-rowchunks-metrics.json',JSON.stringify(results.map(({viewport,chunkExperiment})=>({viewport,...chunkExperiment})),null,2));

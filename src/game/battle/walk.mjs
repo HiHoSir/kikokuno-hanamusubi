@@ -1,4 +1,4 @@
-import {BATTLE_REQUEST_KEY,ENEMIES,FOOD_ITEMS,createBattle,readPlayer,savePlayer} from './rules.mjs?v=field-balance-1';
+import {BATTLE_REQUEST_KEY,ENEMIES,carriedConsumables,createBattle,readPlayer,savePlayer} from './rules.mjs?v=field-menu-1';
 
 const root=new URL('../../../',import.meta.url);
 const el=id=>document.getElementById(id);
@@ -82,7 +82,7 @@ function updateStatus(){
   level.textContent=state.hero.lv+'段';
   hpMeter.style.width=(state.hero.hp/state.hero.maxhp*100)+'%';
   mpMeter.style.width=(state.hero.maxmp?state.hero.mp/state.hero.maxmp*100:0)+'%';
-  resources.textContent='薬草 '+state.hero.potions+'　両 '+state.hero.gold;
+  resources.textContent='所持金 '+state.hero.gold+'両';
   updateEnemies();
 }
 function announce(text){message.textContent=text;}
@@ -90,7 +90,7 @@ function changeMode(next){mode=next;selected=0;updateMenu();}
 function updateMenu(){
   title.textContent=mode==='targets'?'標的を選ぶ':mode==='magic'?'術を選ぶ':mode==='items'?'道具を選ぶ':
     mode==='result'?(state.outcome==='victory'?'勝利':state.outcome==='escape'?'退却':'敗北'):'緋月の行動';
-  const rows=mode==='targets'?[...state.enemies.flatMap((enemy,i)=>enemy.hp>0?[[enemy.name+' '+(i+1),'target-'+i]]:[]),['もどる','back']]:mode==='items'?[['薬草 '+state.hero.potions,'herb'],...Object.values(FOOD_ITEMS).map(item=>[item.name+' '+state.hero.foods[item.id],'food:'+item.id]),['もどる','back']]:mode==='result'&&state.outcome==='defeat'?[['鬼灯村へ戻る','return']]:commands[mode];
+  const rows=mode==='targets'?[...state.enemies.flatMap((enemy,i)=>enemy.hp>0?[[enemy.name+' '+(i+1),'target-'+i]]:[]),['もどる','back']]:mode==='items'?[...carriedConsumables(state.hero).map(item=>[item.name+' ×'+item.count,item.kind==='herb'?'herb':'food:'+item.id]),['もどる','back']]:mode==='result'&&state.outcome==='defeat'?[['鬼灯村へ戻る','return']]:commands[mode];
   list.replaceChildren();
   for(let i=0;i<rows.length;i++){
     const [label,command]=rows[i];

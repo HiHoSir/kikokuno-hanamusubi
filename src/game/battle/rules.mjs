@@ -54,6 +54,8 @@ export const FOOD_ITEMS=Object.freeze({
 // One early equipment tier is available from the existing armory interior.
 // Price and item name are playtest values, not a final equipment catalog.
 export const ARMORY_STOCK=Object.freeze({id:'starter-gear',name:'旅の兵具一式',price:200,tier:'T1'});
+export const HERB=Object.freeze({name:'薬草',heal:26});
+const ROOM_FIND_IDS=['hozuki-northwest-house-tansu'];
 export const ENEMIES=Object.freeze({
   // Initial field only. These are provisional first-area numbers, not the planned late regions.
   'field-oni':Object.freeze({id:'field-oni',name:'野の小鬼',asset:'assets/enemies/field-oni.png',hp:12,attack:7,defense:2,xp:8,gold:8}),
@@ -78,6 +80,8 @@ export function normalizePlayer(input={}){
     lv,...stats, hp:v2?clamp(nonNegative(input.hp,stats.maxhp),0,stats.maxhp):stats.maxhp,
     mp:v2?clamp(nonNegative(input.mp,stats.maxmp),0,stats.maxmp):stats.maxmp,
     equipmentTier,awakening,balanceVersion:2,
+    ownsArmoryGear:input?.ownsArmoryGear===true||equipmentTier===ARMORY_STOCK.tier,
+    roomFinds:ROOM_FIND_IDS.filter(id=>Array.isArray(input?.roomFinds)&&input.roomFinds.includes(id)),
     xp:nonNegative(input?.xp,0),gold:nonNegative(input?.gold,0),
     potions:nonNegative(input?.potions,3),
     foods:Object.fromEntries(Object.keys(FOOD_ITEMS).map(id=>[id,clamp(nonNegative(input?.foods?.[id],0),0,99)])),
@@ -92,6 +96,25 @@ export function savePlayer(player,storage=globalThis.localStorage){
   try{storage?.setItem(PLAYER_KEY,JSON.stringify(value));}catch{}
   return value;
 }
+export function carriedConsumables(hero){
+  return [
+    {...HERB,kind:'herb',id:'herb',count:hero.potions},
+    ...Object.values(FOOD_ITEMS).map(item=>({...item,kind:'food',count:hero.foods[item.id]}))
+  ].filter(item=>item.count>0);
+}
+export function findRoomItem(player,findId,itemId){
+  const hero=normalizePlayer(player);
+  if(!ROOM_FIND_IDS.includes(findId)||!Object.hasOwn(FOOD_ITEMS,itemId))
+    return {accepted:false,player:hero,message:'何も見つからなかった。'};
+  const item=FOOD_ITEMS[itemId];
+  if(hero.roomFinds.includes(findId))
+    return {accepted:false,player:hero,message:'もう何も入っていない。'};
+  if(hero.foods[itemId]>=99)
+    return {accepted:false,player:hero,message:item.name+'を見つけた。持ちきれない。'};
+  hero.foods[itemId]++;
+  hero.roomFinds.push(findId);
+  return {accepted:true,player:hero,message:item.name+'を見つけた！'};
+}
 // Field consumables share the official battle recovery amounts.
 export function useExplorationResource(player,kind,id=''){
   const hero=normalizePlayer(player);
@@ -99,7 +122,7 @@ export function useExplorationResource(player,kind,id=''){
   let heal=0,source='';
   if(kind==='herb'){
     if(hero.potions===0)return {accepted:false,player:hero,message:'薬草がない。'};
-    hero.potions--;heal=26;source='薬草';
+    hero.potions--;heal=HERB.heal;source=HERB.name;
   }else if(kind==='food'&&Object.hasOwn(FOOD_ITEMS,id)){
     if(hero.foods[id]===0)return {accepted:false,player:hero,message:'持っていない。'};
     hero.foods[id]--;heal=FOOD_ITEMS[id].heal;source=FOOD_ITEMS[id].name;
@@ -121,10 +144,19 @@ export function purchaseFood(player,id){
 }
 export function purchaseArmory(player){
   const hero=normalizePlayer(player),item=ARMORY_STOCK;
-  if(hero.equipmentTier!=='T0')return {accepted:false,player:hero,message:'その兵具はもう揃っています。'};
+  if(hero.ownsArmoryGear)return {accepted:false,player:hero,message:'その兵具はもう持っています。'};
   if(hero.gold<item.price)return {accepted:false,player:hero,message:'両が足りません。'};
-  const updated=normalizePlayer({...hero,gold:hero.gold-item.price,equipmentTier:item.tier});
-  return {accepted:true,player:updated,message:item.name+'を身につけました。'};
+  hero.gold-=item.price;
+  hero.ownsArmoryGear=true;
+  return {accepted:true,player:hero,message:item.name+'を買いました。'};
+}
+export function changeEquipment(player,tier){
+  const hero=normalizePlayer(player);
+  if(!hero.ownsArmoryGear||hero.equipmentTier===tier||![ARMORY_STOCK.tier,'T0'].includes(tier))
+    return {accepted:false,player:hero,message:'装備を変更できない。'};
+  const updated=normalizePlayer({...hero,equipmentTier:tier});
+  const message=tier==='T0'?ARMORY_STOCK.name+'を外した。':ARMORY_STOCK.name+'を装備した。';
+  return {accepted:true,player:updated,message};
 }
 export function chooseEnemy(steps=0){
   return ['field-oni','tanuki','onibi'][Math.floor(Math.max(0,steps)/8)%3];
@@ -219,7 +251,7 @@ export function createBattle(enemyId='field-oni',player=DEFAULT_PLAYER,random=Ma
       if(hero.potions===0)return {accepted:false,events:[{text:'薬草がない。',kind:'warning'}],outcome:null};
       if(hero.hp>=hero.maxhp)return {accepted:false,events:[{text:'体力は満ちている。',kind:'warning'}],outcome:null};
       hero.potions--;
-      const amount=Math.min(hero.maxhp-hero.hp,26);
+      const amount=Math.min(hero.maxhp-hero.hp,HERB.heal);
       hero.hp+=amount;event('薬草を使い、体力を'+amount+'回復した。','heal');
     }else if(kind==='food'){
       if(!Object.hasOwn(FOOD_ITEMS,indexText))return {accepted:false,events:[{text:'食べ物を選んでください。',kind:'warning'}],outcome:null};

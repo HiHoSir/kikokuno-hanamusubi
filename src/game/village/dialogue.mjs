@@ -56,9 +56,18 @@ export function bindDialogue(onOpen=()=>{}, onComplete=()=>{}) {
 
   function open() {
     if(conversation || !target)return false;
-    conversation=target;
+    target.face=faceToward(x-target.x,y-target.y);
+    return start(target);
+  }
+
+  function openMessage(text) {
+    if(conversation)return false;
+    return start({name:'',lines:[text]});
+  }
+
+  function start(entry) {
+    conversation=entry;
     index=0;
-    conversation.face=faceToward(x-conversation.x,y-conversation.y);
     onOpen();
     globalThis.KIKOKU_AUDIO?.se?.('talk');
     panel.hidden=false;
@@ -99,5 +108,5 @@ export function bindDialogue(onOpen=()=>{}, onComplete=()=>{}) {
 
   talk.addEventListener('click',open);
   next.addEventListener('click',advance);
-  return {get active(){return !!conversation;},update,open,advance,close};
+  return {get active(){return !!conversation;},update,open,openMessage,advance,close};
 }

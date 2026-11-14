@@ -147,7 +147,32 @@ try{
   });
   const screenshot='artifacts/field-'+width+'x'+height+'.png';
   await page.screenshot({path:screenshot});
-  results.push({viewport:width+'x'+height,...detail,screenshot,profile,idleBefore,errors});
+  // Paired benchmark on the SAME canvas/runner/map: separate CI runs can
+  // differ by >2x depending on virtual CPU scheduling and asset warmup.
+  const comparison=await page.evaluate(()=>{
+    const w=document.querySelector('iframe').contentWindow;
+    const canvas=w.document.querySelector('#scene'),ctx=canvas.getContext('2d');
+    const map=w.YK_WORLD.mapData,px=Number(canvas.dataset.x)*32+16,py=Number(canvas.dataset.y)*32+16;
+    const actor={x:px,foot:py,draw:()=>{}};
+    const draw=()=>w.YK_LANDSCAPE.drawQuarter(ctx,map,actor,1.4,
+       {oceanOutside:true,elevationTerrain:true,viewportWidth:canvas.width});
+    const measure=flat=>{
+      w.YK_FIELD_FAST_FLAT=flat;
+      draw(); // Warm each path before its measured turns.
+      const times=[];
+      for(let i=0;i<5;i++){const begin=w.performance.now();draw();times.push(w.performance.now()-begin);}
+      return times;
+    };
+    const baseline=[...measure(false),...measure(false)];
+    const candidate=[...measure(true),...measure(true)];
+    w.YK_FIELD_FAST_FLAT=true;
+    const median=s=>{const sorted=[...s].sort((a,b)=>a-b);return Number(((sorted[4]+sorted[5])/2).toFixed(2));};
+    return {baselineMs:median(baseline),candidateMs:median(candidate),
+      ratio:Number((median(candidate)/median(baseline)).toFixed(3)),
+      baselineSamples:baseline.map(n=>Math.round(n)),candidateSamples:candidate.map(n=>Math.round(n))};
+  });
+
+  results.push({viewport:width+'x'+height,...detail,screenshot,profile,idleBefore,comparison,errors});
   await page.close();
  }
 }finally{await browser?.close();server.close();}

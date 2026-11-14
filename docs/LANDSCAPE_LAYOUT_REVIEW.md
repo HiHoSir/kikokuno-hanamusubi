@@ -23,7 +23,7 @@
 
 ## フィールドの再発防止
 - 表示サイズに合わせるのは src/field/viewport.mjs の fieldViewportDimensions。論理高544px、描画幅=実際の表示比率に応じた値。
-- `src/field/runtime.mjs` が画面幅を `src/field/terrain-renderer.mjs` に渡す。地形・海・NPC・緋月に共通のフィールドカメラ（1.55倍）を使う。
+- `src/field/runtime.mjs` が画面幅を `src/field/terrain-renderer.mjs` に渡す。地形・海・NPC・緋月に共通のフィールドカメラ（1.75倍）を使う。
 - CSS object-fit:cover や正方形バッファの中央切り抜きは行わない。雲は地形と同じ横幅を覆う。
 - 空の既存640px画像は中央で原寸描画、左右を反転して接続する。繰り返しの目立つ継ぎ目や端列の横縞を作らない。
 - 画面を横へ広げた結果の描画負荷はiPhone Safari実機で要検証。

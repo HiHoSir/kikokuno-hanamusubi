@@ -179,7 +179,7 @@ try{
   results.push(result);
   if(errors.length||!result.battleReturn.water||!result.battleReturn.sameCell||
      result.battleReturn.track!=='field'||result.info.cliffPixels<1||
-     result.info.zoom!==1.55||result.battleReturn.zoom!==result.info.zoom||
+     result.info.zoom!==1.75||result.battleReturn.zoom!==result.info.zoom||
      result.decks.length!==4||!result.decks.every(Boolean)||
      result.animatedPixels<100||!result.fixedLand||
      result.info.waterCells<1||result.info.builds!==1||result.info.waterFrames!==Math.floor((120000+360)/360)%2||

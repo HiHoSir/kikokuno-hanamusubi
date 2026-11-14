@@ -222,7 +222,7 @@ test('landscape field draws directly into a wider viewport without a portrait cr
      assert.equal(args.length,9);
      assert.ok(Math.abs(args[5]+args[7]/2-expected/2)<40,'hero stays horizontally centered');
      const camera={x:1200,y:2256,centerX:expected/2,foregroundGrowth:true};
-     const projected=landscape.project(1200,2272,camera,1.55);
+     const projected=landscape.project(1200,2272,camera,1.75);
      assert.equal(Number(display.dataset.fieldHeroFoot),Math.round(projected.y));
      assert.equal(args[7],32*projected.scale);
    }

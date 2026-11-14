@@ -1,7 +1,7 @@
 import {composeCoast} from './terrain-chips.mjs?v=field-height-1';
 import {clipAtTerrain,composeRaisedTerrain,terrainY} from './height-projection.mjs?v=field-height-1';
 
-const zoom=1.55;
+const zoom=1.75;
 
 const canvas=(w,h)=>{const el=document.createElement('canvas');el.width=w;el.height=h;el.getContext('2d').imageSmoothingEnabled=false;return el};
 

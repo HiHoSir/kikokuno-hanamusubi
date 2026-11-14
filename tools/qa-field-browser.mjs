@@ -147,6 +147,27 @@ try{
   });
   const screenshot='artifacts/field-'+width+'x'+height+'.png';
   await page.screenshot({path:screenshot});
+  const shoreComparison=await page.evaluate(()=>{
+    const w=document.querySelector('iframe').contentWindow;
+    const ctx=w.document.querySelector('#scene').getContext('2d');
+    const map=w.YK_WORLD.mapData;
+    const actor={x:w.YK_WORLD.start[0],foot:w.YK_WORLD.start[1],draw:()=>{}};
+    const draw=()=>w.YK_LANDSCAPE.drawQuarter(ctx,map,actor,1.4,
+      {oceanOutside:true,elevationTerrain:true,viewportWidth:ctx.canvas.width});
+    const measure=on=>{
+      w.YK_FIELD_SHORE_CACHE=on;
+      draw();
+      const times=[];
+      for(let i=0;i<7;i++){const start=w.performance.now();draw();times.push(w.performance.now()-start);}
+      return times;
+    };
+    const baseline=measure(false),cached=measure(true);
+    w.YK_FIELD_SHORE_CACHE=true;
+    const median=a=>{const s=[...a].sort((x,y)=>x-y);return Math.round(s[3]*100)/100;};
+    return {baselineMs:median(baseline),cachedMs:median(cached),
+      ratio:Number((median(cached)/median(baseline)).toFixed(3)),
+      baselineSamples:baseline.map(Math.round),cachedSamples:cached.map(Math.round)};
+  });
   // Heavy terrain drawing stops while the field menu covers the scene,
   // then resumes without recreating the iframe or changing audio tracks.
   const beforeMenu=await page.evaluate(()=>{
@@ -189,7 +210,7 @@ try{
       window.KIKOKU_GAME.audio.trackName===data.bgm,beforeMenu)};
 
 
-  results.push({viewport:width+'x'+height,...detail,screenshot,profile,idleBefore,fieldPause,portraitPause,errors});
+  results.push({viewport:width+'x'+height,...detail,screenshot,profile,idleBefore,shoreComparison,fieldPause,portraitPause,errors});
   await page.close();
  }
 }finally{await browser?.close();server.close();}

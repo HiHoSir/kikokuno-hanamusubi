@@ -1,6 +1,6 @@
 import {fieldViewportDimensions} from './viewport.mjs';
-import {createFieldTerrainRenderer} from './terrain-renderer.mjs';
-import {loadTerrainChips,placeShoreTrees} from './terrain-chips.mjs';
+import {createFieldTerrainRenderer} from './terrain-renderer.mjs?v=field-height-1';
+import {loadTerrainChips,placeShoreTrees} from './terrain-chips.mjs?v=field-height-1';
 const {YK_WORLD: world, YK_LANDSCAPE: landscape, YK_AUTOTILE: autotile,
   YK_ELEVATION: elevation, YK_CAMERA: camera, YK_MOVEMENT: movement,
   YK_AREA_TRANSITIONS: transitions, YK_FIELD_ASSETS: assets} = window;
@@ -116,8 +116,13 @@ export function createFieldRenderer(context,{hero,terrain}) {
       display.height=dims.height;
     }
     const {x,y}=camera.position(state,state.motion,frameTime);
+    let height;
+    if(state.ladder&&state.motion){
+      const t=Math.max(0,Math.min(1,(frameTime-state.motion.at)/state.motion.duration));
+      height=state.ladder.from+(state.ladder.to-state.ladder.from)*t;
+    }
     pose=state;
-    renderer.draw(context,{x,foot:y},frameTime,dims.width);
+    renderer.draw(context,{x,foot:y,height},frameTime,dims.width);
     display.dataset.fieldViewportWidth=String(dims.width);
     display.dataset.fieldViewportHeight=String(dims.height);
     // Deliberately no fieldCropTop: there is no source crop.

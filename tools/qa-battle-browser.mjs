@@ -1,4 +1,4 @@
-// Browser-level combat layout QA: portrait B, landscape A, 1 & 2 enemies.
+// Browser-level combat layout QA: landscape-only 1 & 2 enemies and portrait rotation guard.
 // Run with `npm install --no-save playwright@1.62.1` and `node tools/qa-battle-browser.mjs`.
 import { chromium } from 'playwright';
 import { createServer } from 'node:http';
@@ -30,8 +30,7 @@ const rect=e=>{const r=e?.getBoundingClientRect();return r?
 try{
  for(const [width,height,enemyId,count] of [
   [900,390,'tanuki',2],[1536,706,'tanuki',2],
-  [390,844,'tanuki',2],[375,667,'field-oni',1],
-  [390,844,'onibi',1],[900,390,'onibi',1]
+  [900,390,'field-oni',1],[900,390,'onibi',1]
  ]){
   const page=await chromiumBrowser.newPage({viewport:{width,height},deviceScaleFactor:1,hasTouch:true,isMobile:true});
   const errors=[];
@@ -157,9 +156,7 @@ try{
    if(count===2 && rects.enemy1.x>=rects.enemy2.x){
     overlapIssues.push('enemy numbering must progress left to right');
    }
-   if(height>width && rects.stage.h<height*.49){
-    overlapIssues.push('portrait battle stage takes insufficient vertical area');
-   }
+
    const shot='artifacts/battle-'+width+'x'+height+'-'+count+'enemy.png';
    await page.screenshot({path:shot});
    const name=width+'x'+height+'/'+count+'enemy';
@@ -177,21 +174,27 @@ try{
      const style=getComputedStyle(el,'::before');
      return {position:r.bottom-Number.parseFloat(style.bottom),top:r.top,bottom:r.bottom};
     });
-    if(height>width && cursor.position<cursor.top+60){
-     issues.push(name+' target marker floats above the visible portrait sprite');
-    }
+
     await page.screenshot({path:'artifacts/battle-'+width+'x'+height+'-target.png'});
-    if(height>width){
-     // Rotate while the target submenu is open. A CSS-only orientation
-     // change must preserve the selected enemy and current command state.
-     await page.setViewportSize({width:900,height:390});
-     const stateAfterRotation=await frame.locator('#enemy-figure').evaluate(el=>({
-      target:el.classList.contains('targeted'),
-      stillSelecting:document.querySelector('#command-title')?.textContent==='標的を選ぶ'
-     }));
-     if(!stateAfterRotation.target||!stateAfterRotation.stillSelecting)
-      issues.push(name+' target selection reset on landscape rotation');
+    if(width===900&&enemyId==='tanuki'){
+     // The combat DOM and target mode must survive landscape -> portrait -> landscape.
+     await page.evaluate(()=>{window.__combatFrameBefore=document.querySelector('#game-scene');});
+     await page.setViewportSize({width:390,height:844});
+     await page.waitForFunction(()=>{
+       const gate=document.querySelector('#landscape-required');
+       return getComputedStyle(gate).display==='grid' &&
+         document.querySelector('#game-scene').inert;
+     });
+     await page.screenshot({path:'artifacts/battle-rotate-portrait.png'});
      await page.setViewportSize({width,height});
+     await page.waitForFunction(()=>getComputedStyle(document.querySelector('#landscape-required')).display==='none');
+     const stateAfterRotation=await frame.locator('#enemy-figure').evaluate(el=>({
+       target:el.classList.contains('targeted'),
+       stillSelecting:document.querySelector('#command-title')?.textContent==='標的を選ぶ',
+       framePreserved:window.parent.__combatFrameBefore===window.frameElement
+     }));
+     if(!stateAfterRotation.target||!stateAfterRotation.stillSelecting||!stateAfterRotation.framePreserved)
+      issues.push(name+' battle target or iframe reset by portrait rotation');
     }
     // Two attacks against the second enemy must remove that specific sprite,
     // while the first remains alive. This proves independent HP and targeting.
@@ -223,8 +226,7 @@ try{
      const p=node.getBoundingClientRect(),actor=node.closest('figure').getBoundingClientRect();
      return {height:p.height,top:p.top,actorTop:actor.top,actorHeight:actor.height};
     });
-    if(height>width && fx.top<fx.actorTop+fx.actorHeight*.45)
-     issues.push(name+' attack FX is floating above enemy sprite');
+
     const staleCursor=await frame.locator('.actor.enemy.targeted').count();
     if(staleCursor)issues.push(name+' cursor remains on another enemy during attack');
     await page.screenshot({path:'artifacts/battle-'+width+'x'+height+'-impact.png'});

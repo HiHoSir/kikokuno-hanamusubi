@@ -107,8 +107,8 @@ window.YK_ELEVATION_VIEW=(()=>{
   tile.getContext('2d').drawImage(surface,tx*32,ty*32,32,32,0,0,32,32);cache.set(key,tile);return tile;
  }
  function render(c,m,art,actor,options={}){
-  const rise=options.rise||20,zoom=1.4,camera=options.camera||{x:256,y:options.cameraY||400,preset:0},items=[];
-  const bounds=[];for(const sy of [120,240,400,700])for(const sx of [-160,800])bounds.push(YK_LANDSCAPE.unproject(sx,sy,camera,zoom));
+  const rise=options.rise||20,zoom=1.4,viewWidth=options.viewportWidth||640,camera=options.camera||{x:256,y:options.cameraY||400,preset:0,centerX:viewWidth/2},items=[];
+  const bounds=[];for(const sy of [120,240,400,700])for(const sx of [-160,viewWidth+160])bounds.push(YK_LANDSCAPE.unproject(sx,sy,camera,zoom));
   const minX=Math.max(0,Math.floor(Math.min(...bounds.map(p=>p.x))/32)-2),maxX=Math.min(m[0].length-1,Math.ceil(Math.max(...bounds.map(p=>p.x))/32)+2);
   const minY=Math.max(0,Math.floor(Math.min(...bounds.map(p=>p.y))/32)-2),maxY=Math.min(m.length-1,Math.ceil(Math.max(...bounds.map(p=>p.y))/32)+2);
   // Exact world-space vertices are projected repeatedly by ground strips,
@@ -129,15 +129,19 @@ window.YK_ELEVATION_VIEW=(()=>{
   const xrayFaces=[];
   const cliffReport=diagnostic?{camera:{x:camera.x,y:camera.y},bounds:[minX,minY,maxX,maxY],walls:[],lips:[],tiles:0}:null;
   if(diagnostic)window.YK_CLIFF_REPORT=cliffReport;
-  c.save();c.beginPath();c.rect(0,0,640,544);c.clip();c.imageSmoothingEnabled=false;c.clearRect(0,0,640,544);c.drawImage(art.horizon,0,0,640,240);
+  c.save();c.beginPath();c.rect(0,0,viewWidth,544);c.clip();c.imageSmoothingEnabled=false;c.clearRect(0,0,viewWidth,544);
+   // The existing horizon art is 640px wide. Repeat at native pixel scale
+   // rather than stretching its mountains/clouds to fill panoramic screens.
+   const horizonStart=(viewWidth-640)/2-640;
+   for(let hx=horizonStart;hx<viewWidth;hx+=640)c.drawImage(art.horizon,Math.round(hx),0,640,240);
   // Continue the same sea texture beyond the test map, as in the main field.
   const ocean=c.createPattern(art.sea,'repeat');
   for(let sy=136;sy<544;sy+=4){
-   const a=YK_LANDSCAPE.unproject(0,sy,camera,zoom),b=YK_LANDSCAPE.unproject(640,sy,camera,zoom),d=YK_LANDSCAPE.unproject(0,sy+4,camera,zoom);
-   c.save();c.beginPath();c.rect(0,sy,640,4);c.clip();c.translate(0,sy);c.scale(640/(b.x-a.x),4/(d.y-a.y));c.translate(-a.x,-a.y);c.fillStyle=ocean;
+   const a=YK_LANDSCAPE.unproject(0,sy,camera,zoom),b=YK_LANDSCAPE.unproject(viewWidth,sy,camera,zoom),d=YK_LANDSCAPE.unproject(0,sy+4,camera,zoom);
+   c.save();c.beginPath();c.rect(0,sy,viewWidth,4);c.clip();c.translate(0,sy);c.scale(viewWidth/(b.x-a.x),4/(d.y-a.y));c.translate(-a.x,-a.y);c.fillStyle=ocean;
    c.fillRect(a.x-4,a.y-4,b.x-a.x+8,d.y-a.y+8);c.restore();
   }
-  c.save();c.beginPath();c.rect(0,136,640,408);c.clip();
+  c.save();c.beginPath();c.rect(0,136,viewWidth,408);c.clip();
   // Tile tops are sampled in short world-space strips to follow perspective and slopes.
   for(let ty=minY;ty<=maxY;ty++)for(let tx=minX;tx<=maxX;tx++){
    const center=point(tx*32+16,ty*32+16,E.level(m,tx,ty));
@@ -147,7 +151,7 @@ window.YK_ELEVATION_VIEW=(()=>{
     const tileCorners=[[0,0],[32,0],[32,32],[0,32]].map(([u,v])=>point(tx*32+u,ty*32+v,E.level(m,tx,ty,u/32,v/32)));
     if(tileCorners.every(Boolean)){
      const xs=tileCorners.map(p=>p.x),ys=tileCorners.map(p=>p.y);
-     if(Math.max(...xs)<-2||Math.min(...xs)>642||Math.max(...ys)<110||Math.min(...ys)>602)continue;
+     if(Math.max(...xs)<-2||Math.min(...xs)>viewWidth+2||Math.max(...ys)<110||Math.min(...ys)>602)continue;
     }
    if(diagnostic)cliffReport.tiles++;
    const band=options.groundTile?(center.y<280?32:16):8;
@@ -340,7 +344,7 @@ window.YK_ELEVATION_VIEW=(()=>{
   }
   for(const o of options.objects||m.objects||[]){
    const foot=o.foot??o.y,center=o.foot===undefined?o.x:o.x+o.width/2;
-   items.push({depth:foot,order:2,draw:()=>{const p=point(center,foot,o.supportHeight??E.height(m,center,foot));if(!p||p.x+o.width*p.scale/2<0||p.x-o.width*p.scale/2>640)return;
+   items.push({depth:foot,order:2,draw:()=>{const p=point(center,foot,o.supportHeight??E.height(m,center,foot));if(!p||p.x+o.width*p.scale/2<0||p.x-o.width*p.scale/2>viewWidth)return;
     c.globalAlpha=Math.min(1,Math.max(0,(p.y-136)/70));
     if(o.render)o.render(c,p);else if(art[o.kind])c.drawImage(art[o.kind],p.x-o.width*p.scale/2,p.y-o.height*p.scale,o.width*p.scale,o.height*p.scale);c.globalAlpha=1;
    }});
@@ -369,7 +373,7 @@ window.YK_ELEVATION_VIEW=(()=>{
    cliffReport.xrayFaces=xrayFaces.length;
   }
   c.restore();
-  for(let y=136;y<208;y+=4){const t=(y-136)/72;c.globalAlpha=1-t*t*(3-2*t);c.drawImage(art.horizon,0,y,640,4,0,y,640,4);}c.globalAlpha=1;
+  for(let y=136;y<208;y+=4){const t=(y-136)/72;c.globalAlpha=1-t*t*(3-2*t);for(let hx=horizonStart;hx<viewWidth;hx+=640)c.drawImage(art.horizon,0,y,640,4,Math.round(hx),y,640,4);}c.globalAlpha=1;
   if(options.grid){for(let ty=minY;ty<=maxY;ty++)for(let tx=minX;tx<=maxX;tx++){
    for(const cut of E.outline(m,tx,ty).cuts){
     const blocked=[cut.corner,...cut.ends].map(([u,v])=>point(tx*32+u,ty*32+v,cut.lower));if(!blocked.every(Boolean))continue;

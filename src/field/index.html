@@ -20,18 +20,16 @@ header{display:flex;align-items:center;justify-content:space-between;gap:8px}
 h1{font-size:17px;margin:0}
 output{font-size:12px;color:#dbdec6;text-align:right}
 .viewport{position:relative;display:block;overflow:hidden;border:1px solid #73785c;border-radius:8px;background:#243322}
-canvas{position:absolute;inset:0;display:block;width:100%;height:100%;min-width:0;min-height:0;object-fit:cover;object-position:center center;image-rendering:pixelated;touch-action:none}
+canvas{position:absolute;inset:0;display:block;width:100%;height:100%;min-width:0;min-height:0;object-fit:fill;object-position:center center;image-rendering:pixelated;touch-action:none}
 .field-weather{display:none}
 @supports (width:1cqw) and (mask-image:url("")){
- /* Follow the fitted square in the canvas grid cell, including clipped viewports. */
+ /* Cover the new full-width landscape camera with drifting clouds. */
  .field-weather{
   display:block;position:absolute;grid-area:1/1/2/2;inset:0;container-type:size;
   pointer-events:none;
  }
  .field-weather-scene{
-  --scene-size:max(100cqw,100cqh);
-  position:absolute;overflow:hidden;left:50%;top:50%;
-  width:var(--scene-size);height:var(--scene-size);transform:translate(-50%,-50%);
+  position:absolute;overflow:hidden;inset:0;width:100%;height:100%;
  }
  .cloud-track{
   --cloud-texture:url("../../assets/field/effects/cloud-overlay.png?v=9039b78");
@@ -67,52 +65,36 @@ button.held{background:#e8cc8b;color:#272d22}
 </style>
 <link rel="stylesheet" href="../game/ui/controls.css?v=dotgothic16">
 <style>
-/* Field-only iPhone landscape layout. Field camera crops in runtime.mjs
-   using the rendered hero's actual foot; CSS must never crop it a second time. */
+/* Landscape-only: the world owns the full screen, and controls overlay it.
+   There is no 108px opaque bottom strip and no secondary CSS crop. */
 @media (orientation:landscape){
  main.field-screen{
   grid-template-columns:minmax(0,1fr);
-  grid-template-rows:minmax(0,1fr) 108px;
+  grid-template-rows:minmax(0,1fr);
   gap:0;
  }
  main.field-screen > .viewport{
   grid-area:1/1/2/2;
-  min-width:0;
-  min-height:0;
-  display:block;
+  min-width:0;min-height:0;display:block;
  }
- main.field-screen .viewport canvas{
-  object-fit:fill;
-  object-position:center center;
- }
- /* The canvas owns the camera crop. Weather is a noninteractive overlay. */
- main.field-screen .field-weather-scene{
-  top:50%;
-  transform:translate(-50%,-50%);
- }
+ main.field-screen .viewport canvas{object-fit:fill}
  main.field-screen #pad{
-  grid-area:2/1/3/2;
-  position:relative;
-  left:auto;right:auto;bottom:auto;
-  width:100%;height:108px;
-  padding:0;margin:0;
-  background:linear-gradient(180deg,#0b1a27,#08131e);
-  border-top:1px solid rgba(201,173,120,.55);
-  pointer-events:none;
+  grid-area:auto;position:absolute;inset:auto 0 0;
+  width:100%;height:calc(135px + env(safe-area-inset-bottom));
+  padding:0;margin:0;background:transparent;border:0;pointer-events:none;
  }
  main.field-screen #pad .dpad{
-  left:max(10px,env(safe-area-inset-left));
-  bottom:4px;
-  transform:scale(.64);
-  transform-origin:left bottom;
+  left:max(12px,env(safe-area-inset-left));
+  bottom:calc(6px + env(safe-area-inset-bottom));
+  transform:scale(.72);transform-origin:left bottom;
  }
  main.field-screen #pad #action-a{
   right:max(14px,env(safe-area-inset-right));
-  bottom:16px;
+  bottom:calc(16px + env(safe-area-inset-bottom));
  }
  main.field-screen #pad #action-b{
   right:max(108px,calc(env(safe-area-inset-right) + 100px));
-  bottom:25px;
+  bottom:calc(41px + env(safe-area-inset-bottom));
  }
 }
 </style>
@@ -159,6 +141,6 @@ button.held{background:#e8cc8b;color:#272d22}
 <script src="./camera-position.js?v=26136fe"></script>
 <script src="./movement-rules.js?v=26136fe"></script>
 <script src="./area-transitions.js?v=26136fe"></script>
-<script type="module" src="./walk.mjs?v=field-camera-3"></script>
+<script type="module" src="./walk.mjs?v=field-landscape-panorama-1"></script>
 </body>
 </html>

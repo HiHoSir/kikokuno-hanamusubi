@@ -389,10 +389,10 @@ window.YK_LANDSCAPE=(()=>{
   // Invert the cached piecewise-linear curve directly. Avoid 24 scale/power
   // evaluations per object and terrain vertex on every animation frame.
   let lo=0,hi=800;while(hi-lo>1){const mid=(lo+hi)>>1;if(c.offset[mid]<=vy)lo=mid;else hi=mid;}
-  const sy=lo+(vy-c.offset[lo])/(c.offset[hi]-c.offset[lo]),l=lineAt(sy,zoom,camera.preset||0),xs=camera.horizontalScale||l.xScale;return {x:320+vx*xs,y:sy,scale:l.scale,xScale:xs};
+  const sy=lo+(vy-c.offset[lo])/(c.offset[hi]-c.offset[lo]),l=lineAt(sy,zoom,camera.preset||0),xs=camera.horizontalScale||l.xScale;return {x:(camera.centerX??320)+vx*xs,y:sy,scale:l.scale,xScale:xs};
  }
  function unproject(x,y,camera,zoom=1.4){
-  if(y<0||y>800)return null;const l=lineAt(y,zoom,camera.preset||0),vx=(x-320)/(camera.horizontalScale||l.xScale),vy=l.offset,a=camera.angle||0,cs=Math.cos(a),sn=Math.sin(a);
+  if(y<0||y>800)return null;const l=lineAt(y,zoom,camera.preset||0),vx=(x-(camera.centerX??320))/(camera.horizontalScale||l.xScale),vy=l.offset,a=camera.angle||0,cs=Math.cos(a),sn=Math.sin(a);
   return {x:camera.x+cs*vx-sn*vy,y:camera.y+sn*vx+cs*vy,scale:l.scale};
  }
  // Build only small visible ground chunks. Avoid several 2560² temporary
@@ -438,7 +438,7 @@ window.YK_LANDSCAPE=(()=>{
   if(settings.elevationTerrain&&map.elevationEnabled){
    const fieldArt={...art,waterAnimated:true,sea:movingWater,river:movingWater,waterfall:movingFall,rock:art.barren,grassCliff:art.grassCliff,ladder:art.ladder,forest:art.grass,mountain:art.grass,snowMountain:art.snow,rockMountain:art.barren};
    return !!window.YK_ELEVATION_VIEW.render(c,map,fieldArt,{x:actor.x,y:actor.foot,height:actor.height,draw:actor.draw},{
-    camera:{x:settings.cameraX??actor.x,y:actor.foot,preset:settings.preset||0},rise:map.elevationRise||20,
+    camera:{x:settings.cameraX??actor.x,y:actor.foot,preset:settings.preset||0,centerX:(settings.viewportWidth??640)/2},viewportWidth:settings.viewportWidth??640,rise:map.elevationRise||20,
     groundTile:(tx,ty)=>elevationTexture(map,tx,ty),objects:objects(map)
    });
   }

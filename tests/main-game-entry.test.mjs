@@ -88,8 +88,8 @@ test('immersive gameplay fills the viewport and prevents game text selection',()
   assert.match(html,/apple-mobile-web-app-capable/);
  }
  const field=readFileSync('src/field/index.html','utf8');
- assert.match(field,/object-fit:cover/);
- assert.match(field,/--scene-size:max\(100cqw,100cqh\)/);
+ assert.match(field,/object-fit:fill/);
+ assert.doesNotMatch(field,/--scene-size:max\(100cqw,100cqh\)/);
  const webmanifest=JSON.parse(readFileSync('src/game/app.webmanifest','utf8'));
  assert.equal(webmanifest.display,'standalone');
  assert.equal(webmanifest.start_url,'../../');

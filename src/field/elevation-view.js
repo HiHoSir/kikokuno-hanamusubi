@@ -6,16 +6,12 @@ window.YK_ELEVATION_VIEW=(()=>{
  const [heroAnchorX,heroAnchorY]=YK_FIELD_ASSETS.heroFootAnchorPx;
  const sources={grass:paths.grass,sand:paths.sand,snow:paths.snow,rock:paths.barren,grassCliff:paths.grassCliff,sea:paths.water,road:paths.road,horizon:paths.horizon,trees:paths.newTrees,shrine:paths.shrine,hero:YK_FIELD_ASSETS.hero,ladder:paths.ladder};
  async function load(){const pairs=await Promise.all(Object.entries(sources).map(([k,src])=>new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve([k,im]);im.onerror=()=>reject(Error(src));im.src=YK_FIELD_ASSETS.url(src);})));return Object.fromEntries(pairs);}
- // Previously each projected triangle blitted an entire 3x3 expanded
- // texture, even though the canvas clip reveals just a small UV triangle.
- // A repeating pattern preserves texture phase with far less pixel work.
- const patterns=new WeakMap();
- function repeatingPattern(c,im){
-  let images=patterns.get(c);
-  if(!images){images=new WeakMap();patterns.set(c,images);}
-  let pattern=images.get(im);
-  if(!pattern){pattern=c.createPattern(im,'repeat');images.set(im,pattern);}
-  return pattern;
+ const padded=new WeakMap();
+ function repeatPadding(im){
+  if(padded.has(im))return padded.get(im);
+  const surface=document.createElement('canvas');surface.width=im.width*3;surface.height=im.height*3;
+  const q=surface.getContext('2d');for(let y=0;y<3;y++)for(let x=0;x<3;x++)q.drawImage(im,x*im.width,y*im.height);
+  padded.set(im,surface);return surface;
  }
  function triangle(c,im,uv,p){
   const [a,b,d]=uv,[A,B,D]=p,den=(b.x-a.x)*(d.y-a.y)-(d.x-a.x)*(b.y-a.y);if(Math.abs(den)<1e-8)return;
@@ -28,10 +24,17 @@ window.YK_ELEVATION_VIEW=(()=>{
   const cx=(A.x+B.x+D.x)/3,cy=(A.y+B.y+D.y)/3;
   c.save();c.beginPath();p.forEach((v,i)=>{const len=Math.hypot(v.x-cx,v.y-cy)||1,x=v.x+(v.x-cx)/len*.65,y=v.y+(v.y-cy)/len*.65;i?c.lineTo(x,y):c.moveTo(x,y);});c.closePath();c.clip();
   c.transform(xx,yx,xy,yy,A.x-xx*a.x-xy*a.y,A.y-yx*a.x-yy*a.y);
-  const x0=Math.min(a.x,b.x,d.x)-64,y0=Math.min(a.y,b.y,d.y)-64;
-  const x1=Math.max(a.x,b.x,d.x)+64,y1=Math.max(a.y,b.y,d.y)+64;
-  c.fillStyle=repeatingPattern(c,im);
-  c.fillRect(x0,y0,x1-x0,y1-y0);
+  // Pixel-exact alternative to blitting the ENTIRE 3x3 texture atlas.
+  // Crop only the source rectangle corresponding to this clipped UV triangle;
+  // source and destination remain 1:1 in UV space under the same transform.
+  const left=Math.max(0,Math.floor(Math.min(a.x,b.x,d.x)+im.width-32));
+  const top=Math.max(0,Math.floor(Math.min(a.y,b.y,d.y)+im.height-32));
+  const right=Math.min(im.width*3,Math.ceil(Math.max(a.x,b.x,d.x)+im.width+32));
+  const bottom=Math.min(im.height*3,Math.ceil(Math.max(a.y,b.y,d.y)+im.height+32));
+  if(right>left&&bottom>top){
+   c.drawImage(repeatPadding(im),left,top,right-left,bottom-top,
+     left-im.width,top-im.height,right-left,bottom-top);
+  }
   c.restore();
  }
  function quad(c,im,sx,sy,sw,sh,p,shade=0){
@@ -161,7 +164,7 @@ window.YK_ELEVATION_VIEW=(()=>{
    }
    drawHorizonBand(0,240);
   // Continue the same sea texture beyond the test map, as in the main field.
-  const ocean=repeatingPattern(c,art.sea);
+  const ocean=c.createPattern(art.sea,'repeat');
   for(let sy=136;sy<544;sy+=4){
    const a=YK_LANDSCAPE.unproject(0,sy,camera,zoom),b=YK_LANDSCAPE.unproject(viewWidth,sy,camera,zoom),d=YK_LANDSCAPE.unproject(0,sy+4,camera,zoom);
    c.save();c.beginPath();c.rect(0,sy,viewWidth,4);c.clip();c.translate(0,sy);c.scale(viewWidth/(b.x-a.x),4/(d.y-a.y));c.translate(-a.x,-a.y);c.fillStyle=ocean;

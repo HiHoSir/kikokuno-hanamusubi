@@ -36,7 +36,11 @@ iframe{display:block;border:0;width:100%;flex:1;min-height:0;background:#102635}
  function target(){const q=selection==='tiles'?'&renderer=tile-layers':'';return new URL('src/field/?from=village&profile=1'+q,root).href}
  function open(){
   if(!ready)return;
-  try{frame.contentWindow.KIKOKU_GAME.navigate(target());msg.textContent='描画中…';}
+  try{
+   const game=frame.contentWindow.KIKOKU_GAME;
+   game.setFieldRenderer(selection==='tiles'?'tile-layers':null);
+   game.navigate(target());msg.textContent='描画中…';
+  }
   catch(e){msg.textContent='切替失敗: '+e.message}
  }
  function select(mode){
@@ -46,8 +50,9 @@ iframe{display:block;border:0;width:100%;flex:1;min-height:0;background:#102635}
  }
  current.addEventListener('click',()=>select('current'));tiles.addEventListener('click',()=>select('tiles'));
  const shellUrl=new URL('src/game/',root);
+ shellUrl.searchParams.set('field-renderer-preview','1');
  sessionStorage.setItem('kikokuno-hanamusubi-next-entry',JSON.stringify({
-  route:shellUrl.pathname,expiresAt:Date.now()+120000
+  route:shellUrl.pathname+shellUrl.search,expiresAt:Date.now()+120000
  }));
  frame.addEventListener('load',()=>{ready=!!frame.contentWindow.KIKOKU_GAME;open();},{once:true});
  frame.src=shellUrl.href;

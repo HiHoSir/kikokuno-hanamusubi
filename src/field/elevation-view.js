@@ -139,6 +139,44 @@ window.YK_ELEVATION_VIEW=(()=>{
   const tile=document.createElement('canvas');tile.width=tile.height=32;
   tile.getContext('2d').drawImage(surface,tx*32,ty*32,32,32,0,0,32,32);cache.set(key,tile);return tile;
  }
+ // Experimental, opt-in row-chunk projection: only flat non-shore tiles.
+ // Tiles are cropped from existing approved 8x8 ground composites, not copied
+ // from other games. The production renderer stays unchanged by default.
+ const rowChunks=new WeakMap(),MAX_ROW_CHUNKS=64;
+ function rowChunk(map,tx,ty,count,getTile){
+  let cache=rowChunks.get(map);
+  if(!cache){cache=new Map();rowChunks.set(map,cache);}
+  const key=tx+','+ty+','+count;
+  if(cache.has(key)){
+   const saved=cache.get(key);cache.delete(key);cache.set(key,saved);return saved;
+  }
+  const {surface,x,y}=getTile(tx,ty);
+  const image=document.createElement('canvas');image.width=count*32;image.height=32;
+  const ctx=image.getContext('2d');ctx.imageSmoothingEnabled=false;
+  ctx.drawImage(surface,x,y,count*32,32,0,0,count*32,32);
+  cache.set(key,image);
+  if(cache.size>MAX_ROW_CHUNKS)cache.delete(cache.keys().next().value);
+  return image;
+ }
+ function flatInteriorHeight(m,x,y){
+  if(x<1||y<1||x>=m[0].length-1||y>=m.length-1)return null;
+  const kind=m[y][x];
+  if(!kind||waterKind(kind)||kind==='bridge'||m.bridgeWaterCells?.has(x+','+y)||m.ramps?.[y]?.[x])return null;
+  const shape=E.outline(m,x,y);
+  if(shape.cuts.length||shoreGeometry(m,x,y,shape).sides.length)return null;
+  const h=E.level(m,x,y,0,0);
+  if(!Number.isFinite(h)||Math.abs(E.level(m,x,y,1,0)-h)>.001||
+    Math.abs(E.level(m,x,y,0,1)-h)>.001||Math.abs(E.level(m,x,y,1,1)-h)>.001||
+    Math.abs(E.level(m,x,y,.5,.5)-h)>.001)return null;
+  for(const [dx,dy] of [[-1,0],[1,0],[0,-1],[0,1]]){
+   const adjacent=m[y+dy]?.[x+dx];
+   if(!adjacent||waterKind(adjacent)||adjacent==='bridge')return null;
+   for(const [u,v] of [[0,0],[1,0],[0,1],[1,1]]){
+    if(Math.abs(E.level(m,x+dx,y+dy,u,v)-h)>.001)return null;
+   }
+  }
+  return h;
+ }
  function render(c,m,art,actor,options={}){
   const rise=options.rise||20,zoom=1.4,viewWidth=options.viewportWidth||640,camera=options.camera||{x:256,y:options.cameraY||400,preset:0,centerX:viewWidth/2},items=[];
   const bounds=[];for(const sy of [120,240,400,700])for(const sx of [-160,viewWidth+160])bounds.push(YK_LANDSCAPE.unproject(sx,sy,camera,zoom));
@@ -193,7 +231,41 @@ window.YK_ELEVATION_VIEW=(()=>{
   }
   c.save();c.beginPath();c.rect(0,136,viewWidth,408);c.clip();
   // Tile tops are sampled in short world-space strips to follow perspective and slopes.
+  const useRowChunks=window.YK_FIELD_ROW_CHUNKS===true&&!!options.groundTile&&!diagnostic&&!options.grid;
+  const rowStats=useRowChunks?{runs:0,tiles:0,strips:0}:null;
+  if(useRowChunks)window.YK_FIELD_ROW_CHUNK_STATS=rowStats;
   for(let ty=minY;ty<=maxY;ty++)for(let tx=minX;tx<=maxX;tx++){
+   if(useRowChunks){
+    const h=flatInteriorHeight(m,tx,ty);
+    if(h!==null){
+     const limit=Math.min(maxX-tx+1,8-(tx%8));
+     let count=1;
+     while(count<limit){
+      const next=flatInteriorHeight(m,tx+count,ty);
+      if(next===null||Math.abs(next-h)>.001)break;
+      count++;
+     }
+     if(count>=3){
+      const atlas=rowChunk(m,tx,ty,count,options.groundTile);
+      const center=point(tx*32+16,ty*32+16,h);
+      if(center){
+       const band=center.y<280?32:16;
+       const x0=tx*32,x1=(tx+count)*32,y0=ty*32;
+       for(let v=0;v<32;v+=band){
+        const v0=v,width=count*32;
+        items.push({depth:y0+v+band,order:0,draw:()=>{
+         const p=[point(x0,y0+v0,h),point(x1,y0+v0,h),
+          point(x1,y0+v0+band,h),point(x0,y0+v0+band,h)];
+         if(p.every(Boolean))quad(c,atlas,0,v0,width,band,p);
+        }});
+        rowStats.strips++;
+       }
+       rowStats.runs++;rowStats.tiles+=count;
+       tx+=count-1;continue;
+      }
+     }
+    }
+   }
    const center=point(tx*32+16,ty*32+16,E.level(m,tx,ty));
    if(!center)continue;
     // A projected tile can intersect the viewport even when its centre is outside.

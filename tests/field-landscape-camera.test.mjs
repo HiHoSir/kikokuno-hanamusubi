@@ -34,10 +34,11 @@ test('field profiling is opt-in and does not alter the rendered world or state',
  assert.match(browser,/ArrowRight/);
 });
 
-test('perspective triangle UV clips padded source image to the needed pixel area',()=>{
+test('perspective UV painting uses compact 16px seamless padding with safe fallback',()=>{
  const view=readFileSync('src/field/elevation-view.js','utf8');
- assert.match(view,/function repeatPadding\(im\)/);
- assert.match(view,/const left=Math\.max\(0,Math\.floor\(/);
- assert.match(view,/c\.drawImage\(repeatPadding\(im\),left,top,right-left,bottom-top,/);
- assert.doesNotMatch(view,/function repeatingPattern\(c,im\)/);
+ assert.match(view,/const compact=new WeakMap\(\),pad=16/);
+ assert.match(view,/surface\.width=im\.width\+pad\*2/);
+ assert.match(view,/if\(inside\)c\.drawImage\(compactPadding\(im\),-pad,-pad\)/);
+ assert.match(view,/else c\.drawImage\(repeatPadding\(im\),-im\.width,-im\.height\)/);
+ assert.doesNotMatch(view,/function repeatingPattern/);
 });

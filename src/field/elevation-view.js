@@ -13,6 +13,18 @@ window.YK_ELEVATION_VIEW=(()=>{
   const q=surface.getContext('2d');for(let y=0;y<3;y++)for(let x=0;x<3;x++)q.drawImage(im,x*im.width,y*im.height);
   padded.set(im,surface);return surface;
  }
+ // Most projected ground UVs lie within one source tile. Use the exact
+ // repeating pixels around its perimeter, but not 9 full copies of the tile.
+ // Wider/world-space shoreline UVs still use the original 3x3 source.
+ const compact=new WeakMap(),pad=16;
+ function compactPadding(im){
+  if(compact.has(im))return compact.get(im);
+  const surface=document.createElement('canvas');
+  surface.width=im.width+pad*2;surface.height=im.height+pad*2;
+  const q=surface.getContext('2d');
+  for(let y=-1;y<=1;y++)for(let x=-1;x<=1;x++)q.drawImage(im,pad+x*im.width,pad+y*im.height);
+  compact.set(im,surface);return surface;
+ }
  function triangle(c,im,uv,p){
   const [a,b,d]=uv,[A,B,D]=p,den=(b.x-a.x)*(d.y-a.y)-(d.x-a.x)*(b.y-a.y);if(Math.abs(den)<1e-8)return;
   const xx=((B.x-A.x)*(d.y-a.y)-(D.x-A.x)*(b.y-a.y))/den;
@@ -24,17 +36,11 @@ window.YK_ELEVATION_VIEW=(()=>{
   const cx=(A.x+B.x+D.x)/3,cy=(A.y+B.y+D.y)/3;
   c.save();c.beginPath();p.forEach((v,i)=>{const len=Math.hypot(v.x-cx,v.y-cy)||1,x=v.x+(v.x-cx)/len*.65,y=v.y+(v.y-cy)/len*.65;i?c.lineTo(x,y):c.moveTo(x,y);});c.closePath();c.clip();
   c.transform(xx,yx,xy,yy,A.x-xx*a.x-xy*a.y,A.y-yx*a.x-yy*a.y);
-  // Pixel-exact alternative to blitting the ENTIRE 3x3 texture atlas.
-  // Crop only the source rectangle corresponding to this clipped UV triangle;
-  // source and destination remain 1:1 in UV space under the same transform.
-  const left=Math.max(0,Math.floor(Math.min(a.x,b.x,d.x)+im.width-32));
-  const top=Math.max(0,Math.floor(Math.min(a.y,b.y,d.y)+im.height-32));
-  const right=Math.min(im.width*3,Math.ceil(Math.max(a.x,b.x,d.x)+im.width+32));
-  const bottom=Math.min(im.height*3,Math.ceil(Math.max(a.y,b.y,d.y)+im.height+32));
-  if(right>left&&bottom>top){
-   c.drawImage(repeatPadding(im),left,top,right-left,bottom-top,
-     left-im.width,top-im.height,right-left,bottom-top);
-  }
+  const inside=im.width>=pad&&im.height>=pad&&
+   Math.min(a.x,b.x,d.x)>=0&&Math.max(a.x,b.x,d.x)<=im.width&&
+   Math.min(a.y,b.y,d.y)>=0&&Math.max(a.y,b.y,d.y)<=im.height;
+  if(inside)c.drawImage(compactPadding(im),-pad,-pad);
+  else c.drawImage(repeatPadding(im),-im.width,-im.height);
   c.restore();
  }
  function quad(c,im,sx,sy,sw,sh,p,shade=0){

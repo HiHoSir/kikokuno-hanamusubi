@@ -64,3 +64,16 @@ test('animated water atlas uses HALF the atlas width per frame; second frame is 
  assert.match(code,/ctx\.drawImage\(atlas,i\*frameWidth,0,frameWidth,h,0,0,frameWidth,h\)/);
  assert.doesNotMatch(code,/ctx\.drawImage\(atlas,i\*w,0,w,h,0,0,w,h\)/);
 });
+
+test('opt-in tile-layer experiment keeps shipped field perspective as the default',()=>{
+ const trial=readFileSync('src/field/tile-layer-prototype.mjs','utf8');
+ const runtime=readFileSync('src/field/runtime.mjs','utf8');
+ assert.match(runtime,/get\('renderer'\)==='tile-layers'/);
+ assert.match(runtime,/if\(preview\)\{\s*trial\.draw/);
+ assert.match(runtime,/else landscape\.drawQuarter/);
+ assert.match(trial,/globalCompositeOperation='destination-out'/);
+ assert.match(trial,/motionArt\('water',time\)/);
+ assert.match(trial,/landscape\.unproject/);
+ assert.match(trial,/groundLayer\(flat\)/);
+ assert.match(trial,/staticLand:true,animatedWater:true/);
+});

@@ -63,7 +63,7 @@ try{
   });
   await page.goto(origin+'/src/game/',{waitUntil:'domcontentloaded'});
   await page.waitForFunction(()=>!!window.KIKOKU_GAME?.navigate,{timeout:20000});
-  await page.evaluate(()=>window.KIKOKU_GAME.navigate(new URL('/src/field/?from=village',location.href).href));
+  await page.evaluate(()=>window.KIKOKU_GAME.navigate(new URL('/src/field/?from=village&profile=1',location.href).href));
   try{
    await page.waitForFunction(()=>{
     const f=document.querySelector('iframe')?.contentWindow;
@@ -84,7 +84,31 @@ try{
    await page.screenshot({path:'artifacts/field-'+width+'x'+height+'.png'});
    throw e;
   }
-  await page.waitForTimeout(600);
+  await page.waitForTimeout(650);
+  const idleBefore=await page.evaluate(()=>{
+    const s=document.querySelector('iframe')?.contentWindow?.__FIELD_RENDER_PROFILE;
+    return s?{frames:s.frames,totalMs:s.totalMs,maxMs:s.maxMs}:null;
+  });
+  // A bounded directional hold exercises the 192ms step/continuous camera
+  // path without waiting long enough for a random field encounter.
+  await page.evaluate(()=>{
+    const w=document.querySelector('iframe').contentWindow;
+    w.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowRight',bubbles:true}));
+  });
+  await page.waitForTimeout(790);
+  await page.evaluate(()=>{
+    const w=document.querySelector('iframe').contentWindow;
+    w.dispatchEvent(new KeyboardEvent('keyup',{key:'ArrowRight',bubbles:true}));
+  });
+  await page.waitForTimeout(450);
+  const profile=await page.evaluate(()=>{
+    const s=document.querySelector('iframe')?.contentWindow?.__FIELD_RENDER_PROFILE;
+    if(!s)return null;
+    const a=[...s.samples].sort((x,y)=>x-y);
+    return {frames:s.frames,totalMs:Math.round(s.totalMs),meanMs:Number((s.totalMs/Math.max(1,s.frames)).toFixed(2)),
+      p50Ms:a[Math.floor(a.length*.5)]||0,p95Ms:a[Math.floor(a.length*.95)]||0,
+      maxMs:Number(s.maxMs.toFixed(2)),viewport:s.viewport,measuredSamples:a.length};
+  });
   const detail=await page.evaluate(()=>{
    const doc=document.querySelector('iframe').contentDocument;
    const scene=doc.querySelector('#scene'),viewport=doc.querySelector('.viewport');
@@ -123,7 +147,49 @@ try{
   });
   const screenshot='artifacts/field-'+width+'x'+height+'.png';
   await page.screenshot({path:screenshot});
-  results.push({viewport:width+'x'+height,...detail,screenshot,errors});
+  // Heavy terrain drawing stops while the field menu covers the scene,
+  // then resumes without recreating the iframe or changing audio tracks.
+  const beforeMenu=await page.evaluate(()=>{
+    const f=document.querySelector('iframe').contentWindow;
+    return {frames:f.__FIELD_RENDER_PROFILE.frames,scene:document.querySelector('iframe').src,
+      bgm:window.KIKOKU_GAME.audio.trackName};
+  });
+  await page.locator('#field-menu-toggle').click();
+  await page.waitForFunction(()=>document.querySelector('iframe').contentWindow.__FIELD_RENDER_PAUSED===true);
+  const pausedFrames=await page.evaluate(()=>document.querySelector('iframe').contentWindow.__FIELD_RENDER_PROFILE.frames);
+  await page.waitForTimeout(590);
+  const afterPause=await page.evaluate(()=>document.querySelector('iframe').contentWindow.__FIELD_RENDER_PROFILE.frames);
+  await page.locator('#field-menu-action-b').click();
+  await page.waitForFunction(()=>document.querySelector('iframe').contentWindow.__FIELD_RENDER_PAUSED===false);
+  await page.waitForFunction(previous=>document.querySelector('iframe').contentWindow.__FIELD_RENDER_PROFILE.frames>previous,afterPause,{timeout:4000});
+  const recovered=await page.evaluate(()=>({
+    scene:document.querySelector('iframe').src,bgm:window.KIKOKU_GAME.audio.trackName,
+    frameCount:document.querySelector('iframe').contentWindow.__FIELD_RENDER_PROFILE.frames
+  }));
+  const fieldPause={pausedFrames,afterPause,resumedFrames:recovered.frameCount,
+    preserved:beforeMenu.scene===recovered.scene&&beforeMenu.bgm===recovered.bgm};
+  await page.setViewportSize({width:390,height:844});
+  await page.waitForFunction(()=>{
+    const doc=document.querySelector('iframe')?.contentWindow;
+    return getComputedStyle(document.querySelector('#landscape-required')).display==='grid'&&
+      doc?.__FIELD_RENDER_PAUSED===true;
+  });
+  const rotateBefore=await page.evaluate(()=>document.querySelector('iframe').contentWindow.__FIELD_RENDER_PROFILE.frames);
+  await page.waitForTimeout(550);
+  const rotateAfter=await page.evaluate(()=>document.querySelector('iframe').contentWindow.__FIELD_RENDER_PROFILE.frames);
+  await page.setViewportSize({width,height});
+  await page.waitForFunction(()=>{
+    const doc=document.querySelector('iframe')?.contentWindow;
+    return getComputedStyle(document.querySelector('#landscape-required')).display==='none'&&
+      doc?.__FIELD_RENDER_PAUSED===false;
+  });
+  const portraitPause={before:rotateBefore,after:rotateAfter,
+    preserved:await page.evaluate(data=>
+      document.querySelector('iframe').src===data.scene&&
+      window.KIKOKU_GAME.audio.trackName===data.bgm,beforeMenu)};
+
+
+  results.push({viewport:width+'x'+height,...detail,screenshot,profile,idleBefore,fieldPause,portraitPause,errors});
   await page.close();
  }
 }finally{await browser?.close();server.close();}
@@ -133,6 +199,10 @@ const failures=results.filter(r=>{
  const ratio=width/height,realRatio=r.scene[0]/r.scene[1];
  const barOverlays=r.pad[0]>=0 && r.pad[0]<height;
  return r.errors.some(e=>e.includes('pageerror')||e.includes('HTTP 404'))||
+ !r.profile||r.profile.frames<3||r.profile.measuredSamples<3||r.profile.viewport[0]!==r.scene[0]||
+ !r.fieldPause||r.fieldPause.pausedFrames!==r.fieldPause.afterPause||!r.fieldPause.preserved||
+ !r.portraitPause||r.portraitPause.before!==r.portraitPause.after||!r.portraitPause.preserved||
+ r.fieldPause.resumedFrames<=r.fieldPause.afterPause||
  r.draws<1||!Number.isFinite(r.foot)||r.foot<0||
  !r.visible||r.visible.relTop<0||r.visible.relBottom>1||
  r.visible.redPixels<3||r.scene[1]!==544||Math.abs(realRatio-ratio)>.015||

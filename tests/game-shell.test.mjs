@@ -102,3 +102,15 @@ test('landscape D-pad touch targets are at least 44 CSS pixels when rendered',()
  assert.match(battle,/#pad \.dpad\{[^\n]*transform:scale\(\.85\)/);
  assert.match(menu,/#field-menu-dpad button\{[^\n]*width:44px;height:44px/);
 });
+
+test('world menu sends pause/resume signals to field without touching the BGM engine',()=>{
+ const menu=readFileSync('src/game/ui/field-menu.mjs','utf8');
+ const field=readFileSync('src/field/walk.mjs','utf8');
+ assert.match(menu,/new Event\('game-menu-open'\)/);
+ assert.match(menu,/new Event\('game-menu-close'\)/);
+ assert.match(field,/addEventListener\('game-menu-open'/);
+ assert.match(field,/addEventListener\('game-menu-close'/);
+ assert.match(field,/if \(!renderPaused && \(dirty \|\| waterFrame !== lastWaterFrame\)\)/);
+ assert.match(field,/portraitMedia\.addEventListener\?\.\('change',updateSuspension\)/);
+ assert.match(field,/else lastWaterFrame=-1/);
+});

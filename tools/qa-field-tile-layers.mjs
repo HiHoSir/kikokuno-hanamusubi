@@ -143,7 +143,8 @@ try{
   });
   await page.waitForFunction(()=>{
     const f=document.querySelector('iframe'),w=f?.contentWindow;
-    return f?.src.includes('/src/game/battle/')&&w?.KIKOKU_ROUTE?.admitted===true;
+    return f?.src.includes('/src/game/battle/')&&w?.location.href===f.src&&
+      w?.KIKOKU_ROUTE?.admitted===true;
   },null,{timeout:20000});
   await page.evaluate(()=>{
     const child=document.querySelector('iframe').contentWindow;
@@ -177,7 +178,8 @@ try{
   });
   await page.waitForFunction(()=>{
     const f=document.querySelector('iframe'),w=f?.contentWindow;
-    return f?.src.includes('/src/game/battle/')&&w?.KIKOKU_ROUTE?.admitted===true;
+    return f?.src.includes('/src/game/battle/')&&w?.location.href===f.src&&
+      w?.KIKOKU_ROUTE?.admitted===true;
   },null,{timeout:20000});
   await page.evaluate(()=>{
     const child=document.querySelector('iframe').contentWindow;

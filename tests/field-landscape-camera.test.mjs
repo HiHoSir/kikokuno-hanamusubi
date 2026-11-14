@@ -56,3 +56,11 @@ test('production water/river/waterfall motion uses the same RAF phase as field s
  assert.match(tenyo,/waterKinds=\['shallow','mid','deep'\]/);
  assert.match(tenyo,/Math\.floor\(\(o\.animationTime\|\|0\)\/360\)%4/);
 });
+
+test('animated water atlas uses HALF the atlas width per frame; second frame is not out of range',()=>{
+ const code=readFileSync('src/field/landscape.js','utf8');
+ assert.match(code,/const \[atlasWidth,h\]=specs\[kind\+'Motion'\]/);
+ assert.match(code,/frameWidth=atlasWidth\/frames/);
+ assert.match(code,/ctx\.drawImage\(atlas,i\*frameWidth,0,frameWidth,h,0,0,frameWidth,h\)/);
+ assert.doesNotMatch(code,/ctx\.drawImage\(atlas,i\*w,0,w,h,0,0,w,h\)/);
+});

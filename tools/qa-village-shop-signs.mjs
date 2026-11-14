@@ -110,7 +110,7 @@ try{
         });
         await page.screenshot({path:'artifacts/rotate-game-portrait.png'});
         await page.setViewportSize({width,height});
-        await page.waitForFunction(()=>getComputedStyle(document.querySelector('#landscape-required')).display==='none');
+        await page.waitForFunction(()=>getComputedStyle(document.querySelector('#landscape-required')).display==='none' && !document.querySelector('#game-shell').inert);
         const rotated=await page.evaluate(()=>{
           const b=window.__gameBeforeRotation,frame=document.querySelector('#game-scene');
           return frame===b.frame&&frame.src===b.src &&
@@ -130,6 +130,11 @@ try{
         const before=await page.evaluate(()=>window.KIKOKU_GAME?.audio?.trackName);
         const toggle=page.locator('#field-menu-toggle');
         await toggle.waitFor({state:'visible'});
+        await page.evaluate(()=>{
+          const key='kikokuno-hanamusubi-battle-player';
+          const hero=JSON.parse(localStorage.getItem(key));
+          if(hero){hero.hp=6;localStorage.setItem(key,JSON.stringify(hero));}
+        });
         await toggle.click();
         await page.waitForFunction(()=>{
           const m=document.querySelector('#field-menu-backdrop');
@@ -144,10 +149,29 @@ try{
         if(!menu.status.includes('緋月')||!menu.items.includes('薬草')||menu.bgm!==before||
            !menu.scene.includes('/village/'))issues.push(label+' menu contract failed '+JSON.stringify(menu));
         await page.screenshot({path:'artifacts/field-menu-'+label+'.png',fullPage:true});
-        await page.locator('#field-menu-commands button').filter({hasText:'強さ'}).click();
+        // Real on-screen D-pad/A/B: move across menu without tapping the text.
+        await page.locator('[data-menu-dir="down"]').click(); // 術
+        await page.locator('[data-menu-dir="down"]').click(); // 装備
+        await page.locator('[data-menu-dir="down"]').click(); // 強さ
         const detailText=await page.locator('#field-menu-detail').innerText();
-        if(!detailText.includes('攻撃')||!detailText.includes('守備'))issues.push(label+' status menu missing combat stats');
-        await page.locator('#field-menu-close').click();
+        const menuState=await page.locator('#field-menu-commands').getAttribute('data-menu-pane');
+        if(menuState!=='commands'||!detailText.includes('攻撃')||!detailText.includes('守備'))
+          issues.push(label+' gamepad navigation to status failed '+menuState+' '+detailText);
+        await page.locator('#field-menu-action-b').click();
+        await page.waitForFunction(()=>document.querySelector('#field-menu-backdrop').hidden);
+        // Reopen and select/use the herb without returning to walking input.
+        await toggle.click();
+        await page.locator('#field-menu-action-a').click();
+        if(await page.locator('#field-menu-detail').getAttribute('data-menu-pane')!=='detail')
+          issues.push(label+' A did not enter item submenu');
+        await page.locator('#field-menu-action-a').click();
+        const herbs=await page.locator('#field-menu-detail').innerText();
+        if(!herbs.includes('薬草')||!herbs.includes('×2'))
+          issues.push(label+' field item not consumed by A '+herbs);
+        await page.locator('#field-menu-action-b').click();
+        if(await page.locator('#field-menu-detail').getAttribute('data-menu-pane')!=='commands')
+          issues.push(label+' B did not return to commands');
+        await page.locator('#field-menu-action-b').click();
         await page.waitForFunction(()=>document.querySelector('#field-menu-backdrop').hidden);
       }
       // Verify enter/leave from real contact movement, not a direct room URL.

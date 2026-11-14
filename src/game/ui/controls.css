@@ -38,7 +38,7 @@ main .viewport canvas{touch-action:none}
 .field-hud output{font-size:12px;text-align:left;color:#f7efdb}
 @media(max-height:720px){#pad .dpad{transform:scale(.84);transform-origin:left bottom}#pad #action-a{width:72px;height:72px}#pad #action-b{width:54px;height:54px}}
 @media(max-width:380px){#pad .dpad{left:max(5px,env(safe-area-inset-left))}#pad #action-a{right:max(7px,env(safe-area-inset-right));width:70px;height:70px}#pad #action-b{right:max(86px,calc(env(safe-area-inset-right) + 80px));width:50px;height:50px}}
-@media(orientation:landscape){#pad{height:calc(135px + env(safe-area-inset-bottom))}#pad .dpad{bottom:calc(6px + env(safe-area-inset-bottom));transform:scale(.72);transform-origin:left bottom}#pad #action-a{bottom:calc(16px + env(safe-area-inset-bottom))}#pad #action-b{bottom:calc(46px + env(safe-area-inset-bottom))}}
+@media(orientation:landscape){#pad{height:calc(135px + env(safe-area-inset-bottom))}#pad .dpad{bottom:calc(6px + env(safe-area-inset-bottom));transform:scale(.85);transform-origin:left bottom}#pad #action-a{bottom:calc(16px + env(safe-area-inset-bottom))}#pad #action-b{bottom:calc(46px + env(safe-area-inset-bottom))}}
 @media(prefers-reduced-transparency:reduce){#pad .dpad button,#pad .round{opacity:1;backdrop-filter:none;-webkit-backdrop-filter:none}}
 
 /* The village HUD also stays below the iPhone notch in immersive mode. */

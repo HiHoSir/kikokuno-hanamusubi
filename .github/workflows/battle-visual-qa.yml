@@ -1,0 +1,35 @@
+name: Battle browser visual QA
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/game/battle/**'
+      - 'src/game/index.html'
+      - 'src/game/ui/controls.css'
+      - 'src/game/ui/landscape-only.css'
+      - 'src/game/ui/landscape-only.mjs'
+      - 'tools/qa-battle-browser.mjs'
+      - '.github/workflows/battle-visual-qa.yml'
+  workflow_dispatch:
+jobs:
+  battle-chrome:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser QA without production dependencies
+        run: |
+          npm install --no-save playwright@1.62.1
+          npx playwright install --with-deps chromium
+      - name: Inspect landscape battles and portrait rotation gate in Chromium
+        run: node tools/qa-battle-browser.mjs
+      - name: Upload screenshots on success or failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: battle-browser-screenshots
+          path: artifacts/battle-*.png
+          if-no-files-found: warn

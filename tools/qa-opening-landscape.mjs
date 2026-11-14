@@ -75,6 +75,12 @@ try{
  // Reorient while staying in the same opening document; don't lose the movie element/time.
  await page.evaluate(()=>{window.__movieBefore=document.querySelector('#opening-video');});
  await page.setViewportSize({width:390,height:844});
+ // CSS media queries settle before matchMedia change and the movie pause event.
+ await page.waitForFunction(()=>{
+   const video=document.querySelector('#opening-video');
+   return getComputedStyle(document.querySelector('#landscape-required')).display==='grid'
+     &&document.querySelector('#opening').inert&&video.paused;
+ },null,{timeout:8000});
  const portrait=await page.evaluate(()=>({
    gate:getComputedStyle(document.querySelector('#landscape-required')).display,
    paused:document.querySelector('#opening-video').paused,

@@ -162,10 +162,31 @@ try{
       return times;
     };
     const baseline=measure(false),cached=measure(true);
-    w.YK_FIELD_SHORE_CACHE=true;
+    // Freeze water frame to compare the actual final pixels, not just layout.
+    // The two paths should be byte-identical when supplied the same animation.
+    const ownNow=Object.getOwnPropertyDescriptor(w.performance,'now');
+    Object.defineProperty(w.performance,'now',{configurable:true,value:()=>120000});
+    let mismatchedPixels=0;
+    try{
+      w.YK_FIELD_SHORE_CACHE=false;
+      draw();
+      const before=ctx.getImageData(0,0,ctx.canvas.width,ctx.canvas.height).data.slice();
+      w.YK_FIELD_SHORE_CACHE=true;
+      draw();
+      const after=ctx.getImageData(0,0,ctx.canvas.width,ctx.canvas.height).data;
+      for(let i=0;i<before.length;i+=4){
+        if(before[i]!==after[i]||before[i+1]!==after[i+1]||
+          before[i+2]!==after[i+2]||before[i+3]!==after[i+3])mismatchedPixels++;
+      }
+    }finally{
+      if(ownNow)Object.defineProperty(w.performance,'now',ownNow);
+      else delete w.performance.now;
+      w.YK_FIELD_SHORE_CACHE=true;
+    }
     const median=a=>{const s=[...a].sort((x,y)=>x-y);return Math.round(s[3]*100)/100;};
     return {baselineMs:median(baseline),cachedMs:median(cached),
       ratio:Number((median(cached)/median(baseline)).toFixed(3)),
+      mismatchedPixels,
       baselineSamples:baseline.map(Math.round),cachedSamples:cached.map(Math.round)};
   });
   // Heavy terrain drawing stops while the field menu covers the scene,
@@ -220,6 +241,7 @@ const failures=results.filter(r=>{
  const ratio=width/height,realRatio=r.scene[0]/r.scene[1];
  const barOverlays=r.pad[0]>=0 && r.pad[0]<height;
  return r.errors.some(e=>e.includes('pageerror')||e.includes('HTTP 404'))||
+ !r.shoreComparison||r.shoreComparison.mismatchedPixels!==0||
  !r.profile||r.profile.frames<3||r.profile.measuredSamples<3||r.profile.viewport[0]!==r.scene[0]||
  !r.fieldPause||r.fieldPause.pausedFrames!==r.fieldPause.afterPause||!r.fieldPause.preserved||
  !r.portraitPause||r.portraitPause.before!==r.portraitPause.after||!r.portraitPause.preserved||

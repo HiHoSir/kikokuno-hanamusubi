@@ -31,7 +31,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: field-chrome-screenshots
-          path: |
-            artifacts/field-*.png
-            artifacts/field-rowchunks-metrics.json
+          path: artifacts/field-*.png
           if-no-files-found: warn

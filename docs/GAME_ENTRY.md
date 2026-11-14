@@ -52,7 +52,7 @@
 - フィールドは正方形レンダリングの縦横比を維持して `object-fit:cover` で画面いっぱいに配置。細長い画面では左右または上下が一部トリミングされる。
 - `src/game/ui/controls.css` の `-webkit-user-select:none` ほか、`selection-guard.mjs` で選択、ドラッグ、長押しのコンテキストメニューを禁止。入力の `pointerdown` やタップを抑止しない。
 - タイトルから本編までWebアプリ設定 `src/game/app.webmanifest` とApple用metaタグを共有。Safari通常タブではブラウザUIを消せないため、ブラウザの共有メニューから「ホーム画面に追加」してWebアプリとして開けばアドレスバーなしで利用可能。
-- QA: iPhone Safari縦横、ノッチ・ホームバーとの非重複、画面内の長押し選択不可、A/BとD-padの継続操作、フィールドのトリミングとカメラを点検。ホーム画面からの起動も別途実機確認。
+- QA: iPhone Safari**横持ちで**ノッチ・ホームバーとの非重複、長押し選択不可、A/BとD-padの継続操作、フィールドの表示とカメラを点検。縦持ちは回転案内のみを検査。ホーム画面からの起動も別途実機確認。
 
 ## BGM・SE実装（2026-11-12）
 - BGM正本は `assets/audio/bgm/`。ユーザー提供のBGMパックから新規採用し、音源の重複を避けるため旧 `review/audio/bgm-pack/*.ogg` は移動。対応MIDIは `review/` に残し、ゲームが参照しない。

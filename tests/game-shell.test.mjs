@@ -84,10 +84,21 @@ test('field menu has its own on-screen gamepad with no duplicate scene control I
   const css=readFileSync('src/game/ui/field-menu.css','utf8');
   for(const dir of ['up','down','left','right'])assert.match(html,new RegExp('data-menu-dir="'+dir+'"'));
   for(const id of ['field-menu-action-a','field-menu-action-b','field-menu-controller'])assert.ok(html.includes('id="'+id+'"'));
-  for(const code of ['function direction(dir)','function confirm()','function back()','pane=','frame.style.pointerEvents','data-menu-command'])
+  for(const code of ['function direction(dir)','function confirm()','function back()','pane=','frame.style.pointerEvents','dataset.menuCommand'])
     assert.ok(js.includes(code),code);
   assert.match(css,/#field-menu-dpad/);
   assert.match(css,/\.menu-focus/);
   assert.doesNotMatch(html,/\sid="action-a"/);
   assert.doesNotMatch(html,/\sid="action-b"/);
+});
+
+test('landscape D-pad touch targets are at least 44 CSS pixels when rendered',()=>{
+ const controls=readFileSync('src/game/ui/controls.css','utf8');
+ const field=readFileSync('src/field/index.html','utf8');
+ const battle=readFileSync('src/game/battle/battle.css','utf8');
+ const menu=readFileSync('src/game/ui/field-menu.css','utf8');
+ assert.match(controls,/@media\(orientation:landscape\)[^\n]*transform:scale\(\.85\)/);
+ assert.match(field,/transform:scale\(\.85\)/);
+ assert.match(battle,/#pad \.dpad\{[^\n]*transform:scale\(\.85\)/);
+ assert.match(menu,/#field-menu-dpad button\{[^\n]*width:44px;height:44px/);
 });

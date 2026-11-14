@@ -131,7 +131,7 @@ body{margin:0;background:#0c1424}
  .battle-message p{font-size:clamp(11px,1.55vw,15px)}
  .viewport::after{display:none}
  #pad{height:calc(135px + env(safe-area-inset-bottom))}
- #pad .dpad{width:156px;height:156px;left:max(14px,env(safe-area-inset-left));bottom:calc(6px + env(safe-area-inset-bottom));transform:scale(.72);transform-origin:left bottom}
+ #pad .dpad{width:156px;height:156px;left:max(14px,env(safe-area-inset-left));bottom:calc(6px + env(safe-area-inset-bottom));transform:scale(.85);transform-origin:left bottom}
  #pad .dpad::before{left:52px;top:52px;width:52px;height:52px}
  #pad .dpad button{width:52px;height:52px;min-width:52px;min-height:52px}
  #pad .dpad #up{top:0;left:52px}

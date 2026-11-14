@@ -168,8 +168,28 @@ try{
   }));
   const fieldPause={pausedFrames,afterPause,resumedFrames:recovered.frameCount,
     preserved:beforeMenu.scene===recovered.scene&&beforeMenu.bgm===recovered.bgm};
+  await page.setViewportSize({width:390,height:844});
+  await page.waitForFunction(()=>{
+    const doc=document.querySelector('iframe')?.contentWindow;
+    return getComputedStyle(document.querySelector('#landscape-required')).display==='grid'&&
+      doc?.__FIELD_RENDER_PAUSED===true;
+  });
+  const rotateBefore=await page.evaluate(()=>document.querySelector('iframe').contentWindow.__FIELD_RENDER_PROFILE.frames);
+  await page.waitForTimeout(550);
+  const rotateAfter=await page.evaluate(()=>document.querySelector('iframe').contentWindow.__FIELD_RENDER_PROFILE.frames);
+  await page.setViewportSize({width,height});
+  await page.waitForFunction(()=>{
+    const doc=document.querySelector('iframe')?.contentWindow;
+    return getComputedStyle(document.querySelector('#landscape-required')).display==='none'&&
+      doc?.__FIELD_RENDER_PAUSED===false;
+  });
+  const portraitPause={before:rotateBefore,after:rotateAfter,
+    preserved:await page.evaluate(data=>
+      document.querySelector('iframe').src===data.scene&&
+      window.KIKOKU_GAME.audio.trackName===data.bgm,beforeMenu)};
 
-  results.push({viewport:width+'x'+height,...detail,screenshot,profile,idleBefore,fieldPause,errors});
+
+  results.push({viewport:width+'x'+height,...detail,screenshot,profile,idleBefore,fieldPause,portraitPause,errors});
   await page.close();
  }
 }finally{await browser?.close();server.close();}
@@ -181,6 +201,7 @@ const failures=results.filter(r=>{
  return r.errors.some(e=>e.includes('pageerror')||e.includes('HTTP 404'))||
  !r.profile||r.profile.frames<3||r.profile.measuredSamples<3||r.profile.viewport[0]!==r.scene[0]||
  !r.fieldPause||r.fieldPause.pausedFrames!==r.fieldPause.afterPause||!r.fieldPause.preserved||
+ !r.portraitPause||r.portraitPause.before!==r.portraitPause.after||!r.portraitPause.preserved||
  r.fieldPause.resumedFrames<=r.fieldPause.afterPause||
  r.draws<1||!Number.isFinite(r.foot)||r.foot<0||
  !r.visible||r.visible.relTop<0||r.visible.relBottom>1||

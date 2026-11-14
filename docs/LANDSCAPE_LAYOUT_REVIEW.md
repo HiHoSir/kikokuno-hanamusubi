@@ -17,7 +17,7 @@
 | 鬼灯村 | 横向き画面・NPC・看板・入退店をChromeで検査済み | カメラ倍率と端の遮蔽 |
 | 室内 | 店番・販売・退出はChromeで検査済み | 小型横画面のメニュー操作 |
 | フィールド | 正方形の上下クロップを廃止し、直接パノラマ描画へ変更 | iPhoneのFPSと雲の見え方 |
-| 天妖の社 | resizeとカメラ計算は縦横比に対応 | 横向き実ブラウザの水・鳥居・遮蔽確認（未実施） |
+| 天妖の社 | resizeとカメラ計算は縦横比に対応 | 900×390・844×390・1536×706で実ブラウザの鳥居・浅瀬・背景描画、縦向き復帰・BGM維持を検査済み |
 | 戦闘 | 横画面の案Aを採用、敵1体・2体のChrome検査合格 | 旧portrait専用CSSの段階的整理 |
 | コマンド | 横画面の2カラムで親ゲーム内に表示、BGMは継続 | D-pad・A/B操作との統一（未実装） |
 
@@ -31,7 +31,8 @@
 ## 自動検査・残作業
 - フィールド: tools/qa-field-browser.mjs
 - 村・室内・商店: tools/qa-village-shop-signs.mjs
+- 天妖の社: tools/qa-tenyo-landscape.mjs
 - 戦闘: tools/qa-battle-browser.mjs
 - OP: tools/qa-opening-landscape.mjs
-- 天妖の社の横向き実ブラウザ画像検査を追加し、見切れと伸長を検証する。
+- 天妖の社は tools/qa-tenyo-landscape.mjs と GitHub Actions で横向き実ブラウザ検査を追加済み。
 - 旧縦向きCSSの一括削除は避け、現行の横向き表示を守る回帰検査とセットで整理する。

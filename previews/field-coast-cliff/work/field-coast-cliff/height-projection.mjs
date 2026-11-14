@@ -53,11 +53,30 @@ function depthRuns(depth,width,height,originY) {
  return {rows,columns,maxDepth};
 }
 
+// Sample from the upper surface toward the edges whose walls are hidden or
+// edge-on in this camera. Keep the rim inside the existing terrain silhouette.
+const rimOpacity=[.88,.79,.64,.45,.28,.13];
+function rimMix(levels,data,index,x,y,width,stepThreshold) {
+ if(levels[index]<=stepThreshold)return 0;
+ for(let step=1;step<=rimOpacity.length;step++){
+  const north=index-step*width,west=index-step,east=index+step;
+  const rearDrop=y>=step&&levels[north+width]-levels[north]>stepThreshold&&data[north*4+3]>=128;
+  if(rearDrop)return rimOpacity[step-1];
+  if(step>4)continue;
+  const westDrop=x>=step&&levels[west+1]-levels[west]>stepThreshold&&data[west*4+3]>=128;
+  const eastDrop=x+step<width&&levels[east-1]-levels[east]>stepThreshold&&data[east*4+3]>=128;
+  if(westDrop||eastDrop)return rimOpacity[step-1];
+ }
+ return 0;
+}
+
 export function bakeHeightProjection({width,height,data},levels,rock,rise,maxLevel,levelScale=1) {
  const originY=-maxLevel*rise;
  const projectedHeight=height-originY;
  const pixels=new Uint8ClampedArray(width*projectedHeight*4);
  const depth=new Uint16Array(width*projectedHeight);
+ // A ramp climbs at most 1/32 of a level between consecutive samples.
+ const stepThreshold=.15*levelScale;
  for(let y=0;y<height;y++)for(let x=0;x<width;x++){
   const i=y*width+x,src=i*4;
   if(!data[src+3])continue;
@@ -67,11 +86,20 @@ export function bakeHeightProjection({width,height,data},levels,rock,rise,maxLev
   const bottom=Math.min(height,Math.round(terrainY(y+1,lower,rise)));
   const wall=h-lower>.15;
   const span=bottom-destY;
+  const rim=rimMix(levels,data,i,x,y,width,stepThreshold);
+  const rimColor=rim?((y%cell)*cell+x%cell)*4:0;
   for(let v=destY;v<Math.max(destY+1,bottom);v++){
    const dst=(v-originY)*width+x;
    const p=dst*4;
    if(v===destY||!wall){
-    pixels[p]=data[src];pixels[p+1]=data[src+1];pixels[p+2]=data[src+2];pixels[p+3]=data[src+3];
+    if(rim){
+     for(let channel=0;channel<3;channel++){
+      pixels[p+channel]=data[src+channel]*(1-rim)+rock[rimColor+channel]*.85*rim;
+     }
+    }else{
+     pixels[p]=data[src];pixels[p+1]=data[src+1];pixels[p+2]=data[src+2];
+    }
+    pixels[p+3]=data[src+3];
     depth[dst]=data[src+3]>=128?y+1:0;
    }else{
     const d=v-destY;

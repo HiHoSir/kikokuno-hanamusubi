@@ -59,7 +59,7 @@ export function createTileLayerPrototype(context,map,drawHero,chips,hero){
  function projectionStrips(width,height){
   if(stripsWidth===width&&stripsHeight===height)return strips;
   stripsWidth=width;stripsHeight=height;strips=[];
-  const view={x:0,y:0,preset:0,centerX:width/2};
+  const view={x:0,y:0,preset:0,centerX:width/2,foregroundEase:!!chips};
   for(let sy=136;sy<Math.min(544,height);sy+=4){
    const sh=Math.min(4,height-sy);
    const left=landscape.unproject(0,sy,view,zoom);
@@ -179,7 +179,7 @@ export function createTileLayerPrototype(context,map,drawHero,chips,hero){
  }
  function draw(c,actor,time,viewWidth=c.canvas.width){
   prepare();
-  const height=c.canvas.height,cam={x:actor.x,y:actor.foot,preset:0,centerX:viewWidth/2};
+  const height=c.canvas.height,cam={x:actor.x,y:actor.foot,preset:0,centerX:viewWidth/2,foregroundEase:!!chips};
   c.save();c.imageSmoothingEnabled=false;c.clearRect(0,0,viewWidth,height);
   c.fillStyle='#192f3c';c.fillRect(0,0,viewWidth,height);
   // Match the normal Momotaro-style sky, including mirrored panorama sides.

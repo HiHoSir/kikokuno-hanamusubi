@@ -377,9 +377,14 @@ window.YK_LANDSCAPE=(()=>{
   const origin=offset[anchor];for(let y=0;y<=800;y++)offset[y]-=origin;
   const curve={offset,p,zoom,anchor};curves.set(key,curve);return curve;
  }
- function lineAt(y,zoom=1.4,preset=0){
+ function lineAt(y,zoom=1.4,preset=0,foregroundEase=false){
+  // Near the lower edge, ease the change in horizontal spacing and sprite
+  // size. Keep the original depth curve so ground and objects keep their feet.
+  const nearStart=365,nearSpan=30;
+  const depth=Math.max(0,y-nearStart);
+  const scaleRow=foregroundEase&&depth>0?nearStart+depth/(1+depth/nearSpan):y;
   const c=cameraCurve(zoom,preset),i=Math.max(0,Math.min(799,Math.floor(y))),f=Math.max(0,Math.min(1,y-i));
-  const scale=zoom*perspectiveScale(y/543,c.p),xScale=c.p.softNear?scale:scale*(.94+.06*Math.max(0,Math.min(1,y/543)));
+  const scale=zoom*perspectiveScale(scaleRow/543,c.p),xScale=c.p.softNear?scale:scale*(.94+.06*Math.max(0,Math.min(1,scaleRow/543)));
   return {offset:c.offset[i]*(1-f)+c.offset[i+1]*f,scale,xScale};
  }
  function project(x,y,camera,zoom=1.4){
@@ -389,10 +394,10 @@ window.YK_LANDSCAPE=(()=>{
   // Invert the cached piecewise-linear curve directly. Avoid 24 scale/power
   // evaluations per object and terrain vertex on every animation frame.
   let lo=0,hi=800;while(hi-lo>1){const mid=(lo+hi)>>1;if(c.offset[mid]<=vy)lo=mid;else hi=mid;}
-  const sy=lo+(vy-c.offset[lo])/(c.offset[hi]-c.offset[lo]),l=lineAt(sy,zoom,camera.preset||0),xs=camera.horizontalScale||l.xScale;return {x:(camera.centerX??320)+vx*xs,y:sy,scale:l.scale,xScale:xs};
+  const sy=lo+(vy-c.offset[lo])/(c.offset[hi]-c.offset[lo]),l=lineAt(sy,zoom,camera.preset||0,camera.foregroundEase),xs=camera.horizontalScale||l.xScale;return {x:(camera.centerX??320)+vx*xs,y:sy,scale:l.scale,xScale:xs};
  }
  function unproject(x,y,camera,zoom=1.4){
-  if(y<0||y>800)return null;const l=lineAt(y,zoom,camera.preset||0),vx=(x-(camera.centerX??320))/(camera.horizontalScale||l.xScale),vy=l.offset,a=camera.angle||0,cs=Math.cos(a),sn=Math.sin(a);
+  if(y<0||y>800)return null;const l=lineAt(y,zoom,camera.preset||0,camera.foregroundEase),vx=(x-(camera.centerX??320))/(camera.horizontalScale||l.xScale),vy=l.offset,a=camera.angle||0,cs=Math.cos(a),sn=Math.sin(a);
   return {x:camera.x+cs*vx-sn*vy,y:camera.y+sn*vx+cs*vy,scale:l.scale};
  }
  // Build only small visible ground chunks. Avoid several 2560² temporary

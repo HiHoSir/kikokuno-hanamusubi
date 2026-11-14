@@ -140,6 +140,7 @@ test('field movement retains the 32px grid and projects the SD from its foot anc
     const canvas = {
       save() {}, restore() {}, clearRect() {}, fillRect() {}, translate() {}, scale() {},
       beginPath() {}, ellipse() {}, fill() {}, drawImage: (...args) => draws.push(args),
+      canvas:{width:640,height:544,dataset:{},getBoundingClientRect(){return {width:900,height:390};}},
     };
     context.YK_LANDSCAPE.drawQuarter = (_canvas, _map, actor) => actor.draw(100, 200, 0.75);
     createFieldRenderer(canvas, hero)({x, y, row: 2, column: 1}, 0);
@@ -188,76 +189,37 @@ test('a direction tap between animation frames still moves one cell', async () =
   assert.equal(scene.dataset.y, '69');
 });
 
-test('landscape field crops the real rendered hero and never double-crops in CSS', async () => {
-  const html=source(entry);
-  assert.match(html, /<main class="field-screen" data-bgm="field">/);
-  assert.match(html, /@media \(orientation:landscape\) and \(max-height:560px\)/);
-  assert.match(html, /grid-template-rows:minmax\(0,1fr\) 108px/);
-  assert.match(html, /main\.field-screen #pad\{[\s\S]*?position:relative/);
-  assert.match(html, /main\.field-screen \.viewport canvas\{[\s\S]*?object-fit:fill/);
-  assert.doesNotMatch(html, /object-position:center 65%/);
-
-  const worldContext=loadField();
-  worldContext.YK_LANDSCAPE.drawQuarter=(_ctx,_map,actor)=>actor.draw(320,354,1.08);
-  globalThis.window=worldContext;
-  const onScreenCalls=[];
-  let width=1536,height=440;
-  const display={width:768,height:768,dataset:{},
-    getBoundingClientRect(){return {width,height};}};
-  const paint=(canvas,calls)=>({
-    canvas,save(){},restore(){},clearRect(){},fillRect(){},
-    translate(){},scale(){},beginPath(){},ellipse(){},fill(){},
-    drawImage(...args){calls.push(args);},
-    set imageSmoothingEnabled(value){this._smoothing=value;}
-  });
-  const displayContext=paint(display,onScreenCalls);
-  let sourceBuffer;
-  globalThis.document={createElement(tag){
-    assert.equal(tag,'canvas');
-    const buffer={width:0,height:0};
-    buffer.getContext=()=>paint(buffer,[]);
-    sourceBuffer=buffer;
-    return buffer;
-  }};
-  try{
-    // The query avoids a cached module instance whose world was constructed
-    // by a different test. Test the actual exported production renderer.
-    const {createFieldRenderer,fieldViewportCrop}=await import('../src/field/runtime.mjs?landscape-camera-regression');
-    const render=createFieldRenderer(displayContext,{});
-    for(const [w,h] of [[1536,440],[900,282],[1179,320]]){
-      width=w;height=h;
-      onScreenCalls.length=0;
-      render({x:1200,y:2256,row:0,column:0},0);
-      const ratio=width/height;
-      const heroFoot=Number(display.dataset.fieldHeroFoot);
-      const crop=fieldViewportCrop(ratio,heroFoot);
-      assert.equal(display.width,768);
-      assert.equal(display.height,Math.round(768/ratio));
-      assert.equal(sourceBuffer.width,768);
-      assert.equal(sourceBuffer.height,768);
-      assert.equal(onScreenCalls.length,1,'a single offscreen canvas is composited onto screen');
-      const [buffer,sx,sy,sw,sh,dx,dy,dw,dh]=onScreenCalls[0];
-      assert.equal(buffer,sourceBuffer);
-      assert.deepEqual([sx,sw,sh,dx,dy,dw,dh],[0,768,crop.height,0,0,768,display.height]);
-      // dataset is an integer diagnostic; the live renderer keeps sub-pixel
-      // precision from its actual projected foot before rounding the label.
-      assert.ok(Math.abs(sy-crop.top)<1,'source crop must track drawn foot precisely');
-      const footFraction=(heroFoot-sy)/sh;
-      assert.ok(footFraction>=.65&&footFraction<=.71,
-        'rendered hero foot must remain within 65–71% of the visible field: '+footFraction);
-      assert.ok(sy>=0&&sy+sh<=768,'crop must remain inside original projection');
-    }
-    // Switching back to portrait restores the original 768-square field;
-    // nothing about its game state or world coordinates is reset.
-    width=390;height=710;
-    onScreenCalls.length=0;
-    render({x:1200,y:2256,row:0,column:0},0);
-    assert.deepEqual([display.width,display.height],[768,768]);
-    assert.equal(display.dataset.fieldHeroFoot!==undefined,true);
-    assert.equal(onScreenCalls.length,1,'portrait continues to draw the hero directly');
-    assert.equal(onScreenCalls[0][0].constructor,Object);
-  }finally{
-    delete globalThis.window;
-    delete globalThis.document;
-  }
+test('landscape field draws directly into a wider viewport without a portrait crop',async()=>{
+ const html=source(entry);
+ assert.match(html,/<main class="field-screen" data-bgm="field">/);
+ assert.match(html,/@media \(orientation:landscape\)/);
+ assert.match(html,/main\.field-screen #pad\{[\s\S]*?background:transparent/);
+ assert.doesNotMatch(html,/grid-template-rows:minmax\(0,1fr\) 108px/);
+ assert.doesNotMatch(html,/object-fit:cover/);
+ const worldContext=loadField();
+ worldContext.YK_LANDSCAPE.drawQuarter=(_ctx,_map,actor,_zoom,settings)=>{
+   assert.ok(settings.viewportWidth>=640);
+   actor.draw(settings.viewportWidth/2,354,1.08);
+ };
+ globalThis.window=worldContext;
+ const draws=[];
+ let cssW=900,cssH=390;
+ const display={width:640,height:544,dataset:{},getBoundingClientRect(){return {width:cssW,height:cssH};}};
+ const context={canvas:display,save(){},restore(){},fillRect(){},beginPath(){},ellipse(){},fill(){},drawImage(...args){draws.push(args);}};
+ try{
+   const {createFieldRenderer}=await import('../src/field/runtime.mjs?panoramic-regression');
+   const renderer=createFieldRenderer(context,{});
+   for(const [w,h,expected] of [[900,390,1255],[1536,706,1184],[844,390,1177]]){
+     cssW=w;cssH=h;draws.length=0;
+     renderer({x:1200,y:2256,row:0,column:0},0);
+     assert.deepEqual([display.width,display.height],[expected,544]);
+     assert.equal(display.dataset.fieldViewportWidth,String(expected));
+     assert.ok(!Object.hasOwn(display.dataset,'fieldCropTop'));
+     assert.equal(draws.length,1,'the actual source sprite is painted once directly onto the wide field');
+     const args=draws[0];
+     assert.equal(args.length,9);
+     assert.ok(Math.abs(args[5]+args[7]/2-expected/2)<40,'hero stays horizontally centered');
+     assert.ok(Math.abs(Number(display.dataset.fieldHeroFoot)-369)<=2,'actual sprite foot follows the same projection');
+   }
+ }finally{delete globalThis.window;}
 });

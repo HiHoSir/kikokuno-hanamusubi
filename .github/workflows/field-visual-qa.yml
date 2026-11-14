@@ -5,6 +5,7 @@ on:
     paths:
       - 'src/field/**'
       - 'src/game/index.html'
+      - 'src/game/navigation/game-shell.mjs'
       - 'src/game/ui/controls.css'
       - 'src/game/ui/landscape-only.css'
       - 'src/game/ui/landscape-only.mjs'

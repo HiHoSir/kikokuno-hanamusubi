@@ -29,11 +29,13 @@ try{
   page.on('response',r=>{if(r.status()>=400)errors.push('HTTP '+r.status()+' '+r.url())});
   await page.goto(origin+'/',{waitUntil:'domcontentloaded'});
   await page.evaluate(()=>sessionStorage.setItem('kikokuno-hanamusubi-next-entry',
-    JSON.stringify({route:'/src/game/',expiresAt:Date.now()+120000})));
-  await page.goto(origin+'/src/game/',{waitUntil:'domcontentloaded'});
-  await page.waitForFunction(()=>typeof window.KIKOKU_GAME?.navigate==='function',{timeout:15000});
-  await page.evaluate(()=>window.KIKOKU_GAME.navigate(
-    new URL('/src/field/?from=village&renderer=tile-layers&profile=1',location.href).href));
+    JSON.stringify({route:'/src/game/?field-renderer-preview=1',expiresAt:Date.now()+120000})));
+  await page.goto(origin+'/src/game/?field-renderer-preview=1',{waitUntil:'domcontentloaded'});
+  await page.waitForFunction(()=>typeof window.KIKOKU_GAME?.setFieldRenderer==='function',{timeout:15000});
+  await page.evaluate(()=>{
+    window.KIKOKU_GAME.setFieldRenderer('tile-layers');
+    window.KIKOKU_GAME.navigate(new URL('/src/field/?from=village&profile=1',location.href).href);
+  });
   try{
     await page.waitForFunction(()=>{
       const w=document.querySelector('iframe')?.contentWindow;
@@ -132,8 +134,67 @@ try{
    }
    result.landscapeCheckpoints=views.map(v=>v.label);
   }
+  // Exercise actual authorized child routing, not just URL rewriting:
+  // field -> battle -> field must preserve the preview renderer. Switching
+  // the comparison back to current mode must also survive a battle.
+  await page.evaluate(()=>{
+    const child=document.querySelector('iframe').contentWindow;
+    child.KIKOKU_ROUTE.go(new URL('/src/game/battle/',location.href));
+  });
+  await page.waitForFunction(()=>{
+    const f=document.querySelector('iframe'),w=f?.contentWindow;
+    return f?.src.includes('/src/game/battle/')&&w?.KIKOKU_ROUTE?.admitted===true;
+  },null,{timeout:20000});
+  await page.evaluate(()=>{
+    const child=document.querySelector('iframe').contentWindow;
+    child.KIKOKU_ROUTE.go(new URL('/src/field/?from=battle',location.href));
+  });
+  await page.waitForFunction(()=>{
+    const f=document.querySelector('iframe'),w=f?.contentWindow;
+    return f?.src.includes('/src/field/')&&f?.src.includes('from=battle')&&
+      f?.src.includes('renderer=tile-layers')&&w?.__FIELD_TILE_LAYER_TRIAL?.info?.draws>0&&
+      w.document.querySelector('#load')?.hidden===true;
+  },null,{timeout:60000});
+  const returnFromBattle=await page.evaluate(()=>({
+    mode:'tile-layers',
+    url:document.querySelector('iframe').src,
+    track:window.KIKOKU_GAME.audio.trackName,
+    water:document.querySelector('iframe').contentWindow.__FIELD_TILE_LAYER_TRIAL.info.animatedWater
+  }));
+  await page.evaluate(()=>{
+    window.KIKOKU_GAME.setFieldRenderer(null);
+    window.KIKOKU_GAME.navigate(new URL('/src/field/?from=village&profile=1',location.href));
+  });
+  await page.waitForFunction(()=>{
+    const f=document.querySelector('iframe'),w=f?.contentWindow;
+    return f?.src.includes('/src/field/')&&!f?.src.includes('renderer=')&&
+      w?.document.querySelector('#load')?.hidden===true;
+  },null,{timeout:60000});
+  await page.evaluate(()=>{
+    document.querySelector('iframe').contentWindow.KIKOKU_ROUTE.go(new URL('/src/game/battle/',location.href));
+  });
+  await page.waitForFunction(()=>{
+    const f=document.querySelector('iframe'),w=f?.contentWindow;
+    return f?.src.includes('/src/game/battle/')&&w?.KIKOKU_ROUTE?.admitted===true;
+  },null,{timeout:20000});
+  await page.evaluate(()=>{
+    document.querySelector('iframe').contentWindow.KIKOKU_ROUTE.go(new URL('/src/field/?from=battle',location.href));
+  });
+  await page.waitForFunction(()=>{
+    const f=document.querySelector('iframe'),w=f?.contentWindow;
+    return f?.src.includes('/src/field/')&&f?.src.includes('from=battle')&&
+      !f?.src.includes('renderer=')&&w?.document.querySelector('#load')?.hidden===true;
+  },null,{timeout:60000});
+  const returnToOriginal=await page.evaluate(()=>({
+    url:document.querySelector('iframe').src,track:window.KIKOKU_GAME.audio.trackName,
+    trial:!!document.querySelector('iframe').contentWindow.__FIELD_TILE_LAYER_TRIAL
+  }));
+  result.battleReturn={tile:returnFromBattle,original:returnToOriginal};
   results.push(result);
-  if(errors.length||result.animatedPixels<100||!result.fixedLand||
+  if(errors.length||!result.battleReturn.tile.water||
+     result.battleReturn.tile.track!=='field'||result.battleReturn.original.track!=='field'||
+     result.battleReturn.original.trial||
+     result.animatedPixels<100||!result.fixedLand||
      result.info.waterCells<1||result.info.builds!==1||result.info.waterFrames!==Math.floor((120000+360)/360)%2||
      result.info.staticBytes<100000||!Number.isFinite(result.ratio)||
      result.referenceMs<=0||result.candidateMs<=0)

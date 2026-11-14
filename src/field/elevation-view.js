@@ -134,12 +134,21 @@ window.YK_ELEVATION_VIEW=(()=>{
    // rather than stretching its mountains/clouds to fill panoramic screens.
    const horizonLeft=Math.floor((viewWidth-640)/2);
    const horizonRight=viewWidth-horizonLeft-640;
-   // Extend the same 1px boundary columns of the authored horizon into the
-   // peripheral sky. This avoids obvious repeated mountain/cloud cut seams.
+   // Mirror only the immediate outside edges at native pixel scale: unlike
+   // repeating the whole sky there is no hard tile seam, and unlike stretching
+   // its edge pixel there are no unnatural horizontal color bands.
    function drawHorizonBand(sy,sh){
-     if(horizonLeft>0)c.drawImage(art.horizon,0,sy,1,sh,0,sy,horizonLeft,sh);
+     if(horizonLeft>0){
+       c.save();c.translate(horizonLeft,0);c.scale(-1,1);
+       c.drawImage(art.horizon,0,sy,horizonLeft,sh,0,sy,horizonLeft,sh);
+       c.restore();
+     }
      c.drawImage(art.horizon,0,sy,640,sh,horizonLeft,sy,640,sh);
-     if(horizonRight>0)c.drawImage(art.horizon,639,sy,1,sh,horizonLeft+640,sy,horizonRight,sh);
+     if(horizonRight>0){
+       c.save();c.translate(horizonLeft+640+horizonRight,0);c.scale(-1,1);
+       c.drawImage(art.horizon,640-horizonRight,sy,horizonRight,sh,0,sy,horizonRight,sh);
+       c.restore();
+     }
    }
    drawHorizonBand(0,240);
   // Continue the same sea texture beyond the test map, as in the main field.

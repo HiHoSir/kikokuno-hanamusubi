@@ -12,6 +12,8 @@
   <meta name="theme-color" content="#000000">
   <title>鬼哭の花結び</title>
   <link rel="stylesheet" href="./src/title/title.css?v=dotgothic16">
+  <link rel="stylesheet" href="./src/game/ui/landscape-only.css?v=1">
+  <script type="module" src="./src/game/ui/landscape-only.mjs?v=1"></script>
   <script type="module" src="./src/title/title.js"></script>
 <link rel="stylesheet" href="./src/game/audio/audio.css">
 <script type="module" src="./src/game/audio/boot.mjs"></script>
@@ -40,5 +42,10 @@
     </section>
   <button id="sound-toggle" type="button" aria-label="サウンドを再生" aria-pressed="false">♪ 再生</button>
 </main>
+<aside id="landscape-required" class="landscape-required" role="status" aria-live="polite" aria-hidden="true">
+  <span class="landscape-required-icon" aria-hidden="true">▯</span>
+  <strong>横画面でプレイしてください</strong>
+  <p>端末を横向きにすると、そのまま遊べます。</p>
+</aside>
 </body>
 </html>

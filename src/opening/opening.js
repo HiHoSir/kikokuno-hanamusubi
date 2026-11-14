@@ -7,6 +7,8 @@ const message = document.querySelector('#playback-message');
 const skipButton = document.querySelector('#skip-opening');
 const gameUrl = new URL('../game/', document.baseURI);
 let navigating = false;
+const portrait=matchMedia('(orientation: portrait)');
+let resumeAfterRotation=false;
 
 function enterVillage() {
   if (navigating) return;
@@ -24,6 +26,8 @@ function hidePlayButton() {
 }
 
 async function playOpening() {
+  if(portrait.matches){resumeAfterRotation=true;return;}
+  resumeAfterRotation=false;
   try {
     if (video.error) video.load();
     await video.play();
@@ -34,6 +38,14 @@ async function playOpening() {
   }
 }
 
+// Safari does not reliably support programmatic rotation lock. Pause the movie
+// while the device is upright; a turn to landscape continues at the same time.
+function orientationChanged(){
+  if(portrait.matches){
+    if(!video.paused){resumeAfterRotation=true;video.pause();}
+  }else if(resumeAfterRotation){void playOpening();}
+}
+portrait.addEventListener?.('change',orientationChanged);
 playButton.addEventListener('click', playOpening);
 skipButton.addEventListener('click', enterVillage);
 video.addEventListener('playing', hidePlayButton);

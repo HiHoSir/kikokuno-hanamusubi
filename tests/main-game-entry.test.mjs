@@ -120,3 +120,27 @@ test('village entry evaluates the quest objective before loading map assets',()=
  `;
  execFileSync(process.execPath,['--input-type=module','-e',script],{timeout:10000,stdio:'pipe'});
 });
+
+test('all three top-level pages show the shared landscape-only gate; PWA prefers landscape',()=>{
+  for(const [path,css,js] of [
+    ['index.html','./src/game/ui/landscape-only.css','./src/game/ui/landscape-only.mjs'],
+    ['src/opening/index.html','../game/ui/landscape-only.css','../game/ui/landscape-only.mjs'],
+    ['src/game/index.html','./ui/landscape-only.css','./ui/landscape-only.mjs']
+  ]){
+    const source=readFileSync(path,'utf8');
+    assert.ok(source.includes('id="landscape-required"'),path);
+    assert.ok(source.includes(css),path);
+    assert.ok(source.includes(js),path);
+  }
+  const css=readFileSync('src/game/ui/landscape-only.css','utf8');
+  const js=readFileSync('src/game/ui/landscape-only.mjs','utf8');
+  assert.match(css,/@media\s*\(orientation:\s*portrait\)/);
+  assert.match(css,/z-index:120/);
+  assert.match(js,/inert\s*=\s*portrait/);
+  assert.match(js,/dispatchEvent\(new Event\('blur'\)\)/);
+  assert.doesNotMatch(js,/location\.reload|location\.replace|\.navigate\(/);
+  assert.equal(JSON.parse(readFileSync('src/game/app.webmanifest','utf8')).orientation,'landscape');
+  const video=readFileSync('src/opening/opening.js','utf8');
+  assert.match(video,/video\.pause\(\)/);
+  assert.match(video,/resumeAfterRotation/);
+});

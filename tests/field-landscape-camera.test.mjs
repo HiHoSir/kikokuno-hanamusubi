@@ -33,3 +33,13 @@ test('field profiling is opt-in and does not alter the rendered world or state',
  assert.match(browser,/p95Ms/);
  assert.match(browser,/ArrowRight/);
 });
+
+test('terrain UV triangles use cached native tiling instead of 3x atlas overdraw',()=>{
+ const view=readFileSync('src/field/elevation-view.js','utf8');
+ assert.match(view,/new WeakMap\(\)/);
+ assert.match(view,/function repeatingPattern\(c,im\)/);
+ assert.match(view,/c\.createPattern\(im,'repeat'\)/);
+ assert.match(view,/c\.fillRect\(x0,y0,x1-x0,y1-y0\)/);
+ assert.doesNotMatch(view,/repeatPadding|width=im\.width\*3/);
+ assert.doesNotMatch(view,/c\.createPattern\(art\.sea/);
+});

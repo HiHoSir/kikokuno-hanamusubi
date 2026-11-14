@@ -31,16 +31,14 @@ export function villageArrival(){return placeArrival('village');}
 export async function loadFieldArt() {
   const mode = typeof location==='undefined'?null:new URLSearchParams(location.search).get('renderer');
   if(!window.__FIELD_COAST_CLIFF_CHIPS&&(mode==='coast-cliff-chips'||mode==='tall-plateaus'||mode==='cliff-cells')){
-    const {loadTerrainChips,placeShoreTrees,composeTerrainChips}=await import('../../work/field-coast-cliff/terrain-chips.mjs?v=cliff-cell-2');
+    const {loadTerrainChips,placeShoreTrees,composeTerrainChips}=await import('../../work/field-coast-cliff/terrain-chips.mjs?v=cliff-cell-3');
     const chips=await loadTerrainChips({tallPlateaus:mode==='tall-plateaus',cliffCells:mode==='cliff-cells'});
     const changes=placeShoreTrees(world,chips['coast-mask']);
     window.YK_FIELD_ELEVATION.refreshCollision(world.mapData);
-    if(mode==='cliff-cells'){
-      const {placeCliffCells}=await import('../../work/field-coast-cliff/cliff-cells.mjs?v=cliff-cell-2');
-      placeCliffCells(world.mapData,window.YK_FIELD_TERRAIN.referenceComposition,
-        ()=>window.YK_FIELD_ELEVATION.refreshCollision(world.mapData),world);
-    }
-    window.__FIELD_COAST_CLIFF_CHIPS={art:chips,composeTerrainChips,shoreTreeChanges:changes};
+    const prepare=mode==='cliff-cells'
+      ? (await import('../../work/field-coast-cliff/cliff-cells.mjs?v=cliff-cell-3')).prepareCliffCells
+      : null;
+    window.__FIELD_COAST_CLIFF_CHIPS={art:chips,composeTerrainChips,shoreTreeChanges:changes,prepare};
   }
   const hero = new Image();
   hero.src = assets.url(assets.hero);
@@ -57,6 +55,13 @@ export async function loadFieldArt() {
       check();
     }),
   ]);
+  const fieldChips=window.__FIELD_COAST_CLIFF_CHIPS;
+  if(fieldChips?.prepare){
+    const baked=fieldChips.prepare(world,window.YK_FIELD_TERRAIN.referenceComposition,landscape,fieldChips.art,
+      fieldChips.composeTerrainChips,()=>window.YK_FIELD_ELEVATION.refreshCollision(world.mapData));
+    fieldChips.composeTerrainChips=()=>baked;
+    fieldChips.prepare=null;
+  }
   return hero;
 }
 

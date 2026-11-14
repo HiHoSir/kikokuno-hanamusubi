@@ -5,10 +5,6 @@ const atlasNames = ['coast-mask','coast-sand-0','coast-sand-1','coast-sand-2',
 const plateauFeet = ['cliff-1-foot','cliff-2-foot','cliff-3-foot',
   'cliff-forest-1-foot','cliff-forest-2-foot','cliff-forest-3-foot'];
 const footChipHeight = cell * 2;
-const cliffCellDirections = {
-  s:{row:0, along:[1,0]}, e:{row:3, along:[0,1]},
-  w:{row:6, along:[0,-1]}, n:{row:9, along:[-1,0]},
-};
 const isWater = t => t === 'sea' || t === 'river' || t === undefined;
 
 export async function loadTerrainChips({tallPlateaus = false, cliffCells = false} = {}) {
@@ -19,11 +15,11 @@ export async function loadTerrainChips({tallPlateaus = false, cliffCells = false
     const foot = plateauFeet.includes(id);
     const image = new Image();
     const url = new URL('./atlas/'+id+'-32.png',import.meta.url);
-    if(id==='cliff-cell')url.search = '?v=cliff-cell-2';
+    if(id==='cliff-cell')url.search = '?v=cliff-cell-3';
     if(foot)url.search = '?v=plateau-1';
     image.src = url.href;
     await image.decode();
-    if (image.width !== 128 || image.height !== (id==='cliff-cell' ? 384 : foot ? footChipHeight * 4 : 128)) throw Error('Invalid terrain atlas: '+id);
+    if (image.width !== 128 || image.height !== (id==='cliff-cell' ? 96 : foot ? footChipHeight * 4 : 128)) throw Error('Invalid terrain atlas: '+id);
     return [id,image];
   })));
 }
@@ -286,9 +282,7 @@ export function composeTerrainChips(map,landscape,art,cliffMask) {
     shoreline.push({x,y,px,py,cover,local});
     if(cover===0)waterCells++;
   }
-  const cellCliffs = map.cliffCells;
-  // Full-cell cliffs replace the offset cliff pass in this mode.
-  if(!cellCliffs)for(let y=-1;y<height;y++)for(let x=-1;x<width;x++){
+  for(let y=-1;y<height;y++)for(let x=-1;x<width;x++){
     const local=edgeSamples(get,x,y);
     const minimum=Math.min(...local.map(s=>s.level));
     const maximum=Math.min(3,Math.max(...local.map(s=>s.level)));
@@ -350,20 +344,9 @@ export function composeTerrainChips(map,landscape,art,cliffMask) {
     chip(ground,image,index,px,py);
     if(cliffMask)chip(cliffMask,image,index,px,py);
   }
-  const contacts=cellCliffs ? {adjusted:[]} : fitCliffContacts(ground,map,paintedCliffs,art,cliffMask);
-  if(!cellCliffs){
-    fitTrailCliffJoin(ground,map);
-    if(cliffMask)fitTrailCliffJoin(cliffMask,map);
-  }
-  for(const {x,y,drop,direction} of cellCliffs?.values()||[]){
-    const {row,along:[dx,dy]}=cliffCellDirections[direction];
-    const before=cellCliffs.get((x-dx)+','+(y-dy))?.direction===direction;
-    const after=cellCliffs.get((x+dx)+','+(y+dy))?.direction===direction;
-    const index=(row+drop-1)*4+Number(before)+2*Number(after);
-    chip(ground,art['cliff-cell'],index,x*cell,y*cell);
-    if(cliffMask)chip(cliffMask,art['cliff-cell'],index,x*cell,y*cell);
-  }
-
+  const contacts=fitCliffContacts(ground,map,paintedCliffs,art,cliffMask);
+  fitTrailCliffJoin(ground,map);
+  if(cliffMask)fitTrailCliffJoin(cliffMask,map);
   // Cut the coast with one mask composite. This avoids an expensive
   // destination-in layer per cell on browsers and software canvases.
   const coverage=surface(width*cell,height*cell);
@@ -376,11 +359,6 @@ export function composeTerrainChips(map,landscape,art,cliffMask) {
   ground.globalCompositeOperation='destination-in';
   ground.drawImage(coverage.canvas,0,0);
   ground.globalCompositeOperation='source-over';
-  if(cellCliffs&&cliffMask){
-    cliffMask.globalCompositeOperation='destination-in';
-    cliffMask.drawImage(coverage.canvas,0,0);
-    cliffMask.globalCompositeOperation='source-over';
-  }
   coverage.canvas.width=1;
   coverage.canvas.height=1;
   for(const {x,y,px,py,cover,local} of shoreline){
@@ -389,8 +367,8 @@ export function composeTerrainChips(map,landscape,art,cliffMask) {
     const raised=!local.some(s=>s.terrain==='sand')&&local.some(s=>s.dry&&s.level>0);
     const phase=((x%2+2)%2)+2*((y%2+2)%2);
     chip(ground,art['coast-shallow'],cover,px,py);
-    if(!raised)chip(ground,art[ocean?'coast-sand-'+phase:'coast-river'],cover,px,py);
-    else if(!cellCliffs)chip(ground,art['coast-rock'],cover,px,py);
+    if(raised)chip(ground,art['coast-rock'],cover,px,py);
+    else chip(ground,art[ocean?'coast-sand-'+phase:'coast-river'],cover,px,py);
   }
 
 
@@ -398,6 +376,6 @@ export function composeTerrainChips(map,landscape,art,cliffMask) {
     const [x,y]=ladder.lower;
     landscape.drawAsset(ground,'ladder',x*cell+8,y*cell-18,16,29);
   }
-  return {canvas:ground.canvas,coastTiles:shoreline.length-waterCells,cliffTiles:cellCliffs?.size??cliffTiles,forestCliffTiles,waterCells,
+  return {canvas:ground.canvas,coastTiles:shoreline.length-waterCells,cliffTiles,forestCliffTiles,waterCells,
     plateauCliffTiles:cliffFeet.length,cliffCells:map.cliffCells?.size||0,buildMs:performance.now()-started,...contacts};
 }

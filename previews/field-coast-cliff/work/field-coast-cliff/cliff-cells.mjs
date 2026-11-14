@@ -1,73 +1,89 @@
-const land = tile => tile !== undefined && !['sea','river','bridge'].includes(tile);
+const cell = 32;
 const key = (x,y) => x+','+y;
 
-// The direction names the face as seen from the lower terrain.
-const faces = [
-  {direction:'s', dx:0, dy:1},
-  {direction:'e', dx:1, dy:0},
-  {direction:'w', dx:-1, dy:0},
-  {direction:'n', dx:0, dy:-1},
-];
+export function prepareCliffCells(world,geography,landscape,art,compose,refreshCollision) {
+  const map = world.mapData;
+  const mask = document.createElement('canvas');
+  mask.width = map[0].length*cell;
+  mask.height = map.length*cell;
+  const cliffs = mask.getContext('2d',{willReadFrequently:true});
+  const baked = compose(map,landscape,art,cliffs);
+  const ground = baked.canvas.getContext('2d');
+  const walls = placeCliffCells(map,geography,refreshCollision,world,(x,y)=>{
+    const px=x*cell, py=y*cell;
+    const edge=cliffs.getImageData(px,py-1,cell,cell+1).data;
+    const land=ground.getImageData(px,py,cell,cell).data;
+    const toes=[];
+    for(let u=0;u<cell;u++){
+      if(!edge[u*4+3])return null;
+      let v=0;
+      while(v<cell&&edge[((v+1)*cell+u)*4+3])v++;
+      if(v>18)return null;
+      for(let row=0;row<cell;row++)if(land[(row*cell+u)*4+3]!==255)return null;
+      // Keep separate lower bands and their silhouettes intact.
+      for(let row=v+1;row<cell;row++)if(edge[((row+1)*cell+u)*4+3])return null;
+      toes.push(v);
+    }
+    return toes;
+  });
+  ground.imageSmoothingEnabled=false;
+  for(const {x,y,drop,toes} of walls.values()){
+    const previous=walls.has(key(x-1,y));
+    const next=walls.has(key(x+1,y));
+    const sourceX=(Number(previous)+2*Number(next))*cell;
+    for(let u=0;u<cell;u++){
+      const start=toes[u];
+      ground.drawImage(art['cliff-cell'],sourceX+u,(drop-1)*cell+start,1,cell-start,
+        x*cell+u,y*cell+start,1,cell-start);
+    }
+  }
+  mask.width=1;
+  mask.height=1;
+  return {...baked,cliffCells:walls.size};
+}
 
-export function placeCliffCells(map, geography, refreshCollision, world) {
+function placeCliffCells(map,geography,refreshCollision,world,contact) {
   const reserved = new Set([
-    ...geography.roads.flat(),
-    ...Object.values(geography.places),
-    ...geography.restStops.map(stop => stop.cell),
-    ...map.ladders.flatMap(({lower,upper}) => [lower,upper]),
-    ...map.decorations.flatMap(object => object.contactTiles),
-  ].map(([x,y]) => key(x,y)));
-  for (let y=0;y<map.length;y++)for(let x=0;x<map[y].length;x++){
-    const direction=map.ramps[y][x];
-    if(!direction)continue;
-    const {dx,dy}=faces.find(face=>face.direction===direction);
-    for(let i=-1;i<=1;i++)reserved.add(key(x+i*dx,y+i*dy));
-  }
-  // Keep the authored apron in front of the two shrine approach slopes.
-  for(let x=39;x<=41;x++)reserved.add(key(x,12));
-  for (const k of map.bridgeWaterCells) reserved.add(k);
-  for (const k of map.occupiedTiles) reserved.add(k);
+    ...geography.roads.flat(),...Object.values(geography.places),
+    ...geography.restStops.map(stop=>stop.cell),
+    ...map.ladders.flatMap(({lower,upper})=>[lower,upper]),
+    ...map.decorations.flatMap(object=>object.contactTiles),
+  ].map(([x,y])=>key(x,y)));
+  const before = new Set(map.travelReachable);
   const walls = new Map();
-  map.cliffCells = walls;
-  const width = map[0].length, height = map.length;
-  const reachable = new Set(map.travelReachable);
-  const walking = walkingNetwork(world);
+  map.cliffCells=walls;
 
-  function candidate(x,y,{direction,dx,dy}) {
-    const k=key(x,y), ux=x-dx, uy=y-dy;
-    const drop=map.heights[uy][ux]-map.heights[y][x];
-    if(drop<1||drop>3||reserved.has(k)||walls.has(k)||!land(map[y][x])||map[y][x]==='sand'||
-       !land(map[uy][ux])||map.ramps[y][x]||map.ramps[uy][ux]||map.ramps[y+dy][x+dx])return null;
-    return {x,y,drop,direction};
+  function candidate(x,y) {
+    const dry = t => t && !['sea','river','bridge','sand'].includes(t);
+    const drop=map.heights[y-1][x]-map.heights[y][x];
+    if(drop<1||drop>3||!dry(map[y][x])||!dry(map[y-1][x])||
+       reserved.has(key(x,y))||map.bridgeWaterCells.has(key(x,y))||
+       map.occupiedTiles.has(key(x,y))||[y-1,y,y+1].some(row=>map.ramps[row][x]))return null;
+    const toes=contact(x,y);
+    return toes&&{x,y,drop,toes,direction:'s'};
   }
 
-  const preserves = (before,after) => [...before].every(k=>walls.has(k)||after.has(k));
-
+  const walking=walkingNetwork(world);
   function tryRun(run) {
     if(run.length<2)return;
     for(const wall of run)walls.set(key(wall.x,wall.y),wall);
-    if(run.every(({x,y})=>!reachable.has(key(x,y))))return;
     refreshCollision();
-    if(preserves(reachable,map.travelReachable)&&preserves(walking,walkingNetwork(world)))return;
+    const reachable=walkingNetwork(world);
+    if([...before].every(k=>walls.has(k)||map.travelReachable.has(k))&&
+       [...walking].every(k=>walls.has(k)||reachable.has(k)))return;
     for(const wall of run)walls.delete(key(wall.x,wall.y));
     refreshCollision();
   }
-
-  for(const face of faces){
-    // Parallel faces join along their shared edge, never along their depth.
-    const horizontal = face.dx===0;
-    for(let row=1;row<(horizontal?height:width)-1;row++){
-      let run=[];
-      for(let along=1;along<(horizontal?width:height)-1;along++){
-        const wall = candidate(horizontal?along:row,horizontal?row:along,face);
-        if(wall){run.push(wall);continue;}
-        tryRun(run);
-        run=[];
-      }
+  for(let y=1;y<map.length-1;y++){
+    let run=[];
+    for(let x=1;x<map[0].length-1;x++){
+      const wall=candidate(x,y);
+      if(wall){run.push(wall);continue;}
       tryRun(run);
+      run=[];
     }
+    tryRun(run);
   }
-  refreshCollision();
   return walls;
 }
 
@@ -75,12 +91,12 @@ function walkingNetwork(world) {
   const queue=[world.start], seen=new Set([key(...world.start)]);
   for(let i=0;i<queue.length;i++){
     const [x,y]=queue[i];
-    for(const [dx,dy] of [[0,-32],[32,0],[0,32],[-32,0]]){
+    for(const [dx,dy] of [[0,-cell],[cell,0],[0,cell],[-cell,0]]){
       const nx=x+dx,ny=y+dy,k=key(nx,ny);
       if(seen.has(k)||!world.canMove(x,y,nx,ny))continue;
       seen.add(k);
       queue.push([nx,ny]);
     }
   }
-  return new Set(queue.map(([x,y])=>key(Math.floor(x/32),Math.floor(y/32))));
+  return new Set(queue.map(([x,y])=>key(Math.floor(x/cell),Math.floor(y/cell))));
 }

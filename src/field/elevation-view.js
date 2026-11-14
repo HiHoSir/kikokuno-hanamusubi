@@ -415,7 +415,7 @@ window.YK_ELEVATION_VIEW=(()=>{
    c.strokeStyle='rgba(255,255,255,.25)';c.beginPath();p.forEach((v,i)=>i?c.lineTo(v.x,v.y):c.moveTo(v.x,v.y));c.closePath();c.stroke();
   }}c.restore();return {point};
  }
- return {load,render,sources};
+ return {load,render,sources,shoreGeometry};
 })();
 
 

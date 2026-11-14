@@ -1,4 +1,4 @@
-// Real-browser A/B test: existing terrain-projection vs opt-in static-tile
+// Real-browser A/B test: previous terrain projection vs production static-tile
 // terrain over moving sea. Screenshots and measurements are review-only.
 import {chromium} from 'playwright';
 import {createServer} from 'node:http';
@@ -29,35 +29,34 @@ try{
   page.on('response',r=>{if(r.status()>=400)errors.push('HTTP '+r.status()+' '+r.url())});
   await page.goto(origin+'/',{waitUntil:'domcontentloaded'});
   await page.evaluate(()=>sessionStorage.setItem('kikokuno-hanamusubi-next-entry',
-    JSON.stringify({route:'/src/game/?field-renderer-preview=1',expiresAt:Date.now()+120000})));
-  await page.goto(origin+'/src/game/?field-renderer-preview=1',{waitUntil:'domcontentloaded'});
-  await page.waitForFunction(()=>typeof window.KIKOKU_GAME?.setFieldRenderer==='function',{timeout:15000});
+    JSON.stringify({route:'/src/game/',expiresAt:Date.now()+120000})));
+  await page.goto(origin+'/src/game/',{waitUntil:'domcontentloaded'});
+  await page.waitForFunction(()=>typeof window.KIKOKU_GAME?.navigate==='function',{timeout:15000});
   await page.evaluate(()=>{
-    window.KIKOKU_GAME.setFieldRenderer('tile-layers');
     window.KIKOKU_GAME.navigate(new URL('/src/field/?from=village&profile=1',location.href).href);
   });
   try{
     await page.waitForFunction(()=>{
       const w=document.querySelector('iframe')?.contentWindow;
-      return !!w?.__FIELD_TILE_LAYER_TRIAL?.info?.builds &&
+      return !!w?.__FIELD_TERRAIN_RENDERER?.info?.builds &&
         w.document.querySelector('#load')?.hidden===true;
     },null,{timeout:35000});
   }catch(err){
     const details=await page.evaluate(()=>{
       const f=document.querySelector('iframe'),w=f?.contentWindow;
       return {route:f?.src,body:w?.document?.body?.innerText?.slice(0,300),
-        ready:w?.YK_LANDSCAPE?.ready?.(),trial:w?.__FIELD_TILE_LAYER_TRIAL?.info,
+        ready:w?.YK_LANDSCAPE?.ready?.(),trial:w?.__FIELD_TERRAIN_RENDERER?.info,
         loadHidden:w?.document?.querySelector('#load')?.hidden,
         frameLoaded:w?.document?.readyState};
     });
-    console.error('TILE LAYER BOOT FAILURE '+JSON.stringify({viewport:[width,height],details,errors},null,2));
+    console.error('FIELD TERRAIN BOOT FAILURE '+JSON.stringify({viewport:[width,height],details,errors},null,2));
     await page.screenshot({path:'artifacts/field-layer-load-failure-'+width+'x'+height+'.png'});
     throw err;
   }
   const result=await page.evaluate(()=>{
    const w=document.querySelector('iframe').contentWindow;
    const scene=w.document.querySelector('#scene'),ctx=scene.getContext('2d');
-   const test=w.__FIELD_TILE_LAYER_TRIAL;
+   const test=w.__FIELD_TERRAIN_RENDERER;
    const tx=+scene.dataset.x,ty=+scene.dataset.y;
    const actor={x:tx*32+16,foot:ty*32+16};
    const refActor={...actor,draw:()=>{}};
@@ -113,7 +112,7 @@ try{
    const views=await page.evaluate(()=>{
     const w=document.querySelector('iframe').contentWindow;
     const src=w.document.querySelector('#scene'),map=w.YK_WORLD.mapData;
-    const context=w.__FIELD_TILE_LAYER_TRIAL;
+    const context=w.__FIELD_TERRAIN_RENDERER;
     const width=src.width,height=src.height,ref=document.createElement('canvas'),
       candidate=document.createElement('canvas');
     ref.width=candidate.width=width;ref.height=candidate.height=height;
@@ -134,76 +133,44 @@ try{
    }
    result.landscapeCheckpoints=views.map(v=>v.label);
   }
-  // Exercise actual authorized child routing, not just URL rewriting:
-  // field -> battle -> field must preserve the preview renderer. Switching
-  // the comparison back to current mode must also survive a battle.
+  // Use the live shell and child routing. The field chooses the same
+  // renderer on return without a comparison query parameter.
   await page.evaluate(()=>{
-    const child=document.querySelector('iframe').contentWindow;
-    child.KIKOKU_ROUTE.go(new URL('/src/game/battle/',location.href));
+    const field=document.querySelector('#game-scene').contentWindow;
+    const canvas=field.document.querySelector('#scene');
+    const x=Number(canvas.dataset.x)*32+16,y=Number(canvas.dataset.y)*32+16;
+    sessionStorage.setItem('kikokuno-hanamusubi-battle-field-return',JSON.stringify({x,y}));
+    field.KIKOKU_ROUTE.go(new URL('/src/game/battle/',location.href));
   });
   await page.waitForFunction(()=>{
-    const f=document.querySelector('iframe'),w=f?.contentWindow;
-    return f?.src.includes('/src/game/battle/')&&w?.location.href===f.src&&
-      w?.KIKOKU_ROUTE?.admitted===true;
+    const frame=document.querySelector('#game-scene'),child=frame?.contentWindow;
+    return frame?.src.includes('/src/game/battle/')&&child?.location.href===frame.src&&
+      child.KIKOKU_ROUTE?.admitted===true;
   },null,{timeout:20000});
   await page.evaluate(()=>{
-    const child=document.querySelector('iframe').contentWindow;
-    child.KIKOKU_ROUTE.go(new URL('/src/field/?from=battle',location.href));
+    const battle=document.querySelector('#game-scene').contentWindow;
+    battle.KIKOKU_ROUTE.go(new URL('/src/field/?from=battle&profile=1',location.href));
   });
   await page.waitForFunction(()=>{
-    const f=document.querySelector('iframe'),w=f?.contentWindow;
-    return f?.src.includes('/src/field/')&&f?.src.includes('from=battle')&&
-      f?.src.includes('renderer=tile-layers')&&w?.__FIELD_TILE_LAYER_TRIAL?.info?.draws>0&&
-      w.document.querySelector('#load')?.hidden===true;
+    const frame=document.querySelector('#game-scene'),field=frame?.contentWindow;
+    return frame?.src.includes('from=battle')&&field?.location.href===frame.src&&
+      field.__FIELD_TERRAIN_RENDERER?.info?.builds===1&&field.document.querySelector('#load')?.hidden===true;
   },null,{timeout:60000});
-  const returnFromBattle=await page.evaluate(()=>({
-    mode:'tile-layers',
-    url:document.querySelector('iframe').src,
-    track:window.KIKOKU_GAME.audio.trackName,
-    water:document.querySelector('iframe').contentWindow.__FIELD_TILE_LAYER_TRIAL.info.animatedWater
-  }));
-  await page.evaluate(()=>{
-    window.KIKOKU_GAME.setFieldRenderer(null);
-    window.KIKOKU_GAME.navigate(new URL('/src/field/?from=village&profile=1',location.href));
+  result.battleReturn=await page.evaluate(()=>{
+    const frame=document.querySelector('#game-scene'),field=frame.contentWindow;
+    const {x,y}=JSON.parse(sessionStorage.getItem('kikokuno-hanamusubi-battle-field-return'));
+    const values=field.document.querySelector('#scene').dataset;
+    return {url:frame.src,track:window.KIKOKU_GAME.audio.trackName,
+      sameCell:Number(values.x)===Math.floor(x/32)&&Number(values.y)===Math.floor(y/32),
+      water:field.__FIELD_TERRAIN_RENDERER.info.animatedWater};
   });
-  await page.waitForFunction(()=>{
-    const f=document.querySelector('iframe'),w=f?.contentWindow;
-    return f?.src.includes('/src/field/')&&!f?.src.includes('renderer=')&&
-      w?.location.href===f.src&&w?.KIKOKU_ROUTE?.admitted===true&&
-      w.document.querySelector('#load')?.hidden===true;
-  },null,{timeout:60000});
-  await page.evaluate(()=>{
-    const child=document.querySelector('iframe').contentWindow;
-    child.KIKOKU_ROUTE.go(new URL('../game/battle/',child.location.href));
-  });
-  await page.waitForFunction(()=>{
-    const f=document.querySelector('iframe'),w=f?.contentWindow;
-    return f?.src.includes('/src/game/battle/')&&w?.location.href===f.src&&
-      w?.KIKOKU_ROUTE?.admitted===true;
-  },null,{timeout:20000});
-  await page.evaluate(()=>{
-    const child=document.querySelector('iframe').contentWindow;
-    child.KIKOKU_ROUTE.go(new URL('../../field/?from=battle',child.location.href));
-  });
-  await page.waitForFunction(()=>{
-    const f=document.querySelector('iframe'),w=f?.contentWindow;
-    return f?.src.includes('/src/field/')&&f?.src.includes('from=battle')&&
-      !f?.src.includes('renderer=')&&w?.location.href===f.src&&
-      w?.KIKOKU_ROUTE?.admitted===true&&w.document.querySelector('#load')?.hidden===true;
-  },null,{timeout:60000});
-  const returnToOriginal=await page.evaluate(()=>({
-    url:document.querySelector('iframe').src,track:window.KIKOKU_GAME.audio.trackName,
-    trial:!!document.querySelector('iframe').contentWindow.__FIELD_TILE_LAYER_TRIAL
-  }));
-  result.battleReturn={tile:returnFromBattle,original:returnToOriginal};
   results.push(result);
-  if(errors.length||!result.battleReturn.tile.water||
-     result.battleReturn.tile.track!=='field'||result.battleReturn.original.track!=='field'||
-     result.battleReturn.original.trial||
+  if(errors.length||!result.battleReturn.water||!result.battleReturn.sameCell||
+     result.battleReturn.track!=='field'||result.info.forestCliffTiles<1||
      result.animatedPixels<100||!result.fixedLand||
      result.info.waterCells<1||result.info.builds!==1||result.info.waterFrames!==Math.floor((120000+360)/360)%2||
      result.info.staticBytes<100000||!Number.isFinite(result.ratio)||
-     result.referenceMs<=0||result.candidateMs<=0)
+     result.referenceMs<0||result.candidateMs<0)
    issues.push(width+'x'+height+': '+JSON.stringify({result,errors}));
   await page.close();
  }

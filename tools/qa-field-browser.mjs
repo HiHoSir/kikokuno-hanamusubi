@@ -89,7 +89,7 @@ try{
     const s=document.querySelector('iframe')?.contentWindow?.__FIELD_RENDER_PROFILE;
     return s?{frames:s.frames,totalMs:s.totalMs,maxMs:s.maxMs}:null;
   });
-  // A bounded directional hold exercises the 192ms step/continuous camera
+  // A bounded directional hold exercises the 256ms step/continuous camera
   // path without waiting long enough for a random field encounter.
   await page.evaluate(()=>{
     const w=document.querySelector('iframe').contentWindow;

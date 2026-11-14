@@ -30,7 +30,7 @@ try{
  await page.evaluate(()=>sessionStorage.setItem('kikokuno-hanamusubi-next-entry',JSON.stringify({route:'/src/game/',expiresAt:Date.now()+120000})));
  await page.goto(origin+'/src/game/',{waitUntil:'domcontentloaded'});
  await page.waitForFunction(()=>typeof window.KIKOKU_GAME?.navigate==='function',{timeout:20000});
- await page.evaluate(()=>window.KIKOKU_GAME.navigate(new URL('/src/field/?from=village',location.href).href));
+ await page.evaluate(()=>window.KIKOKU_GAME.navigate(new URL('/src/field/?from=village&profile=1',location.href).href));
  await page.waitForFunction(()=>{
   const w=document.querySelector('#game-scene')?.contentWindow;
   return w?.YK_LANDSCAPE?.ready?.()===true&&w.document.querySelector('#load')?.hidden===true;
@@ -122,10 +122,9 @@ try{
   // Render the real projected terrain with a deterministic water phase.
   // 0 and 720ms have the same two-frame phase, while 360ms must animate.
   const scene=w.document.querySelector('#scene'),sc=scene.getContext('2d');
-  const world=w.YK_WORLD.mapData;
-  const actor={x:w.YK_WORLD.start[0],foot:w.YK_WORLD.start[1],draw:()=>{}};
-  const paint=time=>w.YK_LANDSCAPE.drawQuarter(sc,world,actor,1.4,
-    {oceanOutside:true,elevationTerrain:true,viewportWidth:scene.width,motionTime:time});
+  const renderer=w.__FIELD_TERRAIN_RENDERER;
+  const [x,foot]=w.YK_WORLD.start;
+  const paint=time=>renderer.draw(sc,{x,foot},time,scene.width);
   paint(0);const first=pixels(scene).slice();
   paint(360);const second=pixels(scene).slice();
   paint(720);const last=pixels(scene).slice();

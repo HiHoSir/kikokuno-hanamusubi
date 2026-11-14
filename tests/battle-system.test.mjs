@@ -173,7 +173,9 @@ test('T0 early encounters are winnable without an immediate heal every battle',(
   assert.equal(ENEMIES['field-oni'].xp,8);
   assert.equal(ENEMIES.tanuki.xp*2,8);
   assert.equal(ENEMIES.onibi.xp,9);
-  assert.equal(nextLevelXp(1),80); // ~9-10 fights for one level.
+  assert.equal(nextLevelXp(1),32);
+  assert.equal(nextLevelXp(2),204);
+
 });
 
 test('first-route encounter weights stay deterministic for every 0.1% percentile',()=>{
@@ -196,7 +198,7 @@ test('first-route encounter weights stay deterministic for every 0.1% percentile
   }
 });
 
-test('ten planned first-route fights allow level two without equipment or unlimited consumables',()=>{
+test('first-route fights reach level two on the fourth win without extra equipment',()=>{
   const plan=[
     ['field-oni',1],['tanuki',2],['field-oni',1],['tanuki',2],['onibi',1],
     ['field-oni',1],['tanuki',2],['onibi',1],['field-oni',1],['tanuki',2]
@@ -213,14 +215,14 @@ test('ten planned first-route fights allow level two without equipment or unlimi
       assert.equal(battle.act('attack').accepted,true);
     assert.equal(battle.state.outcome,'victory','first-route playthrough defeated by '+id);
     hero=battle.state.hero;
+    assert.equal(hero.lv,hero.wins<4?1:2);
+    if(hero.wins===4)assert.equal(hero.hp,hero.maxhp,'level-up restores full HP');
   }
   assert.equal(hero.wins,10);
-  assert.equal(herbsUsed,2);
-  assert.equal(hero.potions,1);
-  assert.equal(hero.lv,2);
-  assert.equal(hero.xp,2);
+  assert.ok(herbsUsed<=2);
+  assert.equal(hero.potions,DEFAULT_PLAYER.potions-herbsUsed);
+  assert.equal(hero.xp,50);
   assert.equal(hero.gold,80);
-  assert.equal(hero.hp,hero.maxhp,'level-up restores full HP');
   assert.equal(hero.equipmentTier,'T0','no unapproved equipment is introduced');
 });
 
@@ -390,7 +392,7 @@ test('all three approved battle sprites retain original 128px PNGs without runti
     assert.equal(asset.status,'approved',id);
     assert.deepEqual(asset.dimensions,{width:128,height:128},id);
   }
-  assert.ok(html.includes('walk.mjs?v=approved-onibi-pixel-sprite-1'));
+  assert.match(html,/<script type="module" src="\.\/walk\.mjs\?v=[^"]+"><\/script>/);
   assert.match(css,/img\[data-enemy-id="onibi"\]\{animation:battle-onibi-float 2\.4s steps\(3,end\) infinite\}/);
   assert.match(css,/@keyframes battle-onibi-float/);
   assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);

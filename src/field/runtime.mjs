@@ -1,5 +1,6 @@
 import {fieldViewportDimensions} from './viewport.mjs';
-import {createTileLayerPrototype} from './tile-layer-prototype.mjs';
+import {createFieldTerrainRenderer} from './terrain-renderer.mjs';
+import {loadTerrainChips,placeShoreTrees} from './terrain-chips.mjs';
 const {YK_WORLD: world, YK_LANDSCAPE: landscape, YK_AUTOTILE: autotile,
   YK_ELEVATION: elevation, YK_CAMERA: camera, YK_MOVEMENT: movement,
   YK_AREA_TRANSITIONS: transitions, YK_FIELD_ASSETS: assets} = window;
@@ -28,23 +29,32 @@ export function placeArrival(placeId) {
 
 export function villageArrival(){return placeArrival('village');}
 
-export async function loadFieldArt() {
-  const hero = new Image();
-  hero.src = assets.url(assets.hero);
-  await Promise.all([
+let fieldArt;
+export function loadFieldArt() {
+  fieldArt??=initializeFieldArt();
+  return fieldArt;
+}
+
+async function initializeFieldArt() {
+  const hero=new Image();
+  hero.src=assets.url(assets.hero);
+  const [,terrain]=await Promise.all([
     hero.decode(),
-    new Promise((resolve, reject) => {
-      function check() {
-        const errors = {...landscape.errors, ...autotile.errors};
-        if (Object.keys(errors).length) reject(new Error(JSON.stringify(errors)));
-        else if (landscape.ready() && autotile.ready()) resolve();
+    loadTerrainChips(),
+    new Promise((resolve,reject)=>{
+      function check(){
+        const errors={...landscape.errors,...autotile.errors};
+        if(Object.keys(errors).length)reject(new Error(JSON.stringify(errors)));
+        else if(landscape.ready()&&autotile.ready())resolve();
       }
       landscape.load(check);
       autotile.load(check);
       check();
     }),
   ]);
-  return hero;
+  placeShoreTrees(world,terrain['coast-mask']);
+  window.YK_FIELD_ELEVATION.refreshCollision(world.mapData);
+  return {hero,terrain};
 }
 
 export function fieldStep(state, dx, dy, at) {
@@ -66,34 +76,35 @@ export function fieldStep(state, dx, dy, at) {
 // more world to the LEFT and RIGHT. No portrait square, CSS cover or crop bar.
 // Logical height is the original field renderer's 544px; changing width only
 // leaves the 32px world grid, camera zoom, pixel-density and Y-perspective intact.
-export function createFieldRenderer(context, hero) {
+export function createFieldRenderer(context,{hero,terrain}) {
   const [anchorX,anchorY]=assets.heroFootAnchorPx;
   const display=context.canvas;
-  const preview=typeof location!=='undefined'&&new URLSearchParams(location.search).get('renderer')==='tile-layers';
-  let trialState={row:0,column:0};
-  const trial=preview?createTileLayerPrototype(context,world.mapData,
-    (px,py,z)=>drawHero(px,py,z,trialState.row,trialState.column)):null;
-  if(preview)window.__FIELD_TILE_LAYER_TRIAL=trial;
+  let pose={row:0,column:0};
+  const renderer=createFieldTerrainRenderer(world.mapData,drawHero,terrain,
+    {image:hero,anchor:assets.heroFootAnchorPx,frame:()=>pose});
   // Profiling is opt-in for reproducible browser QA; gameplay never pays
   // timing/allocation costs or displays a debug overlay.
   const profile=typeof location!=='undefined'&&new URLSearchParams(location.search).get('profile')==='1';
   const stats=profile?{frames:0,samples:[],totalMs:0,maxMs:0,viewport:[],lastAt:0}:null;
-  if(profile)window.__FIELD_RENDER_PROFILE=stats;
-  function drawHero(px,py,projection,row,column) {
+  if(profile){
+    window.__FIELD_RENDER_PROFILE=stats;
+    window.__FIELD_TERRAIN_RENDERER=renderer;
+  }
+  function drawHero(target,px,foot,projection) {
+    const {row,column}=pose;
     const z=.56*projection;
-    const foot=py+(14-9*.56)*projection+9*z;
-    context.save();
-    context.imageSmoothingEnabled=false;
-    context.save();
-    context.globalAlpha=.28;
-    context.fillStyle='#101820';
-    context.beginPath();
-    context.ellipse(px,foot,20*z,6*z,0,0,Math.PI*2);
-    context.fill();
-    context.restore();
-    context.drawImage(hero,column*32,row*32,32,32,
+    target.save();
+    target.imageSmoothingEnabled=false;
+    target.save();
+    target.globalAlpha=.28;
+    target.fillStyle='#101820';
+    target.beginPath();
+    target.ellipse(px,foot,20*z,6*z,0,0,Math.PI*2);
+    target.fill();
+    target.restore();
+    target.drawImage(hero,column*32,row*32,32,32,
       px-anchorX*projection,foot-anchorY*projection,32*projection,32*projection);
-    context.restore();
+    target.restore();
     display.dataset.fieldHeroFoot=String(Math.round(foot));
   }
   return function drawField(state,frameTime){
@@ -105,21 +116,8 @@ export function createFieldRenderer(context, hero) {
       display.height=dims.height;
     }
     const {x,y}=camera.position(state,state.motion,frameTime);
-    let height;
-    if(state.ladder&&state.motion){
-      const t=Math.max(0,Math.min(1,(frameTime-state.motion.at)/state.motion.duration));
-      height=state.ladder.from+(state.ladder.to-state.ladder.from)*t;
-    }
-    context.imageSmoothingEnabled=false;
-    context.fillStyle='#102635';
-    context.fillRect(0,0,dims.width,dims.height);
-    trialState=state;
-    if(preview){
-      trial.draw(context,{x,foot:y,height},frameTime,dims.width);
-    }else landscape.drawQuarter(context,world.mapData,{
-      x,foot:y,height,
-      draw:(px,py,z)=>drawHero(px,py,z,state.row,state.column),
-    },1.4,{oceanOutside:true,elevationTerrain:true,viewportWidth:dims.width,motionTime:frameTime});
+    pose=state;
+    renderer.draw(context,{x,foot:y},frameTime,dims.width);
     display.dataset.fieldViewportWidth=String(dims.width);
     display.dataset.fieldViewportHeight=String(dims.height);
     // Deliberately no fieldCropTop: there is no source crop.

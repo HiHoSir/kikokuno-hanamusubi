@@ -84,7 +84,7 @@ test('field movement retains the 32px grid and projects the SD from its foot anc
   const context = loadField();
   globalThis.window = context;
   try {
-    const {contact, createFieldRenderer, fieldStep, villageArrival, placeArrival, world} = await import('../src/field/runtime.mjs');
+    const {contact, fieldStep, villageArrival, placeArrival, world} = await import('../src/field/runtime.mjs');
     const [x, y] = villageArrival();
     assert.equal(x % 32, 16);
     assert.equal(y % 32, 16);
@@ -128,23 +128,13 @@ test('field movement retains the 32px grid and projects the SD from its foot anc
 
 
     assert.equal(Math.abs(entry.x - x) + Math.abs(entry.y - y), 32);
-    assert.equal(entry.motion.duration, 192);
+    assert.equal(entry.motion.duration, 256);
     assert.equal(fieldStep({x: 16, y: 16}, -1, 0, 1000), null);
     const spec = JSON.parse(source('data/characters/hizuki-walk.json'));
     const sprite = spec.variants[spec.defaultForArea.field];
     assert.equal(context.YK_FIELD_ASSETS.hero, sprite.path);
     assert.deepEqual([...context.YK_FIELD_ASSETS.heroFootAnchorPx], sprite.footAnchorPx);
 
-    const hero = {};
-    const draws = [];
-    const canvas = {
-      save() {}, restore() {}, clearRect() {}, fillRect() {}, translate() {}, scale() {},
-      beginPath() {}, ellipse() {}, fill() {}, drawImage: (...args) => draws.push(args),
-      canvas:{width:640,height:544,dataset:{},getBoundingClientRect(){return {width:900,height:390};}},
-    };
-    context.YK_LANDSCAPE.drawQuarter = (_canvas, _map, actor) => actor.draw(100, 200, 0.75);
-    createFieldRenderer(canvas, hero)({x, y, row: 2, column: 1}, 0);
-    assert.deepEqual(draws, [[hero, 32, 64, 32, 32, 88, 188, 24, 24]]);
 
   } finally {
     delete globalThis.window;
@@ -197,18 +187,28 @@ test('landscape field draws directly into a wider viewport without a portrait cr
  assert.doesNotMatch(html,/grid-template-rows:minmax\(0,1fr\) 108px/);
  assert.doesNotMatch(html,/object-fit:cover/);
  const worldContext=loadField();
- worldContext.YK_LANDSCAPE.drawQuarter=(_ctx,_map,actor,_zoom,settings)=>{
-   assert.ok(settings.viewportWidth>=640);
-   actor.draw(settings.viewportWidth/2,354,1.08);
- };
+ const landscape=worldContext.YK_LANDSCAPE;
+ landscape.objects=()=>[];
+ landscape.groundLayer=()=>({width:2560,height:2560});
+ landscape.motionArt=()=>({width:640,height:240});
+ worldContext.YK_WORLD.mapData=Object.assign([['grass']],{decorations:[]});
+ const terrain=new Proxy({}, {get:()=>({})});
+ globalThis.document={createElement:()=>{
+   const canvas={width:0,height:0};
+   canvas.getContext=()=>({canvas,clearRect(){},drawImage(){},fillRect(){}});
+   return canvas;
+ }};
  globalThis.window=worldContext;
  const draws=[];
  let cssW=900,cssH=390;
  const display={width:640,height:544,dataset:{},getBoundingClientRect(){return {width:cssW,height:cssH};}};
- const context={canvas:display,save(){},restore(){},fillRect(){},beginPath(){},ellipse(){},fill(){},drawImage(...args){draws.push(args);}};
+ const hero={};
+ const context={canvas:display,save(){},restore(){},fillRect(){},clearRect(){},
+   beginPath(){},ellipse(){},fill(){},translate(){},scale(){},transform(){},rect(){},clip(){},createPattern(){},
+   drawImage(...args){if(args[0]===hero)draws.push(args);}};
  try{
    const {createFieldRenderer}=await import('../src/field/runtime.mjs?panoramic-regression');
-   const renderer=createFieldRenderer(context,{});
+   const renderer=createFieldRenderer(context,{hero,terrain});
    for(const [w,h,expected] of [[900,390,1255],[1536,706,1184],[844,390,1177]]){
      cssW=w;cssH=h;draws.length=0;
      renderer({x:1200,y:2256,row:0,column:0},0);
@@ -219,7 +219,9 @@ test('landscape field draws directly into a wider viewport without a portrait cr
      const args=draws[0];
      assert.equal(args.length,9);
      assert.ok(Math.abs(args[5]+args[7]/2-expected/2)<40,'hero stays horizontally centered');
-     assert.ok(Math.abs(Number(display.dataset.fieldHeroFoot)-369)<=2,'actual sprite foot follows the same projection');
+     const camera={x:1200,y:2256,centerX:expected/2,foregroundGrowth:true};
+     const foot=landscape.project(1200,2272,camera).y;
+     assert.equal(Number(display.dataset.fieldHeroFoot),Math.round(foot));
    }
- }finally{delete globalThis.window;}
+ }finally{delete globalThis.window;delete globalThis.document;}
 });

@@ -1,4 +1,4 @@
-import {BATTLE_REQUEST_KEY,ENEMIES,FOOD_ITEMS,createBattle,readPlayer,savePlayer} from './rules.mjs';
+import {BATTLE_REQUEST_KEY,ENEMIES,FOOD_ITEMS,createBattle,readPlayer,savePlayer} from './rules.mjs?v=field-balance-1';
 
 const root=new URL('../../../',import.meta.url);
 const el=id=>document.getElementById(id);

@@ -14,7 +14,7 @@ test('field uses panoramic camera, native map perspective, full-screen overlays'
   const field=readFileSync('src/field/index.html','utf8');
   const elevation=readFileSync('src/field/elevation-view.js','utf8');
   const landscape=readFileSync('src/field/landscape.js','utf8');
-  assert.ok(source.includes('viewportWidth:dims.width'));
+  assert.ok(source.includes('frameTime,dims.width'));
   assert.ok(!source.includes('fieldViewportCrop'));
   assert.ok(!source.includes('bufferContext'));
   assert.ok(elevation.includes('viewportWidth||640'));
@@ -28,7 +28,7 @@ test('field profiling is opt-in and does not alter the rendered world or state',
  const runtime=readFileSync('src/field/runtime.mjs','utf8');
  const browser=readFileSync('tools/qa-field-browser.mjs','utf8');
  assert.match(runtime,/new URLSearchParams\(location\.search\)\.get\('profile'\)==='1'/);
- assert.match(runtime,/if\(profile\)window\.__FIELD_RENDER_PROFILE=stats/);
+ assert.match(runtime,/if\(profile\)\{\s*window\.__FIELD_RENDER_PROFILE=stats/);
  assert.match(runtime,/if\(profile\)\{\s*const elapsed=performance\.now\(\)-started/);
  assert.match(browser,/p95Ms/);
  assert.match(browser,/ArrowRight/);
@@ -51,7 +51,7 @@ test('production water/river/waterfall motion uses the same RAF phase as field s
  assert.match(landscape,/Number\.isFinite\(settings\.motionTime\)\?settings\.motionTime/);
  assert.match(landscape,/movingWater=motionArt\('water',motionTime\)/);
  assert.match(landscape,/sea:movingWater,river:movingWater,waterfall:movingFall/);
- assert.match(runtime,/motionTime:frameTime/);
+ assert.match(runtime,/renderer\.draw\(context,\{x,foot:y\},frameTime/);
  assert.match(walk,/Math\.floor\(now \/ 360\)/);
  assert.match(tenyo,/waterKinds=\['shallow','mid','deep'\]/);
  assert.match(tenyo,/Math\.floor\(\(o\.animationTime\|\|0\)\/360\)%4/);
@@ -65,19 +65,17 @@ test('animated water atlas uses HALF the atlas width per frame; second frame is 
  assert.doesNotMatch(code,/ctx\.drawImage\(atlas,i\*w,0,w,h,0,0,w,h\)/);
 });
 
-test('opt-in tile-layer experiment keeps shipped field perspective as the default',()=>{
- const trial=readFileSync('src/field/tile-layer-prototype.mjs','utf8');
+test('the normal field loads approved coast and cliff chips with animated water',()=>{
+ const renderer=readFileSync('src/field/terrain-renderer.mjs','utf8');
  const runtime=readFileSync('src/field/runtime.mjs','utf8');
- assert.match(runtime,/get\('renderer'\)==='tile-layers'/);
- assert.match(runtime,/if\(preview\)\{\s*trial\.draw/);
- assert.match(runtime,/else landscape\.drawQuarter/);
- assert.match(trial,/globalCompositeOperation='destination-out'/);
- assert.match(trial,/motionArt\('water',time\)/);
- assert.match(trial,/landscape\.unproject/);
- assert.match(trial,/groundLayer\(flat\)/);
- assert.match(trial,/staticLand:true,animatedWater:true/);
+ const chips=readFileSync('src/field/terrain-chips.mjs','utf8');
+ assert.match(runtime,/createFieldTerrainRenderer\(world\.mapData/);
+ assert.doesNotMatch(runtime,/get\('renderer'\)|drawQuarter/);
+ assert.match(chips,/destination-in/);
+ assert.match(renderer,/motionArt\('water',time\)/);
+ assert.match(renderer,/landscape\.unproject/);
+ assert.match(renderer,/staticLand:true,animatedWater:true/);
 });
-
 test('terrain rework QA judges camera, height and shoreline fidelity rather than pixel identity',()=>{
  const qa=readFileSync('tools/qa-field-tile-layers.mjs','utf8');
  assert.match(qa,/The pixel-difference number is diagnostic ONLY/);
@@ -89,13 +87,15 @@ test('terrain rework QA judges camera, height and shoreline fidelity rather than
  assert.match(qa,/fixedLand/);
 });
 
-test('static tilemap trial shares the live curved shoreline polygon over animated sea',()=>{
- const source=readFileSync('src/field/tile-layer-prototype.mjs','utf8');
- const elevation=readFileSync('src/field/elevation-view.js','utf8');
- assert.match(elevation,/return \{load,render,sources,shoreGeometry\}/);
- assert.match(source,/elevationView\.shoreGeometry\(map,x,y,shape\)/);
- assert.match(source,/g\.fill\('evenodd'\)/);
- assert.match(source,/const sand=g\.createPattern\(landscape\.motionArt\('sand',0\),'repeat'\)/);
- assert.match(source,/for\(const band of shore\.sand\)/);
- assert.match(source,/landscape\.motionArt\('water',time\)/);
+test('the production atlases are registered and match their 32px tile layout',()=>{
+ const manifest=JSON.parse(readFileSync('assets/manifest.json','utf8'));
+ const assets=manifest.assets.filter(asset=>asset.usage==='field-terrain-atlas');
+ assert.equal(assets.length,14);
+ for(const asset of assets){
+  assert.equal(asset.status,'approved');
+  const png=readFileSync(asset.path);
+  assert.deepEqual([png.readUInt32BE(16),png.readUInt32BE(20),png[25]],[128,128,6]);
+ }
+ assert.ok(assets.some(asset=>asset.id==='field-coast-mask-32'));
+ assert.equal(assets.filter(asset=>asset.id.startsWith('field-cliff-forest-')).length,3);
 });

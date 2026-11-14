@@ -58,9 +58,8 @@ window.YK_WORLD=(()=>{
   }));
  });
  YK_FIELD_ELEVATION.refreshCollision(mapData);
- const solid=mapData.occupiedTiles;
  const passable=new Set(['grass','forest','sand','snow','barren','road','bridge']);
- const cellOpen=(x,y)=>x>0&&y>0&&x<79&&y<79&&passable.has(mapData[y]?.[x])&&!solid.has(x+','+y)&&mapData.travelReachable.has(x+','+y)&&YK_ELEVATION.pointWalkable(mapData,x*32+16,y*32+16);
+ const cellOpen=(x,y)=>x>0&&y>0&&x<79&&y<79&&passable.has(mapData[y]?.[x])&&!mapData.occupiedTiles.has(x+','+y)&&mapData.travelReachable.has(x+','+y)&&YK_ELEVATION.pointWalkable(mapData,x*32+16,y*32+16);
  // Data-only save repair: keep valid positions, otherwise find the nearest
  // open cell. Do not teleport all existing saves to a story destination.
  function safePosition(point){

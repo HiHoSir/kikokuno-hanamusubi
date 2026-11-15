@@ -57,7 +57,7 @@ field.paths=[];field.decorations=[];field.bridgeWaterCells=new Set();
 field.projectedHeights=true;field.shoreRelief=false;field.referencePlacedObjects=true;
 field.occupiedTiles=new Set();
 // A curving rock rim forms a horseshoe-like overlook rather than a long straight wall.
-const ridge=x=>38+Math.round(2*Math.sin(x*.15)+1.3*Math.cos(x*.48)-1.4*Math.exp(-((x-28)/6)**2));
+const ridge=x=>38+Math.round(2*Math.sin(x*.15)+1.3*Math.cos(x*.48)-1.4*Math.exp(-Math.pow((x-28)/6,2)));
 const stream=y=>29+Math.round(6*Math.sin((y-11)*.23));
 function inside(x,y){return x>0&&y>0&&x<W-1&&y<H-1;}
 function hash(x,y){return ((x*92821+y*68917+x*y*1733)>>>0)%100;}

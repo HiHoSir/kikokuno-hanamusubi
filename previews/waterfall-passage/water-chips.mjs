@@ -1,5 +1,5 @@
 const cell = 32;
-const wallDepth = 16;
+
 const corners = [[0,0],[1,0],[1,1],[0,1]];
 
 export async function loadCliffChips() {
@@ -21,7 +21,7 @@ function drawChip(context,atlas,mask,x,y) {
 
 // Keep the crest at its map edge. Place a second rock-only face underneath
 // the first by matching each column to the lower edge of the original chip.
-function lowerFace(atlas,mask,rock) {
+function lowerFace(atlas,mask,rock,wallDepth,phase) {
   const canvas = document.createElement('canvas');
   canvas.width = cell;
   canvas.height = cell+wallDepth;
@@ -33,16 +33,31 @@ function lowerFace(atlas,mask,rock) {
     let y=cell-1;
     while(y>=0 && !data[(y*cell+x)*4+3])y--;
     if(y<0)continue;
-    context.drawImage(rock,x,0,1,wallDepth,x,y+1,1,wallDepth);
+    for(let row=0;row<wallDepth;row+=cell) {
+      const length=Math.min(cell,wallDepth-row);
+      const sourceX=(x+phase)%cell;
+      context.drawImage(rock,sourceX,0,1,length,x,y+1+row,1,length);
+    }
   }
   context.globalCompositeOperation='source-atop';
-  context.fillStyle='rgba(30,19,12,.20)';
+  const shade=context.createLinearGradient(0,8,0,canvas.height);
+  shade.addColorStop(0,'rgba(27,26,29,.16)');
+  shade.addColorStop(.7,'rgba(26,34,40,.32)');
+  shade.addColorStop(1,'rgba(17,29,26,.57)');
+  context.fillStyle=shade;
   context.fillRect(0,0,canvas.width,canvas.height);
+  for(let x=0;x<cell;x++){
+    const u=x+phase;
+    const shadow=.10+.09*Math.sin(u*.71)+.06*Math.cos(u*.31);
+    context.fillStyle='rgba(24,36,45,'+shadow+')';
+    context.fillRect(x,0,1,canvas.height);
+  }
   return canvas;
 }
 
 export function drawCliffs(context,map,art) {
   const faces=new Map();
+  const wallDepth=map.wallDepth??16;
   const caps=[];
   const isDry = type => type !== 'river' && type !== 'sea';
   for (let y=0; y<map.length-1; y++) {
@@ -64,8 +79,9 @@ export function drawCliffs(context,map,art) {
       const southDrop = [[0,3],[1,2]].some(([north,south]) =>
         samples[north].height-samples[south].height===2 && isDry(samples[south].type));
       if(southDrop) {
-        const key=name+'-'+elevated;
-        if(!faces.has(key))faces.set(key,lowerFace(atlas,elevated,art['wall-face']));
+        const phase=(x%4)*8;
+        const key=[name,elevated,phase].join();
+        if(!faces.has(key))faces.set(key,lowerFace(atlas,elevated,art['wall-face'],wallDepth,phase));
         context.drawImage(faces.get(key),px,py);
       }
     }
@@ -74,10 +90,31 @@ export function drawCliffs(context,map,art) {
 }
 
 export function makeWaterfallFrames(image,fall) {
-  const width = fall.width*cell;
-  const height = 4*cell;
-  if (image.width !== width*4 || image.height !== height) throw Error('Invalid waterfall atlas');
-  return Array.from({length:4},(_,phase)=>({
-    image,sx:phase*width,width,height,x:fall.column*cell,y:(fall.edgeRow-2)*cell,
-  }));
+  const frameWidth=4*cell;
+  const width=2*cell;
+  const inset=cell/2;
+  const drop=(fall.basinRow-fall.edgeRow)*cell;
+  const height=drop+2*cell;
+  if (image.width!==frameWidth*4||image.height!==4*cell||fall.width!==1) throw Error('Invalid waterfall atlas');
+  return Array.from({length:4},(_,phase)=>{
+    const canvas=document.createElement('canvas');
+    canvas.width=width;
+    canvas.height=height;
+    const context=canvas.getContext('2d');
+    for(const [column,sourceOffset] of [[0,0],[1,frameWidth-cell/2]]){
+      const sx=phase*frameWidth+sourceOffset;
+      const w=cell/2,x=inset+column*w;
+      context.drawImage(image,sx,0,w,cell,x,0,w,cell);
+      for(let row=0;row<drop;row+=cell){
+        const sy=(row/cell)%2===0?cell:2*cell;
+        context.drawImage(image,sx,sy,w,cell,x,cell+row,w,cell);
+      }
+    }
+    // The splash widens into the pool using the two outer foam tiles.
+    for(const [column,sourceColumn] of [[0,0],[1,3]]){
+      const sx=phase*frameWidth+sourceColumn*cell;
+      context.drawImage(image,sx,3*cell,cell,cell,column*cell,cell+drop,cell,cell);
+    }
+    return {image:canvas,sx:0,width,height,x:fall.column*cell-inset,y:(fall.edgeRow-1)*cell};
+  });
 }

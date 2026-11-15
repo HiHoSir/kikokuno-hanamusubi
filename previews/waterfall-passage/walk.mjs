@@ -1,7 +1,7 @@
-import {loadCliffChips,makeWaterfallFrames} from './water-chips.mjs?v=wall-stack';
-import {map,waterfall,lowerMouth as southMouth,upperMouth as northMouth,start as southStart,validateTerrain} from './terrain.mjs?v=wall-stack';
+import {loadCliffChips,makeWaterfallFrames} from './water-chips.mjs?v=tall-falls';
+import {map,waterfall,lowerMouth as southMouth,upperMouth as northMouth,start as southStart,validateTerrain} from './terrain.mjs?v=tall-falls';
 import {loadTerrainChips} from '../../src/field/terrain-chips.mjs';
-import {createFieldTerrainRenderer} from './terrain-renderer.mjs?v=wall-stack';
+import {createFieldTerrainRenderer} from './terrain-renderer.mjs?v=tall-falls';
 import {fieldViewportDimensions} from '../../src/field/viewport.mjs';
 import {drawCharacter} from '../../src/game/village/residents.mjs';
 
@@ -82,8 +82,8 @@ const gates = {
   lower:{point:southMouth,to:'cave',arrival:[4,10],facing:1},
   upper:{point:northMouth,to:'cave',arrival:[8,2],facing:0},
   cave:[
-    {point:caveSouth,to:'lower',arrival:[12,17],facing:0},
-    {point:caveNorth,to:'upper',arrival:[14,11],facing:0},
+    {point:caveSouth,to:'lower',arrival:[13,22],facing:0},
+    {point:caveNorth,to:'upper',arrival:[15,11],facing:0},
   ],
 };
 function crossedGate(now){

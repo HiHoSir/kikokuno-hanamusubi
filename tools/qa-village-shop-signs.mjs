@@ -20,7 +20,7 @@ const server=createServer(async(req,res)=>{
 await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
 const origin='http://127.0.0.1:'+server.address().port;
 await mkdir('artifacts',{recursive:true});
-const browser=await chromium.launch({headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_EXECUTABLE,args:['--no-sandbox','--disable-dev-shm-usage']});
 const issues=[],results=[];
 try{
   for(const [width,height,label,building,room,filename,expectedPoint] of [
@@ -31,7 +31,9 @@ try{
     const page=await browser.newPage({viewport:{width,height},deviceScaleFactor:1,hasTouch:true,isMobile:true});
     const errors=[];
     page.on('pageerror',error=>errors.push(error.message));
-    page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
+    page.on('console',m=>{
+      if(m.type()==='error'&&!/^https:\/\/fonts\.(googleapis|gstatic)\.com\//.test(m.location().url))errors.push(m.text());
+    });
     await page.addInitScript(()=>{
       const original=CanvasRenderingContext2D.prototype.drawImage;
       CanvasRenderingContext2D.prototype.drawImage=function(...args){
@@ -94,7 +96,8 @@ try{
         const w=frame.contentWindow,d=frame.contentDocument;
         return {rendered:w.__signDraws.filter(x=>x.name===filename),all:w.__signDraws.map(x=>x.name),
           loading:d.querySelector('#load').hidden,canvas:[d.querySelector('#scene').width,d.querySelector('#scene').height],
-          url:frame.src,status:d.querySelector('#status').textContent};
+          url:frame.src,hud:d.querySelector('.village-hud').innerText.trim(),
+          objective:d.getElementById('objective').innerText.trim()};
       },filename);
       if(room==='teahouse'){
         // An orientation change must never navigate or recreate the world.
@@ -120,6 +123,7 @@ try{
         });
         if(!rotated)issues.push('portrait rotation reloaded game or interrupted BGM');
       }
+      if(!data.objective||data.hud!==data.objective)issues.push(label+' '+building+' unexpected village HUD text: '+data.hud);
       const sign=data.rendered[0];
       if(!sign || sign.arguments!==3 || sign.smoothed || JSON.stringify(sign.world)!==JSON.stringify(expectedPoint) ||
         JSON.stringify(sign.size)!==JSON.stringify([96,120])){
@@ -136,43 +140,51 @@ try{
           if(hero){hero.hp=6;localStorage.setItem(key,JSON.stringify(hero));}
         });
         await toggle.click();
-        await page.waitForFunction(()=>{
-          const m=document.querySelector('#field-menu-backdrop');
-          return m && !m.hidden && m.querySelectorAll('#field-menu-commands button').length===6;
-        },null,{timeout:5000});
+        const commands=page.locator('#field-menu-commands');
+        const details=page.locator('#field-menu-detail');
+        const a=page.locator('#field-menu-action-a');
+        const b=page.locator('#field-menu-action-b');
+        await commands.waitFor({state:'visible'});
         const menu=await page.evaluate(()=>({
           status:document.querySelector('#field-menu-summary').textContent,
-          items:document.querySelector('#field-menu-detail').textContent,
           bgm:window.KIKOKU_GAME?.audio?.trackName,
-          scene:document.querySelector('#game-scene').src
+          scene:document.querySelector('#game-scene').src,
+          controls:[...document.querySelectorAll('#field-menu-dpad button')].map(node=>node.getBoundingClientRect().width)
         }));
-        if(!menu.status.includes('緋月')||!menu.items.includes('薬草')||menu.bgm!==before||
-           !menu.scene.includes('/village/'))issues.push(label+' menu contract failed '+JSON.stringify(menu));
+        if(!menu.status.includes('緋月')||menu.bgm!==before||!menu.scene.includes('/village/')||
+           menu.controls.some(size=>size<44)||await details.isVisible()){
+          issues.push(label+' menu contract failed '+JSON.stringify(menu));
+        }
         await page.screenshot({path:'artifacts/field-menu-'+label+'.png',fullPage:true});
-        // Real on-screen D-pad/A/B: move across menu without tapping the text.
-        await page.locator('[data-menu-dir="down"]').click(); // 術
-        await page.locator('[data-menu-dir="down"]').click(); // 装備
-        await page.locator('[data-menu-dir="down"]').click(); // 強さ
-        const detailText=await page.locator('#field-menu-detail').innerText();
-        const menuState=await page.locator('#field-menu-commands').getAttribute('data-menu-pane');
-        if(menuState!=='commands'||!detailText.includes('攻撃')||!detailText.includes('守備'))
-          issues.push(label+' gamepad navigation to status failed '+menuState+' '+detailText);
-        await page.locator('#field-menu-action-b').click();
+        // The field command grid responds to both axes before an A press opens details.
+        await page.locator('[data-menu-dir="down"]').tap();
+        await page.locator('[data-menu-dir="right"]').tap();
+        await page.locator('[data-menu-dir="up"]').tap();
+        await a.tap();
+        const status=await details.innerText();
+        if(!status.includes('攻撃')||!status.includes('守備'))issues.push(label+' status: '+status);
+        await b.tap();
+        await page.locator('[data-menu-dir="left"]').tap();
+        await a.tap();
+        const items=await details.innerText();
+        if(!items.includes('薬草 ×3')||/おにぎり|団子/.test(items))issues.push(label+' inventory: '+items);
+        await a.tap();
+        const pending=await details.innerText();
+        if(!pending.includes('使う')||!pending.includes('体力を26回復'))issues.push(label+' item action: '+pending);
+        await b.tap();
+        if(!(await details.innerText()).includes('薬草 ×3'))issues.push(label+' backing out consumed the herb');
+        await a.tap();
+        await a.tap();
+        if(!(await details.innerText()).includes('薬草 ×2'))issues.push(label+' A did not use one herb');
+        await b.tap();
+        await b.tap();
         await page.waitForFunction(()=>document.querySelector('#field-menu-backdrop').hidden);
-        // Reopen and select/use the herb without returning to walking input.
-        await toggle.click();
-        await page.locator('#field-menu-action-a').click();
-        if(await page.locator('#field-menu-detail').getAttribute('data-menu-pane')!=='detail')
-          issues.push(label+' A did not enter item submenu');
-        await page.locator('#field-menu-action-a').click();
-        const herbs=await page.locator('#field-menu-detail').innerText();
-        if(!herbs.includes('薬草')||!herbs.includes('×2'))
-          issues.push(label+' field item not consumed by A '+herbs);
-        await page.locator('#field-menu-action-b').click();
-        if(await page.locator('#field-menu-detail').getAttribute('data-menu-pane')!=='commands')
-          issues.push(label+' B did not return to commands');
-        await page.locator('#field-menu-action-b').click();
-        await page.waitForFunction(()=>document.querySelector('#field-menu-backdrop').hidden);
+        await page.setViewportSize({width:844,height:390});
+        await toggle.tap();
+        await commands.waitFor({state:'visible'});
+        await page.screenshot({path:'artifacts/field-menu-844x390.png',fullPage:true});
+        await b.tap();
+        await page.setViewportSize({width,height});
       }
       // Verify enter/leave from real contact movement, not a direct room URL.
       await page.evaluate(()=>{
@@ -218,12 +230,31 @@ try{
             d.querySelector('[data-shop-item="'+id+'"]').click();
             const player=JSON.parse(localStorage.getItem('kikokuno-hanamusubi-battle-player'));
             d.getElementById('action-b').click();
-            return {room,gold:player.gold,foods:player.foods,equipmentTier:player.equipmentTier,
+            return {room,gold:player.gold,foods:player.foods,ownsArmoryGear:player.ownsArmoryGear,equipmentTier:player.equipmentTier,
               closed:d.getElementById('shop-panel').hidden};
           },room);
           if(!purchased.closed||purchased.gold!==(room==='teahouse'?242:50)||
-            (room==='teahouse'?purchased.foods?.onigiri!==1:purchased.equipmentTier!=='T1')){
+            (room==='teahouse'?purchased.foods?.onigiri!==1:(purchased.equipmentTier!=='T0'||!purchased.ownsArmoryGear))){
             issues.push(label+' '+building+' purchase persistence failed: '+JSON.stringify(purchased));
+          }
+          if(room==='armory'){
+            await page.locator('#field-menu-toggle').tap();
+            await page.locator('[data-menu-dir="down"]').tap();
+            await page.locator('[data-menu-dir="right"]').tap();
+            const a=page.locator('#field-menu-action-a');
+            const b=page.locator('#field-menu-action-b');
+            await a.tap();
+            await a.tap();
+            const preview=await page.locator('#field-menu-detail').innerText();
+            if(!preview.includes('攻撃 9 → 29')||!preview.includes('守備 6 → 20'))
+              issues.push('armory equipment preview: '+preview);
+            await page.screenshot({path:'artifacts/field-menu-equipment.png'});
+            await a.tap();
+            const equipped=await page.evaluate(()=>JSON.parse(localStorage.getItem('kikokuno-hanamusubi-battle-player')));
+            if(equipped.equipmentTier!=='T1'||equipped.attack!==29||equipped.defense!==20)
+              issues.push('armory manual equip did not update combat stats');
+            await b.tap();
+            await b.tap();
           }
         }
         await page.evaluate(()=>{
@@ -241,6 +272,42 @@ try{
       finally{
         await page.evaluate(()=>{const w=document.querySelector('iframe')?.contentWindow;
           for(const key of ['ArrowUp','ArrowDown'])w?.dispatchEvent(new KeyboardEvent('keyup',{key,bubbles:true}));}).catch(()=>{});
+      }
+      if(room==='armory'&&returned){
+        await page.evaluate(()=>{
+          window.KIKOKU_GAME.navigate(new URL('/src/game/interiors/?building=house-northwest-tile',location.href));
+        });
+        const interior=page.frameLocator('#game-scene');
+        await interior.locator('#load').waitFor({state:'hidden'});
+        const move=async(key,axis,limit)=>{
+          await page.evaluate(key=>document.querySelector('iframe').contentWindow.dispatchEvent(new KeyboardEvent('keydown',{key})),key);
+          await page.waitForFunction(({axis,limit})=>{
+            const scene=document.querySelector('iframe').contentDocument.querySelector('#scene');
+            return Number(scene?.dataset[axis])<=limit;
+          },{axis,limit},{timeout:6000});
+          await page.evaluate(key=>document.querySelector('iframe').contentWindow.dispatchEvent(new KeyboardEvent('keyup',{key})),key);
+        };
+        await interior.locator('#scene[data-room="house-family"]').waitFor();
+        await move('ArrowLeft','x',131);
+        await move('ArrowUp','y',265);
+        const finish=async()=>{
+          await interior.locator('#action-a').tap();
+          await interior.locator('#next').tap();
+          return interior.locator('#line').innerText();
+        };
+        const found=await finish();
+        await interior.locator('#next').tap();
+        const checked=await finish();
+        await interior.locator('#next').tap();
+        const count=await page.evaluate(()=>JSON.parse(localStorage.getItem('kikokuno-hanamusubi-battle-player')).foods.onigiri);
+        if(!found.includes('おにぎりを見つけた')||!checked.includes('何も入っていない')||count!==1){
+          issues.push('furniture discovery failed: '+JSON.stringify({found,checked,count}));
+        }
+        await page.locator('#field-menu-toggle').tap();
+        await page.locator('#field-menu-action-a').tap();
+        const foundInMenu=await page.locator('#field-menu-detail').innerText();
+        if(!foundInMenu.includes('おにぎり ×1')||foundInMenu.includes('団子'))issues.push('found item in menu: '+foundInMenu);
+        await page.screenshot({path:'artifacts/field-menu-items.png'});
       }
       results.push({label,building,signs:data.rendered.length,entered,returned});
       if(errors.length)issues.push(label+' '+building+' JS errors: '+errors.join('; '));

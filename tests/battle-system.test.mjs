@@ -317,7 +317,6 @@ test('two approved enemies render and can be targeted independently in the produ
     const node=id=>nodes.get(id);
     if(node('enemy-figure-2').hidden)throw Error('second enemy hidden');
     if(!node('enemy-label-2').textContent.includes('化け狸'))throw Error('second enemy not drawn');
-    if(node('battle-area').textContent!=='天妖の社への道')throw Error('field encounter zone label not restored');
     node('command-list').children[0].listeners.click();
     const targets=node('command-list').children;
     if(targets.length!==3)throw Error('two-target command menu not shown');
@@ -446,16 +445,14 @@ test('teahouse purchases preserve currency and recovery stock without a village 
   assert.equal(full.act('food:onigiri').accepted,false);
 });
 
-test('armory sells only the existing tier one once and recomputes normalized combat stats',()=>{
-  const money={...DEFAULT_PLAYER,gold:210};
-  const result=purchaseArmory(money);
+test('buying the armory gear keeps the old combat stats until it is equipped',()=>{
+  const result=purchaseArmory({...DEFAULT_PLAYER,gold:210});
   assert.equal(result.accepted,true);
   assert.equal(result.player.gold,10);
-  assert.equal(result.player.equipmentTier,'T1');
-  assert.equal(result.player.attack,29);
-  assert.equal(result.player.defense,20);
+  assert.equal(result.player.equipmentTier,'T0');
+  assert.equal(result.player.attack,9);
+  assert.equal(result.player.defense,6);
   assert.equal(result.player.hp,DEFAULT_PLAYER.hp);
   assert.equal(purchaseArmory(result.player).accepted,false);
   assert.equal(purchaseArmory(DEFAULT_PLAYER).accepted,false);
-  assert.equal(ARMORY_STOCK.price,200);
 });

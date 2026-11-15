@@ -2,11 +2,12 @@ import { HIZUKI_WALK_SPEED, makeWalk, touchedEntrance, crossesSouthExit } from '
 import { villageRooms } from '../interiors/rooms.mjs';
 import { pixelViewport, DEFAULT_CAMERA_ZOOM, canopyOpacity, riverRipples, paintRiverRipples } from './render.mjs';
 import { advanceResident, drawCharacter, makeResident, residentInFront, RESIDENT_RADIUS } from './residents.mjs';
-import { bindDialogue } from './dialogue.mjs';
+import { bindDialogue } from './dialogue.mjs?v=field-menu-1';
+import {collectFind,readPlayer,savePlayer} from '../battle/rules.mjs?v=village-finds-1';
+import {VILLAGE_FINDS} from '../../../data/maps/hozuki-village/finds.mjs';
 import {readStoryStage,advanceStoryStage,objectiveForStage} from '../story/chapter-one.mjs';
 
 const scene = document.querySelector('#scene');
-const status = document.querySelector('#status');
 const load = document.querySelector('#load');
 
 const context = scene.getContext('2d', {alpha:false});
@@ -73,6 +74,10 @@ async function start() {
     clearInput();
     for(const npc of residents) npc.moving=false;
   }, completeStoryDialogue);
+  const finds=Object.entries(VILLAGE_FINDS).filter(([,site])=>site.sprite).map(([id,site])=>{
+    const [x,y]=data.sprites.find(sprite=>sprite.id===site.sprite).feet;
+    return {id,x,y};
+  });
   const entrances=data.markers.filter(marker=>marker.entrance && Object.hasOwn(villageRooms,marker.id));
   const fieldExit=data.markers.find(marker=>marker.southExit);
   const paths = new Set(data.sprites.flatMap(p => [p.file,p.eave,p.sway].filter(Boolean)));
@@ -235,13 +240,9 @@ async function start() {
     const eave = houses.find(house => rectangleContains(house.eaveZone,x,y));
     if(eave) context.drawImage(art.get(eave.eave),...eave.eaveRect,...eave.eavePoint,eave.eaveRect[2],eave.eaveRect[3]);
 
-    const marker=data.markers.find(({point:[mx,my]})=>Math.hypot(mx-x,my-y)<22);
     dialogue.update(residentInFront(x,y,face,residents),x,y);
 
-    const location=eave ? eave.name+'の軒下' : marker?.name ?? '村の中';
     const coords=[Math.round(x+worldX),Math.round(y+worldY)];
-    const label=location;
-    if(status.textContent!==label) status.textContent=label;
     if(coords[0]!==renderedX || coords[1]!==renderedY){
       [renderedX,renderedY]=coords;
       scene.dataset.x=String(renderedX);
@@ -294,11 +295,19 @@ async function start() {
     }
     button.addEventListener('contextmenu',event=>event.preventDefault());
   }
+  function interact(){
+    if(dialogue.open())return;
+    const find=residentInFront(x,y,face,finds);
+    if(!find)return;
+    const result=collectFind(readPlayer(),find.id);
+    if(result.accepted)savePlayer(result.player);
+    dialogue.openMessage(result.message);
+  }
   const actionA=document.querySelector('#action-a');
   const actionB=document.querySelector('#action-b');
   actionA.addEventListener('click',()=>{
     if(dialogue.active)dialogue.advance();
-    else dialogue.open();
+    else interact();
   });
   actionB.addEventListener('click',()=>{
     if(dialogue.active)dialogue.advance();
@@ -314,7 +323,8 @@ async function start() {
       return;
     }
     if ((event.key==='Enter'||event.key===' ') && event.target===document.body) {
-      dialogue.open();
+      event.preventDefault();
+      if(!event.repeat)interact();
       return;
     }
     const direction=keys[event.key];
@@ -340,6 +350,5 @@ async function start() {
 
 start().catch(error=>{
   console.error(error);
-  status.textContent='読み込み失敗';
   load.textContent='村を読み込めませんでした。ページを再読み込みしてください。';
 });

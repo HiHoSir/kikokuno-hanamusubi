@@ -81,16 +81,16 @@ function prop(kind,x,y,w,h,solid=false){
 }
 for(let y=11;y<39;y++)for(let x=3;x<W-3;x++){
  if(field[y][x]!=="grass"&&field[y][x]!=="forest")continue;
- const n=hash(x,y);
- if(n<5)prop("sakura",x,y,32,64);
- else if(n<9)prop("tree",x,y,32,32);
- else if(n<21)prop("flowers",x,y,40,24);
+ const n=hash(x,y),bloom=Math.sin(x*.27)+Math.cos(y*.46)+Math.sin((x-y)*.19);
+ if((bloom>.35&&n<27)||n<7)prop("sakura",x,y,32,64);
+ else if(n<15)prop("tree",x,y,32,32);
+ else if(n<49)prop("flowers",x,y,40,24);
 }
 for(let y=43;y<56;y++)for(let x=4;x<W-4;x++){
  if(hash(x,y)<7&&Math.abs(x-28)>3)prop("flowers",x,y,40,24);
 }
 for(const [x,y] of [[12,47],[17,43],[40,43],[45,49]])prop("sakura",x,y,32,64,true);
-for(const [x,y] of [[6,12],[14,10],[41,11],[48,15]])prop("mountain",x,y,128,64,true);
+for(const [x,y] of [[8,26],[13,24],[45,27],[49,29],[6,12],[14,10],[41,11],[48,15]])prop("mountain",x,y,128,64,false);
 prop("village",44,24,64,32,true);
 prop("torii",14,22,32,32,true);
 prop("bridge",stream(26),26,96,40,false);
@@ -128,7 +128,7 @@ function composeBase(atlases){
    target.drawImage(images.rock,0,0,C,C,x*C,(y+band)*C,C,C);
    // Existing approved 4x4 cliff atlas: NW=1 NE=2 SE=4 SW=8.
    const mask=band===0?12:band===2?3:((x&1)?6:9);
-   target.drawImage(images.cliff,(mask%4)*C,Math.floor(mask/4)*C,C,C,x*C,(y+band)*C,C,C);
+   target.drawImage(x<11||x>44?images.cliffForest:images.cliff,(mask%4)*C,Math.floor(mask/4)*C,C,C,x*C,(y+band)*C,C,C);
    cliffChips++;
   }
   target.drawImage(images.cliff,0,3*C,C,C,x*C,(y-1)*C,C,C);
@@ -152,7 +152,7 @@ function paint(time){
   canvas.width=dimensions.width;canvas.height=dimensions.height;
  }
  const cw=canvas.width,ch=canvas.height;
- const cam={x:hero.x,y:hero.y-2*C,preset:0,centerX:cw/2,foregroundGrowth:true};
+ const cam={x:hero.x,y:hero.y-4*C,preset:0,centerX:cw/2,foregroundGrowth:true};
  c.imageSmoothingEnabled=false;c.clearRect(0,0,cw,ch);
  c.fillStyle="#1b303e";c.fillRect(0,0,cw,ch);
  skyBand(0,240,cw);
@@ -207,7 +207,7 @@ function move(dir){
  cameraChanged=true;window.__OVERLOOK_QA.hero=[Math.floor(hero.x/32),Math.floor(hero.y/32)];
  paint(performance.now());
 }
-function reset(){hero={x:28*C+16,y:44*C+16,dir:"u",step:0};cameraChanged=true;paint(performance.now());}
+function reset(){hero={x:28*C+16,y:44*C+16,dir:"u",step:0};window.__OVERLOOK_QA.hero=[28,44];cameraChanged=true;paint(performance.now());}
 const keyDirs={ArrowUp:"u",ArrowDown:"d",ArrowLeft:"l",ArrowRight:"r",w:"u",s:"d",a:"l",d:"r"};
 document.addEventListener("keydown",e=>{const dir=keyDirs[e.key];if(dir){e.preventDefault();move(dir);}});
 document.querySelector("#reset").addEventListener("click",reset);
@@ -221,6 +221,7 @@ Promise.all([
  loadLandscape(),loadTerrainChips(),
  image("assets/field/terrain/grass-cliff.png"),
  image("assets/field/terrain/atlas/cliff-3-32.png"),
+ image("assets/field/terrain/atlas/cliff-forest-3-32.png"),
  image("assets/field/objects/trees.png"),
  image("assets/field/objects/flowers.png"),
  image("assets/village/objects/tree-sakura-pale.png"),
@@ -230,8 +231,8 @@ Promise.all([
  image("assets/field/objects/bridge.png"),
  image("assets/characters/hizuki/walk-sd-32.png"),
  image("assets/field/effects/waterfall-motion.png")
-]).then(([_,atlas,rock,cliff,tree,flowers,sakura,mountain,village,torii,bridge,heroArt,fall])=>{
- images={rock,cliff,tree,flowers,sakura,mountain,village,torii,bridge,hero:heroArt,fall};
+]).then(([_,atlas,rock,cliff,cliffForest,tree,flowers,sakura,mountain,village,torii,bridge,heroArt,fall])=>{
+ images={rock,cliff,cliffForest,tree,flowers,sakura,mountain,village,torii,bridge,hero:heroArt,fall};
  land=composeBase(atlas);loading.hidden=true;
  let lastTick=-1;
  function tick(time){

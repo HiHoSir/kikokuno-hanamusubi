@@ -1,0 +1,201 @@
+@import url("https://fonts.googleapis.com/css2?family=DotGothic16&display=swap");
+
+:root {
+  color-scheme: dark;
+  color: #faf8f2;
+  background: #000;
+  font-family: "DotGothic16", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+}
+
+*, *::before {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+.title-screen,
+.opening-screen {
+  display: grid;
+  min-height: 100vh;
+  min-height: 100svh;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right)
+    env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+.title-home {
+  display: grid;
+  grid-template-columns: minmax(0, 340px);
+  place-content: center;
+  justify-items: center;
+  gap: clamp(22px, 7vw, 46px);
+  padding: 24px 17px 30px;
+}
+
+.title-logo {
+  width: 100%;
+  margin: 0;
+}
+
+.title-logo img {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: grayscale(1) invert(1) contrast(1.23);
+}
+
+.title-menu {
+  display: grid;
+  width: min(100%, 203px);
+  justify-self: center;
+}
+
+.title-menu :is(a, button) {
+  display: grid;
+  place-items: center;
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  min-height: 45px;
+  padding: 0 20px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.3;
+  letter-spacing: .085em;
+  text-align: center;
+  text-decoration: none;
+  touch-action: manipulation;
+}
+
+.title-menu span {
+  position: relative;
+}
+
+.title-menu span::before {
+  content: "";
+  position: absolute;
+  right: calc(100% + 8px);
+  top: calc(50% - 4px);
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  border-left: 6px solid currentColor;
+  opacity: 0;
+}
+
+.title-start span::before,
+.title-menu :focus-visible span::before {
+  opacity: 1;
+}
+
+.title-menu:focus-within .title-start:not(:focus-visible) span::before {
+  opacity: 0;
+}
+
+@media (hover: hover) {
+  .title-menu button:hover:not(:disabled) span::before {
+    opacity: 1;
+  }
+
+  .title-menu:has(button:hover:not(:disabled)) .title-start span::before {
+    opacity: 0;
+  }
+}
+
+.title-menu button:disabled {
+  color: #777772;
+}
+
+.title-demo {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  width: min(100%, 760px);
+  height: 100vh;
+  height: calc(100svh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  justify-self: center;
+}
+
+.title-demo img {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+.title-demo footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 5px 12px;
+  flex-wrap: wrap;
+  padding: 4px 11px 6px;
+  border-top: 1px solid #393936;
+}
+
+.title-demo p {
+  margin: 0;
+  font-size: 14px;
+}
+
+.demo-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.demo-actions button,
+.opening-return {
+  min-height: 44px;
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+  padding: 0 6px;
+  text-decoration: underline;
+  text-underline-offset: .25em;
+  touch-action: manipulation;
+}
+
+#next-scene {
+  color: #e3cc9c;
+}
+
+.opening-screen {
+  grid-template-rows: 1fr auto;
+}
+
+.opening-return {
+  display: grid;
+  place-items: center;
+  justify-self: center;
+}
+
+@media (orientation: landscape) {
+  .title-home {
+    grid-template-columns: minmax(0, 440px) auto;
+    align-items: center;
+    padding: 16px clamp(10px, 5vw, 44px);
+    gap: clamp(9px, 4vw, 50px);
+  }
+
+  .title-menu {
+    width: auto;
+    min-width: 126px;
+  }
+}
+
+/* Game menus are not browser document text; avoid text selection/callouts
+   while preserving taps and the native opening video controls. */
+.title-screen,.title-screen *, .opening-screen,.opening-screen *{
+  -webkit-user-select:none;user-select:none;
+  -webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;
+}
+.title-logo img,.title-demo img{-webkit-user-drag:none}
+.title-screen,.opening-screen{min-height:100dvh}

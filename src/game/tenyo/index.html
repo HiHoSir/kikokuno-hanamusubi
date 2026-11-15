@@ -22,7 +22,7 @@ button{border:1px solid #777d62;border-radius:8px;background:#314337;color:inher
 #load{position:absolute;inset:0;z-index:10;display:grid;place-items:center;text-align:center;background:#142c3a;padding:16px}
 #load[hidden]{display:none}
 #objective{display:block;color:#f7efdb;font-size:12px;line-height:1.5;text-align:left}
-#status{display:block;color:#d7dbca;font-size:12px;text-align:left}
+#interaction-hint:empty{display:none}
 #pad .dpad button{font-size:21px}
 #pad button.held{background:rgba(59,96,128,.96)}
 @media(orientation:landscape){.field-hud{max-width:60%}}
@@ -37,8 +37,7 @@ button{border:1px solid #777d62;border-radius:8px;background:#314337;color:inher
 <main data-bgm="prologue">
 <section class="viewport" aria-label="天妖の社">
   <div class="field-hud">
-    <h1>天妖の社</h1>
-    <output id="status" aria-live="polite">境内</output>
+    <output id="interaction-hint" aria-live="polite"></output>
     <output id="objective" aria-live="polite">白妙を探そう</output>
   </div>
   <canvas id="scene" width="768" height="768" aria-label="天妖の社のマップ"></canvas>
@@ -68,6 +67,6 @@ button{border:1px solid #777d62;border-radius:8px;background:#314337;color:inher
 <script src="./rendering/autotile.js"></script>
 <script src="./rendering/model.js"></script>
 <script src="./rendering/render.js?v=tenyo-water-depth"></script>
-<script type="module" src="./walk.mjs?v=fb40c1b-tenyo-water-art"></script>
+<script type="module" src="./walk.mjs?v=fb40c1b-tenyo-water-art-location-labels"></script>
 </body>
 </html>

@@ -3,7 +3,6 @@ import {BATTLE_REQUEST_KEY,FIELD_RETURN_KEY,chooseFieldEncounter} from '../game/
 
 const scene = document.querySelector('#scene');
 const load = document.querySelector('#load');
-const status = document.querySelector('#status');
 const buttons = [...document.querySelectorAll('[data-dir]')];
 const directions = {up: [0, -1, 1], down: [0, 1, 0], left: [-1, 0, 3], right: [1, 0, 2]};
 const keys = {ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right', w: 'up', s: 'down', a: 'left', d: 'right'};
@@ -96,8 +95,6 @@ async function start() {
   function updatePosition() {
     scene.dataset.x = String(Math.floor(state.x / world.tileSize));
     scene.dataset.y = String(Math.floor(state.y / world.tileSize));
-    const place = world.near(state.x, state.y);
-    status.textContent = place ? world.places[place].name + '付近' : 'フィールド';
   }
 
   function frame(now) {

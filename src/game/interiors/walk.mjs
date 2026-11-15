@@ -1,10 +1,11 @@
 import {HIZUKI_INTERIOR_WALK_SPEED, makeWalk} from '../village/movement.mjs?v=village-speed-288';
 import {DEFAULT_CAMERA_ZOOM, pixelViewport} from '../village/render.mjs';
 import {drawCharacter, RESIDENT_RADIUS, residentInFront} from '../village/residents.mjs';
-import {bindDialogue} from '../village/dialogue.mjs';
-import {rooms, resolveInterior, prepareInterior} from './rooms.mjs';
+import {bindDialogue} from '../village/dialogue.mjs?v=field-menu-1';
+import {rooms, resolveInterior, prepareInterior} from './rooms.mjs?v=village-finds-1';
 import {paintRoom, paintPartition, paintContactShadow} from './room-art.mjs';
-import {FOOD_ITEMS,ARMORY_STOCK,purchaseFood,purchaseArmory,readPlayer,savePlayer} from '../battle/rules.mjs';
+import {FOOD_ITEMS,ARMORY_STOCK,purchaseFood,purchaseArmory,collectFind,readPlayer,savePlayer} from '../battle/rules.mjs?v=village-finds-1';
+import {VILLAGE_FINDS} from '../../../data/maps/hozuki-village/finds.mjs';
 
 const scene = document.querySelector('#scene');
 const context = scene.getContext('2d', {alpha:false});
@@ -68,7 +69,7 @@ async function start() {
       const button=document.createElement('button');
       button.type='button';button.dataset.shopItem=item.id;
       button.classList.toggle('selected',shopSelected===i);
-      button.textContent=item.label+(hero.foods[item.id]!==undefined?'　所持'+hero.foods[item.id]:item.id===ARMORY_STOCK.id&&hero.equipmentTier!=='T0'?'　購入済':'');
+      button.textContent=item.label+(hero.foods[item.id]!==undefined?'　所持'+hero.foods[item.id]:item.id===ARMORY_STOCK.id&&hero.ownsArmoryGear?'　購入済':'');
       button.addEventListener('click',()=>{shopSelected=i;confirmShop();});
       shopOptions.append(button);
     }
@@ -97,7 +98,7 @@ async function start() {
     shopMessage.textContent=result.message;refreshShop();
     globalThis.KIKOKU_AUDIO?.se?.(result.accepted?'confirm':'cancel');
   }
-  const dialogue = bindDialogue(clearInput,()=>{if(selectedRoom==='teahouse'||selectedRoom==='armory')openShop();});
+  const dialogue = bindDialogue(clearInput,ended=>{if(ended===plan.resident)openShop();});
   const params = new URLSearchParams(location.search);
   const initial = resolveInterior(params);
   const outdoor = new URL('../village/',location.href);
@@ -107,7 +108,7 @@ async function start() {
   const floorContext = floor.getContext('2d');
   const overlay = document.createElement('canvas');
   const overlayContext = overlay.getContext('2d');
-  let room, plan, walk, x, y, viewport, face, distance;
+  let room, plan, walk, x, y, viewport, face, distance, roomFind;
   let lastFrame=0;
 
   function setRoom(nextRoom, selected) {
@@ -118,6 +119,13 @@ async function start() {
     shopActive=false;shopPanel.hidden=true;
     plan = prepareInterior(room);
     plan.resident.bitmap=residentArt.get(plan.resident.asset);
+    const find=Object.entries(VILLAGE_FINDS).find(([,site])=>site.building&&site.building===initial.returnFocus);
+    const furniture=find&&plan.depthSorted.find(object=>object.asset===find[1].furniture);
+    roomFind=null;
+    if(furniture){
+      const [left,top,width,height]=furniture.footprint;
+      roomFind={id:find[0],talkPoint:[left+width/2,top+height-4]};
+    }
     walk = makeWalk(room.width,room.height,plan.blocked,8);
     [x,y] = plan.spawn;
     face = 1;
@@ -229,12 +237,18 @@ async function start() {
     }
     button.addEventListener('contextmenu',event=>event.preventDefault());
   }
+  function interact(){
+    if(dialogue.open()||!roomFind||!residentInFront(x,y,face,[roomFind]))return;
+    const result=collectFind(readPlayer(),roomFind.id);
+    if(result.accepted)savePlayer(result.player);
+    dialogue.openMessage(result.message);
+  }
   const actionA=document.querySelector('#action-a');
   const actionB=document.querySelector('#action-b');
   actionA.addEventListener('click',()=>{
     if(shopActive)confirmShop();
     else if(dialogue.active)dialogue.advance();
-    else dialogue.open();
+    else interact();
   });
   actionB.addEventListener('click',()=>{
     if(shopActive)closeShop();
@@ -260,7 +274,8 @@ async function start() {
       return;
     }
     if((event.key==='Enter'||event.key===' ') && event.target===document.body){
-      dialogue.open();
+      event.preventDefault();
+      if(!event.repeat)interact();
       return;
     }
     if (!keys[event.key] || event.metaKey || event.ctrlKey || event.altKey) return;

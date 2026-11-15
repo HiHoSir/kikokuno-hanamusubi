@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
+<title>花霞野・高台からの眺め — マップチップ検査</title>
+<style>
+:root{color-scheme:dark;background:#14232a;color:#fff6df;font-family:system-ui,"Hiragino Kaku Gothic ProN",sans-serif}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;overflow:hidden}
+main{position:relative;width:100vw;height:100dvh;overflow:hidden}
+#scene{display:block;width:100%;height:100%;image-rendering:pixelated;touch-action:none}
+#title{position:absolute;left:max(12px,env(safe-area-inset-left));top:max(8px,env(safe-area-inset-top));padding:7px 12px;background:#172331c9;border:1px solid #f4e9c275;pointer-events:none;text-shadow:1px 1px #16212c;font-size:17px}
+#title small{font-size:10px;color:#efe3be;display:block}
+#help{position:absolute;left:max(12px,env(safe-area-inset-left));bottom:max(8px,env(safe-area-inset-bottom));background:#162532bf;font-size:11px;padding:7px 10px;max-width:65%;pointer-events:none}
+#actions{position:absolute;right:max(10px,env(safe-area-inset-right));bottom:max(8px,env(safe-area-inset-bottom));display:flex;gap:8px;align-items:flex-end}
+#reset{font-size:11px;color:#f5e3c5;border:1px solid #d8cba29a;background:#1a2b35d9;padding:8px;border-radius:7px;min-height:38px}
+#dpad{display:grid;grid-template-columns:repeat(3,38px);grid-template-rows:repeat(2,38px);gap:3px}
+#dpad button{background:#1b2c38d9;border:1px solid #d8cba29a;color:#fff4db;font-size:18px;border-radius:8px;touch-action:none;user-select:none}
+#dpad button:active{background:#a47b54}
+#dpad [data-dir=u]{grid-column:2;grid-row:1}
+#dpad [data-dir=l]{grid-column:1;grid-row:2}
+#dpad [data-dir=d]{grid-column:2;grid-row:2}
+#dpad [data-dir=r]{grid-column:3;grid-row:2}
+#loading{position:absolute;inset:0;display:grid;place-items:center;background:#14232ae8;text-align:center;padding:20px;font-size:15px}
+#loading[hidden]{display:none}
+#turn{display:none}
+@media (orientation:portrait){#turn{position:absolute;inset:0;z-index:9;display:grid;place-items:center;background:#14232aef;text-align:center;padding:25px}}
+</style>
+<script src="../../src/field/assets.js"></script>
+<script src="../../src/field/landscape.js"></script>
+<script src="../../src/field/autotile.js"></script>
+<script src="../../src/field/elevation-model.js"></script>
+</head>
+<body>
+<main>
+<canvas id="scene" width="960" height="544" aria-label="実際の32pxマップチップから合成した花霞野の高台と谷のゲーム画面"></canvas>
+<div id="title">花霞野 <small>高台から望む、春霞の谷</small></div>
+<div id="help">試作：32px地形＋既存崖面チップ＋独立水面・滝アニメ</div>
+<div id="actions"><button id="reset" type="button">高台へ戻る</button>
+<div id="dpad" aria-label="4方向移動"><button data-dir="u" aria-label="北">▲</button><button data-dir="l" aria-label="西">◀</button><button data-dir="d" aria-label="南">▼</button><button data-dir="r" aria-label="東">▶</button></div></div>
+<div id="loading">採用済みマップチップを読み込み中…</div>
+<div id="turn">横画面で確認してください</div>
+</main>
+<script type="module">
+import {loadTerrainChips,composeCoast} from "../../src/field/terrain-chips.mjs";
+import {fieldViewportDimensions} from "../../src/field/viewport.mjs";
+
+const C=32,W=56,H=58,ZOOM=1.75;
+const LAND=window.YK_LANDSCAPE,E=window.YK_ELEVATION;
+const canvas=document.querySelector("#scene"),c=canvas.getContext("2d"),loading=document.querySelector("#loading");
+const field=Array.from({length:H},()=>Array(W).fill("grass"));
+field.heights=field.map(row=>row.map(()=>0));
+field.ramps=field.map(row=>row.map(()=>null));
+field.cornerCut=0;field.cornerProtected=new Set();field.ladders=[];
+field.paths=[];field.decorations=[];field.bridgeWaterCells=new Set();
+field.projectedHeights=true;field.shoreRelief=false;field.referencePlacedObjects=true;
+field.occupiedTiles=new Set();
+const ridge=x=>39+Math.round(1.1*Math.sin(x*.18)+.6*Math.cos(x*.37));
+const stream=y=>29+Math.round(6*Math.sin((y-11)*.23));
+function inside(x,y){return x>0&&y>0&&x<W-1&&y<H-1;}
+function hash(x,y){return ((x*92821+y*68917+x*y*1733)>>>0)%100;}
+for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+  if(!inside(x,y)){field[y][x]="mountain";continue;}
+  const edge=ridge(x);
+  if(y>=edge&&y<edge+3){field[y][x]="mountain";}
+  if(y>=edge+3)field.heights[y][x]=3;
+  if(y<edge&&y>9&&hash(x,y)<12)field[y][x]="forest";
+}
+for(let y=11;y<37;y++){
+  const mid=stream(y);
+  for(let dx=-1;dx<=1;dx++){const x=mid+dx;if(inside(x,y))field[y][x]="river";}
+}
+// A true deck carries the 32px route across the moving river; water remains beneath its banks.
+for(let x=stream(26)-1;x<=stream(26)+1;x++)field[26][x]="bridge";
+const props=[];
+function prop(kind,x,y,w,h,solid=false){
+ if(!inside(x,y)||field[y][x]==="river"||field[y][x]==="mountain")return;
+ props.push({kind,x:(x+.5)*C,foot:(y+1)*C,w,h,tx:x,ty:y});
+ if(solid)field.occupiedTiles.add(x+","+y);
+}
+for(let y=11;y<39;y++)for(let x=3;x<W-3;x++){
+ if(field[y][x]!=="grass"&&field[y][x]!=="forest")continue;
+ const n=hash(x,y);
+ if(n<5)prop("sakura",x,y,32,64);
+ else if(n<9)prop("tree",x,y,32,32);
+ else if(n<21)prop("flowers",x,y,40,24);
+}
+for(let y=43;y<56;y++)for(let x=4;x<W-4;x++){
+ if(hash(x,y)<7&&Math.abs(x-28)>3)prop("flowers",x,y,40,24);
+}
+for(const [x,y] of [[12,47],[17,43],[40,43],[45,49]])prop("sakura",x,y,32,64,true);
+for(const [x,y] of [[6,12],[14,10],[41,11],[48,15]])prop("mountain",x,y,128,64,true);
+prop("village",44,24,64,32,true);
+prop("torii",14,22,32,32,true);
+prop("bridge",stream(26),26,96,40,false);
+// Re-use the existing animated 80x96 waterfall, laid over the three-chip cliff.
+props.push({kind:"waterfall",x:(stream(36)+.5)*C,foot:41*C,w:80,h:96,tx:stream(36),ty:40});
+props.sort((a,b)=>a.foot-b.foot||a.x-b.x);
+E.prepare(field);
+let images,land,hero={x:28*C+16,y:48*C+16,dir:"u",step:0},cameraChanged=true,lastFrame=-1;
+const rows={d:0,u:1,r:2,l:3};
+function image(path){
+ return new Promise((resolve,reject)=>{
+  const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(Error("画像を読み込めません: "+path));
+  im.src=YK_FIELD_ASSETS.url(path);
+ });
+}
+function loadLandscape(){
+ return new Promise((resolve,reject)=>{
+  function check(){
+   const errors={...LAND.errors,...YK_AUTOTILE.errors};
+   if(Object.keys(errors).length){reject(Error("地形素材: "+JSON.stringify(errors)));return;}
+   if(LAND.ready()&&YK_AUTOTILE.ready())resolve();
+  }
+  LAND.load(check);YK_AUTOTILE.load(check);check();
+ });
+}
+function composeBase(atlases){
+ const result=composeCoast(field,LAND,atlases);
+ const target=result.canvas.getContext("2d");target.imageSmoothingEnabled=false;
+ let cliffChips=0;
+ for(let x=1;x<W-1;x++){
+  const y=ridge(x);
+  // Every visible cliff row is filled with an ACTUAL 32px rock mapchip.
+  // No abandoned canvas elevation meshes, stretched walls, or procedural polygon art.
+  for(let band=0;band<3;band++){
+   target.drawImage(images.rock,0,0,C,C,x*C,(y+band)*C,C,C);
+   // Existing approved 4x4 cliff atlas: NW=1 NE=2 SE=4 SW=8.
+   const mask=band===0?12:band===2?3:((x&1)?6:9);
+   target.drawImage(images.cliff,(mask%4)*C,Math.floor(mask/4)*C,C,C,x*C,(y+band)*C,C,C);
+   cliffChips++;
+  }
+  target.drawImage(images.cliff,0,3*C,C,C,x*C,(y-1)*C,C,C);
+ }
+ window.__OVERLOOK_QA={tileSize:32,terrain:[W,H],cliffChips,
+  waterAnimated:true,usingApprovedAssets:true,draws:0,hero:[28,48]};
+ return result.canvas;
+}
+function skyBand(sourceY,h,width){
+ const horizon=LAND.motionArt("horizon",performance.now()),left=Math.floor((width-640)/2),right=width-left-640;
+ if(left>0){c.save();c.translate(left,0);c.scale(-1,1);c.drawImage(horizon,0,sourceY,left,h,0,sourceY,left,h);c.restore();}
+ c.drawImage(horizon,0,sourceY,640,h,left,sourceY,640,h);
+ if(right>0){c.save();c.translate(left+640+right,0);c.scale(-1,1);
+  c.drawImage(horizon,640-right,sourceY,right,h,0,sourceY,right,h);c.restore();}
+}
+function paint(time){
+ if(!land)return;
+ const rect=canvas.getBoundingClientRect();
+ const dimensions=fieldViewportDimensions(rect.width,rect.height);
+ if(canvas.width!==dimensions.width||canvas.height!==dimensions.height){
+  canvas.width=dimensions.width;canvas.height=dimensions.height;
+ }
+ const cw=canvas.width,ch=canvas.height;
+ const cam={x:hero.x,y:hero.y,preset:0,centerX:cw/2,foregroundGrowth:true};
+ c.imageSmoothingEnabled=false;c.clearRect(0,0,cw,ch);
+ c.fillStyle="#1b303e";c.fillRect(0,0,cw,ch);
+ skyBand(0,240,cw);
+ const water=LAND.motionArt("water",time),pattern=c.createPattern(water,"repeat");
+ // Original field's 4px projection strips: no 3D terrain or full-frame repaint of chips.
+ for(let sy=136;sy<ch;sy+=4){
+  const sh=Math.min(4,ch-sy),a=LAND.unproject(0,sy,cam,ZOOM),b=LAND.unproject(cw,sy,cam,ZOOM),d=LAND.unproject(0,sy+sh,cam,ZOOM);
+  if(!a||!b||!d)continue;
+  const ax=a.x,ay=a.y,bx=b.x,dy=d.y;
+  if(bx<=ax||dy<=ay)continue;
+  const sx=cw/(bx-ax),ys=sh/(dy-ay);
+  c.save();c.beginPath();c.rect(0,sy,cw,sh);c.clip();
+  c.save();c.transform(sx,0,0,ys,-ax*sx,sy-ay*ys);
+  c.fillStyle=pattern;c.fillRect(ax-4,ay-4,bx-ax+8,dy-ay+8);c.restore();
+  const x0=Math.max(0,Math.floor(ax)-1),x1=Math.min(land.width,Math.ceil(bx)+1);
+  const y0=Math.max(0,Math.floor(ay)-1),y1=Math.min(land.height,Math.ceil(dy)+1);
+  if(x1>x0&&y1>y0)c.drawImage(land,x0,y0,x1-x0,y1-y0,(x0-ax)*sx,sy+(y0-ay)*ys,(x1-x0)*sx,(y1-y0)*ys+.5);
+  c.restore();
+ }
+ const all=props.concat([{kind:"hero",x:hero.x,foot:hero.y+16,w:32,h:32}]).sort((a,b)=>a.foot-b.foot);
+ for(const p of all){
+  const pos=LAND.project(p.x,p.foot,cam,ZOOM);
+  if(!pos||pos.y<136||pos.y>ch+110)continue;
+  const w=p.w*pos.scale,h=p.h*pos.scale,left=pos.x-w/2,top=pos.y-h;
+  if(left>cw||left+w<0)continue;
+  c.save();c.imageSmoothingEnabled=false;
+  if(p.kind==="hero"){
+   c.fillStyle="#17232777";c.beginPath();c.ellipse(pos.x,pos.y,10*pos.scale,3*pos.scale,0,0,Math.PI*2);c.fill();
+   const [ax,ay]=YK_FIELD_ASSETS.heroFootAnchorPx;
+   const frame=hero.step%3;
+   c.drawImage(images.hero,frame*32,rows[hero.dir]*32,32,32,pos.x-ax*pos.scale,pos.y-ay*pos.scale,32*pos.scale,32*pos.scale);
+  } else if(p.kind==="waterfall"){
+   const idx=Math.floor(time/360)%2;
+   c.drawImage(images.fall,idx*80,0,80,96,left,top,w,h);
+  } else c.drawImage(images[p.kind],left,top,w,h);
+  c.restore();
+ }
+ // The soft atmospheric veil is a display effect, NOT an image pretending to be a map.
+ const haze=c.createLinearGradient(0,128,0,270);
+ haze.addColorStop(0,"rgba(241,204,227,.23)");
+ haze.addColorStop(1,"rgba(241,204,227,0)");
+ c.fillStyle=haze;c.fillRect(0,128,cw,142);
+ if(window.__OVERLOOK_QA){window.__OVERLOOK_QA.draws++;window.__OVERLOOK_QA.waterFrame=Math.floor(time/360)%2;}
+}
+function move(dir){
+ const delta={u:[0,-1],d:[0,1],l:[-1,0],r:[1,0]}[dir];
+ if(!delta)return;hero.dir=dir;
+ const nx=hero.x+delta[0]*32,ny=hero.y+delta[1]*32,tx=Math.floor(nx/32),ty=Math.floor(ny/32);
+ if(E.canMove(field,hero.x,hero.y,nx,ny)){
+  hero.x=nx;hero.y=ny;hero.step=hero.step===1?2:1;
+ }else hero.step=0;
+ cameraChanged=true;window.__OVERLOOK_QA.hero=[Math.floor(hero.x/32),Math.floor(hero.y/32)];
+ paint(performance.now());
+}
+function reset(){hero={x:28*C+16,y:48*C+16,dir:"u",step:0};cameraChanged=true;paint(performance.now());}
+const keyDirs={ArrowUp:"u",ArrowDown:"d",ArrowLeft:"l",ArrowRight:"r",w:"u",s:"d",a:"l",d:"r"};
+document.addEventListener("keydown",e=>{const dir=keyDirs[e.key];if(dir){e.preventDefault();move(dir);}});
+document.querySelector("#reset").addEventListener("click",reset);
+let interval=null;const stop=()=>{if(interval){clearInterval(interval);interval=null;}};
+document.querySelectorAll("[data-dir]").forEach(button=>{
+ button.addEventListener("pointerdown",e=>{e.preventDefault();stop();move(button.dataset.dir);button.setPointerCapture(e.pointerId);interval=setInterval(()=>move(button.dataset.dir),190);});
+ button.addEventListener("pointerup",stop);button.addEventListener("pointercancel",stop);button.addEventListener("lostpointercapture",stop);
+});
+const observer=new ResizeObserver(()=>{if(land)paint(performance.now());});observer.observe(canvas);
+Promise.all([
+ loadLandscape(),loadTerrainChips(),
+ image("assets/field/terrain/grass-cliff.png"),
+ image("assets/field/terrain/atlas/cliff-3-32.png"),
+ image("assets/field/objects/trees.png"),
+ image("assets/field/objects/flowers.png"),
+ image("assets/village/objects/tree-sakura-pale.png"),
+ image("assets/field/objects/mountain-large.png"),
+ image("assets/field/objects/village.png"),
+ image("assets/field/objects/torii.png"),
+ image("assets/field/objects/bridge.png"),
+ image("assets/characters/hizuki/walk-sd-32.png"),
+ image("assets/field/effects/waterfall-motion.png")
+]).then(([_,atlas,rock,cliff,tree,flowers,sakura,mountain,village,torii,bridge,heroArt,fall])=>{
+ images={rock,cliff,tree,flowers,sakura,mountain,village,torii,bridge,hero:heroArt,fall};
+ land=composeBase(atlas);loading.hidden=true;
+ let lastTick=-1;
+ function tick(time){
+  const thisTick=Math.floor(time/360);
+  if(thisTick!==lastTick||cameraChanged){lastTick=thisTick;cameraChanged=false;paint(time);}
+  requestAnimationFrame(tick);
+ }
+ requestAnimationFrame(tick);
+}).catch(err=>{loading.textContent="読み込み失敗: "+err.message;console.error(err);});
+</script>
+</body>
+</html>

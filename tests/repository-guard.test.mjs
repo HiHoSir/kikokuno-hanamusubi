@@ -77,9 +77,10 @@ test('デザイン正本は一般の採用スプライトとは別に登録し�
 });
 
 
-test('公開検証用の限定ページのみ許可し、採用済みアセットとしては扱わない', () => {
-  const permitted = 'previews/cave-prototype/index.html';
-  assert.deepEqual(validateInventory([...base, permitted], empty), []);
+test('個別許可した検証ページのみ通し、採用済みアセットとしては扱わない', () => {
+  for(const permitted of ['previews/cave-prototype/index.html','previews/field-overlook/index.html']) {
+    assert.deepEqual(validateInventory([...base, permitted], empty), []);
+  }
 });
 
 test('previews の追加ファイル・別の試作・偽装パスは許可しない', () => {

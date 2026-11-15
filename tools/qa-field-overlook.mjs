@@ -5,6 +5,9 @@ import {createServer} from "node:http";
 import {readFile,mkdir,writeFile} from "node:fs/promises";
 import {resolve,relative,extname} from "node:path";
 const root=resolve(".");
+const overlookingPage=await readFile(resolve(root,"previews/field-overlook/index.html"),"utf8");
+assert.doesNotMatch(overlookingPage,/kind\s*:\s*["']waterfall|p\.kind\s*===\s*["']waterfall|images\.fall|waterfall-motion\.png/,
+  "The rejected waterfall sprite must not be placed or drawn in the overlook");
 const mime={".html":"text/html;charset=utf-8",".js":"text/javascript;charset=utf-8",
  ".mjs":"text/javascript;charset=utf-8",".css":"text/css;charset=utf-8",
  ".json":"application/json",".png":"image/png",".webp":"image/webp",
@@ -66,7 +69,7 @@ try{
        now[i+1]!==bytes[i+1]||now[i+2]!==bytes[i+2])diffs++;
     return diffs;
   });
-  assert.ok(changed>100,"waterfall and river must animate independently of baked land: "+changed);
+  assert.ok(changed>100,"river must animate independently of baked land: "+changed);
   await page.keyboard.press("ArrowLeft");
   await page.waitForTimeout(80);
   const after=await page.evaluate(()=>({hero:window.__OVERLOOK_QA.hero,

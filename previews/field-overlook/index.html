@@ -36,7 +36,7 @@ main{position:relative;width:100vw;height:100dvh;overflow:hidden}
 <main>
 <canvas id="scene" width="960" height="544" aria-label="実際の32pxマップチップから合成した花霞野の高台と谷のゲーム画面"></canvas>
 <div id="title">花霞野 <small>高台から望む、春霞の谷</small></div>
-<div id="help">試作：32px地形＋既存崖面チップ＋独立水面・滝アニメ</div>
+<div id="help">試作：32px地形＋既存崖面チップ＋独立水面アニメ（滝は未配置）</div>
 <div id="actions"><button id="reset" type="button">高台へ戻る</button>
 <div id="dpad" aria-label="4方向移動"><button data-dir="u" aria-label="北">▲</button><button data-dir="l" aria-label="西">◀</button><button data-dir="d" aria-label="南">▼</button><button data-dir="r" aria-label="東">▶</button></div></div>
 <div id="loading">採用済みマップチップを読み込み中…</div>
@@ -96,8 +96,6 @@ for(const [x,y] of [[8,26],[13,24],[45,27],[49,29],[6,12],[14,10],[41,11],[48,15
 prop("village",44,24,64,32,true);
 prop("torii",14,22,32,32,true);
 prop("bridge",stream(26),26,96,40,false);
-// Re-use the existing animated 80x96 waterfall, laid over the three-chip cliff.
-props.push({kind:"waterfall",x:(stream(36)+.5)*C,foot:(ridge(stream(36))+3)*C,w:80,h:96,tx:stream(36),ty:ridge(stream(36))+2});
 props.sort((a,b)=>a.foot-b.foot||a.x-b.x);
 E.prepare(field);
 let images,land,hero={x:28*C+16,y:44*C+16,dir:"u",step:0},cameraChanged=true,lastFrame=-1;
@@ -186,9 +184,6 @@ function paint(time){
    const [ax,ay]=YK_FIELD_ASSETS.heroFootAnchorPx;
    const frame=hero.step%3;
    c.drawImage(images.hero,frame*32,rows[hero.dir]*32,32,32,pos.x-ax*pos.scale,pos.y-ay*pos.scale,32*pos.scale,32*pos.scale);
-  } else if(p.kind==="waterfall"){
-   const idx=Math.floor(time/360)%2;
-   c.drawImage(images.fall,idx*80,0,80,96,left,top,w,h);
   } else c.drawImage(images[p.kind],left,top,w,h);
   c.restore();
  }
@@ -231,10 +226,9 @@ Promise.all([
  image("assets/field/objects/village.png"),
  image("assets/field/objects/torii.png"),
  image("assets/field/objects/bridge.png"),
- image("assets/characters/hizuki/walk-sd-32.png"),
- image("assets/field/effects/waterfall-motion.png")
-]).then(([_,atlas,rock,cliff,cliffForest,tree,flowers,sakura,mountain,village,torii,bridge,heroArt,fall])=>{
- images={rock,cliff,cliffForest,tree,flowers,sakura,mountain,village,torii,bridge,hero:heroArt,fall};
+ image("assets/characters/hizuki/walk-sd-32.png")
+]).then(([_,atlas,rock,cliff,cliffForest,tree,flowers,sakura,mountain,village,torii,bridge,heroArt])=>{
+ images={rock,cliff,cliffForest,tree,flowers,sakura,mountain,village,torii,bridge,hero:heroArt};
  land=composeBase(atlas);loading.hidden=true;
  let lastTick=-1;
  function tick(time){

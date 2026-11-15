@@ -56,7 +56,8 @@ field.cornerCut=0;field.cornerProtected=new Set();field.ladders=[];
 field.paths=[];field.decorations=[];field.bridgeWaterCells=new Set();
 field.projectedHeights=true;field.shoreRelief=false;field.referencePlacedObjects=true;
 field.occupiedTiles=new Set();
-const ridge=x=>39+Math.round(1.1*Math.sin(x*.18)+.6*Math.cos(x*.37));
+// A curving rock rim forms a horseshoe-like overlook rather than a long straight wall.
+const ridge=x=>38+Math.round(2*Math.sin(x*.15)+1.3*Math.cos(x*.48)-1.4*Math.exp(-((x-28)/6)**2));
 const stream=y=>29+Math.round(6*Math.sin((y-11)*.23));
 function inside(x,y){return x>0&&y>0&&x<W-1&&y<H-1;}
 function hash(x,y){return ((x*92821+y*68917+x*y*1733)>>>0)%100;}
@@ -89,13 +90,14 @@ for(let y=11;y<39;y++)for(let x=3;x<W-3;x++){
 for(let y=43;y<56;y++)for(let x=4;x<W-4;x++){
  if(hash(x,y)<7&&Math.abs(x-28)>3)prop("flowers",x,y,40,24);
 }
-for(const [x,y] of [[12,47],[17,43],[40,43],[45,49]])prop("sakura",x,y,32,64,true);
+for(const [x,y] of [[12,47],[17,45],[40,45],[45,49]])prop("sakura",x,y,32,64,true);
+for(const [x,y] of [[20,43],[35,43],[22,45],[34,45]])prop("flowers",x,y,40,24);
 for(const [x,y] of [[8,26],[13,24],[45,27],[49,29],[6,12],[14,10],[41,11],[48,15]])prop("mountain",x,y,128,64,false);
 prop("village",44,24,64,32,true);
 prop("torii",14,22,32,32,true);
 prop("bridge",stream(26),26,96,40,false);
 // Re-use the existing animated 80x96 waterfall, laid over the three-chip cliff.
-props.push({kind:"waterfall",x:(stream(36)+.5)*C,foot:41*C,w:80,h:96,tx:stream(36),ty:40});
+props.push({kind:"waterfall",x:(stream(36)+.5)*C,foot:(ridge(stream(36))+3)*C,w:80,h:96,tx:stream(36),ty:ridge(stream(36))+2});
 props.sort((a,b)=>a.foot-b.foot||a.x-b.x);
 E.prepare(field);
 let images,land,hero={x:28*C+16,y:44*C+16,dir:"u",step:0},cameraChanged=true,lastFrame=-1;

@@ -1,3 +1,5 @@
+import {drawCliffWater,fall} from './cliff-water.mjs';
+import {terrainY} from '../../src/field/height-projection.mjs';
 import {loadTerrainChips} from '../../src/field/terrain-chips.mjs';
 import {createFieldTerrainRenderer} from '../../src/field/terrain-renderer.mjs';
 import {fieldViewportDimensions} from '../../src/field/viewport.mjs';
@@ -6,6 +8,8 @@ import {drawCharacter} from '../../src/game/village/residents.mjs';
 const {YK_LANDSCAPE: landscape,YK_ELEVATION: elevation,YK_FIELD_ASSETS: assets} = window;
 const canvas = document.querySelector('#scene');
 const context = canvas.getContext('2d',{alpha:false});
+const waterLayer = document.querySelector('#water-layer');
+const waterContext = waterLayer.getContext('2d');
 const fade = document.querySelector('#fade');
 const loading = document.querySelector('#load');
 const hint = document.querySelector('#hint');
@@ -77,24 +81,23 @@ map.paths = [
 ].map(path=>path.map(point=>point.map(n=>center(n))));
 
 function prop(kind,x,y,width,height,{block=false,supportHeight=map.heights[y][x],foot=(y+1)*fieldCell}={}){
-  const position=kind==='waterfall'?x*fieldCell:center(x);
+  const position=center(x);
   map.decorations.push({kind,x:position-width/2,y:foot-height,width,height,foot,supportHeight,
     occupiedTiles:block?[[x,y]]:[]});
   if(block)map.occupiedTiles.add(x+','+y);
 }
 prop('cave',...southMouth,80,64);
 prop('cave',...northMouth,80,64,{supportHeight:3});
-prop('waterfall',18,14,80,96,{supportHeight:0,foot:15*32+2});
 for(const [x,y] of [[5,7],[7,8],[8,10],[13,7],[15,7],[20,8],[22,8],[23,10],[6,18],[7,20],[9,16],[8,19],[10,20],[8,22],[20,21],[22,18],[23,17],[22,23],[11,23],[21,15],[8,15],[9,14],[6,16],[7,16],[9,21],[7,22],[10,22],[20,22],[22,17],[21,19],[21,20],[20,23],[23,15],[9,9],[10,7],[15,8],[16,8]]){
   prop('newTrees',x,y,32,32,{block:true});
 }
-for(const x of [17,18,19])map.occupiedTiles.add(x+',12');
+for(let y=fall.source/32;y<fall.lip/32;y++)for(const x of [17,18,19])map.occupiedTiles.add(x+','+y);
 for(const [x,y] of [[6,5],[10,5],[16,5],[21,5]])prop('newMountainLarge',x,y,128,64,{block:true});
 for(const [x,y] of [[10,18],[14,19],[15,15],[15,21],[12,12],[15,9],[21,12],[8,23]])prop('wildflowers',x,y,32,32);
 elevation.prepare(map);
 
 let area='lower',position=southStart.slice(),facing=1,move=null,transition=null,renderer,hero,interiorHero;
-let pending=null,lastFrame=-1,needsDraw=true;
+let pending=null,lastFrame=-1,lastFlowFrame=-1,needsDraw=true;
 const held = new Map();
 const movementMillis = 232;
 const pose = {row:1,column:0};
@@ -128,6 +131,7 @@ function enter(destination,point,direction){
   facing=direction;
   move=null;
   hint.textContent=hints[area];
+  waterLayer.style.visibility=area==='cave'?'hidden':'visible';
   publishPosition();
   needsDraw=true;
 }
@@ -177,6 +181,8 @@ function resize(){
   const {width,height}=fieldViewportDimensions(canvas.clientWidth,canvas.clientHeight);
   canvas.width=width;
   canvas.height=height;
+  waterLayer.width=width;
+  waterLayer.height=height;
   needsDraw=true;
 }
 
@@ -254,7 +260,9 @@ function frame(now){
     }
   }
   const waterFrame=Math.floor(now/360);
-  if(!needsDraw&&!move&&(area==='cave'||lastFrame===waterFrame))return;
+  const redraw=needsDraw||move||(area!=='cave'&&lastFrame!==waterFrame);
+  const flowFrame=Math.floor(now/75);
+  if(!redraw&&(area==='cave'||lastFlowFrame===flowFrame))return;
   const progress=move?Math.max(0,Math.min(1,(now-move.start)/movementMillis)):0;
   const point=move?position.map((n,i)=>n+(move.target[i]-n)*progress):position;
   context.imageSmoothingEnabled=false;
@@ -263,7 +271,11 @@ function frame(now){
     pose.row=facing;
     pose.column=move?[0,1,0,2][Math.min(3,Math.floor(progress*4))]:0;
     const [x,foot]=point.map(n=>center(n));
-    renderer.draw(context,{x,foot,height:elevation.height(map,x,foot)},now);
+    const height=elevation.height(map,x,foot);
+    if(redraw)renderer.draw(context,{x,foot,height},now);
+    const camera={x,y:terrainY(foot,height),preset:0,centerX:canvas.width/2,foregroundGrowth:true};
+    drawCliffWater(waterContext,landscape,camera,now,renderer.info.zoom);
+    lastFlowFrame=flowFrame;
   }
   needsDraw=false;
   lastFrame=waterFrame;

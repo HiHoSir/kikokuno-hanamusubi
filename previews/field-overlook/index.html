@@ -98,7 +98,7 @@ prop("bridge",stream(26),26,96,40,false);
 props.push({kind:"waterfall",x:(stream(36)+.5)*C,foot:41*C,w:80,h:96,tx:stream(36),ty:40});
 props.sort((a,b)=>a.foot-b.foot||a.x-b.x);
 E.prepare(field);
-let images,land,hero={x:28*C+16,y:48*C+16,dir:"u",step:0},cameraChanged=true,lastFrame=-1;
+let images,land,hero={x:28*C+16,y:44*C+16,dir:"u",step:0},cameraChanged=true,lastFrame=-1;
 const rows={d:0,u:1,r:2,l:3};
 function image(path){
  return new Promise((resolve,reject)=>{
@@ -134,7 +134,7 @@ function composeBase(atlases){
   target.drawImage(images.cliff,0,3*C,C,C,x*C,(y-1)*C,C,C);
  }
  window.__OVERLOOK_QA={tileSize:32,terrain:[W,H],cliffChips,
-  waterAnimated:true,usingApprovedAssets:true,draws:0,hero:[28,48]};
+  waterAnimated:true,usingApprovedAssets:true,draws:0,hero:[28,44]};
  return result.canvas;
 }
 function skyBand(sourceY,h,width){
@@ -152,7 +152,7 @@ function paint(time){
   canvas.width=dimensions.width;canvas.height=dimensions.height;
  }
  const cw=canvas.width,ch=canvas.height;
- const cam={x:hero.x,y:hero.y,preset:0,centerX:cw/2,foregroundGrowth:true};
+ const cam={x:hero.x,y:hero.y-2*C,preset:0,centerX:cw/2,foregroundGrowth:true};
  c.imageSmoothingEnabled=false;c.clearRect(0,0,cw,ch);
  c.fillStyle="#1b303e";c.fillRect(0,0,cw,ch);
  skyBand(0,240,cw);
@@ -207,7 +207,7 @@ function move(dir){
  cameraChanged=true;window.__OVERLOOK_QA.hero=[Math.floor(hero.x/32),Math.floor(hero.y/32)];
  paint(performance.now());
 }
-function reset(){hero={x:28*C+16,y:48*C+16,dir:"u",step:0};cameraChanged=true;paint(performance.now());}
+function reset(){hero={x:28*C+16,y:44*C+16,dir:"u",step:0};cameraChanged=true;paint(performance.now());}
 const keyDirs={ArrowUp:"u",ArrowDown:"d",ArrowLeft:"l",ArrowRight:"r",w:"u",s:"d",a:"l",d:"r"};
 document.addEventListener("keydown",e=>{const dir=keyDirs[e.key];if(dir){e.preventDefault();move(dir);}});
 document.querySelector("#reset").addEventListener("click",reset);

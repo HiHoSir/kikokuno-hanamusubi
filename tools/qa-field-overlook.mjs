@@ -41,6 +41,7 @@ try{
    await page.screenshot({path:"artifacts/field-overlook-fail-"+width+"x"+height+".png"});
    throw err;
   }
+  await page.screenshot({path:"artifacts/field-overlook-initial-"+width+"x"+height+".png"});
   const initial=await page.evaluate(()=>{
    const q=window.__OVERLOOK_QA,el=document.querySelector("#scene");
    return {tileSize:q.tileSize,terrain:q.terrain,cliffChips:q.cliffChips,
@@ -71,7 +72,7 @@ try{
   const after=await page.evaluate(()=>({hero:window.__OVERLOOK_QA.hero,
     canvas:[document.querySelector("#scene").width,document.querySelector("#scene").height],
     draws:window.__OVERLOOK_QA.draws}));
-  assert.deepEqual(after.hero,[27,48],"one 32px step west on upper terrace");
+  assert.deepEqual(after.hero,[27,44],"one 32px step west on upper terrace");
   assert.ok(after.draws>=2);
   assert.equal(errors.length,0,errors.join("\n"));
   await page.screenshot({path:"artifacts/field-overlook-"+width+"x"+height+".png"});

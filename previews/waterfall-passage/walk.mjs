@@ -1,5 +1,5 @@
 import {loadCliffChips,makeWaterfallFrames} from './water-chips.mjs?v=mapchips';
-import {map,waterfall,lowerMouth as southMouth,upperMouth as northMouth,start as southStart,validateTerrain} from './terrain.mjs?v=mapchips';
+import {map,waterfall,lowerMouth as southMouth,upperMouth as northMouth,start as southStart,validateTerrain} from './terrain.mjs?v=terraces';
 import {loadTerrainChips} from '../../src/field/terrain-chips.mjs';
 import {createFieldTerrainRenderer} from './terrain-renderer.mjs';
 import {fieldViewportDimensions} from '../../src/field/viewport.mjs';

@@ -2,6 +2,7 @@
 window.YK_FIELD_ELEVATION=(()=>{
  const E=window.YK_ELEVATION;
  function prepare(m,geography){
+  const cellAt=geography.cellAt??(point=>point);
   m.ramps=m.map(r=>r.map(()=>null));m.cornerCut=30;m.elevationEnabled=true;m.elevationRise=20;
   m.occupiedTiles=new Set(m.decorations.flatMap(o=>o.occupiedTiles.map(c=>c.join(','))));
   const water=t=>['sea','river'].includes(t),set=(x,y,h)=>{if(m[y]?.[x]&&!water(m[y][x]))m.heights[y][x]=h;};
@@ -25,11 +26,12 @@ window.YK_FIELD_ELEVATION=(()=>{
   for(let y=0;y<m.length;y++)for(let x=0;x<m[y].length;x++)if(water(m[y][x]))m.heights[y][x]=0;
   // Keep the authored raised destinations, but retire every legacy ramp.
   const terraces=[{x:40,from:3,to:7,h:2},{x:40,from:9,to:9,h:1},{x:67,from:18,to:20,h:1}];
-  for(const t of terraces)for(let y=t.from;y<=t.to;y++)for(let x=t.x-1;x<=t.x+1;x++)set(x,y,t.h);
+  for(const t of terraces)for(let y=t.from;y<=t.to;y++)for(let x=t.x-1;x<=t.x+1;x++)set(...cellAt([x,y]),t.h);
   // Final shrine approach: retain the deliberate two-stage north-facing slope.
   // (40,8) is the final upper approach, so it is intentionally NOT a ladder.
   // The lower ramp at (40,10) joins ground 0→1; (40,8) joins 1→2.
-  for(const [cy,base] of [[10,0],[8,1]])for(let x=39;x<=41;x++){
+  for(const [row,base] of [[10,0],[8,1]])for(let column=39;column<=41;column++){
+   const [x,cy]=cellAt([column,row]);
    set(x,cy,base);
    if(m[cy]?.[x]&&!water(m[cy][x]))m.ramps[cy][x]='n';
   }
@@ -46,7 +48,8 @@ window.YK_FIELD_ELEVATION=(()=>{
   // Simplify the former mountain cluster at field (28,35) to one terrace
   // level. Retain lowland corridors, water, ramps and authored materials.
   // No level-2/3 stacks remain inside this local footprint.
-  for(let y=31;y<=39;y++)for(let x=23;x<=32;x++){
+  const [left,top]=cellAt([23,31]),[right,bottom]=cellAt([32,39]);
+  for(let y=top;y<=bottom;y++)for(let x=left;x<=right;x++){
    if(!water(m[y]?.[x])&&m.heights[y][x]>1)m.heights[y][x]=1;
   }
   // The localized highland simplification may lower an existing object's
@@ -146,7 +149,8 @@ window.YK_FIELD_ELEVATION=(()=>{
  // Rebuild derived data after the final object replacement/removal pass.
  // Never keep contact cells from sprites that no longer exist.
  function reachable(m){
-  const queue=[[37,71]],seen=new Set(['37,71']);
+  const start=m.startCell??[37,71];
+  const queue=[start],seen=new Set([start.join(',')]);
   for(let i=0;i<queue.length;i++){const [x,y]=queue[i];for(const [dx,dy] of Object.values(E.dirs)){
    const nx=x+dx,ny=y+dy,k=nx+','+ny;
    if(!seen.has(k)&&E.canMove(m,x*32+16,y*32+16,nx*32+16,ny*32+16)){seen.add(k);queue.push([nx,ny]);}

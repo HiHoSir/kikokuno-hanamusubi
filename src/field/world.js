@@ -1,9 +1,11 @@
 // The authored 80x80 reference composition is baked into field-terrain.js.
 // All object contact/collision coordinates are explicit integer movement cells.
 window.YK_WORLD=(()=>{
- const tileSize=32,size=2560,viewSize=640,revision=120;
- const geography=window.YK_FIELD_TERRAIN.referenceComposition;
- const center=([x,y])=>[x*32+16,y*32+16];
+ const terrain=window.YK_FIELD_TERRAIN;
+ const {tileSize,width,height,referenceComposition:geography}=terrain;
+ const size=width*tileSize,viewSize=640,revision=120;
+ const cellAt=geography.cellAt??(point=>point);
+ const center=([x,y])=>[x*tileSize+tileSize/2,y*tileSize+tileSize/2];
  const descriptions={
   village:['鬼灯村','南の半島から林と花の道を抜け、天妖の社へ。'],
   shrine:['天妖の社','西の山裾から川沿いを東へ進み、海の入り江へ。'],
@@ -14,11 +16,13 @@ window.YK_WORLD=(()=>{
   fox:['九尾の祠','北の山に囲まれた旅路の終点。']
  };
  const places=Object.fromEntries(Object.entries(geography.places).map(([id,cell])=>[id,{point:center(cell),name:descriptions[id][0],note:descriptions[id][1]}]));
- const start=center([37,71]),hub=start;
+ const startCell=cellAt([37,71]);
+ const start=center(startCell),hub=start;
  // Roads are navigation metadata only. The historical wilderness has no
  // constructed road surface: use existing grass tiles instead.
- const mapData=window.YK_FIELD_TERRAIN.tiles.map(row=>row.map(tile=>tile==='road'?'grass':tile));
- mapData.heights=window.YK_FIELD_TERRAIN.heights?.map(row=>row.slice())||mapData.map(row=>row.map(()=>0));
+ const mapData=terrain.tiles.map(row=>row.map(tile=>tile==='road'?'grass':tile));
+ mapData.startCell=startCell;
+ mapData.heights=terrain.heights?.map(row=>row.slice())||mapData.map(row=>row.map(()=>0));
  mapData.heightTransitions=[];mapData.projectedHeights=true;mapData.shoreRelief=true;
  mapData.fieldObjectCollisionDeferred=false;mapData.referencePlacedObjects=true;
  mapData.bridgeWaterCells=new Set(geography.bridgeWaterCells.map(c=>c.join(',')));
@@ -35,7 +39,7 @@ window.YK_WORLD=(()=>{
  // but never rasterize the old dirt-road overlay on the outdoor field.
  mapData.paths=[];
  const restStops=geography.restStops.map(o=>({...o,point:center(o.cell)}));
- const guides=[[30,56,'南の地蔵','林の西を通り、天妖の社へ向かうのじゃ。'],[34,46,'川辺の地蔵','東へ川沿いに進むと海の入り江じゃ。'],[56,37,'森の地蔵','北の鳥居が忘れの森の入口じゃ。'],[40,22,'湖畔の地蔵','湖の南を西へ進むと月見の湯じゃ。']].map(([tx,ty,name,tip],id)=>({id,...{x:tx*32+16,y:ty*32+16},name,tip}));
+ const guides=[[30,56,'南の地蔵','林の西を通り、天妖の社へ向かうのじゃ。'],[34,46,'川辺の地蔵','東へ川沿いに進むと海の入り江じゃ。'],[56,37,'森の地蔵','北の鳥居が忘れの森の入口じゃ。'],[40,22,'湖畔の地蔵','湖の南を西へ進むと月見の湯じゃ。']].map(([tx,ty,name,tip],id)=>{const [x,y]=center(cellAt([tx,ty]));return {id,x,y,name,tip};});
  // Each guide occupies one authored movement cell; its approaches remain open.
  for(const g of guides){const tx=Math.floor(g.x/32),ty=Math.floor(g.y/32);mapData.decorations.push({kind:'jizo',x:tx*32,y:ty*32,width:32,height:32,foot:(ty+1)*32,contactTiles:[[tx,ty]],occupiedTiles:[[tx,ty]],walkThrough:false});}
  window.YK_FIELD_ELEVATION.prepare(mapData,geography);
@@ -45,7 +49,10 @@ window.YK_WORLD=(()=>{
  // Clear the mountain cluster around field tile (28,35), including
  // its previously converted tree sprites. Keep unrelated objects intact.
  const clearMountainCluster=o=>['newMountainLarge','newMountainSmall'].includes(o.kind)
-  &&o.contactTiles.some(([x,y])=>x>=23&&x<=32&&y>=31&&y<=39);
+  &&o.contactTiles.some(([x,y])=>{
+   const [left,top]=cellAt([23,31]),[right,bottom]=cellAt([32,39]);
+   return x>=left&&x<=right&&y>=top&&y<=bottom;
+  });
  mapData.decorations=mapData.decorations.filter(o=>!clearMountainCluster(o));
  mapData.decorations=mapData.decorations.flatMap(o=>{
   if(!['newMountainLarge','newMountainSmall'].includes(o.kind))return [o];
@@ -59,14 +66,14 @@ window.YK_WORLD=(()=>{
  });
  YK_FIELD_ELEVATION.refreshCollision(mapData);
  const passable=new Set(['grass','forest','sand','snow','barren','road','bridge']);
- const cellOpen=(x,y)=>x>0&&y>0&&x<79&&y<79&&passable.has(mapData[y]?.[x])&&!mapData.occupiedTiles.has(x+','+y)&&mapData.travelReachable.has(x+','+y)&&YK_ELEVATION.pointWalkable(mapData,x*32+16,y*32+16);
+ const cellOpen=(x,y)=>x>0&&y>0&&x<width-1&&y<height-1&&passable.has(mapData[y]?.[x])&&!mapData.occupiedTiles.has(x+','+y)&&mapData.travelReachable.has(x+','+y)&&YK_ELEVATION.pointWalkable(mapData,x*32+16,y*32+16);
  // Data-only save repair: keep valid positions, otherwise find the nearest
  // open cell. Do not teleport all existing saves to a story destination.
  function safePosition(point){
   if(!Array.isArray(point)||!point.every(Number.isFinite))return start.slice();
   const tx=Math.floor(point[0]/32),ty=Math.floor(point[1]/32);
   if(cellOpen(tx,ty))return center([tx,ty]);
-  for(let r=1;r<80;r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++)
+  for(let r=1;r<Math.max(width,height);r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++)
    if(Math.max(Math.abs(dx),Math.abs(dy))===r&&cellOpen(tx+dx,ty+dy))return center([tx+dx,ty+dy]);
   return start.slice();
  }

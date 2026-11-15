@@ -8,7 +8,7 @@ const root = new URL('../', import.meta.url);
 const entry = new URL('src/field/index.html', root);
 const source = (path, base = root) => readFileSync(new URL(path, base), 'utf8');
 
-function loadField() {
+function loadField({expanded=false}={}) {
   const manifest = JSON.parse(source('assets/manifest.json'));
   const paths = new Set(manifest.assets.map(({path}) => path));
   class FieldImage {
@@ -27,6 +27,7 @@ function loadField() {
   context.window = context;
   const html = source(entry);
   for (const [, path] of html.matchAll(/<script src="([^"]+)"/g)) {
+    if(!expanded&&path.includes("/terrain-expansion.js"))continue;
     const url = new URL(path, entry);
     context.document.currentScript.src = url.href;
     runInContext(source(url), context, {filename: url.pathname});
@@ -64,6 +65,32 @@ test('the field entry loads the original authored map and elevation data', () =>
   assert.equal(digest(terrain.referenceComposition), 'dfc801b62e70fea3aa0b0f3609db086df23d713392681b9f7caa938a6680807c');
   assert.equal(world.walkable(...world.start), true);
   assert.equal(world.walkable(16, 16), false);
+});
+
+test('the expanded field lengthens the first route and keeps the whole map reachable',()=>{
+  const {YK_WORLD: world,YK_AREA_TRANSITIONS: transitions}=loadField({expanded:true});
+  assert.equal(world.size,104*32);
+  assert.equal(world.mapData.length,104);
+  assert.ok(world.mapData.every(row=>row.length===104));
+  const directions=[[0,-32],[32,0],[-32,0],[0,32]];
+  const queue=[[...world.start,0]],visited=new Set([world.start.join(',')]);
+  let shrineDistance;
+  for(const [x,y,steps] of queue){
+    const destination=transitions.contact(world,x,y);
+    if(destination==='shrine'&&shrineDistance===undefined)shrineDistance=steps;
+    if(destination==='village')continue;
+    for(const [dx,dy] of directions){
+      const nx=x+dx,ny=y+dy,key=nx+','+ny;
+      if(!visited.has(key)&&world.canMove(x,y,nx,ny)){
+        queue.push([nx,ny,steps+1]);visited.add(key);
+      }
+    }
+  }
+  assert.ok(shrineDistance>=60,'the expanded approach is longer than the old 43-step route');
+  for(const [name,{point:[x,y]}] of Object.entries(world.places)){
+    assert.ok(queue.some(([px,py])=>Math.hypot(px-x,py-y)<=32),name);
+  }
+  assert.ok(queue.some(([x,y])=>x>=80*32||y>=80*32),'the expansion adds land that can be walked');
 });
 
 test('the field projection and image loader retain the original perspective and art', () => {

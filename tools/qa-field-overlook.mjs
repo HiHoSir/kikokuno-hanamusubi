@@ -52,16 +52,19 @@ try{
   assert.ok(initial.cliffChips>=150);
   assert.equal(initial.waterAnimated,true);
   assert.equal(initial.loadingHidden,true);
-  const baseline=await page.evaluate(()=>Array.from(document.querySelector("#scene").getContext("2d")
-    .getImageData(0,0,document.querySelector("#scene").width,document.querySelector("#scene").height).data));
+  await page.evaluate(()=>{
+    const el=document.querySelector("#scene");
+    window.__overlookBaseline=el.getContext("2d").getImageData(0,0,el.width,el.height).data.slice();
+  });
   await page.waitForFunction(frame=>window.__OVERLOOK_QA?.waterFrame!==frame,initial.waterFrame,{timeout:3000});
-  const changed=await page.evaluate(bytes=>{
+  const changed=await page.evaluate(()=>{
     const now=document.querySelector("#scene").getContext("2d").getImageData(0,0,
       document.querySelector("#scene").width,document.querySelector("#scene").height).data;
+    const bytes=window.__overlookBaseline;
     let diffs=0;for(let i=0;i<now.length;i+=4)if(now[i]!==bytes[i]||
        now[i+1]!==bytes[i+1]||now[i+2]!==bytes[i+2])diffs++;
     return diffs;
-  },baseline);
+  });
   assert.ok(changed>100,"waterfall and river must animate independently of baked land: "+changed);
   await page.keyboard.press("ArrowLeft");
   await page.waitForTimeout(80);

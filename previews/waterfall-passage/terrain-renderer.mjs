@@ -1,5 +1,5 @@
 import {composeCoast} from '../../src/field/terrain-chips.mjs?v=field-height-1';
-import {drawCliffs} from './water-chips.mjs?v=mapchips';
+import {drawCliffs} from './water-chips.mjs?v=wall-stack';
 
 const zoom=1.75;
 

@@ -1,7 +1,7 @@
-import {loadCliffChips,makeWaterfallFrames} from './water-chips.mjs?v=mapchips';
-import {map,waterfall,lowerMouth as southMouth,upperMouth as northMouth,start as southStart,validateTerrain} from './terrain.mjs?v=terraces';
+import {loadCliffChips,makeWaterfallFrames} from './water-chips.mjs?v=wall-stack';
+import {map,waterfall,lowerMouth as southMouth,upperMouth as northMouth,start as southStart,validateTerrain} from './terrain.mjs?v=wall-stack';
 import {loadTerrainChips} from '../../src/field/terrain-chips.mjs';
-import {createFieldTerrainRenderer} from './terrain-renderer.mjs';
+import {createFieldTerrainRenderer} from './terrain-renderer.mjs?v=wall-stack';
 import {fieldViewportDimensions} from '../../src/field/viewport.mjs';
 import {drawCharacter} from '../../src/game/village/residents.mjs';
 

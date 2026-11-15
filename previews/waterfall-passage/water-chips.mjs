@@ -1,66 +1,48 @@
-import {composeCoast} from '../../src/field/terrain-chips.mjs';
-import {bakeHeightProjection,sampleHeights,terrainY} from '../../src/field/height-projection.mjs';
+const cell = 32;
+const corners = [[0,0],[1,0],[1,1],[0,1]];
 
-const cell=32;
-function surface(width,height){
-  const canvas=document.createElement('canvas');
-  canvas.width=width;
-  canvas.height=height;
-  const context=canvas.getContext('2d',{willReadFrequently:true});
-  context.imageSmoothingEnabled=false;
-  return context;
+export async function loadCliffChips() {
+  const names = ['cliff-1','cliff-2','cliff-forest-1','cliff-forest-2'];
+  return Object.fromEntries(await Promise.all(names.map(async name => {
+    const image = new Image();
+    image.src = new URL('../../assets/field/terrain/atlas/'+name+'-32.png',import.meta.url);
+    await image.decode();
+    if (image.width !== 128 || image.height !== 128) throw Error('Invalid terrain atlas: '+name);
+    return [name,image];
+  })));
 }
 
-// Bake the two existing river frames in the same world coordinates as the rock,
-// then place animated waterfall tiles in that world layer before camera projection.
-export function prepareWaterChips(renderer,map,fall,art,image,landscape,elevation){
-  const coast=composeCoast(map,landscape,art);
-  const flat=surface(coast.canvas.width,coast.canvas.height);
-  const heights=sampleHeights(map,elevation);
-  const rock=surface(cell,cell);
-  landscape.drawAsset(rock,'grassCliff',0,0,cell,cell);
-  const texture=rock.getImageData(0,0,cell,cell).data;
-  const max=Math.max(...map.heights.map(row=>Math.max(...row)))+1;
-  const rise=terrainY(0,0)-terrainY(0,1);
-  const frames=[0,360].map((time)=>{
-    flat.fillStyle=flat.createPattern(landscape.motionArt('water',time),'repeat');
-    flat.fillRect(0,0,flat.canvas.width,flat.canvas.height);
-    flat.drawImage(coast.canvas,0,0);
-    const baked=bakeHeightProjection(flat.getImageData(0,0,flat.canvas.width,flat.canvas.height),heights,texture,rise,max,64);
-    const frame=surface(baked.width,baked.height);
-    frame.putImageData(new ImageData(baked.pixels,baked.width,baked.height),0,0);
-    return {canvas:frame.canvas,originY:baked.originY};
-  });
-  renderer.prepare();
-  const target=renderer.staticLand.getContext('2d');
-  target.imageSmoothingEnabled=false;
-  const origin=frames[0].originY;
-  if(renderer.info.originY!==origin||target.canvas.width!==frames[0].canvas.width||
-    target.canvas.height!==frames[0].canvas.height)throw Error('水辺と崖の描画座標が一致しません');
-  const left=fall.column*cell;
-  const width=fall.width*cell;
-  const lip=terrainY(fall.edgeRow*cell,fall.upperLevel)-origin;
-  const foot=terrainY(fall.edgeRow*cell,fall.lowerLevel)-origin;
-  const crop=(2*cell-(foot-lip))/2;
-  const segment=cell-crop;
-  let previousWater=-1,previousFall=-1;
-  return function updateWater(now){
-    const water=Math.floor(now/360)%frames.length;
-    const phase=Math.floor(now/150)%4;
-    if(water===previousWater&&phase===previousFall)return false;
-    const base=frames[water].canvas;
-    if(water!==previousWater)target.drawImage(base,0,0);
-    else target.drawImage(base,left,lip-cell,width,foot-lip+2*cell,left,lip-cell,width,foot-lip+2*cell);
-    for(let col=0;col<fall.width;col++){
-      const sx=(phase*fall.width+col)*cell;
-      const x=left+col*cell;
-      target.drawImage(image,sx,0,cell,cell,x,lip-cell,cell,cell);
-      target.drawImage(image,sx,cell+crop,cell,segment,x,lip,cell,segment);
-      target.drawImage(image,sx,2*cell,cell,segment,x,lip+segment,cell,segment);
-      target.drawImage(image,sx,3*cell,cell,cell,x,foot,cell,cell);
+function drawChip(context,atlas,mask,x,y) {
+  context.drawImage(atlas,(mask%4)*cell,Math.floor(mask/4)*cell,cell,cell,x,y,cell,cell);
+}
+
+export function drawCliffs(context,map,art) {
+  const isDry = type => type !== 'river' && type !== 'sea';
+  for (let y=0; y<map.length-1; y++) {
+    for (let x=0; x<map[0].length-1; x++) {
+      const samples = corners.map(([dx,dy]) => ({
+        height:map.heights[y+dy][x+dx],
+        type:map[y+dy][x+dx],
+      }));
+      const high = Math.max(...samples.map(sample=>sample.height));
+      const low = Math.min(...samples.map(sample=>sample.height));
+      const px = x*cell+cell/2, py = y*cell+cell/2;
+      const wet = samples.every(sample=>!isDry(sample.type));
+      if (wet || high===low) continue;
+      const elevated = samples.reduce((mask,sample,i) =>
+        sample.height===high ? mask|(1<<i) : mask,0);
+      const forest = samples.some(sample=>sample.height<high && sample.type==='forest');
+      const atlas = art[(forest?'cliff-forest-':'cliff-')+(high-low)];
+      drawChip(context,atlas,elevated,px,py);
     }
-    previousWater=water;
-    previousFall=phase;
-    return true;
-  };
+  }
+}
+
+export function makeWaterfallFrames(image,fall) {
+  const width = fall.width*cell;
+  const height = 4*cell;
+  if (image.width !== width*4 || image.height !== height) throw Error('Invalid waterfall atlas');
+  return Array.from({length:4},(_,phase)=>({
+    image,sx:phase*width,width,height,x:fall.column*cell,y:(fall.edgeRow-2)*cell,
+  }));
 }

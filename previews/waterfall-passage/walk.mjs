@@ -1,7 +1,7 @@
-import {prepareWaterChips} from './water-chips.mjs';
-import {map,waterfall,lowerMouth as southMouth,upperMouth as northMouth,start as southStart,validateTerrain} from './terrain.mjs';
+import {loadCliffChips,makeWaterfallFrames} from './water-chips.mjs?v=mapchips';
+import {map,waterfall,lowerMouth as southMouth,upperMouth as northMouth,start as southStart,validateTerrain} from './terrain.mjs?v=mapchips';
 import {loadTerrainChips} from '../../src/field/terrain-chips.mjs';
-import {createFieldTerrainRenderer} from '../../src/field/terrain-renderer.mjs';
+import {createFieldTerrainRenderer} from './terrain-renderer.mjs';
 import {fieldViewportDimensions} from '../../src/field/viewport.mjs';
 import {drawCharacter} from '../../src/game/village/residents.mjs';
 
@@ -39,8 +39,8 @@ const caveLayout = [
 
 elevation.prepare(map);
 
-let area='lower',position=southStart.slice(),facing=1,move=null,transition=null,renderer,hero,interiorHero,updateWater;
-let pending=null,needsDraw=true;
+let area='lower',position=southStart.slice(),facing=1,move=null,transition=null,renderer,hero,interiorHero;
+let pending=null,needsDraw=true,lastWaterPhase='';
 const held = new Map();
 const movementMillis = 232;
 const pose = {row:1,column:0};
@@ -199,7 +199,8 @@ function frame(now){
       needsDraw=true;
     }
   }
-  const waterChanged=area!=='cave'&&updateWater(now);
+  const waterPhase=[Math.floor(now/360)%2,Math.floor(now/150)%4].join();
+  const waterChanged=area!=='cave'&&waterPhase!==lastWaterPhase;
   if(!needsDraw&&!move&&!waterChanged)return;
   const progress=move?Math.max(0,Math.min(1,(now-move.start)/movementMillis)):0;
   const point=move?position.map((n,i)=>n+(move.target[i]-n)*progress):position;
@@ -209,8 +210,8 @@ function frame(now){
     pose.row=facing;
     pose.column=move?[0,1,0,2][Math.min(3,Math.floor(progress*4))]:0;
     const [x,foot]=point.map(n=>center(n));
-    const height=elevation.height(map,x,foot);
-    renderer.draw(context,{x,foot,height},now);
+    renderer.draw(context,{x,foot},now);
+    lastWaterPhase=waterPhase;
   }
   needsDraw=false;
 }
@@ -246,16 +247,17 @@ document.querySelector('#reset').addEventListener('click',()=>{
 
 try{
   validateTerrain(elevation);
-  const [fieldHero,caveHero,terrain,fallArt]=await Promise.all([
+  const [fieldHero,caveHero,terrain,fallArt,cliffs]=await Promise.all([
     loadImage(assets.url(assets.hero)),
     loadImage(new URL('../../assets/characters/hizuki/walk-4dir-80x112.png',import.meta.url)),
-    loadTerrainChips(),loadImage(new URL('./waterfall-south-4w-2h-32.png',import.meta.url)),loadLandscape()
+    loadTerrainChips(),loadImage(new URL('./waterfall-south-4w-2h-32.png',import.meta.url)),
+    loadCliffChips(),loadLandscape()
   ]);
   hero=fieldHero;
   interiorHero=caveHero;
-  renderer=createFieldTerrainRenderer(map,drawFieldHero,terrain,
-    {image:hero,anchor:assets.heroFootAnchorPx,frame:()=>pose});
-  updateWater=prepareWaterChips(renderer,map,waterfall,terrain,fallArt,landscape,elevation);
+  renderer=createFieldTerrainRenderer(map,drawFieldHero,{...terrain,...cliffs},
+    {image:hero,anchor:assets.heroFootAnchorPx,frame:()=>pose},makeWaterfallFrames(fallArt,waterfall));
+  renderer.prepare();
   new ResizeObserver(resize).observe(canvas);
   resize();
   publishPosition();

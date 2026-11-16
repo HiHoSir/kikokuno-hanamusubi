@@ -59,6 +59,21 @@ window.YK_FIELD_ELEVATION=(()=>{
    if(levels.length&&levels.every(h=>h===levels[0]))o.supportHeight=levels[0];
   }
   m.cornerProtected=new Set(m.decorations.flatMap(o=>(o.contactTiles||[]).map(c=>c.join(','))));
+  // Back-side grass slopes follow the approved 32px height ramp contract.
+  // They occupy a lower-level cell oriented toward its higher southern neighbor.
+  // Authored slopes are checked before procedural access creation; no cliff
+  // sprite, new asset, or separate collision system is introduced.
+  for(const {cell:[x,y],dir,base} of geography.slopeConnections||[]){
+    if(dir!=='s'||!Number.isInteger(base)||base<0||
+       m.heights[y]?.[x]!==base||
+       !E.walkable(m,x,y)||!E.walkable(m,x,y-1)||!E.walkable(m,x,y+1)||
+       m.heights[y-1][x]!==base||m.heights[y+1][x]!==base+1){
+      throw Error('Invalid authored slope: '+x+','+y);
+    }
+    m.ramps[y][x]=dir;
+    for(const offset of [-1,0,1])m.cornerProtected.add(x+','+(y+offset));
+  }
+  if(geography.slopeConnections?.length)E.prepare(m);
   // Build connections from the player's reachable land, one inaccessible
   // elevated component at a time. Prefer south-facing cliff ladders.
   // Only if no safe south-facing edge exists, form a validated ramp instead.

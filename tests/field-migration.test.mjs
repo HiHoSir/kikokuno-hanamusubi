@@ -61,7 +61,7 @@ test('the field entry loads the original authored map and elevation data', () =>
   assert.equal(world.mapData.elevationEnabled, true);
   assert.equal(digest(terrain.tiles), '8a6a964a6de03a0883b9223b228dfc59b9b2527903a75a28e984b207a6113efe');
   assert.equal(digest(terrain.heights), 'a2281bea3735928cb1197099852b7b1a89dcdb678a51cbb840dc54fe2581c16e');
-  assert.equal(digest(terrain.referenceComposition), '6e6460bfa3eb3e5fbdf5bdd554d86c968054c4a81b5cf407374effbc7d7533c0');
+  assert.equal(digest(terrain.referenceComposition), '23f928a1cc8ee821de79e436dd0810b31664e00ac8f6a538d2169ba941b584d5');
   assert.equal(world.walkable(...world.start), true);
   assert.equal(world.walkable(16, 16), false);
 });
@@ -276,4 +276,34 @@ test('southern cliff ladders are visible authored connectors with reversible two
  assert.deepEqual(route.map(([x,y])=>map.heights[y][x]),[0,0,1,1,1,2,2,2]);
  assert.equal(map.travelReachable.has('40,64'),true,'lower entrance reachable from village');
  assert.equal(map.travelReachable.has('40,59'),true,'lookout reachable from village');
+});
+
+test('rear-side slopes connect the summit to lower ground and return to the front entrance', () => {
+ const {YK_WORLD: world, YK_ELEVATION: elevation} = loadField();
+ const map=world.mapData;
+ const pos=([x,y])=>[x*32+16,y*32+16];
+ const rear=[[40,59],[40,58],[40,57],[40,56],[39,56],[38,56],[37,56],[37,55],[37,54],[37,53],[36,53],[36,54],[36,55]];
+ assert.equal(map.ramps[57][40],'s','upper ramp from height 2 to 1');
+ assert.equal(map.ramps[54][37],'s','lower ramp from height 1 to 0');
+ assert.equal(map.heights[58][40],2);
+ assert.equal(map.heights[56][40],1);
+ assert.equal(map.heights[53][37],0);
+ assert.deepEqual(elevation.validate(map),[],'existing elevation contract remains valid');
+ for(let i=1;i<rear.length;i++){
+   assert.equal(world.canMove(...pos(rear[i-1]),...pos(rear[i])),true,'rear descent '+i);
+   assert.equal(world.canMove(...pos(rear[i]),...pos(rear[i-1])),true,'rear ascent '+i);
+ }
+ // Avoid ladders and elevated cells for the return. The route must make a
+ // genuine loop through the existing ground, rather than teleporting.
+ const start=[36,55],goal=[40,65],queue=[start],visited=new Set([start.join(',')]);
+ for(let i=0;i<queue.length&&!visited.has(goal.join(','));i++){
+   const [x,y]=queue[i];
+   for(const [dx,dy] of [[1,0],[0,1],[-1,0],[0,-1]]){
+     const nx=x+dx,ny=y+dy,k=nx+','+ny;
+     if(nx<12||nx>54||ny<43||ny>76||visited.has(k)||map.heights[ny]?.[nx]!==0)continue;
+     if(world.canMove(...pos([x,y]),...pos([nx,ny]))){visited.add(k);queue.push([nx,ny]);}
+   }
+ }
+ assert.ok(visited.has(goal.join(',')),'lower meadow reconnects to the front ladder entrance');
+ assert.ok(map.travelReachable.has('37,53'),'rear exit is reachable from the village');
 });

@@ -73,6 +73,12 @@ try{
     return {landscape:[scene.width,scene.height],hero:[scene.dataset.x,scene.dataset.y],
       flowerObjects:g.mapData.decorations.filter(o=>o.kind==='wildflowers').length,
       ladderCount:m.ladders.length,levelAtLookout:m.heights[59][40],
+      rearSlopes:[[40,57],[37,54]].map(([x,y])=>({cell:[x,y],dir:m.ramps[y][x]})),
+      rearRoute:[[40,59],[40,58],[40,57],[40,56],[39,56],[38,56],[37,56],[37,55],[37,54],[37,53],[36,53],[36,54],[36,55]].every((p,i,list)=>{
+        if(!i)return true;const center=([x,y])=>[x*32+16,y*32+16];
+        return g.canMove(...center(list[i-1]),...center(p))&&g.canMove(...center(p),...center(list[i-1]));
+      }),
+
       authoredClimbs:[[40,64,40,63],[40,61,40,60]].map(([lx,ly,ux,uy])=>({
         lower:[lx,ly],upper:[ux,uy],
         exists:m.ladders.some(l=>l.lower[0]===lx&&l.lower[1]===ly&&l.upper[0]===ux&&l.upper[1]===uy),
@@ -90,6 +96,8 @@ try{
     assert.ok(metrics.upperReachable,'height-2 lookout must be accessible from the lower rim');
   }
   assert.equal(metrics.flowerObjects,19);
+  assert.equal(metrics.rearRoute,true,'rear ridge slopes are walkable both ways');
+  assert.deepEqual(metrics.rearSlopes.map(s=>s.dir),['s','s']);
   assert.equal(metrics.fullClimb,true,'the route is reversible from base to summit');
   assert.ok(metrics.authoredClimbs.every(c=>c.exists&&c.up&&c.down),'each ladder is both visible and traversable');
   assert.ok(metrics.landscape[0]>=640&&metrics.landscape[1]===544);

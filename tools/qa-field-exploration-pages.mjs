@@ -55,6 +55,22 @@ try{
           }))
       };
     })(),
+    cornerWalk:(()=>{
+      // Exact coordinates of the reported Hirozuki forest gap near the east cliff.
+      const m=window.YK_WORLD.mapData,W=window.YK_WORLD,E=window.YK_ELEVATION;
+      const pos=(x,y)=>[x*32+16,y*32+16],center=pos(60,28);
+      const exits=Object.fromEntries(
+        [['north',60,27],['west',59,28],['east',61,28],['south',60,29]]
+          .map(([name,x,y])=>[name,{
+            canMove:W.canMove(...center,...pos(x,y)),
+            hasVisibleTreeCollider:m.decorations.some(o=>
+              o.kind==='newTrees'&&o.occupiedTiles?.some(c=>c[0]===x&&c[1]===y)),
+            cut:E.outline(m,x,y).cuts.length,
+            terrain:m[y]?.[x],height:m.heights[y]?.[x]
+          }])
+      );
+      return {cutWidth:m.cornerCut,originalPassable:W.walkable(...center),exits};
+    })(),
     anchoredTrees:(()=>{
       const m=window.YK_WORLD.mapData,E=window.YK_ELEVATION;
       const trees=m.decorations.filter(o=>o.kind==='newTrees'&&o.contactTiles.length===1);
@@ -116,6 +132,16 @@ try{
     base:document.baseURI, url:location.href
   }));
   assert.equal(info.qa.tiles,61);assert.equal(info.qa.heights,71);
+  assert.equal(info.cornerWalk.cutWidth,28,'small diagonal clipping must not consume walkable tile centers');
+  assert.equal(info.cornerWalk.originalPassable,true,'Hizuki remains on valid highland');
+  assert.equal(info.cornerWalk.exits.west.canMove,true,'forest tile west of Hizuki must remain traversable');
+  assert.equal(info.cornerWalk.exits.south.canMove,true,'forest tile south of Hizuki must remain traversable');
+  assert.equal(info.cornerWalk.exits.north.canMove,true,'existing path northward stays open');
+  assert.equal(info.cornerWalk.exits.east.canMove,false,'real two-level cliff remains impassable');
+  assert.equal(info.cornerWalk.exits.west.cut,1,'west diagonal cliff polygon still exists');
+  assert.equal(info.cornerWalk.exits.south.cut,1,'south diagonal cliff polygon still exists');
+  assert.ok(Object.values(info.cornerWalk.exits).every(o=>!o.hasVisibleTreeCollider),
+    'ordinary forest trees cannot leave a solid collision around Hirozuki');
   assert.equal(info.anchoredTrees.mode,'terrain');
   assert.ok(info.anchoredTrees.inset<=25,'remaining mountain-cover trees may need anchored roots');
   assert.ok(info.anchoredTrees.ramps<=7,'remaining slope trees still use sampled terrain heights');

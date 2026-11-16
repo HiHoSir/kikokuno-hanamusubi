@@ -430,7 +430,7 @@ window.YK_LANDSCAPE=(()=>{
    chunk.textureOrigin={x:ox,y:oy};chunk.projectedHeights=true;chunk.shoreRelief=true;chunk.referencePlacedObjects=true;
    chunk.bridgeWaterCells=new Set([...map.bridgeWaterCells].map(k=>{const [x,y]=k.split(',').map(Number);return (x-ox)+','+(y-oy);}));
    chunk.paths=map.paths.map(r=>r.map(([x,y])=>[x-ox*32,y-oy*32]));
-   chunk.decorations=map.decorations.filter(o=>o.x+o.width>=ox*32-32&&o.x<=ex*32+32&&o.foot>=oy*32-32&&o.y<=ey*32+32).map(o=>({...o,x:o.x-ox*32,y:o.y-oy*32,foot:o.foot-oy*32}));
+   chunk.decorations=map.decorations.filter(o=>o.x+o.width>=ox*32-32&&o.x<=ex*32+32&&o.foot>=oy*32-32&&o.y<=ey*32+32).map(o=>({...o,x:o.x-ox*32,y:o.y-oy*32,foot:o.foot-oy*32,renderFoot:o.renderFoot===undefined?undefined:o.renderFoot-oy*32}));
    const surface=groundLayer(chunk);
    for(const layers of [floors,roads,shadows]){const temp=layers.get(chunk);if(temp){temp.width=1;temp.height=1;}layers.delete(chunk);}
    cache.set(key,{surface,ox,oy,lastUsed:++chunkTouch});

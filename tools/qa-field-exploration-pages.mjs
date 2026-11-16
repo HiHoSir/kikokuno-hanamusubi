@@ -20,7 +20,7 @@ await new Promise(ok=>server.listen(0,'127.0.0.1',ok));
 await mkdir('artifacts',{recursive:true});
 const browser=await chromium.launch({headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
 try{
- for(const start of ['meadow','approach','west','east','lookout','rear','eastHighland','centralHighland','northRidge','forestCliff','mountainCliff']){
+ for(const start of ['meadow','approach','west','east','lookout','rear','eastHighland','centralHighland','northRidge','forestCliff','mountainCliff','treeEdgeEast','treeEdgeCenter']){
   const page=await browser.newPage({viewport:{width:874,height:402},deviceScaleFactor:1});
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
   page.on('response',r=>{if(r.status()>=400)errors.push('HTTP '+r.status()+' '+r.url());});
@@ -111,7 +111,7 @@ try{
   assert.ok(info.mountainThinning.removed.every(o=>!o.stillPresent&&o.terrain==='mountain'&&!o.walkable),'underlying mountain collision survives all visual thinning');
   assert.ok(info.mountainThinning.remainingAnchors,'mountain range remains legible');
 
-  assert.equal(info.height,2);assert.equal(info.flowers,34);assert.equal(info.nav,11);assert.deepEqual(info.ramps,['s','s','n','n','e','e','w','w']);
+  assert.equal(info.height,2);assert.equal(info.flowers,34);assert.equal(info.nav,13);assert.deepEqual(info.ramps,['s','s','n','n','e','e','w','w']);
   assert.equal(info.localLadders,0,'overlook uses ramps, not ladder sprites');
   assert.deepEqual(info.markers?.cells,[[40,58],[37,55]]);
   assert.equal(info.markers?.tileSize,32);
@@ -121,7 +121,7 @@ try{
   assert.ok(Object.values(info.allRoutes).every(Boolean),'every direction supports two-way movement');
   assert.equal(info.routeCanMove,true,'full uphill and downhill route');
 
-  assert.deepEqual(info.pos,({meadow:[27,59],approach:[40,65],west:[34,60],east:[46,61],lookout:[40,59],rear:[40,58],eastHighland:[63,34],centralHighland:[24,38],northRidge:[68,26],forestCliff:[39,32],mountainCliff:[54,22]})[start]);
+  assert.deepEqual(info.pos,({meadow:[27,59],approach:[40,65],west:[34,60],east:[46,61],lookout:[40,59],rear:[40,58],eastHighland:[63,34],centralHighland:[24,38],northRidge:[68,26],forestCliff:[39,32],mountainCliff:[54,22],treeEdgeEast:[60,29],treeEdgeCenter:[30,39]})[start]);
   assert.equal(errors.length,0,errors.join('\n'));
   if(start==='approach'){
     await page.screenshot({path:'artifacts/field-exploration-pages-before-climb.png'});
@@ -195,7 +195,7 @@ try{
   await page.close();
   // Capture the identical camera position using the pre-fix painter for an
   // actual pixel comparison. Do not use image-generation approximations.
-  if(['forestCliff','eastHighland','centralHighland','mountainCliff'].includes(start)){
+  if(['forestCliff','eastHighland','centralHighland','mountainCliff','treeEdgeEast','treeEdgeCenter'].includes(start)){
     const legacy=await browser.newPage({viewport:{width:874,height:402},deviceScaleFactor:1});
     const legacyErrors=[];legacy.on('pageerror',e=>legacyErrors.push(e.message));
     await legacy.goto('http://127.0.0.1:'+server.address().port+'/previews/field-exploration/?from=battle&anchor=old&start='+start);
@@ -210,6 +210,14 @@ try{
     assert.deepEqual(legacyErrors,[]);
     await legacy.screenshot({path:'artifacts/field-exploration-pages-'+start+'-legacy.png'});
     await legacy.close();
+    if(['treeEdgeEast','treeEdgeCenter'].includes(start)){
+      const overlay=await browser.newPage({viewport:{width:874,height:402},deviceScaleFactor:1});
+      await overlay.goto('http://127.0.0.1:'+server.address().port+'/previews/field-exploration/?from=battle&trees=front&start='+start);
+      await overlay.waitForFunction(()=>window.__FIELD_EXPLORATION_PREVIEW&&document.querySelector('#load')?.hidden===true,null,{timeout:45000});
+      assert.equal(await overlay.evaluate(()=>window.YK_FIELD_TREE_OVERLAY_DIAGNOSTIC),true);
+      await overlay.screenshot({path:'artifacts/field-exploration-pages-'+start+'-overlay-diagnostic.png'});
+      await overlay.close();
+    }
   }
  }
 }finally{await browser.close();await new Promise(ok=>server.close(ok));}

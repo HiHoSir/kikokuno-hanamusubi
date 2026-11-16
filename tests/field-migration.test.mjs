@@ -254,7 +254,7 @@ test('the eastern raised lookout uses authored heights and does not replace wate
  assert.ok(top.some(t=>t.h===1),'lower terrace');
  assert.ok(top.some(t=>t.h===2),'higher lookout');
  assert.ok(top.filter(t=>t.h>0).every(t=>['grass','forest'].includes(terrain.tiles[t.y][t.x])));
- assert.equal(terrain.referenceComposition.decorations.filter(o=>o.kind==='wildflowers').length, 19);
+ assert.equal(terrain.referenceComposition.decorations.filter(o=>o.kind==='wildflowers').length, 34);
  assert.deepEqual(world.roads.length,terrain.referenceComposition.roads.length);
 });
 
@@ -269,8 +269,8 @@ test('highland has 32px traversable slopes on south, east and west, and a north 
   north:[[40,59],[40,58],[40,57],[40,56],[39,56],[38,56],[37,56],[37,55],[37,54],[37,53]]
  };
  const slopes=terrain.referenceComposition.slopeConnections;
- assert.equal(slopes.length,8);
- assert.deepEqual(slopes.map(s=>s.dir).sort().join(''), 'ee'+'nn'+'ss'+'ww');
+ assert.equal(slopes.length,12);
+ assert.deepEqual(slopes.map(s=>s.dir).sort().join(''), 'eeee'+'nnn'+'sss'+'ww');
  for(const [name,route] of Object.entries(routes)){
   for(let i=1;i<route.length;i++){
    assert.equal(world.canMove(...pos(route[i-1]),...pos(route[i])),true,name+' traversal '+i);

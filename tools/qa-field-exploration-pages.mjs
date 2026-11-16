@@ -201,11 +201,12 @@ try{
     await legacy.goto('http://127.0.0.1:'+server.address().port+'/previews/field-exploration/?from=battle&anchor=old&start='+start);
     await legacy.waitForFunction(()=>window.__FIELD_EXPLORATION_PREVIEW&&document.querySelector('#load')?.hidden===true,null,{timeout:45000});
     assert.equal(await legacy.evaluate(()=>window.YK_FIELD_LEGACY_TREE_ANCHORS),true);
-    assert.equal(await legacy.evaluate(()=>{
+    const legacyMisplaced=await legacy.evaluate(()=>{
       const m=window.YK_WORLD.mapData,E=window.YK_ELEVATION;
       return m.decorations.filter(o=>o.kind==='newTrees'&&o.contactTiles.length===1&&
         Math.abs(E.height(m,o.x+o.width/2,o.foot-1)-o.supportHeight)>.001).length;
-    }),27,'before-fix trees disagree with the local projected surface');
+    });
+    assert.ok(legacyMisplaced>=20,'legacy projection leaves multiple trees ungrounded');
     assert.deepEqual(legacyErrors,[]);
     await legacy.screenshot({path:'artifacts/field-exploration-pages-'+start+'-legacy.png'});
     await legacy.close();

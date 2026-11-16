@@ -39,6 +39,22 @@ try{
     qa:window.__FIELD_EXPLORATION_PREVIEW,
     reviewSpawn:window.__FIELD_EXPLORATION_SPAWN,
     scenery:window.__FIELD_EXPLORATION_SCENERY_THINNING,
+    collisionConsistency:(()=>{
+      const m=window.YK_WORLD.mapData, expected=new Set(m.decorations.flatMap(o=>o.occupiedTiles.map(c=>c.join(','))));
+      const stale=[...m.occupiedTiles].filter(k=>!expected.has(k));
+      const missing=[...expected].filter(k=>!m.occupiedTiles.has(k));
+      const removed=window.__FIELD_EXPLORATION_SCENERY_THINNING?.removed||[];
+      const retiredCells=removed.flatMap(o=>o.contactTiles).filter(([x,y])=>['grass','forest'].includes(m[y]?.[x]));
+      return {stale,missing,retiredCount:retiredCells.length,
+        newlyOpen:retiredCells.filter(([x,y])=>!m.occupiedTiles.has(x+','+y)).length,
+        restoredMountainAnchors:[[52,22],[54,24],[55,25],[57,26],[65,15],[68,15],[66,16],[68,16],[70,18],[44,64],[42,65],[46,66],[42,67],[64,8],[65,9],[68,8]]
+          .map(([x,y])=>({
+           x,y,visible:m.decorations.some(o=>['newTrees','newMountainLarge','newMountainSmall'].includes(o.kind)&&
+             o.contactTiles.some(c=>c[0]===x&&c[1]===y)),
+           terrain:m[y]?.[x]
+          }))
+      };
+    })(),
     anchoredTrees:(()=>{
       const m=window.YK_WORLD.mapData,E=window.YK_ELEVATION;
       const trees=m.decorations.filter(o=>o.kind==='newTrees'&&o.contactTiles.length===1);
@@ -101,22 +117,29 @@ try{
   }));
   assert.equal(info.qa.tiles,61);assert.equal(info.qa.heights,71);
   assert.equal(info.anchoredTrees.mode,'terrain');
-  assert.equal(info.anchoredTrees.inset,0,'no diagonal-cliff tree should need an inset after thinning');
+  assert.ok(info.anchoredTrees.inset<=25,'remaining mountain-cover trees may need anchored roots');
   assert.ok(info.anchoredTrees.ramps<=7,'remaining slope trees still use sampled terrain heights');
   assert.ok(info.scenery?.bevelTiles>=5,'the filter detects actual diagonal cliff cells');
-  assert.ok(info.scenery.removed.length>=8,'scenery is removed along diagonal highland borders');
+  assert.ok(info.scenery.removed.length>=8,'forest trees are removed around diagonal cliffs');
   assert.ok(info.scenery.byKind.newTrees>0,'trees adjacent to diagonal cliffs are thinned');
-  assert.equal(info.scenery.remainingAtBevel,0,'no tree or mountain sprite remains within a tile of a bevel');
-  assert.ok(info.scenery.removed.every(o=>['newTrees','newMountainSmall','newMountainLarge'].includes(o.kind)),
-    'only tree and mountain scenery is removed');
+  assert.equal(info.scenery.remainingForestAtBevel,0,'no original forest tree remains within one tile of a bevel');
+  assert.ok(info.scenery.preservedMountainScenery>=90,'solid mountains retain visible sprites');
+  assert.ok(info.collisionConsistency.restoredMountainAnchors.every(o=>o.visible),'restored mountain anchor must have a visible mountain or tree stand-in');
+  assert.deepEqual(info.collisionConsistency.stale,[],'removed sprites must not retain collision-only occupied cells');
+  assert.deepEqual(info.collisionConsistency.missing,[],'every live object footprint must be in collision map');
+  assert.ok(info.collisionConsistency.retiredCount>=8,'check actual removed tree footholds');
+  assert.ok(info.scenery.removed.every(o=>o.kind==='newTrees'),
+    'do not delete mountain or mountain-derived stand-in scenery');
   assert.equal(info.anchoredTrees.misplaced,0,'no tree root disagrees with its projected terrain height');
   assert.ok(info.anchoredTrees.reachable>=2403,'thinning must not shrink the traversable field');
   assert.ok(info.regionCoverage.east>=125&&info.regionCoverage.central>=45,'restored plateaus are traversable');
-  assert.ok(info.cliffObjects.every(o=>o.cuts>0&&!o.protected&&!o.sprite),'diagonal cliff faces remain while interfering scenery is removed');
-  assert.equal(info.qa.thinnedMountains,16,'16 mountain sprites removed from review-only map');
-  assert.equal(info.mountainThinning.sourceCount,165);
-  assert.ok(info.mountainThinning.runtimeCount<=98,'existing mountain thinning is preserved with added bevel clearance');
-  assert.ok(info.mountainThinning.removed.every(o=>!o.stillPresent&&o.terrain==='mountain'&&!o.walkable),'underlying mountain collision survives all visual thinning');
+  assert.ok(info.cliffObjects.every(o=>o.cuts>0&&!o.protected),
+    'diagonal cliff shapes survive even where mountain sprites are restored');
+  assert.equal(info.qa.thinnedMountains,0,'mountain sprite deletion must not leave invisible mountain terrain');
+  assert.equal(info.qa.restoredMountains,16,'prior deliberately suppressed mountain anchors return');
+  assert.equal(info.mountainThinning.sourceCount,181);
+  assert.ok(info.mountainThinning.runtimeCount>=98,'preserve most original mountain sprites');
+  assert.ok(info.mountainThinning.removed.every(o=>o.stillPresent&&o.terrain==='mountain'&&!o.walkable),'impassable mountain cells remain visibly represented');
   assert.ok(info.mountainThinning.remainingAnchors,'mountain range remains legible');
 
   assert.equal(info.height,2);assert.equal(info.flowers,34);assert.equal(info.nav,13);assert.deepEqual(info.ramps,['s','s','n','n','e','e','w','w']);

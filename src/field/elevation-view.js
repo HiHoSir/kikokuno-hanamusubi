@@ -156,6 +156,12 @@ window.YK_ELEVATION_VIEW=(()=>{
    projectedVertices.set(key,projected);
    return projected;
   };
+  // Elevated terrain is displaced by the camera after world-space sorting.
+  // Use the same projected Y coordinate for terrain, cliffs, sprites and hero;
+  // otherwise later ground strips can cut into an earlier tree crown.
+  // The switch is retained for preview-only before/after verification.
+  const projectedSorting=window.YK_FIELD_LEGACY_DEPTH_SORT!==true;
+  const depthAt=(x,y,h,oldDepth)=>projectedSorting?(point(x,y,h)?.y??oldDepth):oldDepth;
   const diagnostic=window.YK_CLIFF_DEBUG===true;
   // Separate late overlay isolates missing geometry from depth overpainting.
   const xray=diagnostic&&window.YK_CLIFF_XRAY===true;
@@ -207,7 +213,9 @@ window.YK_ELEVATION_VIEW=(()=>{
    const band=options.groundTile?(center.y<280?32:16):8;
    const kind=m[ty][tx],im=art[kind]||art.grass,road=m.roads?.has(tx+','+ty),texture=art.waterAnimated&&waterKind(kind)?im:options.groundTile?(()=>{const t=options.groundTile(tx,ty);return groundTile(t.surface,t.x/32,t.y/32);})():options.groundTexture?groundTile(options.groundTexture,tx,ty):road?art.road:im,shape=E.outline(m,tx,ty),shore=shoreGeometry(m,tx,ty,shape),shores=shore.sides,shoreShape=shore.outline;
    for(let v=0;v<32;v+=band){const py=ty*32+v;
-    items.push({depth:py+band,order:0,draw:()=>{
+    const bottom=ty*32+v+band;
+    const stripDepth=depthAt(tx*32+16,bottom,E.level(m,tx,ty,.5,(v+band)/32),py+band);
+    items.push({depth:stripDepth,order:0,draw:()=>{
      const p=[[0,v],[32,v],[32,v+band],[0,v+band]].map(([u,w])=>point(tx*32+u,ty*32+w,E.level(m,tx,ty,u/32,w/32)));
      if(p.every(Boolean)){
       if(shoreShape){c.save();if(!clipShore(c,shoreShape.poly,tx,ty,point,m)){c.restore();return;}}
@@ -233,7 +241,9 @@ window.YK_ELEVATION_VIEW=(()=>{
    if(shores.length){
     // Sand polygons are stable in world space; only projection changes.
     for(const {a,b,width,poly} of shore.sand){
-     items.push({depth:ty*32+Math.max(a[1],b[1])+width,order:.25,draw:()=>{
+     items.push({depth:depthAt(tx*32+16,ty*32+Math.max(a[1],b[1])+width,
+      E.level(m,tx,ty,.5,Math.min(1,(Math.max(a[1],b[1])+width)/32)),
+      ty*32+Math.max(a[1],b[1])+width),order:.25,draw:()=>{
       c.save();
       if(!clipShore(c,shoreShape.poly,tx,ty,point,m)){c.restore();return;}
       const p=poly.map(([u,v])=>point(tx*32+u,ty*32+v,E.level(m,tx,ty,u/32,v/32)));
@@ -249,7 +259,8 @@ window.YK_ELEVATION_VIEW=(()=>{
    // The removed triangle exposes lower ground, not an empty cutout.
    for(const cut of shape.cuts){
     const local=[cut.corner,...cut.ends],base=art[cut.material]||im;
-    items.push({depth:ty*32+Math.max(...local.map(p=>p[1])),order:0,draw:()=>{
+    items.push({depth:depthAt(tx*32+16,ty*32+Math.max(...local.map(p=>p[1])),
+      cut.lower,ty*32+Math.max(...local.map(p=>p[1]))),order:0,draw:()=>{
      const p=local.map(([u,v])=>point(tx*32+u,ty*32+v,cut.lower));
      const uv=local.map(([u,v])=>({x:tx*32%base.width+u,y:ty*32%base.height+v}));
      if(p.every(Boolean))triangle(c,base,uv,p);
@@ -274,7 +285,10 @@ window.YK_ELEVATION_VIEW=(()=>{
     // Do not promote rear-facing lips: that exposed the back walls in 16.0.154.
     const facesCamera=side==='s'||(!side&&bx<ax);
     const lift=facesCamera?Math.max(0,Math.max(h0-n0,h1-n1))*rise/zoom:0;
-    const depth=ty*32+Math.max(ay,by)+lift;
+    const worldDepth=ty*32+Math.max(ay,by)+lift;
+    const depth=projectedSorting?
+      Math.max(depthAt(tx*32+ax,ty*32+ay,h0,worldDepth),
+               depthAt(tx*32+bx,ty*32+by,h1,worldDepth)):worldDepth;
     items.push({depth,order:1.5,draw:()=>{
      const p0=point(tx*32+ax,ty*32+ay,h0),p1=point(tx*32+bx,ty*32+by,h1);
      if(!p0||!p1)return;
@@ -325,7 +339,11 @@ window.YK_ELEVATION_VIEW=(()=>{
      // than drawing every cliff after all terrain (the 16.0.154 regression).
      const facesCamera=side==='s'||(!side&&bx<ax);
      const lift=facesCamera?Math.max(...high.map((h,j)=>h-low[j]))*rise/zoom:0;
-     items.push({depth:facesCamera?Math.max(...span.map(p=>p[1]))+lift:ty*32-.01,order:facesCamera?1:-1,draw:()=>{
+     const oldDepth=facesCamera?Math.max(...span.map(p=>p[1]))+lift:ty*32-.01;
+     const wallDepth=projectedSorting?(facesCamera?
+       Math.max(depthAt(...span[0],low[0],oldDepth),depthAt(...span[1],low[1],oldDepth)):
+       Math.min(depthAt(...span[0],high[0],oldDepth),depthAt(...span[1],high[1],oldDepth))-.01):oldDepth;
+     items.push({depth:wallDepth,order:facesCamera?1:-1,draw:()=>{
       const bands=Math.max(1,Math.ceil(Math.max(...high.map((h,j)=>h-low[j]))));
       for(let b=0;b<bands;b++){
        const hi=high.map((h,j)=>h+(low[j]-h)*b/bands),lo=high.map((h,j)=>h+(low[j]-h)*(b+1)/bands);
@@ -349,7 +367,8 @@ window.YK_ELEVATION_VIEW=(()=>{
    if(shape.cuts.length)continue;
    const shore=shoreGeometry(m,tx,ty,shape),edges=shore.darkEdges;
    if(!edges.length)continue;
-   items.push({depth:ty*32+32,order:.5,draw:()=>{
+   items.push({depth:depthAt(tx*32+16,(ty+1)*32,E.level(m,tx,ty,.5,1),ty*32+32),
+    order:.5,draw:()=>{
     c.save();c.strokeStyle='rgba(27,36,29,.76)';
     const p0=point(tx*32+16,ty*32+16,E.level(m,tx,ty));
     c.lineWidth=Math.max(1,(p0?.scale||1)*.6);
@@ -365,7 +384,8 @@ window.YK_ELEVATION_VIEW=(()=>{
   // Illustrated ladders lie on the front-facing cliff surface.
   for(const l of m.ladders||[]){
    const [tx,ty]=l.lower,[ux,uy]=l.upper;
-   items.push({depth:ty*32+20,order:2.5,draw:()=>{
+   items.push({depth:depthAt(tx*32+16,ty*32+20,E.level(m,tx,ty,.5,.625),ty*32+20),
+     order:2.5,draw:()=>{
     if(!art.ladder)return;
     const top=point(ux*32+16,(uy+1)*32,E.level(m,ux,uy));
     const bottom=point(tx*32+16,ty*32,E.level(m,tx,ty));
@@ -376,7 +396,10 @@ window.YK_ELEVATION_VIEW=(()=>{
   }
   for(const o of options.objects||m.objects||[]){
    const foot=o.foot??o.y,center=o.foot===undefined?o.x:o.x+o.width/2;
-   items.push({depth:foot,order:2,draw:()=>{const p=point(center,foot,o.supportHeight??E.height(m,center,foot));if(!p||p.x+o.width*p.scale/2<0||p.x-o.width*p.scale/2>viewWidth)return;
+   const projectedFoot=point(center,foot,o.supportHeight??E.height(m,center,foot));
+   if(!projectedFoot)continue;
+   items.push({depth:projectedSorting?projectedFoot.y:foot,order:2,draw:()=>{const p=projectedFoot;
+    if(p.x+o.width*p.scale/2<0||p.x-o.width*p.scale/2>viewWidth)return;
     c.globalAlpha=Math.min(1,Math.max(0,(p.y-136)/70));
     if(o.render)o.render(c,p);else if(art[o.kind])c.drawImage(art[o.kind],p.x-o.width*p.scale/2,p.y-o.height*p.scale,o.width*p.scale,o.height*p.scale);c.globalAlpha=1;
    }});
@@ -384,7 +407,11 @@ window.YK_ELEVATION_VIEW=(()=>{
   // The actor's feet must be composited after the entire ground cell under them.
    // Sorting at the exact foot y interleaved the sprite with 16px terrain strips,
    // making the boots/body flicker as the camera moved vertically.
-   if(actor)items.push({depth:actor.y+32,order:3,draw:()=>{
+   if(actor){
+    const ty=Math.floor(actor.y/32),tx=Math.floor(actor.x/32);
+    const bottom=(ty+1)*32;
+    const actorDepth=depthAt(actor.x,bottom,E.level(m,tx,ty,.5,1),actor.y+32);
+    items.push({depth:actorDepth+.01,order:3,draw:()=>{
    const p=point(actor.x,actor.y,actor.height??E.height(m,actor.x,actor.y));if(!p)return;
    if(actor.draw){actor.draw(p.x,p.y,p.scale);return;}
    const row={d:0,u:1,r:2,l:3}[actor.dir||'d'],col=row>=2?Math.min(1,actor.frame||0):actor.frame||0;
@@ -392,6 +419,8 @@ window.YK_ELEVATION_VIEW=(()=>{
    c.fillStyle='rgba(0,0,0,.24)';c.beginPath();c.ellipse(p.x,p.y,9*p.scale,3*p.scale,0,0,Math.PI*2);c.fill();
    c.drawImage(art.hero,col*32,row*32,32,32,p.x-heroAnchorX*p.scale,p.y-heroAnchorY*p.scale,32*p.scale,32*p.scale);
   }});
+  }
+  if(diagnostic)cliffReport.sort=projectedSorting?'projected':'world';
   items.sort((a,b)=>a.depth-b.depth||a.order-b.order);for(const item of items)item.draw();
   // Diagnostic only: draw projected face polygons AFTER all depth sorting.
   // If the cyan shape appears where the normal wall is absent, the face

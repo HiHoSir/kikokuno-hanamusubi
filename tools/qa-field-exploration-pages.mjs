@@ -43,7 +43,7 @@ try{
       const m=window.YK_WORLD.mapData, expected=new Set(m.decorations.flatMap(o=>o.occupiedTiles.map(c=>c.join(','))));
       const stale=[...m.occupiedTiles].filter(k=>!expected.has(k));
       const missing=[...expected].filter(k=>!m.occupiedTiles.has(k));
-      const removed=window.__FIELD_EXPLORATION_SCENERY_THINNING?.removed||[];
+      const removed=m.diagonalSceneryThinning?.removed||[];
       const retiredCells=removed.flatMap(o=>o.contactTiles).filter(([x,y])=>['grass','forest'].includes(m[y]?.[x]));
       return {stale,missing,retiredCount:retiredCells.length,
         newlyOpen:retiredCells.filter(([x,y])=>!m.occupiedTiles.has(x+','+y)).length,

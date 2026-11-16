@@ -98,7 +98,7 @@ try{
     assert.ok(metrics.raisedReachable,'height-1 terrace must connect to the walkable world');
     assert.ok(metrics.upperReachable,'height-2 lookout must be accessible from the lower rim');
   }
-  assert.equal(metrics.flowerObjects,19);
+  assert.equal(metrics.flowerObjects,34);
   assert.equal(metrics.rearRoute,true,'rear ridge slopes are walkable both ways');
   assert.deepEqual(metrics.rearSlopes.map(s=>s.dir),['s','s']);
   assert.equal(metrics.fullClimb,true,'the route is reversible from base to summit');

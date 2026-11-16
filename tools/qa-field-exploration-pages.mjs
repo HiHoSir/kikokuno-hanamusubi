@@ -67,6 +67,9 @@ try{
   assert.equal(info.localLadders,0,'overlook uses ramps, not ladder sprites');
   assert.deepEqual(info.markers?.cells,[[40,58],[37,55]]);
   assert.equal(info.markers?.tileSize,32);
+  assert.equal(info.markers?.style,'grass-worn-soil-dither');
+  assert.equal(info.markers?.source,'approved-road-and-grass');
+  assert.ok(info.markers?.changed.every(n=>n>100&&n<900),'single-cell non-square footpath masks');
   assert.ok(Object.values(info.allRoutes).every(Boolean),'every direction supports two-way movement');
   assert.equal(info.routeCanMove,true,'full uphill and downhill route');
 

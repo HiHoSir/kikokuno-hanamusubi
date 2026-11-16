@@ -41,6 +41,23 @@ try{
     height:window.YK_WORLD.mapData.heights[59][40],
     flowers:window.YK_WORLD.mapData.decorations.filter(o=>o.kind==='wildflowers').length,
     nav:document.querySelectorAll('#review-controls a').length,
+    mountainThinning:(()=>{
+      const terrain=window.YK_FIELD_TERRAIN;
+      const map=window.YK_WORLD.mapData;
+      const removed=[[52,22],[54,24],[55,25],[57,26],[65,15],[68,15],[66,16],[68,16],[70,18],[44,64],[42,65],[46,66],[42,67],[64,8],[65,9],[68,8]];
+      const objects=terrain.referenceComposition.decorations.filter(o=>o.kind==='newMountainLarge'||o.kind==='newMountainSmall');
+      return {
+        sourceCount:objects.length,
+        runtimeCount:map.decorations.filter(o=>o.kind==='newMountainLarge'||o.kind==='newMountainSmall').length,
+        removed:removed.map(([x,y])=>({
+          x,y,
+          stillPresent:objects.some(o=>o.contactTiles[0][0]===x&&o.contactTiles[0][1]===y),
+          terrain:map[y][x],
+          walkable:window.YK_WORLD.walkable(x*32+16,y*32+16)
+        })),
+        remainingAnchors:[[53,23],[53,26],[42,66]].every(([x,y])=>objects.some(o=>o.contactTiles[0][0]===x&&o.contactTiles[0][1]===y))
+      };
+    })(),
     cliffObjects:[[39,32,'newTrees'],[53,23,'newMountainSmall'],[53,26,'newMountainLarge']].map(([x,y,kind])=>({
       x,y,kind,cuts:window.YK_ELEVATION.outline(window.YK_WORLD.mapData,x,y).cuts.length,
       protected:window.YK_WORLD.mapData.cornerProtected.has(x+','+y),
@@ -71,6 +88,12 @@ try{
   assert.equal(info.qa.tiles,61);assert.equal(info.qa.heights,71);
   assert.ok(info.regionCoverage.east>=125&&info.regionCoverage.central>=45,'restored plateaus are traversable');
   assert.ok(info.cliffObjects.every(o=>o.cuts>0&&!o.protected&&o.sprite),'forest and mountain sprites preserve diagonal cliff faces');
+  assert.equal(info.qa.thinnedMountains,16,'16 mountain sprites removed from review-only map');
+  assert.equal(info.mountainThinning.sourceCount,165);
+  assert.equal(info.mountainThinning.runtimeCount,98);
+  assert.ok(info.mountainThinning.removed.every(o=>!o.stillPresent&&o.terrain==='mountain'&&!o.walkable),'underlying mountain collision survives all visual thinning');
+  assert.ok(info.mountainThinning.remainingAnchors,'mountain range remains legible');
+
   assert.equal(info.height,2);assert.equal(info.flowers,34);assert.equal(info.nav,11);assert.deepEqual(info.ramps,['s','s','n','n','e','e','w','w']);
   assert.equal(info.localLadders,0,'overlook uses ramps, not ladder sprites');
   assert.deepEqual(info.markers?.cells,[[40,58],[37,55]]);

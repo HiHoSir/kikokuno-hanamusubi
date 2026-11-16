@@ -41,7 +41,10 @@ try{
   const loadImage=src=>new Promise((resolve,reject)=>{
    const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(Error('Unable to load '+src));im.src=src;
   });
-  const [water,fall]=await Promise.all(['waterMotion','waterfallMotion'].map(key=>loadImage(approved.url(approved.landscape[key]))));
+  const [water,fall]=await Promise.all([
+   loadImage(approved.url(approved.landscape.waterMotion)),
+   loadImage(approved.url('assets/field/terrain/atlas/waterfall-south-4w-2h-32.png'))
+  ]);
   const cv=(width,height)=>{const c=document.createElement('canvas');c.width=width;c.height=height;const q=c.getContext('2d');q.imageSmoothingEnabled=false;return c;};
   const pixels=c=>c.getContext('2d').getImageData(0,0,c.width,c.height).data;
   const changed=(a,b,mask=null,invert=false)=>{
@@ -55,7 +58,11 @@ try{
    c.getContext('2d').drawImage(image,frame*c.width,0,c.width,c.height,0,0,c.width,c.height);
    return c;
   };
-  const waterFrames=[srcFrame(water,0),srcFrame(water,1)],fallFrames=[srcFrame(fall,0),srcFrame(fall,1)];
+  const waterFrames=[srcFrame(water,0),srcFrame(water,1)];
+  const fallFrames=Array.from({length:4},(_,i)=>{
+   const c=cv(128,128);c.getContext('2d').drawImage(fall,i*128,0,128,128,0,0,128,128);
+   return c;
+  });
   const alphaNonzero=c=>{const d=pixels(c);let n=0;for(let i=3;i<d.length;i+=4)if(d[i]>0)n++;return n;};
   const source={
    waterAtlas:[water.width,water.height],
@@ -128,10 +135,19 @@ try{
   paint(0);const first=pixels(scene).slice();
   paint(360);const second=pixels(scene).slice();
   paint(720);const last=pixels(scene).slice();
-  const production={frame0To360Changed:changed(first,second),frame0To720Changed:changed(first,last),canvas:[scene.width,scene.height]};
+  const actor={x:66*32+16,foot:20*32+16};
+  const drawFall=ms=>{
+   const count=renderer.draw(sc,actor,ms,scene.width).waterfallTiles;
+   return {count,frame:pixels(scene).slice()};
+  };
+  const fall0=drawFall(0),fall1=drawFall(180),fall4=drawFall(720);
+  const production={frame0To360Changed:changed(first,second),frame0To720Changed:changed(first,last),
+   canvas:[scene.width,scene.height],tileCounts:[fall0.count,fall1.count,fall4.count],
+   waterfallAnimatedPixels:changed(fall0.frame,fall1.frame),
+   waterfallLoopPixels:changed(fall0.frame,fall4.frame)};
   return {source,candidate,production,contract:{
     waterTimeMs:360,seaAndRiver:'animated source frames',shoreMask:'static 32px alpha',
-    waterfall:'independent animated frame pair',shallow:'Tenyo 4-frame water is unchanged'
+    waterfall:'approved 4-frame map-chip atlas',shallow:'Tenyo 4-frame water is unchanged'
   }};
  });
  const {candidate,source,production,contract}=data;
@@ -145,12 +161,16 @@ try{
  const failures=[];
  if(source.waterAtlas.join(',')!=='128,64'||source.waterFrames.some(d=>d.join(',')!=='64,64')||
     source.waterOpaque.some(n=>n<512)||source.waterChangedPixels<32)failures.push('approved sea/river two-frame source missing or blank');
- if(source.waterfallAtlas.join(',')!=='160,96'||source.waterfallFrames.some(d=>d.join(',')!=='80,96')||
-    source.waterfallOpaque.some(n=>n<512)||source.waterfallChangedPixels<32)failures.push('approved waterfall source missing or blank');
+ if(source.waterfallAtlas.join(',')!=='512,128'||source.waterfallFrames.length!==4||
+    source.waterfallFrames.some(d=>d.join(',')!=='128,128')||
+    source.waterfallOpaque.some(n=>n<512)||source.waterfallChangedPixels<32)
+   failures.push('approved waterfall map-chip atlas missing or blank');
  if(candidate.waterCells<5||candidate.wetPixelsChanged<50||candidate.dryPixelsChanged!==0||candidate.loopPixelsChanged!==0)
     failures.push('animated mask compositing changed land or froze water '+JSON.stringify(candidate));
  if(production.frame0To360Changed<50||production.frame0To720Changed!==0)
     failures.push('real projected field water is blank/static or does not loop '+JSON.stringify(production));
+ if(production.tileCounts.some(n=>n!==16)||production.waterfallAnimatedPixels<32||production.waterfallLoopPixels!==0)
+  failures.push('production waterfall map-chip render is missing or frozen '+JSON.stringify(production));
  if(errors.length)failures.push('page errors '+errors.join('; '));
  if(failures.length)throw Error('Water animation QA failed: '+failures.join(' | '));
 }finally{

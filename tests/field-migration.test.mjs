@@ -288,7 +288,7 @@ test('rear-side slopes connect the summit to lower ground and return to the fron
  assert.equal(map.heights[58][40],2);
  assert.equal(map.heights[56][40],1);
  assert.equal(map.heights[53][37],0);
- assert.deepEqual(elevation.validate(map),[],'existing elevation contract remains valid');
+ assert.equal(elevation.validate(map).length,0,'existing elevation contract remains valid');
  for(let i=1;i<rear.length;i++){
    assert.equal(world.canMove(...pos(rear[i-1]),...pos(rear[i])),true,'rear descent '+i);
    assert.equal(world.canMove(...pos(rear[i]),...pos(rear[i-1])),true,'rear ascent '+i);

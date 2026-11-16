@@ -20,7 +20,7 @@ await new Promise(ok=>server.listen(0,'127.0.0.1',ok));
 await mkdir('artifacts',{recursive:true});
 const browser=await chromium.launch({headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
 try{
- for(const start of ['meadow','approach','lookout','rear']){
+ for(const start of ['meadow','approach','west','east','lookout','rear']){
   const page=await browser.newPage({viewport:{width:874,height:402},deviceScaleFactor:1});
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
   page.on('response',r=>{if(r.status()>=400)errors.push('HTTP '+r.status()+' '+r.url());});
@@ -41,9 +41,20 @@ try{
     height:window.YK_WORLD.mapData.heights[59][40],
     flowers:window.YK_WORLD.mapData.decorations.filter(o=>o.kind==='wildflowers').length,
     nav:document.querySelectorAll('#review-controls a').length,
-    ramps:[[40,57],[37,54]].map(([x,y])=>window.YK_WORLD.mapData.ramps[y][x]),
+    ramps:[[40,57],[37,54],[40,64],[40,61],[35,60],[39,59],[45,61],[42,59]].map(([x,y])=>window.YK_WORLD.mapData.ramps[y][x]),
+    markers:window.__FIELD_EXPLORATION_MARKERS||null,
+    allRoutes:Object.fromEntries(Object.entries({
+      south:[[40,65],[40,64],[40,63],[40,62],[40,61],[40,60],[40,59]],
+      west:[[34,60],[35,60],[36,60],[37,60],[38,60],[38,59],[39,59],[40,59]],
+      east:[[46,61],[45,61],[44,61],[43,61],[43,60],[43,59],[42,59],[41,59],[40,59]],
+      north:[[40,59],[40,58],[40,57],[40,56],[39,56],[38,56],[37,56],[37,55],[37,54],[37,53]]
+    }).map(([name,route])=>[name,route.every((p,i,cells)=>{
+      if(!i)return true;const center=([x,y])=>[x*32+16,y*32+16];
+      return window.YK_WORLD.canMove(...center(cells[i-1]),...center(p))&&window.YK_WORLD.canMove(...center(p),...center(cells[i-1]));
+    })])),
+    localLadders:window.YK_WORLD.mapData.ladders.filter(l=>l.lower[0]>=34&&l.lower[0]<=46&&l.lower[1]>=53&&l.lower[1]<=64).length,
 
-    ladders:window.YK_WORLD.mapData.ladders.filter(l=>l.lower[0]===40&&[61,64].includes(l.lower[1])),
+
     routeCanMove:[[40,65],[40,64],[40,63],[40,62],[40,61],[40,60],[40,59],[40,58]].every((c,i,path)=>{
       if(!i)return true;
       const pos=([x,y])=>[x*32+16,y*32+16];
@@ -52,10 +63,14 @@ try{
     base:document.baseURI, url:location.href
   }));
   assert.equal(info.qa.tiles,7);assert.equal(info.qa.heights,71);
-  assert.equal(info.height,2);assert.equal(info.flowers,19);assert.equal(info.nav,4);assert.deepEqual(info.ramps,['s','s']);
+  assert.equal(info.height,2);assert.equal(info.flowers,19);assert.equal(info.nav,6);assert.deepEqual(info.ramps,['s','s','n','n','e','e','w','w']);
+  assert.equal(info.localLadders,0,'overlook uses ramps, not ladder sprites');
+  assert.deepEqual(info.markers?.cells,[[40,58],[37,55]]);
+  assert.equal(info.markers?.tileSize,32);
+  assert.ok(Object.values(info.allRoutes).every(Boolean),'every direction supports two-way movement');
   assert.equal(info.routeCanMove,true,'full uphill and downhill route');
-  assert.equal(info.ladders.length,2,'both visible ladder connectors');
-  assert.deepEqual(info.pos,({meadow:[27,59],approach:[40,65],lookout:[40,59],rear:[40,58]})[start]);
+
+  assert.deepEqual(info.pos,({meadow:[27,59],approach:[40,65],west:[34,60],east:[46,61],lookout:[40,59],rear:[40,58]})[start]);
   assert.equal(errors.length,0,errors.join('\n'));
   if(start==='approach'){
     await page.screenshot({path:'artifacts/field-exploration-pages-before-climb.png'});
@@ -73,6 +88,25 @@ try{
     }
     assert.equal(await page.locator('#scene').getAttribute('data-y'),'65','actual downhill traversal');
     await page.screenshot({path:'artifacts/field-exploration-pages-after-descent.png'});
+  }
+  if(start==='west'||start==='east'){
+    const route=start==='west'?
+      [[34,60],[35,60],[36,60],[37,60],[38,60],[38,59],[39,59],[40,59]]:
+      [[46,61],[45,61],[44,61],[43,61],[43,60],[43,59],[42,59],[41,59],[40,59]];
+    const walk=async (from,to)=>{
+      const dx=to[0]-from[0],dy=to[1]-from[1];
+      const key=dx===1?'ArrowRight':dx===-1?'ArrowLeft':dy===1?'ArrowDown':'ArrowUp';
+      await page.keyboard.press(key,{delay:35});
+      await page.waitForFunction(([x,y])=>{
+        const s=document.querySelector('#scene');
+        return Number(s.dataset.x)===x&&Number(s.dataset.y)===y;
+      },to,{timeout:4000});
+      await page.waitForTimeout(25);
+    };
+    for(let i=1;i<route.length;i++)await walk(route[i-1],route[i]);
+    await page.screenshot({path:'artifacts/field-exploration-'+start+'-on-summit.png'});
+    for(let i=route.length-1;i>0;i--)await walk(route[i],route[i-1]);
+    assert.deepEqual(await page.evaluate(()=>[Number(document.querySelector('#scene').dataset.x),Number(document.querySelector('#scene').dataset.y)]),route[0],start+' return route');
   }
   if(start==='rear'){
     const route=[[40,58],[40,57],[40,56],[39,56],[38,56],[37,56],[37,55],[37,54],[37,53],[36,53],[36,54],[36,55]];

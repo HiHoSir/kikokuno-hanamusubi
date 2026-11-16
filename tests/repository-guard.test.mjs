@@ -78,7 +78,7 @@ test('デザイン正本は一般の採用スプライトとは別に登録し�
 
 
 test('個別許可した検証ページのみ通し、採用済みアセットとしては扱わない', () => {
-  for(const permitted of ['previews/cave-prototype/index.html','previews/field-overlook/index.html']) {
+  for(const permitted of ['previews/cave-prototype/index.html','previews/field-overlook/index.html','previews/field-exploration/index.html']) {
     assert.deepEqual(validateInventory([...base, permitted], empty), []);
   }
 });

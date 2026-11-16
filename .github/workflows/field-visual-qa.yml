@@ -5,6 +5,7 @@ on:
     paths:
       - 'src/field/**'
       - 'previews/field-overlook/index.html'
+      - 'previews/field-exploration/index.html'
       - 'src/game/index.html'
       - 'src/game/navigation/game-shell.mjs'
       - 'src/game/ui/controls.css'
@@ -12,6 +13,7 @@ on:
       - 'src/game/ui/landscape-only.mjs'
       - 'tools/qa-field-browser.mjs'
       - 'tools/qa-field-overlook.mjs'
+      - 'tools/qa-field-exploration-pages.mjs'
       - 'tools/qa-field-map-parts.mjs'
       - 'tools/qa-field-water-animation.mjs'
       - 'tools/qa-field-tile-layers.mjs'
@@ -34,6 +36,8 @@ jobs:
         run: node tools/qa-field-browser.mjs
       - name: Inspect highland overlook mapchip scene and movement in Chromium
         run: node tools/qa-field-overlook.mjs
+      - name: Inspect Pages field-exploration review route in Chromium
+        run: node tools/qa-field-exploration-pages.mjs
       - name: Generate coast connection tile atlas from approved assets
         run: node tools/qa-field-map-parts.mjs
       - name: Verify animated coastal masks and live field water playback

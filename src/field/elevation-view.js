@@ -375,8 +375,8 @@ window.YK_ELEVATION_VIEW=(()=>{
    }});
   }
   for(const o of options.objects||m.objects||[]){
-   const foot=o.foot??o.y,center=o.foot===undefined?o.x:o.x+o.width/2;
-   items.push({depth:foot,order:2,draw:()=>{const p=point(center,foot,o.supportHeight??E.height(m,center,foot));if(!p||p.x+o.width*p.scale/2<0||p.x-o.width*p.scale/2>viewWidth)return;
+   const foot=o.renderFoot??o.foot??o.y,center=o.foot===undefined?o.x:o.x+o.width/2;
+   items.push({depth:foot,order:2,draw:()=>{const p=point(center,foot,o.renderHeight??o.supportHeight??E.height(m,center,foot));if(!p||p.x+o.width*p.scale/2<0||p.x-o.width*p.scale/2>viewWidth)return;
     c.globalAlpha=Math.min(1,Math.max(0,(p.y-136)/70));
     if(o.render)o.render(c,p);else if(art[o.kind])c.drawImage(art[o.kind],p.x-o.width*p.scale/2,p.y-o.height*p.scale,o.width*p.scale,o.height*p.scale);c.globalAlpha=1;
    }});

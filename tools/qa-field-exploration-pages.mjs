@@ -124,6 +124,7 @@ try{
   assert.ok(info.scenery.byKind.newTrees>0,'trees adjacent to diagonal cliffs are thinned');
   assert.equal(info.scenery.remainingForestAtBevel,0,'no original forest tree remains within one tile of a bevel');
   assert.ok(info.scenery.preservedMountainScenery>=90,'solid mountains retain visible sprites');
+  console.log('MOUNTAIN ANCHORS',JSON.stringify(info.collisionConsistency.restoredMountainAnchors));
   assert.ok(info.collisionConsistency.restoredMountainAnchors.every(o=>o.visible),'restored mountain anchor must have a visible mountain or tree stand-in');
   assert.deepEqual(info.collisionConsistency.stale,[],'removed sprites must not retain collision-only occupied cells');
   assert.deepEqual(info.collisionConsistency.missing,[],'every live object footprint must be in collision map');

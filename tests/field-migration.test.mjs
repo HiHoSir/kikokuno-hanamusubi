@@ -339,3 +339,31 @@ test('the rebuilt forest highland and former mountain plateau are reachable and 
  assert.equal(elevation.validate(m).length,0,'no cliff connection inconsistencies');
  assert.equal(terrain.referenceComposition.decorations.filter(o=>o.kind==='wildflowers').length, 34);
 });
+
+test('scenic objects cannot square off diagonal cliff cuts or alter their collision', () => {
+ const {YK_WORLD:world,YK_ELEVATION:elevation}=loadField();
+ const map=world.mapData;
+ // Forest and both approved mountain-sprite sizes are scenery, not a
+ // request to replace diagonal cliff faces with square walls.
+ const examples=[
+   {cell:[39,32],kind:'newTrees'},
+   {cell:[53,23],kind:'newMountainSmall'},
+   {cell:[53,26],kind:'newMountainLarge'},
+ ];
+ for(const {cell:[x,y],kind} of examples){
+   const o=map.decorations.find(o=>o.kind===kind&&o.contactTiles.some(([cx,cy])=>cx===x&&cy===y));
+   assert.ok(o,kind+' approved sprite still present at '+x+','+y);
+   assert.equal(map.cornerProtected.has(x+','+y),false,kind+' is not a structural foundation');
+   assert.ok(elevation.outline(map,x,y).cuts.length>0,kind+' preserves diagonal cliff');
+   const wasSolid=o.occupiedTiles.some(([cx,cy])=>cx===x&&cy===y);
+   assert.equal(map.occupiedTiles.has(x+','+y),wasSolid,kind+' collision is not discarded');
+ }
+ const monument=map.decorations.find(o=>o.kind==='jizo'&&!o.ground);
+ assert.ok(monument,'structural landmarks still registered');
+ const [jx,jy]=monument.contactTiles[0];
+ assert.equal(map.cornerProtected.has(jx+','+jy),true,'structural foundation still protects its tile');
+ assert.equal(elevation.validate(map).length,0);
+ for(const name of ['village','shrine','forest','waterfall','hotspring','fox']){
+   const place=world.places[name];assert.ok(place,'destination retained: '+name);
+ }
+});

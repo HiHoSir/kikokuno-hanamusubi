@@ -83,10 +83,23 @@ try{
       const key=dx===1?'ArrowRight':dx===-1?'ArrowLeft':dy===1?'ArrowDown':dy===-1?'ArrowUp':null;
       assert.ok(key,'rear route uses orthogonal steps');
       await page.keyboard.down(key);
-      await page.waitForFunction(([x,y])=>{
-        const scene=document.querySelector('#scene');
-        return Number(scene?.dataset.x)===x&&Number(scene?.dataset.y)===y;
-      },to,{timeout:3200});
+      try{
+        await page.waitForFunction(([x,y])=>{
+          const scene=document.querySelector('#scene');
+          return Number(scene?.dataset.x)===x&&Number(scene?.dataset.y)===y;
+        },to,{timeout:4000});
+      }catch(error){
+        const state=await page.evaluate(()=>{
+          const scene=document.querySelector('#scene');
+          return {x:scene?.dataset.x,y:scene?.dataset.y,paused:window.__FIELD_RENDER_PAUSED,
+            preview:window.__FIELD_EXPLORATION_PREVIEW,
+            blocked:window.YK_WORLD?.canMove(40*32+16,58*32+16,40*32+16,57*32+16)};
+        });
+        console.error('REAR MOVE FAILED '+JSON.stringify({from,to,key,state}));
+        await page.screenshot({path:'artifacts/field-exploration-rear-failure.png'});
+        throw error;
+      }
+      console.log('REAR MOVE OK '+JSON.stringify({from,to,key}));
       await page.keyboard.up(key);
       await page.waitForTimeout(40);
     };

@@ -15,6 +15,25 @@ window.YK_FIELD_ELEVATION=(()=>{
     return values.sort((a,b)=>a-b)[Math.floor(values.length/2)]??h;
    }));
   }
+  // Remove isolated one-to-three-cell height islands which do not give a
+  // legible 32px cliff silhouette. Large terraces and landmark approaches
+  // are preserved; water and materials are not changed by this pass.
+  const features=[...Object.values(geography.places),...geography.restStops.map(s=>s.cell)];
+  const seenHeight=new Set();
+  for(let y=1;y<m.length-1;y++)for(let x=1;x<m[0].length-1;x++){
+    const key=x+','+y;
+    if(m.heights[y][x]<1||seenHeight.has(key))continue;
+    const queue=[[x,y]];seenHeight.add(key);
+    for(let i=0;i<queue.length;i++){
+      const [cx,cy]=queue[i];
+      for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
+        const nx=cx+dx,ny=cy+dy,k=nx+','+ny;
+        if(m.heights[ny]?.[nx]>=1&&!seenHeight.has(k)){seenHeight.add(k);queue.push([nx,ny]);}
+      }
+    }
+    const nearFeature=queue.some(([cx,cy])=>features.some(([fx,fy])=>Math.abs(cx-fx)+Math.abs(cy-fy)<=4));
+    if(queue.length<=3&&!nearFeature)for(const [cx,cy] of queue)m.heights[cy][cx]=0;
+  }
   // Keep authored mountain/terrace heights away from the existing travel network.
   // Reserve level corridors including approaches and bridge banks; never change tiles.
   const protectedCells=new Set();

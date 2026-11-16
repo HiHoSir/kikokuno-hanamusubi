@@ -59,9 +59,9 @@ test('the field entry loads the original authored map and elevation data', () =>
   assert.equal(world.mapData.length, 80);
   assert.ok(world.mapData.every(row => row.length === 80));
   assert.equal(world.mapData.elevationEnabled, true);
-  assert.equal(digest(terrain.tiles), '8a6a964a6de03a0883b9223b228dfc59b9b2527903a75a28e984b207a6113efe');
+  assert.equal(digest(terrain.tiles), 'de21dabdd8125fe4be430cb1dc4714d1a7e797c5cec361384817e3778f512999');
   assert.equal(digest(terrain.heights), 'a2281bea3735928cb1197099852b7b1a89dcdb678a51cbb840dc54fe2581c16e');
-  assert.equal(digest(terrain.referenceComposition), '3a691fc2475e001f389b4044663b466871d5c1bdd0aca8e91a286004102ddd83');
+  assert.equal(digest(terrain.referenceComposition), 'c095037cd569f0a64654884e1b9f1d03c94cb6179f902b137f59ca3d1db13910');
   assert.equal(world.walkable(...world.start), true);
   assert.equal(world.walkable(16, 16), false);
 });
@@ -310,4 +310,32 @@ test('rear-side slopes connect the summit to lower ground and return to the fron
  }
  assert.ok(visited.has(goal.join(',')),'lower meadow reconnects to the front ladder entrance');
  assert.ok(map.travelReachable.has('37,53'),'rear exit is reachable from the village');
+});
+
+test('the rebuilt forest highland and former mountain plateau are reachable and preserve all destinations', () => {
+ const {YK_WORLD:world,YK_ELEVATION:elevation,YK_FIELD_TERRAIN:terrain}=loadField();
+ const m=world.mapData,pos=([x,y])=>[x*32+16,y*32+16];
+ const areas=[{x:[62,76],y:[26,42],min:125},{x:[23,32],y:[34,40],min:45}];
+ for(const {x:[left,right],y:[top,bottom],min} of areas) {
+   const reachable=[];
+   for(let y=top;y<=bottom;y++)for(let x=left;x<=right;x++){
+     if(m.heights[y][x]>0&&m.travelReachable.has(x+','+y))reachable.push([x,y]);
+   }
+   assert.ok(reachable.length>=min, 'plateau has walkable destinations: '+left+','+top);
+   assert.ok(reachable.every(c=>world.walkable(...pos(c))),'plateau does not hide impassable tiles');
+ }
+ const climbs=[[62,34,'e'],[68,25,'s'],[23,38,'e'],[25,40,'n']];
+ for(const [x,y,dir] of climbs){
+   assert.equal(m.ramps[y][x],dir,'authored entrance '+x+','+y);
+ }
+ for(const [id,[x,y]] of Object.entries({
+   village:[37,70],shrine:[20,45],cove:[49,50],forest:[60,33],
+   waterfall:[67,20],hotspring:[22,17],fox:[40,5]
+ })) {
+   assert.deepEqual(Array.from(terrain.referenceComposition.places[id]),[x,y]);
+   assert.ok([[x,y],[x-1,y],[x+1,y],[x,y-1],[x,y+1]]
+     .some(([a,b])=>m.travelReachable.has(a+','+b)),id+' remains reachable');
+ }
+ assert.equal(elevation.validate(m).length,0,'no cliff connection inconsistencies');
+ assert.equal(terrain.referenceComposition.decorations.filter(o=>o.kind==='wildflowers').length, 34);
 });

@@ -388,3 +388,25 @@ test('scenic mountain thinning exposes highland cliffs without changing terrain 
  assert.equal(m.travelReachable.size,2403);
  for(const cell of [[40,59],[63,34],[37,71]])assert.ok(m.travelReachable.has(cell.join(',')));
 });
+
+test('scenery tree feet remain on their real terrain after projection',()=>{
+ const {YK_WORLD:world,YK_ELEVATION:E}=loadField(),m=world.mapData;
+ let shifted=0,slopes=0;
+ for(const o of m.decorations.filter(o=>o.kind==='newTrees'&&o.contactTiles.length===1)){
+  const x=o.x+o.width/2,y=(o.renderFoot??o.foot)-1,actual=E.height(m,x,y),drawn=o.renderHeight??o.supportHeight;
+  assert.ok(Math.abs(actual-drawn)<.001,'tree root matches projected surface at '+o.contactTiles[0]);
+  if(o.renderFoot!==undefined){
+   shifted++;
+   assert.ok(o.foot-o.renderFoot>0&&o.foot-o.renderFoot<=16);
+   assert.ok(E.outline(m,...o.contactTiles[0]).cuts.length>0,'only diagonal cliff trees are inset');
+  }
+  if(o.renderHeight!==undefined){
+   slopes++;
+   const [tx,ty]=o.contactTiles[0];assert.ok(m.ramps[ty][tx],'only ramp trees use interpolated support height');
+  }
+ }
+ assert.equal(shifted,22);
+ assert.equal(slopes,7);
+ assert.equal(E.validate(m).length,0);
+ assert.equal(m.travelReachable.size,2403);
+});

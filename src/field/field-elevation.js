@@ -224,11 +224,17 @@ window.YK_FIELD_ELEVATION=(()=>{
   // The authored x/y, collision/contact cells, terrain and height are intact.
   for(const o of m.decorations){
    delete o.renderFoot;
+   delete o.renderHeight;
    if(o.kind!=='newTrees'||o.width!==32||o.contactTiles?.length!==1||
       !Number.isFinite(o.supportHeight)||!Number.isFinite(o.foot))continue;
    const [tx,ty]=o.contactTiles[0],shape=E.outline(m,tx,ty);
-   if(!shape.cuts.length||m.ramps[ty]?.[tx])continue;
    const x=o.x+o.width/2;
+   // A sprite on an actual slope needs its interpolated support elevation
+   // rather than the integer height of the ramp's lower cell.
+   if(m.ramps[ty]?.[tx]){
+    o.renderHeight=E.height(m,x,o.foot-1);continue;
+   }
+   if(!shape.cuts.length)continue;
    if(Math.abs(E.height(m,x,o.foot-1)-o.supportHeight)<.001)continue;
    for(let inset=2;inset<=17;inset++){
     const y=o.foot-inset;

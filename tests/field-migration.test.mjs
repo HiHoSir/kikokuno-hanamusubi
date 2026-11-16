@@ -61,7 +61,7 @@ test('the field entry loads the original authored map and elevation data', () =>
   assert.equal(world.mapData.elevationEnabled, true);
   assert.equal(digest(terrain.tiles), 'de21dabdd8125fe4be430cb1dc4714d1a7e797c5cec361384817e3778f512999');
   assert.equal(digest(terrain.heights), 'a2281bea3735928cb1197099852b7b1a89dcdb678a51cbb840dc54fe2581c16e');
-  assert.equal(digest(terrain.referenceComposition), 'c095037cd569f0a64654884e1b9f1d03c94cb6179f902b137f59ca3d1db13910');
+  assert.equal(digest(terrain.referenceComposition), '849f6dc7a1cc6061a76f94a9865ab8b53f0ea98d5957ce368bba23b58269e918');
   assert.equal(world.walkable(...world.start), true);
   assert.equal(world.walkable(16, 16), false);
 });
@@ -366,4 +366,25 @@ test('scenic objects cannot square off diagonal cliff cuts or alter their collis
  for(const name of ['village','shrine','forest','waterfall','hotspring','fox']){
    const place=world.places[name];assert.ok(place,'destination retained: '+name);
  }
+});
+
+test('scenic mountain thinning exposes highland cliffs without changing terrain collision', () => {
+ const {YK_WORLD:world,YK_FIELD_TERRAIN:terrain,YK_ELEVATION:elevation}=loadField();
+ const m=world.mapData,removed=[[52,22],[54,24],[55,25],[57,26],[65,15],[68,15],[66,16],[68,16],[70,18],[44,64],[42,65],[46,66],[42,67],[64,8],[65,9],[68,8]];
+ const mountains=terrain.referenceComposition.decorations.filter(o=>['newMountainSmall','newMountainLarge'].includes(o.kind));
+ assert.equal(mountains.length,165,'181 approved mountain objects reduced by 16');
+ assert.equal(m.decorations.filter(o=>['newMountainSmall','newMountainLarge'].includes(o.kind)).length,98);
+ for(const [x,y] of removed){
+   assert.ok(!mountains.some(o=>o.contactTiles[0][0]===x&&o.contactTiles[0][1]===y),'mountain prop removed at '+x+','+y);
+   assert.equal(terrain.tiles[y][x],'mountain','non-walkable mountain tile preserved');
+   assert.equal(world.walkable(x*32+16,y*32+16),false,'mountain remains impassable');
+ }
+ for(const [x,y,kind] of [[53,23,'newMountainSmall'],[53,26,'newMountainLarge'],[42,66,'newMountainLarge']]){
+   assert.ok(mountains.some(o=>o.kind===kind&&o.contactTiles[0][0]===x&&o.contactTiles[0][1]===y),'neighboring mountain ridge still visible');
+ }
+ for(const [x,y] of [[53,23],[53,26],[39,32]])
+   assert.ok(elevation.outline(m,x,y).cuts.length>0,'diagonal cliff remains: '+x+','+y);
+ assert.equal(elevation.validate(m).length,0);
+ assert.equal(m.travelReachable.size,2403);
+ for(const cell of [[40,59],[63,34],[37,71]])assert.ok(m.travelReachable.has(cell.join(',')));
 });

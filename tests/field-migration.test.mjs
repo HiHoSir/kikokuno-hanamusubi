@@ -61,7 +61,7 @@ test('the field entry loads the original authored map and elevation data', () =>
   assert.equal(world.mapData.elevationEnabled, true);
   assert.equal(digest(terrain.tiles), '8a6a964a6de03a0883b9223b228dfc59b9b2527903a75a28e984b207a6113efe');
   assert.equal(digest(terrain.heights), 'a2281bea3735928cb1197099852b7b1a89dcdb678a51cbb840dc54fe2581c16e');
-  assert.equal(digest(terrain.referenceComposition), '23f928a1cc8ee821de79e436dd0810b31664e00ac8f6a538d2169ba941b584d5');
+  assert.equal(digest(terrain.referenceComposition), '3a691fc2475e001f389b4044663b466871d5c1bdd0aca8e91a286004102ddd83');
   assert.equal(world.walkable(...world.start), true);
   assert.equal(world.walkable(16, 16), false);
 });
@@ -258,24 +258,28 @@ test('the eastern raised lookout uses authored heights and does not replace wate
  assert.deepEqual(world.roads.length,terrain.referenceComposition.roads.length);
 });
 
-test('southern cliff ladders are visible authored connectors with reversible two-stage movement', () => {
- const {YK_WORLD: world, YK_ELEVATION: E} = loadField();
- const map=world.mapData;
- const climb=[{lower:[40,64],upper:[40,63]},{lower:[40,61],upper:[40,60]}];
- const pos=([x,y])=>[x*32+16,y*32+16];
- for(const l of climb) {
-   assert.ok(map.ladders.some(a=>a.lower.join(',')===l.lower.join(',')&&a.upper.join(',')===l.upper.join(',')), 'authored ladder in renderer');
-   assert.equal(world.canMove(...pos(l.lower),...pos(l.upper)),true,'ladder ascent is traversable');
-   assert.equal(world.canMove(...pos(l.upper),...pos(l.lower)),true,'ladder descent is traversable');
+
+test('highland has 32px traversable slopes on south, east and west, and a north descent', () => {
+ const {YK_WORLD:world, YK_FIELD_TERRAIN:terrain,YK_ELEVATION:elevation}=loadField();
+ const m=world.mapData,pos=([x,y])=>[x*32+16,y*32+16];
+ const routes={
+  south:[[40,65],[40,64],[40,63],[40,62],[40,61],[40,60],[40,59]],
+  west:[[34,60],[35,60],[36,60],[37,60],[38,60],[38,59],[39,59],[40,59]],
+  east:[[46,61],[45,61],[44,61],[43,61],[43,60],[43,59],[42,59],[41,59],[40,59]],
+  north:[[40,59],[40,58],[40,57],[40,56],[39,56],[38,56],[37,56],[37,55],[37,54],[37,53]]
+ };
+ const slopes=terrain.referenceComposition.slopeConnections;
+ assert.equal(slopes.length,8);
+ assert.deepEqual(slopes.map(s=>s.dir).sort().join(''), 'ee'+'nn'+'ss'+'ww');
+ for(const [name,route] of Object.entries(routes)){
+  for(let i=1;i<route.length;i++){
+   assert.equal(world.canMove(...pos(route[i-1]),...pos(route[i])),true,name+' traversal '+i);
+   assert.equal(world.canMove(...pos(route[i]),...pos(route[i-1])),true,name+' reverse '+i);
+  }
  }
- const route=[[40,65],[40,64],[40,63],[40,62],[40,61],[40,60],[40,59],[40,58]];
- for(let i=1;i<route.length;i++) {
-   assert.equal(world.canMove(...pos(route[i-1]),...pos(route[i])),true,'uphill step '+i);
-   assert.equal(world.canMove(...pos(route[i]),...pos(route[i-1])),true,'downhill step '+i);
- }
- assert.deepEqual(route.map(([x,y])=>map.heights[y][x]),[0,0,1,1,1,2,2,2]);
- assert.equal(map.travelReachable.has('40,64'),true,'lower entrance reachable from village');
- assert.equal(map.travelReachable.has('40,59'),true,'lookout reachable from village');
+ assert.equal(m.ladders.filter(l=>l.lower[0]>=34&&l.lower[0]<=46&&l.lower[1]>=53&&l.lower[1]<=64).length,0,'no highland ladders');
+ assert.equal(elevation.validate(m).length,0);
+ assert.ok(m.travelReachable.has('40,59'));
 });
 
 test('rear-side slopes connect the summit to lower ground and return to the front entrance', () => {

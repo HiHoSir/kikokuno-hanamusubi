@@ -63,15 +63,18 @@ window.YK_FIELD_ELEVATION=(()=>{
   // They occupy a lower-level cell oriented toward its higher southern neighbor.
   // Authored slopes are checked before procedural access creation; no cliff
   // sprite, new asset, or separate collision system is introduced.
+  // All four directions use the same 32px grass-slope geometry. The tile
+  // stores the LOWER edge height and must have a same-height approach behind
+  // and a one-level-high landing ahead. Preserve lip corners at both ends.
   for(const {cell:[x,y],dir,base} of geography.slopeConnections||[]){
-    if(dir!=='s'||!Number.isInteger(base)||base<0||
-       m.heights[y]?.[x]!==base||
-       !E.walkable(m,x,y)||!E.walkable(m,x,y-1)||!E.walkable(m,x,y+1)||
-       m.heights[y-1][x]!==base||m.heights[y+1][x]!==base+1){
-      throw Error('Invalid authored slope: '+x+','+y);
-    }
+    const delta=E.dirs[dir];if(!delta)throw Error('Invalid slope direction: '+dir);
+    const [dx,dy]=delta,bx=x-dx,by=y-dy,hx=x+dx,hy=y+dy;
+    if(!Number.isInteger(base)||base<0||
+      !E.walkable(m,x,y)||!E.walkable(m,bx,by)||!E.walkable(m,hx,hy)||
+      m.heights[y]?.[x]!==base||m.heights[by]?.[bx]!==base||m.heights[hy]?.[hx]!==base+1)
+      throw Error('Invalid authored slope: '+x+','+y+','+dir);
     m.ramps[y][x]=dir;
-    for(const offset of [-1,0,1])m.cornerProtected.add(x+','+(y+offset));
+    for(const [cx,cy] of [[x,y],[bx,by],[hx,hy]])m.cornerProtected.add(cx+','+cy);
   }
   if(geography.slopeConnections?.length)E.prepare(m);
   // Build connections from the player's reachable land, one inaccessible

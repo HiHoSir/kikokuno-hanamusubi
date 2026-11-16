@@ -79,12 +79,15 @@ try{
         return g.canMove(...center(list[i-1]),...center(p))&&g.canMove(...center(p),...center(list[i-1]));
       }),
 
-      authoredClimbs:[[40,64,40,63],[40,61,40,60]].map(([lx,ly,ux,uy])=>({
-        lower:[lx,ly],upper:[ux,uy],
-        exists:m.ladders.some(l=>l.lower[0]===lx&&l.lower[1]===ly&&l.upper[0]===ux&&l.upper[1]===uy),
-        up:g.canMove(...pos([lx,ly]),...pos([ux,uy])),
-        down:g.canMove(...pos([ux,uy]),...pos([lx,ly]))
-      })),
+      localLadders:m.ladders.filter(l=>l.lower[0]>=34&&l.lower[0]<=46&&l.lower[1]>=53&&l.lower[1]<=64).length,
+      allRoutes:Object.fromEntries(Object.entries({
+       south:[[40,65],[40,64],[40,63],[40,62],[40,61],[40,60],[40,59]],
+       west:[[34,60],[35,60],[36,60],[37,60],[38,60],[38,59],[39,59],[40,59]],
+       east:[[46,61],[45,61],[44,61],[43,61],[43,60],[43,59],[42,59],[41,59],[40,59]],
+       north:[[40,59],[40,58],[40,57],[40,56],[39,56],[38,56],[37,56],[37,55],[37,54],[37,53]]
+      }).map(([name,route])=>[name,route.every((c,i,a)=>!i||(
+        g.canMove(...pos(a[i-1]),...pos(c))&&g.canMove(...pos(c),...pos(a[i-1]))
+      ))])),
       fullClimb:[[40,65],[40,64],[40,63],[40,62],[40,61],[40,60],[40,59],[40,58]].every((c,i,a)=>!i||(
         g.canMove(...pos(a[i-1]),...pos(c))&&g.canMove(...pos(c),...pos(a[i-1]))
       )),
@@ -99,7 +102,8 @@ try{
   assert.equal(metrics.rearRoute,true,'rear ridge slopes are walkable both ways');
   assert.deepEqual(metrics.rearSlopes.map(s=>s.dir),['s','s']);
   assert.equal(metrics.fullClimb,true,'the route is reversible from base to summit');
-  assert.ok(metrics.authoredClimbs.every(c=>c.exists&&c.up&&c.down),'each ladder is both visible and traversable');
+  assert.equal(metrics.localLadders,0,'highland uses slopes, no ladders');
+  assert.ok(Object.values(metrics.allRoutes).every(Boolean),'all four ramps pass movement in both directions');
   assert.ok(metrics.landscape[0]>=640&&metrics.landscape[1]===544);
   assert.equal(errors.length,0,errors.join('\n'));
   await page.screenshot({path:'artifacts/field-exploration-'+item.name+'.png'});

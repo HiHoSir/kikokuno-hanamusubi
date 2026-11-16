@@ -216,6 +216,27 @@ window.YK_FIELD_ELEVATION=(()=>{
   }}return seen;
  }
  function refreshCollision(m){
+  // A tree's sprite foot was always the southern tile border. On a beveled
+  // highland edge, that pixel may be part of the removed diagonal corner:
+  // the sprite is projected at supportHeight while the actual root surface
+  // is one or two height levels lower, so terrain visibly slices the tree.
+  // Re-anchor only the affected 32px trees INSIDE their supporting tile.
+  // The authored x/y, collision/contact cells, terrain and height are intact.
+  for(const o of m.decorations){
+   delete o.renderFoot;
+   if(o.kind!=='newTrees'||o.width!==32||o.contactTiles?.length!==1||
+      !Number.isFinite(o.supportHeight)||!Number.isFinite(o.foot))continue;
+   const [tx,ty]=o.contactTiles[0],shape=E.outline(m,tx,ty);
+   if(!shape.cuts.length||m.ramps[ty]?.[tx])continue;
+   const x=o.x+o.width/2;
+   if(Math.abs(E.height(m,x,o.foot-1)-o.supportHeight)<.001)continue;
+   for(let inset=2;inset<=17;inset++){
+    const y=o.foot-inset;
+    if(Math.abs(E.height(m,x,y)-o.supportHeight)<.001){
+     o.renderFoot=y;break;
+    }
+   }
+  }
   m.occupiedTiles=new Set(m.decorations.flatMap(o=>o.occupiedTiles.map(c=>c.join(','))));
   m.travelReachable=reachable(m);return m;
  }

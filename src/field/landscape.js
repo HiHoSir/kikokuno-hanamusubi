@@ -201,7 +201,7 @@ window.YK_LANDSCAPE=(()=>{
  const sceneObjects=new WeakMap();
  function objects(map){
   if(sceneObjects.has(map))return sceneObjects.get(map);
-  if(map.referencePlacedObjects){const result=(map.decorations||[]).filter(o=>!o.ground).slice().sort((a,b)=>a.foot-b.foot||a.x-b.x);sceneObjects.set(map,result);return result;}
+  if(map.referencePlacedObjects){const result=(map.decorations||[]).filter(o=>!o.ground).slice().sort((a,b)=>(a.renderFoot??a.foot)-(b.renderFoot??b.foot)||a.x-b.x);sceneObjects.set(map,result);return result;}
   // Approved field objects replace legacy procedural crowns and mountain sprites.
   // Grouping is visual only: the authored terrain/collision grid is immutable.
   const trees=[],mountains=[],covered=new Set(),key=(x,y)=>y*map[0].length+x;
@@ -230,7 +230,7 @@ window.YK_LANDSCAPE=(()=>{
    // A short contact shadow, anchored to the base; no projected roof silhouette.
    const small=['lantern','jizo','torii'].includes(o.kind);
    const width=o.width*(small?.48:.70),depth=small?2:3;
-   c.beginPath();c.ellipse(o.x+o.width/2+2,o.foot-1,width/2,depth,0,0,Math.PI*2);c.fill();
+   c.beginPath();c.ellipse(o.x+o.width/2+2,(o.renderFoot??o.foot)-1,width/2,depth,0,0,Math.PI*2);c.fill();
   }
   const p=c.getImageData(0,0,layer.width,layer.height);
   for(let i=0;i<p.data.length;i+=4){const alpha=p.data[i+3]>=128?30:0;p.data[i]=24;p.data[i+1]=40;p.data[i+2]=30;p.data[i+3]=alpha;}

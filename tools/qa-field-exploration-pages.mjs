@@ -41,12 +41,31 @@ try{
     height:window.YK_WORLD.mapData.heights[59][40],
     flowers:window.YK_WORLD.mapData.decorations.filter(o=>o.kind==='wildflowers').length,
     nav:document.querySelectorAll('#review-controls a').length,
+
+    ladders:window.YK_WORLD.mapData.ladders.filter(l=>l.lower[0]===40&&[61,64].includes(l.lower[1])),
+    routeCanMove:[[40,65],[40,64],[40,63],[40,62],[40,61],[40,60],[40,59],[40,58]].every((c,i,path)=>{
+      if(!i)return true;
+      const pos=([x,y])=>[x*32+16,y*32+16];
+      return window.YK_WORLD.canMove(...pos(path[i-1]),...pos(c))&&window.YK_WORLD.canMove(...pos(c),...pos(path[i-1]));
+    }),
     base:document.baseURI, url:location.href
   }));
   assert.equal(info.qa.tiles,7);assert.equal(info.qa.heights,71);
   assert.equal(info.height,2);assert.equal(info.flowers,19);assert.equal(info.nav,3);
-  assert.deepEqual(info.pos,({meadow:[27,59],approach:[39,64],lookout:[40,59]})[start]);
+  assert.equal(info.routeCanMove,true,'full uphill and downhill route');
+  assert.equal(info.ladders.length,2,'both visible ladder connectors');
+  assert.deepEqual(info.pos,({meadow:[27,59],approach:[40,65],lookout:[40,59]})[start]);
   assert.equal(errors.length,0,errors.join('\n'));
+  if(start==='approach'){
+    for(let i=1;i<=7;i++){
+      await page.keyboard.down('ArrowUp');
+      await page.waitForFunction(y=>Number(document.querySelector('#scene').dataset.y)===y,65-i,{timeout:3000});
+      await page.keyboard.up('ArrowUp');
+      await page.waitForTimeout(40);
+    }
+    assert.equal(await page.locator('#scene').getAttribute('data-y'),'58','actual uphill traversal');
+    await page.screenshot({path:'artifacts/field-exploration-pages-after-climb.png'});
+  }
   await page.screenshot({path:'artifacts/field-exploration-pages-'+start+'.png'});
   console.log(start,JSON.stringify(info));
   await page.close();

@@ -38,6 +38,7 @@ try{
   const info=await page.evaluate(()=>({
     qa:window.__FIELD_EXPLORATION_PREVIEW,
     reviewSpawn:window.__FIELD_EXPLORATION_SPAWN,
+    scenery:window.__FIELD_EXPLORATION_SCENERY_THINNING,
     anchoredTrees:(()=>{
       const m=window.YK_WORLD.mapData,E=window.YK_ELEVATION;
       const trees=m.decorations.filter(o=>o.kind==='newTrees'&&o.contactTiles.length===1);
@@ -100,15 +101,21 @@ try{
   }));
   assert.equal(info.qa.tiles,61);assert.equal(info.qa.heights,71);
   assert.equal(info.anchoredTrees.mode,'terrain');
-  assert.ok(info.anchoredTrees.inset>=20,'diagonal cliff tree roots are inset onto retained ground');
-  assert.equal(info.anchoredTrees.ramps,7);
+  assert.equal(info.anchoredTrees.inset,0,'no diagonal-cliff tree should need an inset after thinning');
+  assert.ok(info.anchoredTrees.ramps<=7,'remaining slope trees still use sampled terrain heights');
+  assert.ok(info.scenery?.bevelTiles>=5,'the filter detects actual diagonal cliff cells');
+  assert.ok(info.scenery.removed.length>=8,'scenery is removed along diagonal highland borders');
+  assert.ok(info.scenery.byKind.newTrees>0,'trees adjacent to diagonal cliffs are thinned');
+  assert.equal(info.scenery.remainingAtBevel,0,'no tree or mountain sprite remains within a tile of a bevel');
+  assert.ok(info.scenery.removed.every(o=>['newTrees','newMountainSmall','newMountainLarge'].includes(o.kind)),
+    'only tree and mountain scenery is removed');
   assert.equal(info.anchoredTrees.misplaced,0,'no tree root disagrees with its projected terrain height');
-  assert.equal(info.anchoredTrees.reachable,2403);
+  assert.ok(info.anchoredTrees.reachable>=2403,'thinning must not shrink the traversable field');
   assert.ok(info.regionCoverage.east>=125&&info.regionCoverage.central>=45,'restored plateaus are traversable');
-  assert.ok(info.cliffObjects.every(o=>o.cuts>0&&!o.protected&&o.sprite),'forest and mountain sprites preserve diagonal cliff faces');
+  assert.ok(info.cliffObjects.every(o=>o.cuts>0&&!o.protected&&!o.sprite),'diagonal cliff faces remain while interfering scenery is removed');
   assert.equal(info.qa.thinnedMountains,16,'16 mountain sprites removed from review-only map');
   assert.equal(info.mountainThinning.sourceCount,165);
-  assert.equal(info.mountainThinning.runtimeCount,98);
+  assert.ok(info.mountainThinning.runtimeCount<=98,'existing mountain thinning is preserved with added bevel clearance');
   assert.ok(info.mountainThinning.removed.every(o=>!o.stillPresent&&o.terrain==='mountain'&&!o.walkable),'underlying mountain collision survives all visual thinning');
   assert.ok(info.mountainThinning.remainingAnchors,'mountain range remains legible');
 
@@ -208,6 +215,8 @@ try{
     await legacy.goto('http://127.0.0.1:'+server.address().port+'/previews/field-exploration/?from=battle&anchor=old&start='+start);
     await legacy.waitForFunction(()=>window.__FIELD_EXPLORATION_PREVIEW&&document.querySelector('#load')?.hidden===true,null,{timeout:45000});
     assert.equal(await legacy.evaluate(()=>window.YK_FIELD_LEGACY_TREE_ANCHORS),true);
+    assert.equal(await legacy.evaluate(()=>window.YK_FIELD_SCENERY_LEGACY),true,
+      'legacy comparison retains the original dense scenery');
     const legacyMisplaced=await legacy.evaluate(()=>{
       const m=window.YK_WORLD.mapData,E=window.YK_ELEVATION;
       return m.decorations.filter(o=>o.kind==='newTrees'&&o.contactTiles.length===1&&

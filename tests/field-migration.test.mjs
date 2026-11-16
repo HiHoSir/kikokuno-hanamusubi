@@ -59,9 +59,9 @@ test('the field entry loads the original authored map and elevation data', () =>
   assert.equal(world.mapData.length, 80);
   assert.ok(world.mapData.every(row => row.length === 80));
   assert.equal(world.mapData.elevationEnabled, true);
-  assert.equal(digest(terrain.tiles), 'f0956d5ef070f828359a32a27c68481570f528cac542220ae8a3392a80fd4bd1');
-  assert.equal(digest(terrain.heights), '8193650f027e8de6f03468b518fbd1ac330b9be31e214b3aa2d0d9517cd19bb1');
-  assert.equal(digest(terrain.referenceComposition), 'dfc801b62e70fea3aa0b0f3609db086df23d713392681b9f7caa938a6680807c');
+  assert.equal(digest(terrain.tiles), '8a6a964a6de03a0883b9223b228dfc59b9b2527903a75a28e984b207a6113efe');
+  assert.equal(digest(terrain.heights), 'a2281bea3735928cb1197099852b7b1a89dcdb678a51cbb840dc54fe2581c16e');
+  assert.equal(digest(terrain.referenceComposition), '0c153f720de26fa20e299bb065c3c93e6efa1544d2bffd434585eabf2e58a106');
   assert.equal(world.walkable(...world.start), true);
   assert.equal(world.walkable(16, 16), false);
 });
@@ -226,4 +226,34 @@ test('landscape field draws directly into a wider viewport without a portrait cr
      assert.equal(args[7],32*projected.scale);
    }
  }finally{delete globalThis.window;delete globalThis.document;delete globalThis.ImageData;}
+});
+
+test('early exploration meadow links two authored route cells without moving destinations', () => {
+ const {YK_WORLD: world, YK_FIELD_TERRAIN: terrain} = loadField();
+ const start=[31,62],end=[28,53],glade=[27,59];
+ const center=([x,y])=>[x*32+16,y*32+16];
+ const queue=[start],visited=new Set([start.join(',')]);
+ for(let i=0;i<queue.length;i++){
+  const [x,y]=queue[i];
+  for(const [dx,dy] of [[0,1],[1,0],[0,-1],[-1,0]]){
+   const nx=x+dx,ny=y+dy,key=nx+','+ny;
+   if(nx<22||nx>34||ny<52||ny>63||visited.has(key))continue;
+   if(world.canMove(...center([x,y]),...center([nx,ny]))){visited.add(key);queue.push([nx,ny]);}
+  }
+ }
+ assert.ok(visited.has(end.join(',')), 'side route rejoins existing path');
+ assert.ok(visited.has(glade.join(',')), 'forest meadow is reachable');
+ assert.equal(terrain.tiles[59][27], 'grass');
+ for (const [key,cell] of Object.entries({
+  village:[37,70],shrine:[20,45],cove:[49,50],forest:[60,33],waterfall:[67,20],hotspring:[22,17],fox:[40,5]
+ })) assert.deepEqual(Array.from(terrain.referenceComposition.places[key]),cell);
+});
+test('the eastern raised lookout uses authored heights and does not replace water or roads', () => {
+ const {YK_WORLD: world, YK_FIELD_TERRAIN: terrain} = loadField();
+ const top=terrain.heights.slice(55,64).flatMap((row,j)=>row.slice(36,45).map((h,i)=>({h,x:36+i,y:55+j})));
+ assert.ok(top.some(t=>t.h===1),'lower terrace');
+ assert.ok(top.some(t=>t.h===2),'higher lookout');
+ assert.ok(top.filter(t=>t.h>0).every(t=>['grass','forest'].includes(terrain.tiles[t.y][t.x])));
+ assert.equal(terrain.referenceComposition.decorations.filter(o=>o.kind==='wildflowers').length, 19);
+ assert.deepEqual(world.roads.length,terrain.referenceComposition.roads.length);
 });

@@ -63,7 +63,25 @@ window.YK_FIELD_ELEVATION=(()=>{
   // elevated component at a time. Prefer south-facing cliff ladders.
   // Only if no safe south-facing edge exists, form a validated ramp instead.
   E.prepare(m);
-  m.ladders=[];
+  // Authored climbing points are the same collision and 32px units as the
+  // automatic cliff connectors. A pair of clear approach/landing cells is
+  // preserved from diagonal bevels so a ladder can be used in both directions.
+  // The default map has no authored climbs, leaving its behavior unchanged.
+  const authored=geography.climbConnections||[];
+  m.ladders=authored.map(({lower,upper})=>({lower:lower.slice(),upper:upper.slice()}));
+  for(const {lower,upper} of m.ladders){
+    if(lower[0]!==upper[0]||lower[1]!==upper[1]+1||
+       !E.walkable(m,...lower)||!E.walkable(m,...upper)||
+       E.level(m,...upper)!==E.level(m,...lower)+1){
+      throw Error('Invalid authored cliff access: '+lower+' -> '+upper);
+    }
+    for(const p of [lower,upper])m.cornerProtected.add(p.join(','));
+  }
+  for(const [x,y] of geography.climbLandings||[]){
+    if(!E.walkable(m,x,y))throw Error('Invalid cliff landing: '+x+','+y);
+    m.cornerProtected.add(x+','+y);
+  }
+  if(authored.length||geography.climbLandings?.length)E.prepare(m);
   const dirs=[[0,-1,'n'],[0,1,'s'],[-1,0,'w'],[1,0,'e']];
   const key=(x,y)=>x+','+y,center=(x,y)=>[x*32+16,y*32+16];
   const pass=(x,y)=>E.walkable(m,x,y)&&E.pointWalkable(m,...center(x,y));

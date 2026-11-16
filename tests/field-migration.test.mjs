@@ -61,7 +61,7 @@ test('the field entry loads the original authored map and elevation data', () =>
   assert.equal(world.mapData.elevationEnabled, true);
   assert.equal(digest(terrain.tiles), '8a6a964a6de03a0883b9223b228dfc59b9b2527903a75a28e984b207a6113efe');
   assert.equal(digest(terrain.heights), 'a2281bea3735928cb1197099852b7b1a89dcdb678a51cbb840dc54fe2581c16e');
-  assert.equal(digest(terrain.referenceComposition), '0c153f720de26fa20e299bb065c3c93e6efa1544d2bffd434585eabf2e58a106');
+  assert.equal(digest(terrain.referenceComposition), '6e6460bfa3eb3e5fbdf5bdd554d86c968054c4a81b5cf407374effbc7d7533c0');
   assert.equal(world.walkable(...world.start), true);
   assert.equal(world.walkable(16, 16), false);
 });
@@ -256,4 +256,24 @@ test('the eastern raised lookout uses authored heights and does not replace wate
  assert.ok(top.filter(t=>t.h>0).every(t=>['grass','forest'].includes(terrain.tiles[t.y][t.x])));
  assert.equal(terrain.referenceComposition.decorations.filter(o=>o.kind==='wildflowers').length, 19);
  assert.deepEqual(world.roads.length,terrain.referenceComposition.roads.length);
+});
+
+test('southern cliff ladders are visible authored connectors with reversible two-stage movement', () => {
+ const {YK_WORLD: world, YK_ELEVATION: E} = loadField();
+ const map=world.mapData;
+ const climb=[{lower:[40,64],upper:[40,63]},{lower:[40,61],upper:[40,60]}];
+ const pos=([x,y])=>[x*32+16,y*32+16];
+ for(const l of climb) {
+   assert.ok(map.ladders.some(a=>a.lower.join(',')===l.lower.join(',')&&a.upper.join(',')===l.upper.join(',')), 'authored ladder in renderer');
+   assert.equal(world.canMove(...pos(l.lower),...pos(l.upper)),true,'ladder ascent is traversable');
+   assert.equal(world.canMove(...pos(l.upper),...pos(l.lower)),true,'ladder descent is traversable');
+ }
+ const route=[[40,65],[40,64],[40,63],[40,62],[40,61],[40,60],[40,59],[40,58]];
+ for(let i=1;i<route.length;i++) {
+   assert.equal(world.canMove(...pos(route[i-1]),...pos(route[i])),true,'uphill step '+i);
+   assert.equal(world.canMove(...pos(route[i]),...pos(route[i-1])),true,'downhill step '+i);
+ }
+ assert.deepEqual(route.map(([x,y])=>map.heights[y][x]),[0,0,1,1,1,2,2,2]);
+ assert.equal(map.travelReachable.has('40,64'),true,'lower entrance reachable from village');
+ assert.equal(map.travelReachable.has('40,59'),true,'lookout reachable from village');
 });

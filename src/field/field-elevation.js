@@ -77,7 +77,15 @@ window.YK_FIELD_ELEVATION=(()=>{
    const levels=(o.contactTiles||[]).filter(([x,y])=>m[y]?.[x]&&!water(m[y][x])).map(([x,y])=>m.heights[y][x]);
    if(levels.length&&levels.every(h=>h===levels[0]))o.supportHeight=levels[0];
   }
-  m.cornerProtected=new Set(m.decorations.flatMap(o=>(o.contactTiles||[]).map(c=>c.join(','))));
+  // Only structural landmarks require an intact square foundation.
+  // Forest crowns, mountain sprites and ground decoration are visual scenery:
+  // protecting their contact cells from corner cuts makes diagonal cliff
+  // walls vanish, even though the elevated terrain itself is unchanged.
+  // Occupancy/collision is independent and remains in m.occupiedTiles.
+  const cliffScenery=new Set(['newTrees','newMountainLarge','newMountainSmall']);
+  m.cornerProtected=new Set(m.decorations
+    .filter(o=>!o.ground&&!cliffScenery.has(o.kind))
+    .flatMap(o=>(o.contactTiles||[]).map(c=>c.join(','))));
   // Back-side grass slopes follow the approved 32px height ramp contract.
   // They occupy a lower-level cell oriented toward its higher southern neighbor.
   // Authored slopes are checked before procedural access creation; no cliff

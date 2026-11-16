@@ -20,7 +20,7 @@ await new Promise(ok=>server.listen(0,'127.0.0.1',ok));
 await mkdir('artifacts',{recursive:true});
 const browser=await chromium.launch({headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
 try{
- for(const start of ['meadow','approach','west','east','lookout','rear','eastHighland','centralHighland','northRidge']){
+ for(const start of ['meadow','approach','west','east','lookout','rear','eastHighland','centralHighland','northRidge','forestCliff','mountainCliff']){
   const page=await browser.newPage({viewport:{width:874,height:402},deviceScaleFactor:1});
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
   page.on('response',r=>{if(r.status()>=400)errors.push('HTTP '+r.status()+' '+r.url());});
@@ -41,6 +41,11 @@ try{
     height:window.YK_WORLD.mapData.heights[59][40],
     flowers:window.YK_WORLD.mapData.decorations.filter(o=>o.kind==='wildflowers').length,
     nav:document.querySelectorAll('#review-controls a').length,
+    cliffObjects:[[39,32,'newTrees'],[53,23,'newMountainSmall'],[53,26,'newMountainLarge']].map(([x,y,kind])=>({
+      x,y,kind,cuts:window.YK_ELEVATION.outline(window.YK_WORLD.mapData,x,y).cuts.length,
+      protected:window.YK_WORLD.mapData.cornerProtected.has(x+','+y),
+      sprite:window.YK_WORLD.mapData.decorations.some(o=>o.kind===kind&&o.contactTiles.some(c=>c[0]===x&&c[1]===y))
+    })),
     regionCoverage:(()=>{const m=window.YK_WORLD.mapData;const count=(xl,yl,xh,yh)=>{let total=0;for(let y=yl;y<=yh;y++)for(let x=xl;x<=xh;x++)if(m.heights[y][x]>0&&m.travelReachable.has(x+','+y))total++;return total;};return {east:count(62,26,76,42),central:count(23,34,32,40)};})(),
     ramps:[[40,57],[37,54],[40,64],[40,61],[35,60],[39,59],[45,61],[42,59]].map(([x,y])=>window.YK_WORLD.mapData.ramps[y][x]),
     markers:window.__FIELD_EXPLORATION_MARKERS||null,
@@ -65,7 +70,8 @@ try{
   }));
   assert.equal(info.qa.tiles,61);assert.equal(info.qa.heights,71);
   assert.ok(info.regionCoverage.east>=125&&info.regionCoverage.central>=45,'restored plateaus are traversable');
-  assert.equal(info.height,2);assert.equal(info.flowers,34);assert.equal(info.nav,9);assert.deepEqual(info.ramps,['s','s','n','n','e','e','w','w']);
+  assert.ok(info.cliffObjects.every(o=>o.cuts>0&&!o.protected&&o.sprite),'forest and mountain sprites preserve diagonal cliff faces');
+  assert.equal(info.height,2);assert.equal(info.flowers,34);assert.equal(info.nav,11);assert.deepEqual(info.ramps,['s','s','n','n','e','e','w','w']);
   assert.equal(info.localLadders,0,'overlook uses ramps, not ladder sprites');
   assert.deepEqual(info.markers?.cells,[[40,58],[37,55]]);
   assert.equal(info.markers?.tileSize,32);
@@ -75,7 +81,7 @@ try{
   assert.ok(Object.values(info.allRoutes).every(Boolean),'every direction supports two-way movement');
   assert.equal(info.routeCanMove,true,'full uphill and downhill route');
 
-  assert.deepEqual(info.pos,({meadow:[27,59],approach:[40,65],west:[34,60],east:[46,61],lookout:[40,59],rear:[40,58],eastHighland:[63,34],centralHighland:[24,38],northRidge:[68,26]})[start]);
+  assert.deepEqual(info.pos,({meadow:[27,59],approach:[40,65],west:[34,60],east:[46,61],lookout:[40,59],rear:[40,58],eastHighland:[63,34],centralHighland:[24,38],northRidge:[68,26],forestCliff:[39,32],mountainCliff:[54,22]})[start]);
   assert.equal(errors.length,0,errors.join('\n'));
   if(start==='approach'){
     await page.screenshot({path:'artifacts/field-exploration-pages-before-climb.png'});

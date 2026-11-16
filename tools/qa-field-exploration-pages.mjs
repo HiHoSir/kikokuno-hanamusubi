@@ -37,6 +37,7 @@ try{
   }
   const info=await page.evaluate(()=>({
     qa:window.__FIELD_EXPLORATION_PREVIEW,
+    reviewSpawn:window.__FIELD_EXPLORATION_SPAWN,
     anchoredTrees:(()=>{
       const m=window.YK_WORLD.mapData,E=window.YK_ELEVATION;
       const trees=m.decorations.filter(o=>o.kind==='newTrees'&&o.contactTiles.length===1);
@@ -121,7 +122,13 @@ try{
   assert.ok(Object.values(info.allRoutes).every(Boolean),'every direction supports two-way movement');
   assert.equal(info.routeCanMove,true,'full uphill and downhill route');
 
-  assert.deepEqual(info.pos,({meadow:[27,59],approach:[40,65],west:[34,60],east:[46,61],lookout:[40,59],rear:[40,58],eastHighland:[63,34],centralHighland:[24,38],northRidge:[68,26],forestCliff:[39,32],mountainCliff:[54,22],treeEdgeEast:[60,29],treeEdgeCenter:[30,39]})[start]);
+  // Tree/diagonal-cliff inspection cells may be occupied. Assert the intended
+  // camera neighborhood is inspected instead of accepting the village fallback.
+  const target=({meadow:[27,59],approach:[40,65],west:[34,60],east:[46,61],lookout:[40,59],rear:[40,58],eastHighland:[63,34],centralHighland:[24,38],northRidge:[68,26],forestCliff:[39,32],mountainCliff:[54,22],treeEdgeEast:[60,29],treeEdgeCenter:[30,39]})[start];
+  assert.deepEqual(info.reviewSpawn?.requested,target,'the named location remains the camera review target');
+  assert.deepEqual(info.pos,info.reviewSpawn?.resolved,'hero starts at the verified playable inspection cell');
+  assert.ok(info.reviewSpawn.displacement<=8,'review spawn must stay near the named tree, not at the village');
+  if(!start.startsWith('treeEdge'))assert.equal(info.reviewSpawn.displacement,0,'established walkthrough spawn stays unchanged');
   assert.equal(errors.length,0,errors.join('\n'));
   if(start==='approach'){
     await page.screenshot({path:'artifacts/field-exploration-pages-before-climb.png'});

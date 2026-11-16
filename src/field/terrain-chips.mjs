@@ -169,3 +169,26 @@ export function composeCoast(map,landscape,art) {
 
   return {canvas:ground.canvas,coastTiles:shoreline.length-waterCells,waterCells};
 }
+
+// waterfall-south-4w-2h-32.png is an approved four-frame atlas, each frame
+// containing 4x4 independent 32px map chips. Never use the legacy object art.
+export function drawWaterfallChips(ctx,atlas,layer,time,project,visible=()=>true){
+ if(!atlas||!layer?.tiles?.length)return 0;
+ const size=layer.tileSize,fw=layer.frameSize[0],fh=layer.frameSize[1],frames=layer.frameCount;
+ if(size!==32||fw!==128||fh!==128||frames!==4||atlas.width!==512||atlas.height!==128)
+  throw Error('Invalid authored waterfall atlas or tile contract');
+ const frame=((Math.floor(time/layer.frameDurationMs)%frames)+frames)%frames;
+ let drawn=0;
+ for(const tile of layer.tiles){
+  const [tx,ty]=tile.cell,[u,v]=tile.atlas;
+  if(!Number.isInteger(tx)||!Number.isInteger(ty)||!Number.isInteger(u)||!Number.isInteger(v)||u<0||u>=4||v<0||v>=4)
+   throw Error('Invalid waterfall 32px map tile coordinate');
+  const left=project(tx*size,ty*size),right=project((tx+1)*size,ty*size),bottom=project(tx*size,(ty+1)*size);
+  if(!left||!right||!bottom)continue;
+  const w=right.x-left.x,h=bottom.y-left.y;
+  if(w<=0||h<=0||!visible(left.x,left.y,w,h))continue;
+  ctx.drawImage(atlas,frame*fw+u*size,v*size,size,size,left.x,left.y,w+.25,h+.25);
+  drawn++;
+ }
+ return drawn;
+}

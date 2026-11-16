@@ -1,4 +1,4 @@
-import {composeCoast} from './terrain-chips.mjs?v=field-height-1';
+import {composeCoast,drawWaterfallChips} from './terrain-chips.mjs?v=authored-waterfall-1';
 import {clipAtTerrain,composeRaisedTerrain,terrainY} from './height-projection.mjs?v=field-height-1';
 
 const zoom=1.75;
@@ -83,7 +83,7 @@ export function createFieldTerrainRenderer(map,drawHero,art,hero){
   if(!patterns.has(frame))patterns.set(frame,c.createPattern(frame,'repeat'));
   return patterns.get(frame);
  }
- const info={zoom,builds:0,waterFrames:0,draws:0,staticLand:true,animatedWater:true};
+ const info={zoom,builds:0,waterFrames:0,draws:0,waterfallTiles:0,staticLand:true,animatedWater:true};
  function prepare(){
   if(land)return;
   const started=performance.now();
@@ -111,7 +111,6 @@ export function createFieldTerrainRenderer(map,drawHero,art,hero){
   }
   skyBand(0,240);
   const frame=landscape.motionArt('water',time),pattern=waterPattern(c,frame);
-  const fall=landscape.motionArt('waterfall',time);
   const projectedStrips=[];
   for(const {sy,sh,left,right,next} of projectionStrips(viewWidth,height)){
    const ax=cam.x+left.x,ay=cam.y+left.y,bx=cam.x+right.x,dy=cam.y+next.y;
@@ -126,6 +125,17 @@ export function createFieldTerrainRenderer(map,drawHero,art,hero){
    const y0=Math.max(originY,Math.floor(ay)-1),y1=Math.min(originY+land.height,Math.ceil(dy)+1);
    if(x1>x0&&y1>y0)c.drawImage(land,x0,y0-originY,x1-x0,y1-y0,
     (x0-ax)*sx,sy+(y0-ay)*ys,(x1-x0)*sx,(y1-y0)*ys+.5);
+   c.restore();
+  }
+  // Project transparent authored waterfall map chips after land/water and
+  // before actors/sprites. This layer neither creates nor sorts objects.
+  const layer=map.waterfallChipLayer;
+  if(layer){
+   const atlas=art[layer.source];
+   c.save();c.beginPath();c.rect(0,136,viewWidth,Math.max(0,height-136));c.clip();
+   info.waterfallTiles=drawWaterfallChips(c,atlas,layer,time,
+    (wx,wy)=>landscape.project(wx,terrainY(wy,layer.heightLevel),cam,zoom),
+    (x,y,w,h)=>x+w>0&&x<viewWidth&&y+h>136&&y<height);
    c.restore();
   }
   // The camera follows the cell center. Use the near edge of the same
@@ -166,8 +176,7 @@ export function createFieldTerrainRenderer(map,drawHero,art,hero){
     &&overlapsHero(o.kind,x,y,w,h,playerPosition);
    c.globalAlpha=Math.min(1,Math.max(0,(p.y-136)/70))*(fadeTree?treeOverlapAlpha:1);
    const clipped=clipSprite(x,y,w,h,foot);
-   if(o.kind==='waterfall'&&fall)c.drawImage(fall,x,y,w,h);
-   else landscape.drawAsset(c,o.kind,x,y,w,h);
+   landscape.drawAsset(c,o.kind,x,y,w,h);
    if(clipped)c.restore();
    c.globalAlpha=1;
   }

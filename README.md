@@ -29,3 +29,7 @@ GitHub Actionsでもpush・PR時に検査します。直接mainへpushする場�
 ## フィールドの採用版
 
 フィールド探索で検証した高台・坂道・斜め崖・森の間引き・山の表示復元を本編に採用済みです。地形の正本は `data/maps/field/terrain.js`、標高・衝突処理は `src/field/field-elevation.js` に統一しました。`previews/field-exploration/` は本編ファイルをそのまま読み込む歩行検査用で、地形や描画処理の別実装は保持しません。
+
+## 龍神の滝（採用済み32pxマップチップ）
+
+`assets/field/terrain/atlas/waterfall-south-4w-2h-32.png`（PR #3で採用、512×128px）を使用。横4マス・落差2段用で、4アニメーションフレーム×（4列×4行）の32pxマップチップとして描画します。旧80×96px滝オブジェクトは使用せず、入口の接触セルと移動判定はそのまま維持します。

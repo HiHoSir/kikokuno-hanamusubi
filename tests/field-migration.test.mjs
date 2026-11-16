@@ -61,7 +61,9 @@ test('the field entry loads the approved exploration map and elevation data', ()
   assert.equal(world.mapData.elevationEnabled, true);
   assert.equal(digest(terrain.tiles), 'de21dabdd8125fe4be430cb1dc4714d1a7e797c5cec361384817e3778f512999');
   assert.equal(digest(terrain.heights), 'a2281bea3735928cb1197099852b7b1a89dcdb678a51cbb840dc54fe2581c16e');
-  assert.equal(digest(terrain.referenceComposition), 'c095037cd569f0a64654884e1b9f1d03c94cb6179f902b137f59ca3d1db13910');
+  assert.equal(terrain.referenceComposition.decorations.length,1032);
+  assert.equal(terrain.referenceComposition.waterfallChipLayer.tiles.length,16);
+  assert.equal(terrain.referenceComposition.decorations.some(o=>o.kind==='waterfall'),false);
   assert.equal(world.walkable(...world.start), true);
   assert.equal(world.walkable(16, 16), false);
 });
@@ -83,6 +85,28 @@ test('adopted highland clears diagonal forest corner centers without removing re
   assert.deepEqual([...map.occupiedTiles].filter(k=>!expected.has(k)),[],'no invisible object occupancy remains');
   assert.ok(map.decorations.some(o=>o.contactTiles.some(([tx,ty])=>tx===68&&ty===8)),
     'original mountain at (68,8) remains represented');
+});
+
+test('author-approved four-frame waterfall atlas preserves the entrance collision contract',()=>{
+  const {YK_WORLD:world,YK_AREA_TRANSITIONS:transitions}=loadField();
+  const layer=world.mapData.waterfallChipLayer;
+  assert.equal(layer.source,'waterfall-south-4w-2h');
+  assert.equal(layer.tileSize,32);
+  assert.equal(layer.frameCount,4);
+  assert.equal(layer.frameDurationMs,180);
+  assert.deepEqual(Array.from(layer.frameSize),[128,128]);
+  assert.deepEqual(Array.from(layer.origin),[65,16]);
+  assert.equal(layer.tiles.length,16);
+  assert.equal(new Set(layer.tiles.map(t=>t.cell.join(','))).size,16);
+  assert.ok(layer.tiles.every(t=>t.atlas.every(v=>Number.isInteger(v)&&v>=0&&v<4)));
+  assert.equal(world.mapData.decorations.some(o=>o.kind==='waterfall'),false);
+  assert.deepEqual(Array.from(world.mapData.landmarkContactTiles.waterfall,([x,y])=>[x,y]),
+    [[66,18],[67,18],[68,18]]);
+  for(const x of [66,67,68])
+    assert.equal(transitions.contact(world,x*32+16,18*32+16),'waterfall');
+  assert.equal(transitions.contact(world,67*32+16,20*32+16),null);
+  assert.ok(world.walkable(67*32+16,18*32+16),'old entrance is passable');
+  assert.equal(world.mapData.occupiedTiles.has('67,18'),false);
 });
 
 test('the field projection and image loader retain the original perspective and art', () => {

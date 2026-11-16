@@ -37,6 +37,7 @@ try{
   }
   const info=await page.evaluate(()=>({
     qa:window.__FIELD_EXPLORATION_PREVIEW,
+    depthSort:window.YK_FIELD_LEGACY_DEPTH_SORT===true?'world':'projected',
     pos:[Number(document.querySelector('#scene').dataset.x),Number(document.querySelector('#scene').dataset.y)],
     height:window.YK_WORLD.mapData.heights[59][40],
     flowers:window.YK_WORLD.mapData.decorations.filter(o=>o.kind==='wildflowers').length,
@@ -86,6 +87,7 @@ try{
     base:document.baseURI, url:location.href
   }));
   assert.equal(info.qa.tiles,61);assert.equal(info.qa.heights,71);
+  assert.equal(info.depthSort,'projected','preview uses camera-projected scene painter');
   assert.ok(info.regionCoverage.east>=125&&info.regionCoverage.central>=45,'restored plateaus are traversable');
   assert.ok(info.cliffObjects.every(o=>o.cuts>0&&!o.protected&&o.sprite),'forest and mountain sprites preserve diagonal cliff faces');
   assert.equal(info.qa.thinnedMountains,16,'16 mountain sprites removed from review-only map');
@@ -176,5 +178,17 @@ try{
   await page.screenshot({path:'artifacts/field-exploration-pages-'+start+'.png'});
   console.log(start,JSON.stringify(info));
   await page.close();
+  // Capture the identical camera position using the pre-fix painter for an
+  // actual pixel comparison. Do not use image-generation approximations.
+  if(['forestCliff','eastHighland','centralHighland','mountainCliff'].includes(start)){
+    const legacy=await browser.newPage({viewport:{width:874,height:402},deviceScaleFactor:1});
+    const legacyErrors=[];legacy.on('pageerror',e=>legacyErrors.push(e.message));
+    await legacy.goto('http://127.0.0.1:'+server.address().port+'/previews/field-exploration/?from=battle&depth=old&start='+start);
+    await legacy.waitForFunction(()=>window.__FIELD_EXPLORATION_PREVIEW&&document.querySelector('#load')?.hidden===true,null,{timeout:45000});
+    assert.equal(await legacy.evaluate(()=>window.YK_FIELD_LEGACY_DEPTH_SORT),true);
+    assert.deepEqual(legacyErrors,[]);
+    await legacy.screenshot({path:'artifacts/field-exploration-pages-'+start+'-legacy.png'});
+    await legacy.close();
+  }
  }
 }finally{await browser.close();await new Promise(ok=>server.close(ok));}

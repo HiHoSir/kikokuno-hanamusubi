@@ -61,7 +61,8 @@ test('the field entry loads the approved exploration map and elevation data', ()
   assert.equal(world.mapData.elevationEnabled, true);
   assert.equal(digest(terrain.tiles), 'de21dabdd8125fe4be430cb1dc4714d1a7e797c5cec361384817e3778f512999');
   assert.equal(digest(terrain.heights), 'a2281bea3735928cb1197099852b7b1a89dcdb678a51cbb840dc54fe2581c16e');
-  assert.equal(digest(terrain.referenceComposition), 'c095037cd569f0a64654884e1b9f1d03c94cb6179f902b137f59ca3d1db13910');
+  assert.equal(terrain.referenceComposition.waterfallChipLayer.tiles.length,9);
+  assert.equal(terrain.referenceComposition.decorations.some(o=>o.kind==='waterfall'),false);
   assert.equal(world.walkable(...world.start), true);
   assert.equal(world.walkable(16, 16), false);
 });
@@ -83,6 +84,26 @@ test('adopted highland clears diagonal forest corner centers without removing re
   assert.deepEqual([...map.occupiedTiles].filter(k=>!expected.has(k)),[],'no invisible object occupancy remains');
   assert.ok(map.decorations.some(o=>o.contactTiles.some(([tx,ty])=>tx===68&&ty===8)),
     'original mountain at (68,8) remains represented');
+});
+
+test('waterfall map chips preserve the authored entrance without object collision',()=>{
+  const {YK_WORLD:world,YK_AREA_TRANSITIONS:transitions}=loadField();
+  const layer=world.mapData.waterfallChipLayer;
+  assert.equal(layer.tileSize,32);
+  assert.deepEqual(Array.from(layer.origin),[66,16]);
+  assert.equal(layer.tiles.length,9);
+  assert.equal(new Set(layer.tiles.map(t=>t.cell.join(','))).size,9);
+  assert.equal(world.mapData.decorations.some(o=>o.kind==='waterfall'),false);
+  for(const tile of layer.tiles){
+    assert.equal(tile.source[0]%32,0);
+    assert.equal(tile.source[1]%32,0);
+    assert.ok(tile.source[2]>0&&tile.source[2]<=32);
+    assert.ok(tile.source[3]>0&&tile.source[3]<=32);
+  }
+  for(const x of [66,67,68])
+    assert.equal(transitions.contact(world,x*32+16,18*32+16),'waterfall');
+  assert.equal(transitions.contact(world,67*32+16,20*32+16),null);
+  assert.equal(layer.tiles[8].source[2],16);
 });
 
 test('the field projection and image loader retain the original perspective and art', () => {

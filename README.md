@@ -29,3 +29,7 @@ GitHub Actionsでもpush・PR時に検査します。直接mainへpushする場�
 ## フィールドの採用版
 
 フィールド探索で検証した高台・坂道・斜め崖・森の間引き・山の表示復元を本編に採用済みです。地形の正本は `data/maps/field/terrain.js`、標高・衝突処理は `src/field/field-elevation.js` に統一しました。`previews/field-exploration/` は本編ファイルをそのまま読み込む歩行検査用で、地形や描画処理の別実装は保持しません。
+
+## 龍神の滝（フィールド）
+
+滝は `waterfall` オブジェクトから、地形データの `referenceComposition.waterfallChipLayer` に記録した **32pxマップチップ（3列×3段、右端16px）** に切り替えました。既存の `waterfall-motion.png` 2フレームから各チップを切り出し、水流をアニメーション表示します。入口は `landmarkContactTiles.waterfall` に保持し、表示チップは独立した当たり判定を追加しません。

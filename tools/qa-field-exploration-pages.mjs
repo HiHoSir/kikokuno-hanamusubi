@@ -57,6 +57,7 @@ try{
   assert.deepEqual(info.pos,({meadow:[27,59],approach:[40,65],lookout:[40,59]})[start]);
   assert.equal(errors.length,0,errors.join('\n'));
   if(start==='approach'){
+    await page.screenshot({path:'artifacts/field-exploration-pages-before-climb.png'});
     for(let i=1;i<=7;i++){
       await page.keyboard.down('ArrowUp');
       await page.waitForFunction(y=>Number(document.querySelector('#scene').dataset.y)===y,65-i,{timeout:3000});
@@ -65,6 +66,14 @@ try{
     }
     assert.equal(await page.locator('#scene').getAttribute('data-y'),'58','actual uphill traversal');
     await page.screenshot({path:'artifacts/field-exploration-pages-after-climb.png'});
+    for(let i=1;i<=7;i++){
+      await page.keyboard.down('ArrowDown');
+      await page.waitForFunction(y=>Number(document.querySelector('#scene').dataset.y)===y,58+i,{timeout:3000});
+      await page.keyboard.up('ArrowDown');
+      await page.waitForTimeout(40);
+    }
+    assert.equal(await page.locator('#scene').getAttribute('data-y'),'65','actual downhill traversal');
+    await page.screenshot({path:'artifacts/field-exploration-pages-after-descent.png'});
   }
   await page.screenshot({path:'artifacts/field-exploration-pages-'+start+'.png'});
   console.log(start,JSON.stringify(info));

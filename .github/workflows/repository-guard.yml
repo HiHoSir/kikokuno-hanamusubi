@@ -12,3 +12,28 @@ jobs:
         with:
           node-version: '20'
       - run: npm test
+
+  field-exploration-chrome:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser
+        run: |
+          npm install --no-save playwright@1.62.1
+          npx playwright install --with-deps chromium
+      - name: Inspect meadow and lookout in actual field renderer
+        run: node tools/qa-field-exploration.mjs
+      - name: Archive real scene screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: field-exploration-screenshots
+          path: |
+            artifacts/field-exploration-*.png
+            artifacts/field-exploration-qa.json
+          if-no-files-found: warn

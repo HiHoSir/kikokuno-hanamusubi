@@ -20,7 +20,7 @@ await new Promise(ok=>server.listen(0,'127.0.0.1',ok));
 await mkdir('artifacts',{recursive:true});
 const browser=await chromium.launch({headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
 try{
- for(const start of ['meadow','approach','west','east','lookout','rear','eastHighland','centralHighland','northRidge','forestCliff','mountainCliff','treeEdgeEast','treeEdgeCenter','waterfall']){
+ for(const start of ['meadow','approach','west','east','lookout','rear','eastHighland','centralHighland','northRidge','forestCliff','mountainCliff','treeEdgeEast','treeEdgeCenter']){
   const page=await browser.newPage({viewport:{width:874,height:402},deviceScaleFactor:1});
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
   page.on('response',r=>{if(r.status()>=400)errors.push('HTTP '+r.status()+' '+r.url());});
@@ -169,7 +169,7 @@ try{
   assert.ok(info.mountainThinning.removed.every(o=>o.stillPresent&&o.terrain==='mountain'&&!o.walkable),'impassable mountain cells remain visibly represented');
   assert.ok(info.mountainThinning.remainingAnchors,'mountain range remains legible');
 
-  assert.equal(info.height,2);assert.equal(info.flowers,34);assert.equal(info.nav,14);assert.deepEqual(info.ramps,['s','s','n','n','e','e','w','w']);
+  assert.equal(info.height,2);assert.equal(info.flowers,34);assert.equal(info.nav,13);assert.deepEqual(info.ramps,['s','s','n','n','e','e','w','w']);
   assert.equal(info.localLadders,0,'overlook uses ramps, not ladder sprites');
   assert.deepEqual(info.markers?.cells,[[40,58],[37,55]]);
   assert.equal(info.markers?.tileSize,32);
@@ -181,13 +181,12 @@ try{
 
   // Tree/diagonal-cliff inspection cells may be occupied. Assert the intended
   // camera neighborhood is inspected instead of accepting the village fallback.
-  const target=({meadow:[27,59],approach:[40,65],west:[34,60],east:[46,61],lookout:[40,59],rear:[40,58],eastHighland:[63,34],centralHighland:[24,38],northRidge:[68,26],forestCliff:[39,32],mountainCliff:[54,22],treeEdgeEast:[60,29],treeEdgeCenter:[30,39],waterfall:[66,20]})[start];
+  const target=({meadow:[27,59],approach:[40,65],west:[34,60],east:[46,61],lookout:[40,59],rear:[40,58],eastHighland:[63,34],centralHighland:[24,38],northRidge:[68,26],forestCliff:[39,32],mountainCliff:[54,22],treeEdgeEast:[60,29],treeEdgeCenter:[30,39]})[start];
   assert.deepEqual(info.reviewSpawn?.requested,target,'the named location remains the camera review target');
   assert.deepEqual(info.pos,info.reviewSpawn?.resolved,'hero starts at the verified playable inspection cell');
   assert.ok(info.reviewSpawn.displacement<=8,'review spawn must stay near the named tree, not at the village');
   if(!start.startsWith('treeEdge'))assert.equal(info.reviewSpawn.displacement,0,'established walkthrough spawn stays unchanged');
   assert.equal(errors.length,0,errors.join('\n'));
-  if(start==='waterfall')await page.screenshot({path:'artifacts/field-waterfall-mapchips.png'});
   if(start==='approach'){
     await page.screenshot({path:'artifacts/field-exploration-pages-before-climb.png'});
     for(let i=1;i<=7;i++){

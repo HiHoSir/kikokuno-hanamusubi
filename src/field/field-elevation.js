@@ -83,11 +83,9 @@ window.YK_FIELD_ELEVATION=(()=>{
   // walls vanish, even though the elevated terrain itself is unchanged.
   // Occupancy/collision is independent and remains in m.occupiedTiles.
   const cliffScenery=new Set(['newTrees','newMountainLarge','newMountainSmall']);
-  m.cornerProtected=new Set([
-    ...m.decorations.filter(o=>!o.ground&&!cliffScenery.has(o.kind))
-      .flatMap(o=>(o.contactTiles||[]).map(c=>c.join(','))),
-    ...Object.values(geography.landmarkContactTiles||{}).flatMap(cells=>cells.map(c=>c.join(',')))
-  ]);
+  m.cornerProtected=new Set(m.decorations
+    .filter(o=>!o.ground&&!cliffScenery.has(o.kind))
+    .flatMap(o=>(o.contactTiles||[]).map(c=>c.join(','))));
   // Back-side grass slopes follow the approved 32px height ramp contract.
   // They occupy a lower-level cell oriented toward its higher southern neighbor.
   // Authored slopes are checked before procedural access creation; no cliff

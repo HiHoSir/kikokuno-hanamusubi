@@ -128,15 +128,7 @@ try{
   paint(0);const first=pixels(scene).slice();
   paint(360);const second=pixels(scene).slice();
   paint(720);const last=pixels(scene).slice();
-  // Same production renderer, focused on the waterfall's authored 32px cells.
-  const layer=w.YK_WORLD.mapData.waterfallChipLayer,actor={x:67*32+16,foot:19*32+16};
-  const waterfallDraws0=renderer.draw(sc,actor,0,scene.width).waterfallTiles;
-  const waterfallFrame0=pixels(scene).slice();
-  const waterfallDraws1=renderer.draw(sc,actor,360,scene.width).waterfallTiles;
-  const waterfallFrame1=pixels(scene).slice();
-  const production={frame0To360Changed:changed(first,second),frame0To720Changed:changed(first,last),
-    canvas:[scene.width,scene.height],waterfallMapChips:layer.tiles.length,
-    waterfallDraws:[waterfallDraws0,waterfallDraws1],waterfallFrameChange:changed(waterfallFrame0,waterfallFrame1)};
+  const production={frame0To360Changed:changed(first,second),frame0To720Changed:changed(first,last),canvas:[scene.width,scene.height]};
   return {source,candidate,production,contract:{
     waterTimeMs:360,seaAndRiver:'animated source frames',shoreMask:'static 32px alpha',
     waterfall:'independent animated frame pair',shallow:'Tenyo 4-frame water is unchanged'
@@ -159,9 +151,6 @@ try{
     failures.push('animated mask compositing changed land or froze water '+JSON.stringify(candidate));
  if(production.frame0To360Changed<50||production.frame0To720Changed!==0)
     failures.push('real projected field water is blank/static or does not loop '+JSON.stringify(production));
- if(production.waterfallMapChips!==9||production.waterfallDraws.some(n=>n<5)||
-    production.waterfallFrameChange<32)
-   failures.push('real waterfall map chip render is static or missing '+JSON.stringify(production));
  if(errors.length)failures.push('page errors '+errors.join('; '));
  if(failures.length)throw Error('Water animation QA failed: '+failures.join(' | '));
 }finally{

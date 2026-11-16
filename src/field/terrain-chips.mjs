@@ -168,22 +168,3 @@ export function composeCoast(map,landscape,art) {
 
   return {canvas:ground.canvas,coastTiles:shoreline.length-waterCells,waterCells};
 }
-
-// Render the animated waterfall as individually positioned 32px terrain tiles.
-// The 80px-wide approved atlas occupies 2.5 authored 32px grid columns.
-export function drawWaterfallChips(target,frame,layer,project,visible=()=>true) {
-  if(!frame||!layer?.tiles?.length)return 0;
-  let count=0;
-  for(const tile of layer.tiles){
-    const [x,y]=tile.cell,[sx,sy,w,h]=tile.source;
-    if(w<1||h<1||w>cell||h>cell||sx<0||sy<0||sx+w>layer.frameSize[0]||sy+h>layer.frameSize[1])
-      throw Error('Invalid 32px waterfall map chip: '+tile.cell);
-    const a=project(x*cell,y*cell),b=project(x*cell+w,y*cell),d=project(x*cell,y*cell+h);
-    if(!a||!b||!d)continue;
-    const pw=b.x-a.x,ph=d.y-a.y;
-    if(!(pw>0&&ph>0)||!visible(a.x,a.y,pw,ph))continue;
-    target.drawImage(frame,sx,sy,w,h,a.x,a.y,pw+0.25,ph+0.25);
-    count++;
-  }
-  return count;
-}

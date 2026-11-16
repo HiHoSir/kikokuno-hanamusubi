@@ -1,4 +1,4 @@
-import {composeCoast,drawWaterfallChips} from './terrain-chips.mjs?v=field-waterfall-chips-1';
+import {composeCoast} from './terrain-chips.mjs?v=field-height-1';
 import {clipAtTerrain,composeRaisedTerrain,terrainY} from './height-projection.mjs?v=field-height-1';
 
 const zoom=1.75;
@@ -83,7 +83,7 @@ export function createFieldTerrainRenderer(map,drawHero,art,hero){
   if(!patterns.has(frame))patterns.set(frame,c.createPattern(frame,'repeat'));
   return patterns.get(frame);
  }
- const info={zoom,builds:0,waterFrames:0,draws:0,waterfallTiles:0,staticLand:true,animatedWater:true};
+ const info={zoom,builds:0,waterFrames:0,draws:0,staticLand:true,animatedWater:true};
  function prepare(){
   if(land)return;
   const started=performance.now();
@@ -128,14 +128,6 @@ export function createFieldTerrainRenderer(map,drawHero,art,hero){
     (x0-ax)*sx,sy+(y0-ay)*ys,(x1-x0)*sx,(y1-y0)*ys+.5);
    c.restore();
   }
-  // Animated waterfall map chips sit on the projected terrain, over its
-  // existing river and cliff surfaces and behind sprites/characters.
-  const waterfallLayer=map.waterfallChipLayer;
-  c.save();c.beginPath();c.rect(0,136,viewWidth,Math.max(0,height-136));c.clip();
-  info.waterfallTiles=drawWaterfallChips(c,fall,waterfallLayer,
-   (wx,wy)=>landscape.project(wx,terrainY(wy,waterfallLayer?.heightLevel??0),cam,zoom),
-   (x,y,w,h)=>x+w>0&&x<viewWidth&&y+h>136&&y<height);
-  c.restore();
   // The camera follows the cell center. Use the near edge of the same
   // cell for the visible foot and for depth sorting.
   const playerFoot=actor.foot+16;
@@ -174,7 +166,8 @@ export function createFieldTerrainRenderer(map,drawHero,art,hero){
     &&overlapsHero(o.kind,x,y,w,h,playerPosition);
    c.globalAlpha=Math.min(1,Math.max(0,(p.y-136)/70))*(fadeTree?treeOverlapAlpha:1);
    const clipped=clipSprite(x,y,w,h,foot);
-   landscape.drawAsset(c,o.kind,x,y,w,h);
+   if(o.kind==='waterfall'&&fall)c.drawImage(fall,x,y,w,h);
+   else landscape.drawAsset(c,o.kind,x,y,w,h);
    if(clipped)c.restore();
    c.globalAlpha=1;
   }

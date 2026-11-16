@@ -1,6 +1,6 @@
 const cell = 32, offset = cell / 2;
 const atlasNames = ['coast-mask','coast-sand-0','coast-sand-1','coast-sand-2',
-  'coast-sand-3','coast-river','coast-shallow'];
+  'coast-sand-3','coast-river','coast-shallow','waterfall-south-4w-2h'];
 export const isBridgeDeck = o => o.ground&&(o.kind==='bridge'||o.kind==='bridgeNS');
 const isWater = t => t === 'sea' || t === 'river' || t === undefined;
 
@@ -9,7 +9,8 @@ export async function loadTerrainChips() {
     const image = new Image();
     image.src = new URL('../../assets/field/terrain/atlas/'+id+'-32.png',import.meta.url);
     await image.decode();
-    if (image.width !== 128 || image.height !== 128) throw Error('Invalid terrain atlas: '+id);
+    const expected=id==='waterfall-south-4w-2h'?[512,128]:[128,128];
+    if(image.width!==expected[0]||image.height!==expected[1])throw Error('Invalid terrain atlas: '+id);
     return [id,image];
   })));
 }

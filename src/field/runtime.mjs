@@ -1,5 +1,5 @@
 import {fieldViewportDimensions} from './viewport.mjs';
-import {createFieldTerrainRenderer} from './terrain-renderer.mjs?v=field-camera-175';
+import {createFieldTerrainRenderer} from './terrain-renderer.mjs?v=field-waterfall-chips-1';
 import {loadTerrainChips,placeShoreTrees} from './terrain-chips.mjs?v=field-height-1';
 const {YK_WORLD: world, YK_LANDSCAPE: landscape, YK_AUTOTILE: autotile,
   YK_ELEVATION: elevation, YK_CAMERA: camera, YK_MOVEMENT: movement,

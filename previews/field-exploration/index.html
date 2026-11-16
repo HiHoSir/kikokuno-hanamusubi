@@ -12,14 +12,14 @@ const resp=await fetch(area,{cache:"no-store"});
 if(!resp.ok)throw Error("フィールドのHTMLを取得できません: "+resp.status);
 let source=await resp.text();
 const gate='<script src="../game/navigation/entry.js" data-entry="game"></scr'+'ipt>';
-const slot='<script src="../../data/maps/field/terrain.js?v=field-exploration-prod-1"></scr'+'ipt>';
+const slot='<script src="../../data/maps/field/terrain.js?v=field-waterfall-chips-1"></scr'+'ipt>';
 if(!source.includes(gate)||!source.includes(slot))throw Error("本編フィールドの読み込み構成が変化しました");
 const tag=s=>'<scr'+'ipt>'+s+'</scr'+'ipt>';
 const base='<base href="'+area.href+'">';
 source=source.replace('<head>','<head>'+base)
-  .replace(gate,tag("(()=>{\nconst points={meadow:[27,59],approach:[40,65],west:[34,60],east:[46,61],lookout:[40,59],rear:[40,58],eastHighland:[63,34],centralHighland:[24,38],northRidge:[68,26],forestCliff:[39,32],mountainCliff:[54,22],treeEdgeEast:[60,29],treeEdgeCenter:[30,39]};\nconst at=new URLSearchParams(location.search).get('start')||'meadow';\nconst [x,y]=points[at]||points.meadow;\nwindow.__FIELD_EXPLORATION_REQUESTED_CELL=[x,y];\ntry{sessionStorage.setItem('kikokuno-hanamusubi-battle-field-return',JSON.stringify({x:x*32+16,y:y*32+16,row:1}));}\ncatch(e){console.error('試験用位置を保存できません',e);}\nwindow.KIKOKU_ROUTE={go(target){alert('検査画面です。通常のゲームへの遷移は無効です。');}};\nwindow.addEventListener('pagehide',()=>{try{sessionStorage.removeItem('kikokuno-hanamusubi-battle-field-return');}catch{}});\n})();"));
+  .replace(gate,tag("(()=>{\nconst points={meadow:[27,59],approach:[40,65],west:[34,60],east:[46,61],lookout:[40,59],rear:[40,58],eastHighland:[63,34],centralHighland:[24,38],northRidge:[68,26],forestCliff:[39,32],mountainCliff:[54,22],treeEdgeEast:[60,29],treeEdgeCenter:[30,39],waterfall:[66,20]};\nconst at=new URLSearchParams(location.search).get('start')||'meadow';\nconst [x,y]=points[at]||points.meadow;\nwindow.__FIELD_EXPLORATION_REQUESTED_CELL=[x,y];\ntry{sessionStorage.setItem('kikokuno-hanamusubi-battle-field-return',JSON.stringify({x:x*32+16,y:y*32+16,row:1}));}\ncatch(e){console.error('試験用位置を保存できません',e);}\nwindow.KIKOKU_ROUTE={go(target){alert('検査画面です。通常のゲームへの遷移は無効です。');}};\nwindow.addEventListener('pagehide',()=>{try{sessionStorage.removeItem('kikokuno-hanamusubi-battle-field-return');}catch{}});\n})();"));
 source=source.replace(slot,slot+tag("window.__FIELD_EXPLORATION_PREVIEW={source:'production',tiles:61,heights:71,added:27,removed:18,thinnedMountains:0,restoredMountains:16,phase:'production-field-exploration'};"));
-const walkSlot='<script type="module" src="./walk.mjs?v=field-camera-175-location-labels"></scr'+'ipt>';
+const walkSlot='<script type="module" src="./walk.mjs?v=field-waterfall-chips-1"></scr'+'ipt>';
 const walkResponse=await fetch(new URL('walk.mjs',area),{cache:'no-store'});
 if(!walkResponse.ok||!source.includes(walkSlot))throw Error('歩行モジュールの読み込み構成が変わりました');
 let walkCode=await walkResponse.text();
@@ -44,9 +44,9 @@ const inspectionSpawn="(()=>{const world=window.YK_WORLD;const requested=window.
 source=source.replace(walkSlot,tag(inspectionSpawn)+'<script type="module">'+walkCode+'</scr'+'ipt>');
 const reviewRoot=new URL("./",location.href);
 const navigation='<nav id="review-controls" aria-label="検査場所の選択">'
- + ['meadow','approach','west','east','lookout','rear','eastHighland','centralHighland','northRidge','forestCliff','mountainCliff','treeEdgeEast','treeEdgeCenter'].map((p,i)=>'<a href="'+new URL("?from=battle&start="+p,reviewRoot).href+'">'+['森の寄り道','南の坂','西の坂','東の坂','高台の上','北の踏み跡','東の高台','中央の高台','北東の眺め','森と斜め崖','山と斜め崖','東の斜め崖','中央の斜め崖'][i]+'</a>').join('')
+ + ['meadow','approach','west','east','lookout','rear','eastHighland','centralHighland','northRidge','forestCliff','mountainCliff','treeEdgeEast','treeEdgeCenter','waterfall'].map((p,i)=>'<a href="'+new URL("?from=battle&start="+p,reviewRoot).href+'">'+['森の寄り道','南の坂','西の坂','東の坂','高台の上','北の踏み跡','東の高台','中央の高台','北東の眺め','森と斜め崖','山と斜め崖','東の斜め崖','中央の斜め崖','龍神の滝'][i]+'</a>').join('')
  + '</nav>';
-const instructions='<aside id="field-climb-help">斜め崖周辺の木を間引き、山の画像と衝突判定を揃えた検査版</aside>';
+const instructions='<aside id="field-climb-help">フィールド本編の地形・滝マップチップを直接検査</aside>';
 source=source.replace('</head>', '<style>\n'
  + '#review-controls{position:fixed;z-index:100;top:max(7px,env(safe-area-inset-top));right:max(8px,env(safe-area-inset-right));display:flex;gap:5px;padding:4px;background:#13212ae6;border:1px solid #e4d4aa;max-width:85vw;flex-wrap:wrap} '
  + '#review-controls a{display:block;color:#fff6df;font:11px system-ui;padding:5px 7px;border:1px solid #a6a28b;border-radius:4px;text-decoration:none;white-space:nowrap} '

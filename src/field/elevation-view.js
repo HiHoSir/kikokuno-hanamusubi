@@ -375,8 +375,8 @@ window.YK_ELEVATION_VIEW=(()=>{
    }});
   }
   for(const o of options.objects||m.objects||[]){
-   const foot=o.foot??o.y,center=o.foot===undefined?o.x:o.x+o.width/2;
-   items.push({depth:foot,order:2,draw:()=>{const p=point(center,foot,o.supportHeight??E.height(m,center,foot));if(!p||p.x+o.width*p.scale/2<0||p.x-o.width*p.scale/2>viewWidth)return;
+   const foot=o.renderFoot??o.foot??o.y,center=o.foot===undefined?o.x:o.x+o.width/2;
+   items.push({depth:window.YK_FIELD_TREE_OVERLAY_DIAGNOSTIC===true&&o.kind==='newTrees'?1e7+foot:foot,order:2,draw:()=>{const p=point(center,foot,o.renderHeight??o.supportHeight??E.height(m,center,foot));if(!p||p.x+o.width*p.scale/2<0||p.x-o.width*p.scale/2>viewWidth)return;
     c.globalAlpha=Math.min(1,Math.max(0,(p.y-136)/70));
     if(o.render)o.render(c,p);else if(art[o.kind])c.drawImage(art[o.kind],p.x-o.width*p.scale/2,p.y-o.height*p.scale,o.width*p.scale,o.height*p.scale);c.globalAlpha=1;
    }});
@@ -384,7 +384,7 @@ window.YK_ELEVATION_VIEW=(()=>{
   // The actor's feet must be composited after the entire ground cell under them.
    // Sorting at the exact foot y interleaved the sprite with 16px terrain strips,
    // making the boots/body flicker as the camera moved vertically.
-   if(actor)items.push({depth:actor.y+32,order:3,draw:()=>{
+   if(actor)items.push({depth:window.YK_FIELD_TREE_OVERLAY_DIAGNOSTIC===true?1e7+actor.y+32:actor.y+32,order:3,draw:()=>{
    const p=point(actor.x,actor.y,actor.height??E.height(m,actor.x,actor.y));if(!p)return;
    if(actor.draw){actor.draw(p.x,p.y,p.scale);return;}
    const row={d:0,u:1,r:2,l:3}[actor.dir||'d'],col=row>=2?Math.min(1,actor.frame||0):actor.frame||0;

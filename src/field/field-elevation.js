@@ -15,6 +15,25 @@ window.YK_FIELD_ELEVATION=(()=>{
     return values.sort((a,b)=>a-b)[Math.floor(values.length/2)]??h;
    }));
   }
+  // Remove isolated one-to-three-cell height islands which do not give a
+  // legible 32px cliff silhouette. Large terraces and landmark approaches
+  // are preserved; water and materials are not changed by this pass.
+  const features=[...Object.values(geography.places),...geography.restStops.map(s=>s.cell)];
+  const seenHeight=new Set();
+  for(let y=1;y<m.length-1;y++)for(let x=1;x<m[0].length-1;x++){
+    const key=x+','+y;
+    if(m.heights[y][x]<1||seenHeight.has(key))continue;
+    const queue=[[x,y]];seenHeight.add(key);
+    for(let i=0;i<queue.length;i++){
+      const [cx,cy]=queue[i];
+      for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
+        const nx=cx+dx,ny=cy+dy,k=nx+','+ny;
+        if(m.heights[ny]?.[nx]>=1&&!seenHeight.has(k)){seenHeight.add(k);queue.push([nx,ny]);}
+      }
+    }
+    const nearFeature=queue.some(([cx,cy])=>features.some(([fx,fy])=>Math.abs(cx-fx)+Math.abs(cy-fy)<=4));
+    if(queue.length<=3&&!nearFeature)for(const [cx,cy] of queue)m.heights[cy][cx]=0;
+  }
   // Keep authored mountain/terrace heights away from the existing travel network.
   // Reserve level corridors including approaches and bridge banks; never change tiles.
   const protectedCells=new Set();
@@ -58,12 +77,56 @@ window.YK_FIELD_ELEVATION=(()=>{
    const levels=(o.contactTiles||[]).filter(([x,y])=>m[y]?.[x]&&!water(m[y][x])).map(([x,y])=>m.heights[y][x]);
    if(levels.length&&levels.every(h=>h===levels[0]))o.supportHeight=levels[0];
   }
-  m.cornerProtected=new Set(m.decorations.flatMap(o=>(o.contactTiles||[]).map(c=>c.join(','))));
+  // Only structural landmarks require an intact square foundation.
+  // Forest crowns, mountain sprites and ground decoration are visual scenery:
+  // protecting their contact cells from corner cuts makes diagonal cliff
+  // walls vanish, even though the elevated terrain itself is unchanged.
+  // Occupancy/collision is independent and remains in m.occupiedTiles.
+  const cliffScenery=new Set(['newTrees','newMountainLarge','newMountainSmall']);
+  m.cornerProtected=new Set(m.decorations
+    .filter(o=>!o.ground&&!cliffScenery.has(o.kind))
+    .flatMap(o=>(o.contactTiles||[]).map(c=>c.join(','))));
+  // Back-side grass slopes follow the approved 32px height ramp contract.
+  // They occupy a lower-level cell oriented toward its higher southern neighbor.
+  // Authored slopes are checked before procedural access creation; no cliff
+  // sprite, new asset, or separate collision system is introduced.
+  // All four directions use the same 32px grass-slope geometry. The tile
+  // stores the LOWER edge height and must have a same-height approach behind
+  // and a one-level-high landing ahead. Preserve lip corners at both ends.
+  for(const {cell:[x,y],dir,base} of geography.slopeConnections||[]){
+    const delta=E.dirs[dir];if(!delta)throw Error('Invalid slope direction: '+dir);
+    const [dx,dy]=delta,bx=x-dx,by=y-dy,hx=x+dx,hy=y+dy;
+    if(!Number.isInteger(base)||base<0||
+      !E.walkable(m,x,y)||!E.walkable(m,bx,by)||!E.walkable(m,hx,hy)||
+      m.heights[y]?.[x]!==base||m.heights[by]?.[bx]!==base||m.heights[hy]?.[hx]!==base+1)
+      throw Error('Invalid authored slope: '+x+','+y+','+dir);
+    m.ramps[y][x]=dir;
+    for(const [cx,cy] of [[x,y],[bx,by],[hx,hy]])m.cornerProtected.add(cx+','+cy);
+  }
+  if(geography.slopeConnections?.length)E.prepare(m);
   // Build connections from the player's reachable land, one inaccessible
   // elevated component at a time. Prefer south-facing cliff ladders.
   // Only if no safe south-facing edge exists, form a validated ramp instead.
   E.prepare(m);
-  m.ladders=[];
+  // Authored climbing points are the same collision and 32px units as the
+  // automatic cliff connectors. A pair of clear approach/landing cells is
+  // preserved from diagonal bevels so a ladder can be used in both directions.
+  // The default map has no authored climbs, leaving its behavior unchanged.
+  const authored=geography.climbConnections||[];
+  m.ladders=authored.map(({lower,upper})=>({lower:lower.slice(),upper:upper.slice()}));
+  for(const {lower,upper} of m.ladders){
+    if(lower[0]!==upper[0]||lower[1]!==upper[1]+1||
+       !E.walkable(m,...lower)||!E.walkable(m,...upper)||
+       E.level(m,...upper)!==E.level(m,...lower)+1){
+      throw Error('Invalid authored cliff access: '+lower+' -> '+upper);
+    }
+    for(const p of [lower,upper])m.cornerProtected.add(p.join(','));
+  }
+  for(const [x,y] of geography.climbLandings||[]){
+    if(!E.walkable(m,x,y))throw Error('Invalid cliff landing: '+x+','+y);
+    m.cornerProtected.add(x+','+y);
+  }
+  if(authored.length||geography.climbLandings?.length)E.prepare(m);
   const dirs=[[0,-1,'n'],[0,1,'s'],[-1,0,'w'],[1,0,'e']];
   const key=(x,y)=>x+','+y,center=(x,y)=>[x*32+16,y*32+16];
   const pass=(x,y)=>E.walkable(m,x,y)&&E.pointWalkable(m,...center(x,y));
@@ -153,6 +216,33 @@ window.YK_FIELD_ELEVATION=(()=>{
   }}return seen;
  }
  function refreshCollision(m){
+  // A tree's sprite foot was always the southern tile border. On a beveled
+  // highland edge, that pixel may be part of the removed diagonal corner:
+  // the sprite is projected at supportHeight while the actual root surface
+  // is one or two height levels lower, so terrain visibly slices the tree.
+  // Re-anchor only the affected 32px trees INSIDE their supporting tile.
+  // The authored x/y, collision/contact cells, terrain and height are intact.
+  for(const o of m.decorations){
+   delete o.renderFoot;
+   delete o.renderHeight;
+   if(o.kind!=='newTrees'||o.width!==32||o.contactTiles?.length!==1||
+      !Number.isFinite(o.supportHeight)||!Number.isFinite(o.foot))continue;
+   const [tx,ty]=o.contactTiles[0],shape=E.outline(m,tx,ty);
+   const x=o.x+o.width/2;
+   // A sprite on an actual slope needs its interpolated support elevation
+   // rather than the integer height of the ramp's lower cell.
+   if(m.ramps[ty]?.[tx]){
+    o.renderHeight=E.height(m,x,o.foot-1);continue;
+   }
+   if(!shape.cuts.length)continue;
+   if(Math.abs(E.height(m,x,o.foot-1)-o.supportHeight)<.001)continue;
+   for(let inset=2;inset<=17;inset++){
+    const y=o.foot-inset;
+    if(Math.abs(E.height(m,x,y)-o.supportHeight)<.001){
+     o.renderFoot=y;break;
+    }
+   }
+  }
   m.occupiedTiles=new Set(m.decorations.flatMap(o=>o.occupiedTiles.map(c=>c.join(','))));
   m.travelReachable=reachable(m);return m;
  }

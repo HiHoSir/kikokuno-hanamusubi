@@ -59,9 +59,9 @@ test('the field entry loads the original authored map and elevation data', () =>
   assert.equal(world.mapData.length, 80);
   assert.ok(world.mapData.every(row => row.length === 80));
   assert.equal(world.mapData.elevationEnabled, true);
-  assert.equal(digest(terrain.tiles), 'f0956d5ef070f828359a32a27c68481570f528cac542220ae8a3392a80fd4bd1');
-  assert.equal(digest(terrain.heights), '8193650f027e8de6f03468b518fbd1ac330b9be31e214b3aa2d0d9517cd19bb1');
-  assert.equal(digest(terrain.referenceComposition), 'dfc801b62e70fea3aa0b0f3609db086df23d713392681b9f7caa938a6680807c');
+  assert.equal(digest(terrain.tiles), 'de21dabdd8125fe4be430cb1dc4714d1a7e797c5cec361384817e3778f512999');
+  assert.equal(digest(terrain.heights), 'a2281bea3735928cb1197099852b7b1a89dcdb678a51cbb840dc54fe2581c16e');
+  assert.equal(digest(terrain.referenceComposition), '849f6dc7a1cc6061a76f94a9865ab8b53f0ea98d5957ce368bba23b58269e918');
   assert.equal(world.walkable(...world.start), true);
   assert.equal(world.walkable(16, 16), false);
 });
@@ -226,4 +226,187 @@ test('landscape field draws directly into a wider viewport without a portrait cr
      assert.equal(args[7],32*projected.scale);
    }
  }finally{delete globalThis.window;delete globalThis.document;delete globalThis.ImageData;}
+});
+
+test('early exploration meadow links two authored route cells without moving destinations', () => {
+ const {YK_WORLD: world, YK_FIELD_TERRAIN: terrain} = loadField();
+ const start=[31,62],end=[28,53],glade=[27,59];
+ const center=([x,y])=>[x*32+16,y*32+16];
+ const queue=[start],visited=new Set([start.join(',')]);
+ for(let i=0;i<queue.length;i++){
+  const [x,y]=queue[i];
+  for(const [dx,dy] of [[0,1],[1,0],[0,-1],[-1,0]]){
+   const nx=x+dx,ny=y+dy,key=nx+','+ny;
+   if(nx<22||nx>34||ny<52||ny>63||visited.has(key))continue;
+   if(world.canMove(...center([x,y]),...center([nx,ny]))){visited.add(key);queue.push([nx,ny]);}
+  }
+ }
+ assert.ok(visited.has(end.join(',')), 'side route rejoins existing path');
+ assert.ok(visited.has(glade.join(',')), 'forest meadow is reachable');
+ assert.equal(terrain.tiles[59][27], 'grass');
+ for (const [key,cell] of Object.entries({
+  village:[37,70],shrine:[20,45],cove:[49,50],forest:[60,33],waterfall:[67,20],hotspring:[22,17],fox:[40,5]
+ })) assert.deepEqual(Array.from(terrain.referenceComposition.places[key]),cell);
+});
+test('the eastern raised lookout uses authored heights and does not replace water or roads', () => {
+ const {YK_WORLD: world, YK_FIELD_TERRAIN: terrain} = loadField();
+ const top=terrain.heights.slice(55,64).flatMap((row,j)=>row.slice(36,45).map((h,i)=>({h,x:36+i,y:55+j})));
+ assert.ok(top.some(t=>t.h===1),'lower terrace');
+ assert.ok(top.some(t=>t.h===2),'higher lookout');
+ assert.ok(top.filter(t=>t.h>0).every(t=>['grass','forest'].includes(terrain.tiles[t.y][t.x])));
+ assert.equal(terrain.referenceComposition.decorations.filter(o=>o.kind==='wildflowers').length, 34);
+ assert.deepEqual(world.roads.length,terrain.referenceComposition.roads.length);
+});
+
+
+test('highland has 32px traversable slopes on south, east and west, and a north descent', () => {
+ const {YK_WORLD:world, YK_FIELD_TERRAIN:terrain,YK_ELEVATION:elevation}=loadField();
+ const m=world.mapData,pos=([x,y])=>[x*32+16,y*32+16];
+ const routes={
+  south:[[40,65],[40,64],[40,63],[40,62],[40,61],[40,60],[40,59]],
+  west:[[34,60],[35,60],[36,60],[37,60],[38,60],[38,59],[39,59],[40,59]],
+  east:[[46,61],[45,61],[44,61],[43,61],[43,60],[43,59],[42,59],[41,59],[40,59]],
+  north:[[40,59],[40,58],[40,57],[40,56],[39,56],[38,56],[37,56],[37,55],[37,54],[37,53]]
+ };
+ const slopes=terrain.referenceComposition.slopeConnections;
+ assert.equal(slopes.length,12);
+ assert.deepEqual(slopes.map(s=>s.dir).sort().join(''), 'eeee'+'nnn'+'sss'+'ww');
+ for(const [name,route] of Object.entries(routes)){
+  for(let i=1;i<route.length;i++){
+   assert.equal(world.canMove(...pos(route[i-1]),...pos(route[i])),true,name+' traversal '+i);
+   assert.equal(world.canMove(...pos(route[i]),...pos(route[i-1])),true,name+' reverse '+i);
+  }
+ }
+ assert.equal(m.ladders.filter(l=>l.lower[0]>=34&&l.lower[0]<=46&&l.lower[1]>=53&&l.lower[1]<=64).length,0,'no highland ladders');
+ assert.equal(elevation.validate(m).length,0);
+ assert.ok(m.travelReachable.has('40,59'));
+});
+
+test('rear-side slopes connect the summit to lower ground and return to the front entrance', () => {
+ const {YK_WORLD: world, YK_ELEVATION: elevation} = loadField();
+ const map=world.mapData;
+ const pos=([x,y])=>[x*32+16,y*32+16];
+ const rear=[[40,59],[40,58],[40,57],[40,56],[39,56],[38,56],[37,56],[37,55],[37,54],[37,53],[36,53],[36,54],[36,55]];
+ assert.equal(map.ramps[57][40],'s','upper ramp from height 2 to 1');
+ assert.equal(map.ramps[54][37],'s','lower ramp from height 1 to 0');
+ assert.equal(map.heights[58][40],2);
+ assert.equal(map.heights[56][40],1);
+ assert.equal(map.heights[53][37],0);
+ assert.equal(elevation.validate(map).length,0,'existing elevation contract remains valid');
+ for(let i=1;i<rear.length;i++){
+   assert.equal(world.canMove(...pos(rear[i-1]),...pos(rear[i])),true,'rear descent '+i);
+   assert.equal(world.canMove(...pos(rear[i]),...pos(rear[i-1])),true,'rear ascent '+i);
+ }
+ // Avoid ladders and elevated cells for the return. The route must make a
+ // genuine loop through the existing ground, rather than teleporting.
+ const start=[36,55],goal=[40,65],queue=[start],visited=new Set([start.join(',')]);
+ for(let i=0;i<queue.length&&!visited.has(goal.join(','));i++){
+   const [x,y]=queue[i];
+   for(const [dx,dy] of [[1,0],[0,1],[-1,0],[0,-1]]){
+     const nx=x+dx,ny=y+dy,k=nx+','+ny;
+     if(nx<12||nx>54||ny<43||ny>76||visited.has(k)||map.heights[ny]?.[nx]!==0)continue;
+     if(world.canMove(...pos([x,y]),...pos([nx,ny]))){visited.add(k);queue.push([nx,ny]);}
+   }
+ }
+ assert.ok(visited.has(goal.join(',')),'lower meadow reconnects to the front ladder entrance');
+ assert.ok(map.travelReachable.has('37,53'),'rear exit is reachable from the village');
+});
+
+test('the rebuilt forest highland and former mountain plateau are reachable and preserve all destinations', () => {
+ const {YK_WORLD:world,YK_ELEVATION:elevation,YK_FIELD_TERRAIN:terrain}=loadField();
+ const m=world.mapData,pos=([x,y])=>[x*32+16,y*32+16];
+ const areas=[{x:[62,76],y:[26,42],min:125},{x:[23,32],y:[34,40],min:45}];
+ for(const {x:[left,right],y:[top,bottom],min} of areas) {
+   const reachable=[];
+   for(let y=top;y<=bottom;y++)for(let x=left;x<=right;x++){
+     if(m.heights[y][x]>0&&m.travelReachable.has(x+','+y))reachable.push([x,y]);
+   }
+   assert.ok(reachable.length>=min, 'plateau has walkable destinations: '+left+','+top);
+   assert.ok(reachable.every(c=>world.walkable(...pos(c))),'plateau does not hide impassable tiles');
+ }
+ const climbs=[[62,34,'e'],[68,25,'s'],[23,38,'e'],[25,40,'n']];
+ for(const [x,y,dir] of climbs){
+   assert.equal(m.ramps[y][x],dir,'authored entrance '+x+','+y);
+ }
+ for(const [id,[x,y]] of Object.entries({
+   village:[37,70],shrine:[20,45],cove:[49,50],forest:[60,33],
+   waterfall:[67,20],hotspring:[22,17],fox:[40,5]
+ })) {
+   assert.deepEqual(Array.from(terrain.referenceComposition.places[id]),[x,y]);
+   assert.ok([[x,y],[x-1,y],[x+1,y],[x,y-1],[x,y+1]]
+     .some(([a,b])=>m.travelReachable.has(a+','+b)),id+' remains reachable');
+ }
+ assert.equal(elevation.validate(m).length,0,'no cliff connection inconsistencies');
+ assert.equal(terrain.referenceComposition.decorations.filter(o=>o.kind==='wildflowers').length, 34);
+});
+
+test('scenic objects cannot square off diagonal cliff cuts or alter their collision', () => {
+ const {YK_WORLD:world,YK_ELEVATION:elevation}=loadField();
+ const map=world.mapData;
+ // Forest and both approved mountain-sprite sizes are scenery, not a
+ // request to replace diagonal cliff faces with square walls.
+ const examples=[
+   {cell:[39,32],kind:'newTrees'},
+   {cell:[53,23],kind:'newMountainSmall'},
+   {cell:[53,26],kind:'newMountainLarge'},
+ ];
+ for(const {cell:[x,y],kind} of examples){
+   const o=map.decorations.find(o=>o.kind===kind&&o.contactTiles.some(([cx,cy])=>cx===x&&cy===y));
+   assert.ok(o,kind+' approved sprite still present at '+x+','+y);
+   assert.equal(map.cornerProtected.has(x+','+y),false,kind+' is not a structural foundation');
+   assert.ok(elevation.outline(map,x,y).cuts.length>0,kind+' preserves diagonal cliff');
+   const wasSolid=o.occupiedTiles.some(([cx,cy])=>cx===x&&cy===y);
+   assert.equal(map.occupiedTiles.has(x+','+y),wasSolid,kind+' collision is not discarded');
+ }
+ const monument=map.decorations.find(o=>o.kind==='jizo'&&!o.ground);
+ assert.ok(monument,'structural landmarks still registered');
+ const [jx,jy]=monument.contactTiles[0];
+ assert.equal(map.cornerProtected.has(jx+','+jy),true,'structural foundation still protects its tile');
+ assert.equal(elevation.validate(map).length,0);
+ for(const name of ['village','shrine','forest','waterfall','hotspring','fox']){
+   const place=world.places[name];assert.ok(place,'destination retained: '+name);
+ }
+});
+
+test('scenic mountain thinning exposes highland cliffs without changing terrain collision', () => {
+ const {YK_WORLD:world,YK_FIELD_TERRAIN:terrain,YK_ELEVATION:elevation}=loadField();
+ const m=world.mapData,removed=[[52,22],[54,24],[55,25],[57,26],[65,15],[68,15],[66,16],[68,16],[70,18],[44,64],[42,65],[46,66],[42,67],[64,8],[65,9],[68,8]];
+ const mountains=terrain.referenceComposition.decorations.filter(o=>['newMountainSmall','newMountainLarge'].includes(o.kind));
+ assert.equal(mountains.length,165,'181 approved mountain objects reduced by 16');
+ assert.equal(m.decorations.filter(o=>['newMountainSmall','newMountainLarge'].includes(o.kind)).length,98);
+ for(const [x,y] of removed){
+   assert.ok(!mountains.some(o=>o.contactTiles[0][0]===x&&o.contactTiles[0][1]===y),'mountain prop removed at '+x+','+y);
+   assert.equal(terrain.tiles[y][x],'mountain','non-walkable mountain tile preserved');
+   assert.equal(world.walkable(x*32+16,y*32+16),false,'mountain remains impassable');
+ }
+ for(const [x,y,kind] of [[53,23,'newMountainSmall'],[53,26,'newMountainLarge'],[42,66,'newMountainLarge']]){
+   assert.ok(mountains.some(o=>o.kind===kind&&o.contactTiles[0][0]===x&&o.contactTiles[0][1]===y),'neighboring mountain ridge still visible');
+ }
+ for(const [x,y] of [[53,23],[53,26],[39,32]])
+   assert.ok(elevation.outline(m,x,y).cuts.length>0,'diagonal cliff remains: '+x+','+y);
+ assert.equal(elevation.validate(m).length,0);
+ assert.equal(m.travelReachable.size,2403);
+ for(const cell of [[40,59],[63,34],[37,71]])assert.ok(m.travelReachable.has(cell.join(',')));
+});
+
+test('scenery tree feet remain on their real terrain after projection',()=>{
+ const {YK_WORLD:world,YK_ELEVATION:E}=loadField(),m=world.mapData;
+ let shifted=0,slopes=0;
+ for(const o of m.decorations.filter(o=>o.kind==='newTrees'&&o.contactTiles.length===1)){
+  const x=o.x+o.width/2,y=(o.renderFoot??o.foot)-1,actual=E.height(m,x,y),drawn=o.renderHeight??o.supportHeight;
+  assert.ok(Math.abs(actual-drawn)<.001,'tree root matches projected surface at '+o.contactTiles[0]);
+  if(o.renderFoot!==undefined){
+   shifted++;
+   assert.ok(o.foot-o.renderFoot>0&&o.foot-o.renderFoot<=16);
+   assert.ok(E.outline(m,...o.contactTiles[0]).cuts.length>0,'only diagonal cliff trees are inset');
+  }
+  if(o.renderHeight!==undefined){
+   slopes++;
+   const [tx,ty]=o.contactTiles[0];assert.ok(m.ramps[ty][tx],'only ramp trees use interpolated support height');
+  }
+ }
+ assert.equal(shifted,22);
+ assert.equal(slopes,7);
+ assert.equal(E.validate(m).length,0);
+ assert.equal(m.travelReachable.size,2403);
 });

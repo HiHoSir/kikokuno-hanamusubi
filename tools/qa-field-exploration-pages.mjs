@@ -1,4 +1,4 @@
-// Public review route uses the real field HTML and PR terrain delta, without changing the game in main.
+// Public review route uses the exact production field HTML, assets and terrain.
 import {chromium} from 'playwright';
 import assert from 'node:assert/strict';
 import {createServer} from 'node:http';
@@ -38,7 +38,7 @@ try{
   const info=await page.evaluate(()=>({
     qa:window.__FIELD_EXPLORATION_PREVIEW,
     reviewSpawn:window.__FIELD_EXPLORATION_SPAWN,
-    scenery:window.__FIELD_EXPLORATION_SCENERY_THINNING,
+    scenery:window.YK_WORLD.mapData.diagonalSceneryThinning,
     collisionConsistency:(()=>{
       const m=window.YK_WORLD.mapData, expected=new Set(m.decorations.flatMap(o=>o.occupiedTiles.map(c=>c.join(','))));
       const stale=[...m.occupiedTiles].filter(k=>!expected.has(k));
@@ -131,6 +131,7 @@ try{
     }),
     base:document.baseURI, url:location.href
   }));
+  assert.equal(info.qa.source,'production','review scene must reference the live game');
   assert.equal(info.qa.tiles,61);assert.equal(info.qa.heights,71);
   assert.equal(info.cornerWalk.cutWidth,28,'small diagonal clipping must not consume walkable tile centers');
   assert.equal(info.cornerWalk.originalPassable,true,'Hizuki remains on valid highland');
@@ -150,7 +151,6 @@ try{
   assert.ok(info.scenery.byKind.newTrees>0,'trees adjacent to diagonal cliffs are thinned');
   assert.equal(info.scenery.remainingForestAtBevel,0,'no original forest tree remains within one tile of a bevel');
   assert.ok(info.scenery.preservedMountainScenery>=90,'solid mountains retain visible sprites');
-  console.log('MOUNTAIN ANCHORS',JSON.stringify(info.collisionConsistency.restoredMountainAnchors));
   assert.ok(info.collisionConsistency.restoredMountainAnchors.every(o=>o.visible),'restored mountain anchor must have a visible mountain or tree stand-in');
   assert.deepEqual(info.collisionConsistency.stale,[],'removed sprites must not retain collision-only occupied cells');
   assert.deepEqual(info.collisionConsistency.missing,[],'every live object footprint must be in collision map');
@@ -257,33 +257,6 @@ try{
   await page.screenshot({path:'artifacts/field-exploration-pages-'+start+'.png'});
   console.log(start,JSON.stringify(info));
   await page.close();
-  // Capture the identical camera position using the pre-fix painter for an
-  // actual pixel comparison. Do not use image-generation approximations.
-  if(['forestCliff','eastHighland','centralHighland','mountainCliff','treeEdgeEast','treeEdgeCenter'].includes(start)){
-    const legacy=await browser.newPage({viewport:{width:874,height:402},deviceScaleFactor:1});
-    const legacyErrors=[];legacy.on('pageerror',e=>legacyErrors.push(e.message));
-    await legacy.goto('http://127.0.0.1:'+server.address().port+'/previews/field-exploration/?from=battle&anchor=old&start='+start);
-    await legacy.waitForFunction(()=>window.__FIELD_EXPLORATION_PREVIEW&&document.querySelector('#load')?.hidden===true,null,{timeout:45000});
-    assert.equal(await legacy.evaluate(()=>window.YK_FIELD_LEGACY_TREE_ANCHORS),true);
-    assert.equal(await legacy.evaluate(()=>window.YK_FIELD_SCENERY_LEGACY),true,
-      'legacy comparison retains the original dense scenery');
-    const legacyMisplaced=await legacy.evaluate(()=>{
-      const m=window.YK_WORLD.mapData,E=window.YK_ELEVATION;
-      return m.decorations.filter(o=>o.kind==='newTrees'&&o.contactTiles.length===1&&
-        Math.abs(E.height(m,o.x+o.width/2,o.foot-1)-o.supportHeight)>.001).length;
-    });
-    assert.ok(legacyMisplaced>=20,'legacy projection leaves multiple trees ungrounded');
-    assert.deepEqual(legacyErrors,[]);
-    await legacy.screenshot({path:'artifacts/field-exploration-pages-'+start+'-legacy.png'});
-    await legacy.close();
-    if(['treeEdgeEast','treeEdgeCenter'].includes(start)){
-      const overlay=await browser.newPage({viewport:{width:874,height:402},deviceScaleFactor:1});
-      await overlay.goto('http://127.0.0.1:'+server.address().port+'/previews/field-exploration/?from=battle&trees=front&start='+start);
-      await overlay.waitForFunction(()=>window.__FIELD_EXPLORATION_PREVIEW&&document.querySelector('#load')?.hidden===true,null,{timeout:45000});
-      assert.equal(await overlay.evaluate(()=>window.YK_FIELD_TREE_OVERLAY_DIAGNOSTIC),true);
-      await overlay.screenshot({path:'artifacts/field-exploration-pages-'+start+'-overlay-diagnostic.png'});
-      await overlay.close();
-    }
-  }
+
  }
 }finally{await browser.close();await new Promise(ok=>server.close(ok));}

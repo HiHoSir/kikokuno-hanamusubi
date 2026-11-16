@@ -201,7 +201,7 @@ window.YK_LANDSCAPE=(()=>{
  const sceneObjects=new WeakMap();
  function objects(map){
   if(sceneObjects.has(map))return sceneObjects.get(map);
-  if(map.referencePlacedObjects){const result=(map.decorations||[]).filter(o=>!o.ground).slice().sort((a,b)=>a.foot-b.foot||a.x-b.x);sceneObjects.set(map,result);return result;}
+  if(map.referencePlacedObjects){const result=(map.decorations||[]).filter(o=>!o.ground).slice().sort((a,b)=>(a.renderFoot??a.foot)-(b.renderFoot??b.foot)||a.x-b.x);sceneObjects.set(map,result);return result;}
   // Approved field objects replace legacy procedural crowns and mountain sprites.
   // Grouping is visual only: the authored terrain/collision grid is immutable.
   const trees=[],mountains=[],covered=new Set(),key=(x,y)=>y*map[0].length+x;
@@ -230,7 +230,7 @@ window.YK_LANDSCAPE=(()=>{
    // A short contact shadow, anchored to the base; no projected roof silhouette.
    const small=['lantern','jizo','torii'].includes(o.kind);
    const width=o.width*(small?.48:.70),depth=small?2:3;
-   c.beginPath();c.ellipse(o.x+o.width/2+2,o.foot-1,width/2,depth,0,0,Math.PI*2);c.fill();
+   c.beginPath();c.ellipse(o.x+o.width/2+2,(o.renderFoot??o.foot)-1,width/2,depth,0,0,Math.PI*2);c.fill();
   }
   const p=c.getImageData(0,0,layer.width,layer.height);
   for(let i=0;i<p.data.length;i+=4){const alpha=p.data[i+3]>=128?30:0;p.data[i]=24;p.data[i+1]=40;p.data[i+2]=30;p.data[i+3]=alpha;}
@@ -430,7 +430,7 @@ window.YK_LANDSCAPE=(()=>{
    chunk.textureOrigin={x:ox,y:oy};chunk.projectedHeights=true;chunk.shoreRelief=true;chunk.referencePlacedObjects=true;
    chunk.bridgeWaterCells=new Set([...map.bridgeWaterCells].map(k=>{const [x,y]=k.split(',').map(Number);return (x-ox)+','+(y-oy);}));
    chunk.paths=map.paths.map(r=>r.map(([x,y])=>[x-ox*32,y-oy*32]));
-   chunk.decorations=map.decorations.filter(o=>o.x+o.width>=ox*32-32&&o.x<=ex*32+32&&o.foot>=oy*32-32&&o.y<=ey*32+32).map(o=>({...o,x:o.x-ox*32,y:o.y-oy*32,foot:o.foot-oy*32}));
+   chunk.decorations=map.decorations.filter(o=>o.x+o.width>=ox*32-32&&o.x<=ex*32+32&&o.foot>=oy*32-32&&o.y<=ey*32+32).map(o=>({...o,x:o.x-ox*32,y:o.y-oy*32,foot:o.foot-oy*32,renderFoot:o.renderFoot===undefined?undefined:o.renderFoot-oy*32}));
    const surface=groundLayer(chunk);
    for(const layers of [floors,roads,shadows]){const temp=layers.get(chunk);if(temp){temp.width=1;temp.height=1;}layers.delete(chunk);}
    cache.set(key,{surface,ox,oy,lastUsed:++chunkTouch});
@@ -515,6 +515,81 @@ window.YK_LANDSCAPE=(()=>{
  return {foregroundProjectionLimit,cameraPresets,perspectiveScale,mode7LikeMatrix,groundLayer,drawHeightFaces,drawQuarter,project,unproject,quarterFixture,footprints,shadowLayer,walkable,floorLayer,specs,keys,placeKeys,placesFixture,errors,load,ready,fixture,draw,objects,drawAsset,motionArt,contains,adjacent,roadAllowed,roadLayer,groundInside,elevationChunkStats};
 })();
 
-
-
-
+// Two authored worn-soil trail cells share the approved field grass/road art.
+(function(){
+  const landscape=window.YK_LANDSCAPE;
+  const groundLayer=landscape.groundLayer;
+  // Exactly one map cell for each rear-facing passage: no square backdrop,
+  // directional line, extra scene art or change to gameplay collision.
+  const cells=[[40,58],[37,55]];
+  // Initialize approved trail pigment only when actual game art is ready.
+  // The field module must also load in data-only Node tests without a DOM.
+  let road;
+  const prepared=new WeakSet();
+  const bayer=[
+    0,8,2,10,
+    12,4,14,6,
+    3,11,1,9,
+    15,7,13,5
+  ];
+  function applyOne(surface,tx,ty,variant){
+    const g=surface.getContext('2d',{willReadFrequently:true});
+    g.imageSmoothingEnabled=false;
+    const ox=tx*32,oy=ty*32;
+    const pixels=g.getImageData(ox,oy,32,32),out=pixels.data;
+    const earth=road.data;
+    let changed=0;
+    for(let y=0;y<32;y++)for(let x=0;x<32;x++){
+      const i=(y*32+x)*4;
+      // Soil follows a slightly irregular foot-sized oval; grass remains all
+      // around it. The thin broken edge is pixel dither, not smooth blur.
+      const jitter=Math.sin((y+variant*3)*.61)*1.25+
+        Math.sin((y+variant*5)*1.63)*.55;
+      const dx=(x-15.5-jitter)/(10.4+Math.cos((y+variant)*.47)*.65);
+      const dy=(y-16.1)/(12.9+Math.sin((x+variant)*.29)*.65);
+      const d=Math.sqrt(dx*dx+dy*dy);
+      const edge=Math.max(0,Math.min(1,(1.10-d)/.22));
+      if(edge<=bayer[(y%4)*4+(x%4)]/16)continue;
+      const speck=((x*13+y*17+x*y*3+variant*19)%23)/23;
+      // Derive every colour from approved grass and road PNG pixels.
+      // Moderate saturation: the trail belongs to the meadow rather than
+      // forming a pasted-on ochre/black-bordered icon.
+      const soil=(d<.73?.73:.56)+(speck-.5)*.11;
+      const stone=(x===11+variant&&y===12 ||
+        x===12+variant&&y===12 ||
+        x===21&&y===19+variant ||
+        x===16&&y===24);
+      for(let k=0;k<3;k++){
+        const original=out[i+k],sample=earth[i+k];
+        let tint=original*(1-soil)+sample*soil;
+        if(stone){
+          const grey=(earth[i]+earth[i+1]+earth[i+2])/3;
+          tint=tint*.32+(grey+(k===0?6:k===1?5:1))*.68;
+        }
+        out[i+k]=Math.round(Math.max(0,Math.min(255,tint)));
+      }
+      changed++;
+    }
+    g.putImageData(pixels,ox,oy);
+    return changed;
+  }
+  landscape.groundLayer=function(map){
+    const ground=groundLayer(map);
+    if(map.length!==80||map[0]?.length!==80||!map.projectedHeights||prepared.has(map))return ground;
+    if(!road){
+      const source=document.createElement('canvas');
+      source.width=64;source.height=64;
+      const c=source.getContext('2d',{willReadFrequently:true});
+      c.imageSmoothingEnabled=false;
+      if(!landscape.drawAsset(c,'road',0,0,64,64))throw Error('Approved road art is not ready');
+      road=c.getImageData(16,16,32,32);
+    }
+    const changed=cells.map(([tx,ty],i)=>applyOne(ground,tx,ty,i));
+    prepared.add(map);
+    window.__FIELD_EXPLORATION_MARKERS={
+      cells:cells.map(c=>c.slice()),drawn:changed.length,tileSize:32,
+      style:'grass-worn-soil-dither',source:'approved-road-and-grass',changed
+    };
+    return ground;
+  };
+})();

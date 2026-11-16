@@ -51,7 +51,7 @@ test('the field foreground clouds and shadows share a registered moving layer', 
   assert.equal(png[25], 6, 'RGBA texture supplies the shadow alpha mask');
 });
 
-test('the field entry loads the original authored map and elevation data', () => {
+test('the field entry loads the approved exploration map and elevation data', () => {
   assert.match(source('data/maps/field/terrain.js'), /referenceComposition/);
   const {YK_WORLD: world, YK_FIELD_TERRAIN: terrain} = loadField();
   assert.equal(world.tileSize, 32);
@@ -59,11 +59,30 @@ test('the field entry loads the original authored map and elevation data', () =>
   assert.equal(world.mapData.length, 80);
   assert.ok(world.mapData.every(row => row.length === 80));
   assert.equal(world.mapData.elevationEnabled, true);
-  assert.equal(digest(terrain.tiles), 'f0956d5ef070f828359a32a27c68481570f528cac542220ae8a3392a80fd4bd1');
-  assert.equal(digest(terrain.heights), '8193650f027e8de6f03468b518fbd1ac330b9be31e214b3aa2d0d9517cd19bb1');
-  assert.equal(digest(terrain.referenceComposition), 'dfc801b62e70fea3aa0b0f3609db086df23d713392681b9f7caa938a6680807c');
+  assert.equal(digest(terrain.tiles), 'de21dabdd8125fe4be430cb1dc4714d1a7e797c5cec361384817e3778f512999');
+  assert.equal(digest(terrain.heights), 'a2281bea3735928cb1197099852b7b1a89dcdb678a51cbb840dc54fe2581c16e');
+  assert.equal(digest(terrain.referenceComposition), 'c095037cd569f0a64654884e1b9f1d03c94cb6179f902b137f59ca3d1db13910');
   assert.equal(world.walkable(...world.start), true);
   assert.equal(world.walkable(16, 16), false);
+});
+
+test('adopted highland clears diagonal forest corner centers without removing real cliff walls',()=>{
+  const {YK_WORLD: world}=loadField();
+  const map=world.mapData;
+  const at=(x,y)=>[x*32+16,y*32+16];
+  const [x,y]=at(60,28);
+  assert.equal(map.cornerCut,28);
+  assert.ok(world.walkable(x,y),'Hizuki can stand on retained highland');
+  assert.equal(world.canMove(x,y,...at(59,28)),true,'west forest corner remains open');
+  assert.equal(world.canMove(x,y,...at(60,29)),true,'south forest corner remains open');
+  assert.equal(world.canMove(x,y,...at(61,28)),false,'east two-level cliff still blocks');
+  assert.ok(map.diagonalSceneryThinning.removed.length>=100,'forests are thinned near real diagonal cliffs');
+  assert.ok(map.diagonalSceneryThinning.removed.every(o=>o.kind==='newTrees'),
+    'mountains are never deleted to expose a silhouette');
+  const expected=new Set(map.decorations.flatMap(o=>o.occupiedTiles.map(c=>c.join(','))));
+  assert.deepEqual([...map.occupiedTiles].filter(k=>!expected.has(k)),[],'no invisible object occupancy remains');
+  assert.ok(map.decorations.some(o=>o.contactTiles.some(([tx,ty])=>tx===68&&ty===8)),
+    'original mountain at (68,8) remains represented');
 });
 
 test('the field projection and image loader retain the original perspective and art', () => {

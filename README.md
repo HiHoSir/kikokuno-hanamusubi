@@ -25,3 +25,7 @@ npm run check
 ```
 
 GitHub Actionsでもpush・PR時に検査します。直接mainへpushする場合、Actionsは**事後検出**であり、push前の強制阻止ではありません。画像の画風、ライセンス、実機動作は別途確認が必要です。
+
+## フィールドの採用版
+
+フィールド探索で検証した高台・坂道・斜め崖・森の間引き・山の表示復元を本編に採用済みです。地形の正本は `data/maps/field/terrain.js`、標高・衝突処理は `src/field/field-elevation.js` に統一しました。`previews/field-exploration/` は本編ファイルをそのまま読み込む歩行検査用で、地形や描画処理の別実装は保持しません。

@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - 'src/field/**'
+      - 'data/maps/field/terrain.js'
       - 'previews/field-overlook/index.html'
       - 'previews/field-exploration/index.html'
       - 'src/game/index.html'

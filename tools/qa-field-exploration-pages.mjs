@@ -60,18 +60,16 @@ try{
   if(start==='approach'){
     await page.screenshot({path:'artifacts/field-exploration-pages-before-climb.png'});
     for(let i=1;i<=7;i++){
-      await page.keyboard.down('ArrowUp');
+      await page.keyboard.press('ArrowUp',{delay:35});
       await page.waitForFunction(y=>Number(document.querySelector('#scene').dataset.y)===y,65-i,{timeout:3000});
-      await page.keyboard.up('ArrowUp');
-      await page.waitForTimeout(40);
+      await page.waitForTimeout(30);
     }
     assert.equal(await page.locator('#scene').getAttribute('data-y'),'58','actual uphill traversal');
     await page.screenshot({path:'artifacts/field-exploration-pages-after-climb.png'});
     for(let i=1;i<=7;i++){
-      await page.keyboard.down('ArrowDown');
+      await page.keyboard.press('ArrowDown',{delay:35});
       await page.waitForFunction(y=>Number(document.querySelector('#scene').dataset.y)===y,58+i,{timeout:3000});
-      await page.keyboard.up('ArrowDown');
-      await page.waitForTimeout(40);
+      await page.waitForTimeout(30);
     }
     assert.equal(await page.locator('#scene').getAttribute('data-y'),'65','actual downhill traversal');
     await page.screenshot({path:'artifacts/field-exploration-pages-after-descent.png'});
@@ -82,7 +80,7 @@ try{
       const dx=to[0]-from[0],dy=to[1]-from[1];
       const key=dx===1?'ArrowRight':dx===-1?'ArrowLeft':dy===1?'ArrowDown':dy===-1?'ArrowUp':null;
       assert.ok(key,'rear route uses orthogonal steps');
-      await page.keyboard.down(key);
+      await page.keyboard.press(key,{delay:35});
       try{
         await page.waitForFunction(([x,y])=>{
           const scene=document.querySelector('#scene');
@@ -100,8 +98,7 @@ try{
         throw error;
       }
       console.log('REAR MOVE OK '+JSON.stringify({from,to,key}));
-      await page.keyboard.up(key);
-      await page.waitForTimeout(40);
+      await page.waitForTimeout(30);
     };
     for(let i=1;i<route.length;i++)await go(route[i-1],route[i]);
     await page.screenshot({path:'artifacts/field-exploration-rear-after-descent.png'});

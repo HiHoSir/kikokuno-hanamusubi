@@ -1,16 +1,31 @@
-// Trial beachcombing data for shoreline-study ONLY. Production economy
-// and village shop stock are intentionally unchanged until scenery review.
+// Beachcombing prototype. Real saved battle wins, not time or random re-rolls,
+// unlock shell batches once after each FIVE completed victories.
 import {TILE,WIDTH,HEIGHT,MAP,SHORE_Y,SCENERY,START} from './scene.mjs';
 
-export const SHELL_SAVE_KEY='kikokuno-hanamusubi-preview-shoreline-shells-v1';
+export const SHELL_SAVE_KEY='kikokuno-hanamusubi-preview-shoreline-shells-v2';
+export const VICTORIES_PER_SHELL_BATCH=5;
+export const SHELL_BATCH_MIN=1;
+export const SHELL_BATCH_MAX=3;
+export const SHELL_CAP=12;
+export const PICKUP_DISTANCE=36;
 export const SHELL_KINDS=Object.freeze({
   sakura:Object.freeze({id:'sakura',name:'桜貝',value:12,weight:0.17}),
   spiral:Object.freeze({id:'spiral',name:'巻貝',value:7,weight:0.30}),
   white:Object.freeze({id:'white',name:'白貝',value:3,weight:0.53})
 });
-export const SHELL_COUNT=14;
-export const PICKUP_DISTANCE=36;
-
+// Fixed, carefully spaced sandy pickup points. ONLY the COUNT (1–3) and
+// variety are random per five victories; positions do not reroll.
+const SITE_COLUMNS=Object.freeze([
+  [3,2,3,4],[5,2,-4,1],[7,2,4,2],[9,3,-3,-4],
+  [11,2,4,2],[13,3,0,-2],[15,2,-4,0],[17,2,3,1],
+  [19,2,-3,-2],[21,3,2,-3],[23,2,-2,1],[25,2,3,-2],
+  [27,2,-3,1],[4,3,1,0],[12,3,-3,-2],[20,3,4,2]
+]);
+export const SHELL_SITES=Object.freeze(SITE_COLUMNS.map(([tx,dy,dx,oy],i)=>
+  Object.freeze({id:'spot-'+i,x:tx*TILE+16+dx,y:(SHORE_Y[tx]+dy)*TILE+16+oy})
+));
+const dist=(x,y,px,py)=>Math.hypot(x-px,y-py);
+const validWins=n=>Number.isSafeInteger(n)&&n>=0?Math.min(n,1000000):0;
 const rng=seed=>{
   let state=seed>>>0;
   return ()=>{
@@ -20,50 +35,89 @@ const rng=seed=>{
     return ((t^(t>>>14))>>>0)/4294967296;
   };
 };
-const dist=(x,y,px,py)=>Math.hypot(x-px,y-py);
-export function generateShells(seed){
-  const random=rng(seed>>>0),result=[];
-  // Only sandy terrain, past the furthest wave wash. No arbitrary grid-centre
-  // columns, and no freshly appearing shells while the camera is moving.
-  for(let tries=0;tries<600&&result.length<SHELL_COUNT;tries++){
-    const tx=2+Math.floor(random()*(WIDTH-4));
-    const row=SHORE_Y[tx]+1+Math.floor(random()*Math.min(4,HEIGHT-SHORE_Y[tx]-3));
-    if(row>=HEIGHT-2||MAP[row]?.[tx]!=='sand')continue;
-    const x=tx*TILE+Math.floor(5+random()*23);
-    const y=row*TILE+Math.floor(7+random()*19);
-    if(dist(x,y,START.x,START.y)<28)continue;
-    if(SCENERY.some(rock=>dist(x,y,rock.x,rock.y)<34))continue;
-    if(result.some(item=>dist(x,y,item.x,item.y)<32))continue;
-    const draw=random();
-    const kind=draw<.17?'sakura':draw<.47?'spiral':'white';
-    result.push(Object.freeze({id:'shell-'+result.length,kind,x,y}));
-  }
-  return Object.freeze(result);
-}
+const kindFor=number=>number<.17?'sakura':number<.47?'spiral':'white';
+const shellRecord=(value)=>{
+  if(!value||typeof value!=='object'||typeof value.id!=='string'||
+    !/^shell-[1-9]\d*-[0-2]$/.test(value.id)||
+    !Object.hasOwn(SHELL_KINDS,value.kind)||
+    !Number.isInteger(value.site)||value.site<0||value.site>=SHELL_SITES.length)return null;
+  const site=SHELL_SITES[value.site];
+  return Object.freeze({id:value.id,kind:value.kind,site:value.site,x:site.x,y:site.y});
+};
 export const emptyBag=()=>({sakura:0,spiral:0,white:0});
-export function normalizeShellState(value,fallbackSeed=0){
-  const input=value&&typeof value==='object'?value:{};
-  const seed=Number.isInteger(input.seed)&&input.seed>=0&&input.seed<=0xffffffff?
-    input.seed>>>0:fallbackSeed>>>0;
-  const availableIds=new Set(generateShells(seed).map(item=>item.id));
-  const picked=Array.isArray(input.picked)?
-    [...new Set(input.picked.filter(id=>availableIds.has(id)))]:[];
-  // A bag is derived only from actually gathered shells so reload cannot
-  // create items from arbitrary localStorage counts.
-  const bag=emptyBag();
-  const sold=Array.isArray(input.sold)?
-    [...new Set(input.sold.filter(id=>picked.includes(id)))]:[];
-  const byId=new Map(generateShells(seed).map(item=>[item.id,item]));
-  for(const id of picked){
-    if(!sold.includes(id))bag[byId.get(id).kind]++;
+export function initialShellState(wins=0){
+  wins=validWins(wins);
+  // Existing saved games should not receive years of retroactive payouts.
+  // If the first visit falls on the 5th win, that batch is awarded.
+  const processedCycles=Math.floor(Math.max(0,wins-1)/VICTORIES_PER_SHELL_BATCH);
+  return {version:2,lastWins:wins,processedCycles,onBeach:[],picked:[],sold:[],gold:0,bag:emptyBag()};
+}
+export function normalizeShellState(value,currentWins=0){
+  if(!value||value.version!==2)return initialShellState(currentWins);
+  const lastWins=validWins(value.lastWins);
+  const processedCycles=validWins(value.processedCycles);
+  const onBeach=(Array.isArray(value.onBeach)?value.onBeach:[])
+    .map(shellRecord).filter(Boolean).slice(0,SHELL_CAP);
+  const seen=new Set(),sites=new Set();
+  const unique=onBeach.filter(shell=>{
+    if(seen.has(shell.id)||sites.has(shell.site))return false;
+    seen.add(shell.id);sites.add(shell.site);return true;
+  });
+  const picked=Array.isArray(value.picked)?
+    value.picked.map(shellRecord).filter(Boolean):[];
+  const collected=[],ids=new Set();
+  for(const shell of picked){
+    if(ids.has(shell.id)||seen.has(shell.id))continue;
+    ids.add(shell.id);collected.push(shell);
   }
-  const gold=Number.isSafeInteger(input.gold)&&input.gold>=0?Math.min(input.gold,999999):0;
-  return {seed,picked,sold,bag,gold};
+  const sold=Array.isArray(value.sold)?
+    [...new Set(value.sold.filter(id=>ids.has(id)))]:[];
+  const bag=emptyBag(),soldSet=new Set(sold);
+  for(const shell of collected)if(!soldSet.has(shell.id))bag[shell.kind]++;
+  const gold=Number.isSafeInteger(value.gold)&&value.gold>=0?
+    Math.min(value.gold,999999):0;
+  return {version:2,lastWins,processedCycles,onBeach:unique,picked:collected,sold,bag,gold};
+}
+export function batchCount(cycle){
+  const random=rng((cycle*0x9e3779b1)^0xBEEFA416);
+  return SHELL_BATCH_MIN+Math.floor(random()*(SHELL_BATCH_MAX-SHELL_BATCH_MIN+1));
+}
+export function syncVictoryShells(value,wins){
+  wins=validWins(wins);
+  const original=normalizeShellState(value,wins);
+  if(wins<original.lastWins){
+    // A new game / older save must not carry another character's findings.
+    return {state:initialShellState(wins),spawned:0,reset:true};
+  }
+  let onBeach=[...original.onBeach],spawned=0;
+  const target=Math.floor(wins/VICTORIES_PER_SHELL_BATCH);
+  const first=original.processedCycles+1;
+  for(let cycle=first;cycle<=target;cycle++){
+    const random=rng((cycle*0x9e3779b1)^0xBEEFA416);
+    const count=SHELL_BATCH_MIN+
+      Math.floor(random()*(SHELL_BATCH_MAX-SHELL_BATCH_MIN+1));
+    for(let i=0;i<count&&onBeach.length<SHELL_CAP;i++){
+      // Deterministic rotation through fixed points; never randomly placed.
+      const used=new Set(onBeach.map(shell=>shell.site));
+      const candidateOrder=Array.from({length:SHELL_SITES.length},(_,j)=>
+        (cycle*3+j)%SHELL_SITES.length);
+      const site=candidateOrder.find(index=>!used.has(index));
+      if(site===undefined)break;
+      const kind=kindFor(random());
+      onBeach.push(Object.freeze({
+        id:'shell-'+cycle+'-'+i,kind,site,
+        x:SHELL_SITES[site].x,y:SHELL_SITES[site].y
+      }));
+      spawned++;
+    }
+  }
+  const next=normalizeShellState({
+    ...original,onBeach,lastWins:wins,processedCycles:Math.max(target,original.processedCycles)
+  },wins);
+  return {state:next,spawned,reset:false};
 }
 export function visibleShells(state){
-  const normalized=normalizeShellState(state);
-  const collected=new Set(normalized.picked);
-  return generateShells(normalized.seed).filter(shell=>!collected.has(shell.id));
+  return normalizeShellState(state).onBeach;
 }
 export function nearestShell(state,x,y,radius=PICKUP_DISTANCE){
   return visibleShells(state).filter(shell=>dist(shell.x,shell.y,x,y)<=radius)
@@ -71,11 +125,15 @@ export function nearestShell(state,x,y,radius=PICKUP_DISTANCE){
 }
 export function gatherShell(state,id,x,y){
   const current=normalizeShellState(state);
-  const shell=visibleShells(current).find(item=>item.id===id);
+  const shell=current.onBeach.find(item=>item.id===id);
   if(!shell||!Number.isFinite(x)||!Number.isFinite(y)||
      dist(shell.x,shell.y,x,y)>PICKUP_DISTANCE)
     return {accepted:false,state:current,message:'貝殻に近づいてください。'};
-  const next=normalizeShellState({...current,picked:[...current.picked,id]});
+  const next=normalizeShellState({
+    ...current,
+    onBeach:current.onBeach.filter(item=>item.id!==id),
+    picked:[...current.picked,shell]
+  });
   return {accepted:true,state:next,shell,
     message:SHELL_KINDS[shell.kind].name+'を拾った。'};
 }
@@ -88,8 +146,28 @@ export function sellAllShells(state){
   const current=normalizeShellState(state),amount=bagValue(current);
   if(!amount)return {accepted:false,state:current,amount:0,message:'売れる貝殻を持っていません。'};
   const next=normalizeShellState({
-    ...current,sold:current.picked,gold:Math.min(999999,current.gold+amount)
+    ...current,sold:current.picked.map(shell=>shell.id),
+    gold:Math.min(999999,current.gold+amount)
   });
   return {accepted:true,state:next,amount,
-    message:'貝殻を売って '+amount+'両を受け取った。'};
+    message:'貝殻を売って '+amount+'両を受け取った。（試作）'};
+}
+// Validate the authored fixed pickup spots before browser rendering.
+export function validateShellSites(){
+  const errors=[];
+  for(const [i,spot] of SHELL_SITES.entries()){
+    const tx=Math.floor(spot.x/TILE),ty=Math.floor(spot.y/TILE);
+    if(tx<1||tx>=WIDTH-1||ty<SHORE_Y[tx]+1||ty>=HEIGHT-1||
+       MAP[ty]?.[tx]!=='sand')errors.push('shell is not on dry sand: '+i);
+    if(dist(spot.x,spot.y,START.x,START.y)<28)
+      errors.push('shell is at character spawn: '+i);
+    if(SCENERY.some(rock=>dist(spot.x,spot.y,rock.x,rock.y)<34))
+      errors.push('shell is buried in a rock: '+i);
+  }
+  for(let i=0;i<SHELL_SITES.length;i++)
+    for(let j=i+1;j<SHELL_SITES.length;j++)
+      if(dist(SHELL_SITES[i].x,SHELL_SITES[i].y,
+        SHELL_SITES[j].x,SHELL_SITES[j].y)<32)
+        errors.push('shell pickup sites overlap: '+i+','+j);
+  return errors;
 }

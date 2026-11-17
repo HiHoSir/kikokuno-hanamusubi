@@ -46,22 +46,20 @@ try{
  assert.ok(first.tileSheet[0]%32===0&&first.tileSheet[1]%32===0,
    '8-frame atlas dimensions align to native 32px source rectangles');
  assert.equal(first.characterSheet,'village-80x112','use the town-scale 80x112 Hizuki');
- assert.equal(first.sceneryCount,8,'only a few props in the reviewed coast');
+ assert.equal(first.sceneryCount,3,'only approved rocks, not a grass border');
  assert.equal(first.sceneryRender,'unscaled-native-sprites-sorted-by-foot');
  assert.equal(first.scenery.filter(o=>o.solid).length,3);
  assert.ok(Object.values(first.sceneryNativeSizes).every(([w,h])=>
    Number.isInteger(w)&&Number.isInteger(h)&&w>0&&h>0&&w<=112&&h<=112),
    'approved native-size objects must fit within the intended character scale');
- assert.equal(first.grassColorStudy.scale,1,'grass palette transformation must not enlarge source pixels');
- assert.equal(first.grassColorStudy.paletteSize,5,'fixed terrain palette');
- assert.ok(first.grassColorStudy.pixelPreserved>70,'retain source tuft alpha geometry');
  assert.ok(first.foamPixels>0,'actual visible surf pixels');
- assert.ok(first.seaCells>100&&first.sandCells>50);
+ assert.ok(first.seaCells>100&&first.sandCells>250);
+ assert.equal(first.grassCells,0,'no forced grassy strip behind the beach');
+ assert.ok(first.minSandRows>=9,'at least nine full 32px sand rows inland');
+ assert.ok(first.maxSandRows>=first.minSandRows);
  assert.ok(first.dryMapGenerated);
- assert.equal(first.landJoin,'approved-16-corner-alpha-autotiles',
-   'grass-to-sand transitions must use authored corner-mask mapchips');
- assert.ok(first.grassEdgeChips>20,'grass/sand border has real connection chips');
- assert.ok(first.grassDiagonalChips>0,'grass/sand diagonal corners exist');
+ assert.equal(first.landJoin,'sea-to-sand-16-corner-alpha-autotiles',
+   'retain approved shoreline without creating a grass join');
  await page.screenshot({path:'artifacts/shoreline-study-initial.png'});
  // The approved ocean atlas has two frames, alternating every 360ms.
  let phases=new Set([first.waterFrame]);
@@ -97,7 +95,7 @@ try{
  await page.keyboard.down('ArrowUp');await page.waitForTimeout(380);
  await page.keyboard.up('ArrowUp');await page.waitForTimeout(100);
  const after=await page.evaluate(()=>({...window.__SHORE_QA}));
- assert.ok(after.hero.y<yBefore-20,'direction must move the sprite on sand/grass');
+ assert.ok(after.hero.y<yBefore-20,'direction must move the sprite on sand');
  await page.locator('#grid').click();
  await page.waitForFunction(()=>window.__SHORE_QA?.grid===true,null,{timeout:2000});
  const debug=await page.evaluate(()=>window.__SHORE_QA);
@@ -129,10 +127,9 @@ try{
    highTide:{reach:high.tideReach,washed:high.washedPixels},
    retreat:{reach:retreat.tideReach,wet:retreat.wetPixels},
    villageHero:true,sceneryCount:first.sceneryCount,sceneryNativeSizes:first.sceneryNativeSizes,
-   grassColorStudy:first.grassColorStudy,
    rockCollision:{rockX:rock.x,heroX:beforeRock.x,heroY:beforeRock.y},
-   landJoin:first.landJoin,grassEdgeChips:first.grassEdgeChips,
-   grassDiagonalChips:first.grassDiagonalChips,tileAtlas:true,
+   landJoin:first.landJoin,minSandRows:first.minSandRows,
+   maxSandRows:first.maxSandRows,grassCells:first.grassCells,tileAtlas:true,
    animatedTileCount:first.animatedTileCount,
    tileSheet:first.tileSheet,yBefore,yAfter:after.hero.y,
    screenshots:['artifacts/shoreline-study-initial.png',

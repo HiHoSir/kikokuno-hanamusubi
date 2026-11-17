@@ -72,9 +72,9 @@ test('the starting inlet route reaches a talkable spot around Ushiohei and the s
  assert.equal(bfs(entry,cell=>adjacent(cell,fisher)) ,true,'can reach the fisher');
  assert.equal(bfs(fisher,cell=>isSouthExit(...cell)),true,'can return to field');
  assert.equal(walkableCell(...fisher),true);
- assert.equal(isSouthExit(8,33),true);
- assert.equal(walkableCell(8,33),true);
- assert.equal(isSouthExit(6,33),false);
+ assert.equal(isSouthExit(28,33),true);
+ assert.equal(walkableCell(28,33),true);
+ assert.equal(isSouthExit(8,33),false);
 });
 test('masked native atlases preserve diagonal coastline and animated sea is separate',()=>{
  const land={tiles:['gg~','gg~','~~~']};

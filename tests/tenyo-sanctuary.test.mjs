@@ -137,6 +137,7 @@ test('production sanctuary paints its entrance within landscape and portrait vie
     const scene={width:768,height:768,parentElement:viewport,dataset:{},getContext:()=>context};
     const load={hidden:false};
     const element={addEventListener(){}};
+    globalThis.window={parent:{}};
     globalThis.document={
       querySelector:id=>({'#scene':scene,'#load':load}[id]??{...element}),
       querySelectorAll:()=>[],

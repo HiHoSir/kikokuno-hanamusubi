@@ -3,7 +3,7 @@ import { villageRooms } from '../interiors/rooms.mjs';
 import { pixelViewport, DEFAULT_CAMERA_ZOOM, canopyOpacity, riverRipples, paintRiverRipples } from './render.mjs';
 import { advanceResident, drawCharacter, makeResident, residentInFront, RESIDENT_RADIUS } from './residents.mjs';
 import { bindDialogue } from './dialogue.mjs?v=field-menu-1';
-import {collectFind,readPlayer,savePlayer} from '../battle/rules.mjs?v=village-finds-1';
+import {collectFind,readPlayer,savePlayer} from '../battle/rules.mjs?v=equipment-4slots-2';
 import {VILLAGE_FINDS} from '../../../data/maps/hozuki-village/finds.mjs';
 import {readStoryStage,advanceStoryStage,objectiveForStage} from '../story/chapter-one.mjs';
 

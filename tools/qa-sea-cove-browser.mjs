@@ -174,8 +174,8 @@ try{
  assert.ok(surf.tileCount>=25);
  const before=await review.screenshot({path:'artifacts/sea-cove-pages-review-start.png'});
  await review.waitForTimeout(600);
- const after=await review.screenshot({path:'artifacts/sea-cove-pages-review-wave.png'});
- assert.ok(!before.equals(after),'Pages preview shows genuinely moving sea');
+ const reviewAfter=await review.screenshot({path:'artifacts/sea-cove-pages-review-wave.png'});
+ assert.ok(!before.equals(reviewAfter),'Pages preview shows genuinely moving sea');
  await review.evaluate(()=>window.dispatchEvent(new KeyboardEvent('keydown',
    {key:'ArrowUp',bubbles:true,cancelable:true})));
  await review.waitForTimeout(420);

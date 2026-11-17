@@ -70,7 +70,13 @@ test('the actor can approach the tide but the actual foot cannot enter the sea',
 test('preview is independent of the production village and cove, reuses approved 32px images',()=>{
  const html=readFileSync('previews/shoreline-study/index.html','utf8');
  assert.match(html,/from '..\/..\/data\/maps\/shoreline-study\/scene\.mjs'/);
- assert.match(html,/YK_LANDSCAPE\.groundLayer\(paint\)/);
+ assert.ok(html.includes('window.YK_LANDSCAPE.groundLayer(map)'));
+ assert.ok(html.includes("grassCover=(x,y)=>"),'sand/grass is a separate 4-corner tile junction');
+ assert.ok(html.includes("cutChip(grassMask,art.mask,cover,px,py)"),
+   'grass shapes reuse the existing 16-shape chip atlas');
+ assert.ok(html.includes("grassDiagonalChips"),'diagonal transitions are generated');
+ assert.ok(html.includes("ctx.drawImage(ground.staticMap,0,0)"),
+   'render contiguous static mapchip cache without re-cut 32px draw seams');
  assert.match(html,/destination-in/);
  assert.match(html,/drawImage\(art\.water,frame\*64/);
  assert.match(html,/32pxアニメマップチップ/);
@@ -79,7 +85,7 @@ test('preview is independent of the production village and cove, reuses approved
  assert.ok(html.includes('drawImage(tileAtlas.sheet,'));
  assert.ok(html.includes('animated-32px-atlas-chips'));
  assert.ok(html.includes('ctx.putImageData(tile,'));
- assert.ok(html.includes('drawImage(ground.staticMap,x*TILE,y*TILE,TILE,TILE'));
+ assert.ok(!html.includes('drawImage(ground.staticMap,x*TILE,y*TILE,TILE,TILE'),'never cut a composed map into cells again');
  assert.equal(html.includes('ctx.drawImage(tideLayers['),false,'do not redraw full-frame tide canvases');
  assert.equal(html.includes('buildTideLayers('),false,'remove the old overlay implementation');
  assert.ok(html.includes('drawCharacter(ctx,'));

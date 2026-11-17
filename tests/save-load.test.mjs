@@ -142,7 +142,8 @@ test('title continue opens distinct selectable manual and automatic checkpoints'
  const manual={savedAt:'2026-11-17T00:00:00Z',location:{scene:'village'},player:{lv:2,gold:25}};
  const auto={savedAt:'2026-11-17T00:03:00Z',location:{scene:'field'},player:{lv:3,gold:29}};
  const context={
-  document:{querySelector:key=>nodes[key],createElement:node,addEventListener(){}},
+  document:{baseURI:'https://example.test/kikokuno-hanamusubi/',
+    querySelector:key=>nodes[key],createElement:node,addEventListener(){}},
   window:{KIKOKU_ROUTE:{go:url=>calls.push(url)}},URL,Intl,Date,
   readManualGame:()=>manual,readAutoGame:()=>auto,
   restoreSavedGame:slot=>({accepted:true,slot}),

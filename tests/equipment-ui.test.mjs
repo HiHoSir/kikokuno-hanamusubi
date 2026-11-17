@@ -6,9 +6,10 @@ import * as rules from '../src/game/battle/rules.mjs';
 import {SHELL_KINDS} from '../src/game/items/shells.mjs';
 
 const source=readFileSync('src/game/ui/field-menu.mjs','utf8')
- .replace(/import \{[\s\S]*?\} from '\.\.\/battle\/rules\.mjs\?v=[^']+';\nimport \{readStoryStage\} from '\.\.\/story\/chapter-one\.mjs';\n/,'')
- .replace(/import \{readManualGame,readAutoGame,manualSaveLabel\} from '\.\.\/save\/save-game\.mjs\?v=[^']+';\n/,'')
- .replace(/import \{SHELL_KINDS\} from '\.\.\/items\/shells\.mjs';\n/,'');
+ .replace(/import \\{[\\s\\S]*?\\} from '\\.\\.\\/battle\\/rules\\.mjs\\?v=[^']+';\\n/,'')
+ .replace(/import \\{SHELL_KINDS\\} from '\\.\\.\\/items\\/shells\\.mjs';\\n/,'')
+ .replace(/import \\{readStoryStage\\} from '\\.\\.\\/story\\/chapter-one\\.mjs';\\n/,'')
+ .replace(/import \\{readManualGame,readAutoGame,manualSaveLabel\\} from '\\.\\.\\/save\\/save-game\\.mjs\\?v=[^']+';\\n/,'');
 if(source.includes('import {'))throw Error('Unable to isolate field menu for DOM interaction test');
 
 function makeNode(tag='div'){

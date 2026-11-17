@@ -91,7 +91,7 @@ export const ACTIONS=Object.freeze(['attack','bloom','heal','herb','food','guard
 export const DEFAULT_PLAYER=Object.freeze({
   lv:1,hp:26,maxhp:26,mp:12,maxmp:12,attack:9,defense:6,speed:9,
   equipmentTier:'T0',awakening:0,balanceVersion:2,
-  xp:0,gold:0,potions:3,foods:Object.freeze({onigiri:0,dango:0}),wins:0
+  xp:0,gold:0,potions:3,foods:Object.freeze({onigiri:0,dango:0}),wins:0,completedBattles:0
 });
 export function normalizePlayer(input={}){
   const lv=clamp(nonNegative(input?.lv,1),1,99);
@@ -128,7 +128,10 @@ export function normalizePlayer(input={}){
     xp:nonNegative(input?.xp,0),gold:nonNegative(input?.gold,0),
     potions:nonNegative(input?.potions,3),
     foods:Object.fromEntries(Object.keys(FOOD_ITEMS).map(id=>[id,clamp(nonNegative(input?.foods?.[id],0),0,99)])),
-    wins:nonNegative(input?.wins,0)
+    wins:nonNegative(input?.wins,0),
+    // Older saves only tracked wins; retain them as the minimum number
+    // of completed encounters rather than erasing past battle progress.
+    completedBattles:nonNegative(input?.completedBattles,nonNegative(input?.wins,0))
   };
 }
 export function readPlayer(storage=globalThis.localStorage){
@@ -250,6 +253,13 @@ export function createBattle(enemyId='field-oni',player=DEFAULT_PLAYER,random=Ma
   const state={hero,enemies,enemy:enemies[0],phase:'command',turn:1,guarding:false,events:[],outcome:null};
   const event=(text,kind='info')=>state.events.push({text,kind});
   const alive=()=>enemies.filter(e=>e.hp>0);
+  function finish(outcome){
+    // Exactly once per concluded encounter, including retreat and defeat.
+    // This drives the optional beach-shell replenishment every five battles.
+    if(state.outcome!==null)return;
+    hero.completedBattles++;
+    state.phase='result';state.outcome=outcome;
+  }
   function reward(){
     hero.wins++;
     const xp=enemies.reduce((s,e)=>s+e.xp,0),gold=enemies.reduce((s,e)=>s+e.gold,0);
@@ -261,7 +271,7 @@ export function createBattle(enemyId='field-oni',player=DEFAULT_PLAYER,random=Ma
       hero.hp=hero.maxhp;hero.mp=hero.maxmp;
       event('緋月は'+hero.lv+'段に上がった！','levelup');
     }
-    state.phase='result';state.outcome='victory';
+    finish('victory');
   }
   function enemyActions(guarding){
     for(const enemy of alive()){
@@ -273,7 +283,7 @@ export function createBattle(enemyId='field-oni',player=DEFAULT_PLAYER,random=Ma
         // Money is deducted once, at defeat; it is not restored on town return.
         const lost=Math.floor(hero.gold*.25);hero.gold-=lost;
         event('緋月は倒れた……'+lost+'両を失い、鬼灯村へ戻る。','defeat');
-        state.phase='result';state.outcome='defeat';return;
+        finish('defeat');return;
       }
     }
     state.turn++;state.phase='command';
@@ -322,7 +332,7 @@ export function createBattle(enemyId='field-oni',player=DEFAULT_PLAYER,random=Ma
     }else if(kind==='flee'){
       const chance=clamp(.70+(hero.speed-9)*.0015,.70,.85);
       if(roll(random)<chance){
-        state.phase='result';state.outcome='escape';
+        finish('escape');
         event('緋月はうまく逃げ出した。','escape');
         return {accepted:true,events:state.events.slice(),outcome:state.outcome};
       }

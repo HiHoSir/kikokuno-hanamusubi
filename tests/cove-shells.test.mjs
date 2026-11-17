@@ -26,7 +26,8 @@ test('production shell pickup sites are fixed, on sand, and do not overlap objec
  assert.match(render,/createShellAtlas\(/);
  assert.match(render,/SHELL_ART_SIZE/);
  assert.ok(render.includes('ctx.drawImage(staticArt.ground,0,0)'));
- assert.ok(render.includes('coastShallow'),'existing ocean/shore tiles remain intact');
+ assert.ok(render.includes('sandEdges[(x&1)+2*(y&1)]'),
+  'approved shoreline sand atlases replace the earlier static shallow-water outline');
 });
 test('each five completed battles creates 1–3 items, never every visit or frame',()=>{
  let state=initialCoveShells(0);

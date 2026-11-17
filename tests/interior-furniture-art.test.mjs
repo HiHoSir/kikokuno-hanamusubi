@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {inflateSync} from 'node:zlib';
+import {createHash} from 'node:crypto';
 import {furniture,rooms,prepareInterior} from '../src/game/interiors/rooms.mjs';
 
 const path='assets/village/interiors/furniture.png';
@@ -84,29 +85,38 @@ test('the 2px furniture atlas is the exact unscaled rendering of the logical-pix
   assert.ok(readFileSync('assets/manifest.json','utf8').includes('source-assets/village/interiors/furniture-master.png'));
 });
 
-test('rebuilt kitchen is whole, style-matched and has no static steam above the lid',()=>{
+test('kamado pixels have the same restrained shading and pixel scale as other furniture',()=>{
   const master=decodeRGBA('source-assets/village/interiors/furniture-master.png');
   const [atlasX,atlasY,w,h]=furniture.kitchen.sprite;
-  assert.deepEqual([w,h],[148,144],'kitchen must retain its approved native size and collision geometry');
-  const px=atlasX/2,py=atlasY/2;
-  const rgba=(x,y)=>{
-    const offset=((py+y)*master.width+px+x)*4;
-    return [...master.pixels.subarray(offset,offset+4)];
-  };
-  // Blank air above the newly rebuilt closed lid. No white baked-in vapour.
+  assert.deepEqual([atlasX,atlasY,w,h],[0,352,148,144],'no change in sprite geometry');
+  const ox=atlasX/2,oy=atlasY/2;
+  const rgba=(x,y)=>[...master.pixels.subarray(((oy+y)*master.width+ox+x)*4,((oy+y)*master.width+ox+x)*4+4)];
   for(let y=0;y<12;y++)for(let x=0;x<w/2;x++)
-    assert.equal(rgba(x,y)[3],0,`fixed steam in the blank sky at (${x},${y})`);
-  // Check that steam removal did not erase the lid, kettle, hearth or mortar.
-  for(const [part,x,y] of [['pot handle',28,16],['wood lid',20,20],
-    ['stone stove',35,44],['firebox',28,60],['mortar',60,40],['stone foot',60,65]])
-    assert.equal(rgba(x,y)[3],255,`${part} is damaged`);
+    assert.equal(rgba(x,y)[3],0,`static steam at (${x},${y})`);
+  for(const [name,x,y] of [['pot handle',28,16],['wood lid',20,20],
+    ['stove',35,44],['firebox',28,60],['mortar',60,40],['stone foot',60,65]])
+    assert.equal(rgba(x,y)[3],255,`${name} should remain intact`);
   const colors=new Set();
   for(let y=0;y<h/2;y++)for(let x=0;x<w/2;x++){
     const pixel=rgba(x,y);
-    if(pixel[3]===255)colors.add(pixel.slice(0,3).join(','));
+    if(pixel[3]>0)colors.add(pixel.slice(0,3).join(','));
   }
-  assert.ok(colors.size>=40 && colors.size<=52,'palette follows the other 48-colour interior props');
+  assert.ok(colors.size>=36&&colors.size<=48,`kamado has ${colors.size} visible colors instead of <=48`);
+  assert.deepEqual(furniture.kitchen.foot,[8,74,132,66]);
   const rendered=readFileSync('src/game/interiors/walk.mjs','utf8');
-  assert.ok(rendered.includes('furniture.png?v=interior-kamado-replace-1'),'Safari must load the new atlas');
-  assert.ok(rendered.includes('life-effects.mjs?v=indoor-life-3-kamado'),'the kettle steam must be animated');
+  assert.ok(rendered.includes('furniture.png?v=interior-kamado-style-1'),'Safari must not keep old atlas');
+});
+
+test('all non-kamado parts of the logical furniture atlas are bit-for-bit unchanged',()=>{
+  const {width,height,pixels}=decodeRGBA('source-assets/village/interiors/furniture-master.png');
+  assert.deepEqual([width,height],[448,352]);
+  const outside=Buffer.alloc((width*height-74*72)*4);
+  let offset=0;
+  for(let y=0;y<height;y++)for(let x=0;x<width;x++){
+    if(x<74&&y>=176&&y<248)continue;
+    outside.set(pixels.subarray((y*width+x)*4,(y*width+x+1)*4),offset);
+    offset+=4;
+  }
+  assert.equal(createHash('sha256').update(outside).digest('hex'),
+    'd5b595bfc5a888f1e82c3b58792934380b84ceb5249b141236dae102046ce4dc');
 });

@@ -20,19 +20,23 @@ const rockCells=new Set([
   [16,9],[17,9],[18,9],[13,25],[14,25],
   [30,7],[28,9],[31,23],[33,25],[37,27]
 ].map(([x,y])=>cellKey(x,y)));
-const clusters=[
-  [4,4,5,4],[10,2,5,4],[17,3,6,4],[4,15,5,6],
-  [9,17,5,4],[4,23,5,3],[12,27,4,4],[21,27,5,4]
-];
-// Break the old rectangular dark forest blocks into authored clipped
-// silhouettes, while keeping every blocked tile explicit in the map data.
-const denseScrub=(x,y)=>clusters.some(([left,top,w,h],index)=>{
- const dx=x-left,dy=y-top;
- if(dx<0||dx>=w||dy<0||dy>=h)return false;
- if((dx===0&&dy===0)||(dx===w-1&&dy===h-1))return false;
- if(index%2===0&&dx===w-1&&dy===0)return false;
- if(index%2===1&&dx===0&&dy===h-1)return false;
- return true;
+// Hand-authored native 32px forest footprints. Each row is a contiguous
+// [left,right] inclusive span, widening and narrowing to make rounded groves
+// instead of clipped rectangular collision slabs. The common 16-corner
+// forest atlas clips their visual edges; no canvas-drawn vegetation patches.
+export const COVE_GROVES=Object.freeze([
+  [4, [[6,7],[5,8],[4,8],[4,9],[5,8],[6,7]]],
+  [2, [[12,13],[11,14],[10,15],[10,15],[11,14],[12,13]]],
+  [3, [[19,21],[18,22],[17,22],[17,23],[18,22],[20,21]]],
+  [15,[[5,6],[4,8],[4,9],[4,9],[5,9],[5,8],[6,8]]],
+  [17,[[11,12],[10,14],[9,14],[9,15],[10,14],[11,13]]],
+  [23,[[6,7],[5,8],[4,9],[5,8],[6,7]]],
+  [27,[[13,14],[12,15],[12,16],[13,15],[14,14]]],
+  [27,[[23,24],[22,25],[21,26],[21,26],[22,25],[23,24]]]
+]);
+const denseScrub=(x,y)=>COVE_GROVES.some(([north,spans])=>{
+  const range=spans[y-north];
+  return range!==undefined&&x>=range[0]&&x<=range[1];
 });
 // Terrain legend: g grass, s sandy foreshore, ~ moving sea,
 // t thick impassable scrub, r boulders. No hidden object collisions.
@@ -63,8 +67,13 @@ export const COVE_MAP=Object.freeze({
  objects:Object.freeze([
   {kind:'basket',x:20,y:18},{kind:'barrel',x:18,y:19},
   {kind:'rocks',x:17,y:9},{kind:'rocks',x:13,y:25},
-  {kind:'flowers',x:17,y:13,chip:1},{kind:'flowers',x:22,y:25,chip:5},
-  {kind:'flowers',x:28,y:26,chip:11}
+  // A sparse sequence of native, single-tile flowers leads through the
+  // grass-to-beach transition without adding a trail overlay or blocking sand.
+  {kind:'flowers',x:11,y:8,chip:3},{kind:'flowers',x:16,y:10,chip:10},
+  {kind:'flowers',x:11,y:13,chip:9},{kind:'flowers',x:17,y:13,chip:1},
+  {kind:'flowers',x:16,y:22,chip:8},{kind:'flowers',x:21,y:24,chip:4},
+  {kind:'flowers',x:22,y:25,chip:5},{kind:'flowers',x:17,y:27,chip:12},
+  {kind:'flowers',x:28,y:26,chip:11},{kind:'flowers',x:19,y:30,chip:6}
  ])
 });
 export function tileAt(x,y,map=COVE_MAP){

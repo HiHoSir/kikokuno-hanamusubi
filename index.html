@@ -14,7 +14,7 @@
   <link rel="stylesheet" href="./src/title/title.css?v=dotgothic16">
   <link rel="stylesheet" href="./src/game/ui/landscape-only.css?v=1">
   <script type="module" src="./src/game/ui/landscape-only.mjs?v=1"></script>
-  <script type="module" src="./src/title/title.js"></script>
+  <script type="module" src="./src/title/title.js?v=save-slots-1"></script>
 <link rel="stylesheet" href="./src/game/audio/audio.css">
 <script type="module" src="./src/game/audio/boot.mjs"></script>
 </head>
@@ -26,9 +26,15 @@
       </h1>
       <nav class="title-menu" aria-label="タイトルメニュー">
         <a class="title-start" href="./src/opening/?build=equipment-4slots-2-ui-1"><span>はじめから</span></a>
-        <button type="button" disabled><span>つづきから</span></button>
+        <button type="button" id="title-continue" disabled><span>つづきから</span></button>
         <button type="button" id="show-demo"><span>デモを見る</span></button>
       </nav>
+      <section id="title-load" class="title-load" aria-label="記録を読み込む" hidden>
+        <h2>つづきから</h2>
+        <div id="title-load-slots" class="title-load-slots"></div>
+        <p id="title-load-message" role="status" aria-live="polite"></p>
+        <button id="title-load-back" type="button">もどる</button>
+      </section>
     </div>
     <section class="title-demo" aria-label="デモ" hidden>
       <img id="demo-image" alt="">

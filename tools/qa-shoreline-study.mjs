@@ -60,11 +60,13 @@ try{
  const after=await page.evaluate(()=>({...window.__SHORE_QA}));
  assert.ok(after.hero.y<yBefore-20,'direction must move the sprite on sand/grass');
  await page.locator('#grid').click();
+ await page.waitForFunction(()=>window.__SHORE_QA?.grid===true,null,{timeout:2000});
  const debug=await page.evaluate(()=>window.__SHORE_QA);
  assert.equal(debug.grid,true);
  await page.screenshot({path:'artifacts/shoreline-study-grid.png'});
  await page.locator('#reset').click();
- await page.waitForTimeout(80);
+ await page.waitForFunction(()=>window.__SHORE_QA?.hero?.x===336&&
+   window.__SHORE_QA?.hero?.y===432,null,{timeout:2000});
  const reset=await page.evaluate(()=>window.__SHORE_QA.hero);
  assert.equal(reset.x,336);assert.equal(reset.y,432);
  assert.deepEqual(errors,[],'no broken assets or runtime exceptions');

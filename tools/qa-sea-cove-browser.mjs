@@ -77,6 +77,10 @@ try{
  assert.equal(initial.surf.chipSize,32,'surf must be native 32px animated mapchips');
  assert.equal(initial.surf.mode,'animated-native-32px-mapchips');
  assert.equal(initial.surf.orientation,'sea-east');
+ assert.equal(initial.surf.landJoin,'masked-16-corner-grass-sand',
+   'sand/grass boundary uses auto-connected native chips');
+ assert.ok(initial.surf.grassCornerChips>12,
+   'visible irregular grass border has several connected corner chips');
  assert.ok(initial.surf.tileCount>=25,'entire authored cove coast is covered by surf chips');
  assert.equal(initial.surf.atlas[0]%32,0);
  assert.equal(initial.surf.atlas[1]%32,0);

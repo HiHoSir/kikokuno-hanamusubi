@@ -23,6 +23,12 @@ export const coastMask=(map,x,y)=>{
  return (dry(x,y)?1:0)|(dry(x+1,y)?2:0)|
    (dry(x+1,y+1)?4:0)|(dry(x,y+1)?8:0);
 };
+// Use the same approved corner atlas for the distant sand/grass join.
+export const grassCornerMask=(map,x,y)=>{
+ const green=(cx,cy)=>['g','t'].includes(tileAt(cx,cy,map));
+ return (green(x,y)?1:0)|(green(x+1,y)?2:0)|
+   (green(x+1,y+1)?4:0)|(green(x,y+1)?8:0);
+};
 const chip=(ctx,atlas,mask,px,py)=>{
  ctx.drawImage(atlas,(mask%4)*TILE,Math.floor(mask/4)*TILE,
    TILE,TILE,px,py,TILE,TILE);
@@ -30,18 +36,42 @@ const chip=(ctx,atlas,mask,px,py)=>{
 export function prepareCoveArt(map=COVE_MAP,art){
  const pixelWidth=map.width*TILE,pixelHeight=map.height*TILE;
  const ground=canvas(pixelWidth,pixelHeight);
+ const green=canvas(pixelWidth,pixelHeight);
+ const greenCoverage=canvas(pixelWidth,pixelHeight);
  const mask=canvas(pixelWidth,pixelHeight);
- const foam=[];
- // Compose *native 32px tiles* once; no runtime terrain shapes or stretched
- // painted backdrop. Water remains a separate moving underlay.
+ const foam=[],treesAndRocks=[];
+ // Every dry cell begins as a native sand tile, then an approved 16-corner
+ // mask smoothly joins distant grass. We never resample a large landscape
+ // image into independently stretched tile rectangles.
  for(let y=0;y<map.height;y++)for(let x=0;x<map.width;x++){
    const type=tileAt(x,y,map);
-   const variation=((x*13+y*19)>>>0);
    if(type==='~')continue;
-   const image=type==='s'?art.sand:type==='t'?art.forest:
-     type==='r'?art.rocks:art.grass;
-   drawTile(ground.ctx,image,x,y,variation);
+   const variation=((x*13+y*19)>>>0);
+   drawTile(ground.ctx,art.sand,x,y,variation);
+   drawTile(green.ctx,art.grass,x,y,variation);
+   if(type==='t'||type==='r')treesAndRocks.push({x,y,type,variation});
  }
+ greenCoverage.ctx.fillStyle='#fff';
+ greenCoverage.ctx.fillRect(0,0,pixelWidth,pixelHeight);
+ let grassCornerChips=0;
+ for(let y=-1;y<map.height;y++)for(let x=-1;x<map.width;x++){
+   const cover=grassCornerMask(map,x,y);
+   if(cover===15)continue;
+   const px=x*TILE+TILE/2,py=y*TILE+TILE/2;
+   greenCoverage.ctx.clearRect(px,py,TILE,TILE);
+   if(cover>0){
+     chip(greenCoverage.ctx,art.coastMask,cover,px,py);
+     grassCornerChips++;
+   }
+ }
+ green.ctx.globalCompositeOperation='destination-in';
+ green.ctx.drawImage(greenCoverage.surface,0,0);
+ green.ctx.globalCompositeOperation='source-over';
+ ground.ctx.drawImage(green.surface,0,0);
+ // Large rocks and dense, unwalkable forest remain native opaque mapchips;
+ // they never create hidden collision where the beach is walkable.
+ for(const {x,y,type,variation} of treesAndRocks)
+   drawTile(ground.ctx,type==='t'?art.forest:art.rocks,x,y,variation);
  mask.ctx.fillStyle='#fff';
  mask.ctx.fillRect(0,0,pixelWidth,pixelHeight);
  // This offset-quarter shoreline matches the 16-bitmask atlas used by the
@@ -59,7 +89,7 @@ export function prepareCoveArt(map=COVE_MAP,art){
  ground.ctx.globalCompositeOperation='destination-in';
  ground.ctx.drawImage(mask.surface,0,0);
  ground.ctx.globalCompositeOperation='source-over';
- return {ground:ground.surface,foam,shoreMask:mask.surface};
+ return {ground:ground.surface,foam,shoreMask:mask.surface,grassCornerChips};
 }
 // Compile the accepted 8-phase shoreline animation into 32x32 mapchip frames.
 // This cove has sea to the EAST, so the sea/land boundary is measured from
@@ -203,7 +233,9 @@ export function createCoveRenderer(ctx,art,map=COVE_MAP){
  render.surfInfo={
    chipSize:TILE,frames:surf.frames,tileCount:surf.entries.length,
    atlas:[surf.sheet.width,surf.sheet.height],coverage:surf.coverage,
-   mode:'animated-native-32px-mapchips',orientation:'sea-east'
+   mode:'animated-native-32px-mapchips',orientation:'sea-east',
+   landJoin:'masked-16-corner-grass-sand',
+   grassCornerChips:staticArt.grassCornerChips
  };
  return render;
 }

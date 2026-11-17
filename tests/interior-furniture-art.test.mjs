@@ -83,3 +83,21 @@ test('the 2px furniture atlas is the exact unscaled rendering of the logical-pix
   assert.ok(render.includes('interior-wall-anchor-1'));
   assert.ok(readFileSync('assets/manifest.json','utf8').includes('source-assets/village/interiors/furniture-master.png'));
 });
+
+test('kitchen sprite removes the permanently painted steam above the kettle',()=>{
+  const master=decodeRGBA('source-assets/village/interiors/furniture-master.png');
+  const [atlasX,atlasY]=furniture.kitchen.sprite;
+  const px=atlasX/2, py=atlasY/2;
+  const alpha=(x,y)=>master.pixels[((py+y)*master.width+px+x)*4+3];
+  // This used to be a large white steam plume, painted into the static sprite.
+  for(let y=2;y<=17;y++) for(let x=14;x<=34;x++)
+    assert.equal(alpha(x,y),0,`static kitchen steam at logical pixel (${x},${y})`);
+  for(let x=14;x<24;x++)assert.equal(alpha(x,18),0,'bottom of painted plume must also be removed');
+  // The underlying stove, lid and firebox retain their authored pixels.
+  assert.ok(alpha(20,26)>0,'wooden kettle lid survives');
+  assert.ok(alpha(24,46)>0,'stone stove survives');
+  assert.ok(alpha(23,59)>0,'firebox survives');
+  const rendered=readFileSync('src/game/interiors/walk.mjs','utf8');
+  assert.match(rendered,/furniture\.png\?v=interior-wall-anchor-1-no-baked-steam-1/,'Safari should not load old artwork');
+  assert.match(rendered,/life-effects\.mjs\?v=indoor-life-2/,'moving steam must load');
+});

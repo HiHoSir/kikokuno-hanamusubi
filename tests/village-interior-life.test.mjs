@@ -42,7 +42,8 @@ test('heat and vapour animate only at real furniture sources, without canvas sca
     }
   }
   assert.notDeepEqual(collectPaints('hearth',0),collectPaints('hearth',180));
-  assert.notDeepEqual(collectPaints('kitchen',0),collectPaints('kitchen',400));
+  assert.deepEqual(FURNITURE_LIFE_EMITTERS.kitchen,[{kind:'fire',x:58,y:115},{kind:'steam',x:56,y:48}]);
+  assert.notDeepEqual(collectPaints('kitchen',0),collectPaints('kitchen',420));
   assert.notDeepEqual(collectPaints('teaCounter',0),collectPaints('teaCounter',420));
   assert.deepEqual(collectPaints('hearth',0,true),collectPaints('hearth',9000,true));
   assert.deepEqual(collectPaints('teaTable',0,true),collectPaints('teaTable',9000,true));

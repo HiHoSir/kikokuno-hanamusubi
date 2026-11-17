@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {TILE,WIDTH,HEIGHT,MAP,SHORE_Y,SAND_DEPTH,START,terrainAt,walkable,safeFoot,shoreCover,validateShore}
+import {TILE,WIDTH,HEIGHT,MAP,SHORE_Y,SAND_DEPTH,START,SCENERY,sceneryCollision,canStandWithScenery,terrainAt,walkable,safeFoot,shoreCover,validateShore}
  from '../data/maps/shoreline-study/scene.mjs';
 import {TIDE_FRAMES,TIDE_INTERVAL_MS,tideFrame,surfFront,surfSample}
  from '../data/maps/shoreline-study/tide.mjs';
@@ -67,6 +67,29 @@ test('the actor can approach the tide but the actual foot cannot enter the sea',
  assert.equal(safeFoot(-10,200),false);
  assert.equal(safeFoot(300,100000),false);
 });
+test('only eight approved native-size shoreline objects and foot collisions are placed',()=>{
+ assert.equal(SCENERY.length,8);
+ assert.equal(SCENERY.filter(o=>o.kind==='rock').length,3);
+ assert.equal(SCENERY.filter(o=>o.kind==='grass-tuft').length,5);
+ assert.ok(SCENERY.every(o=>o.solid===(o.kind==='rock')));
+ assert.equal(new Set(SCENERY.map(o=>o.id)).size,SCENERY.length);
+ for(const object of SCENERY){
+  assert.ok(Number.isInteger(object.x)&&Number.isInteger(object.y));
+  assert.equal(terrainAt(Math.floor(object.x/TILE),Math.floor((object.y-1)/TILE)),
+   'grass','object foot must rest on dry grass');
+  if(object.solid){
+   assert.ok(sceneryCollision(object.x,object.y),'rock foot actually blocks');
+   assert.equal(canStandWithScenery(object.x,object.y),false);
+  }else{
+   assert.equal(sceneryCollision(object.x,object.y),false,
+    'walk-through ground cover does not add invisible collision');
+  }
+ }
+ assert.equal(canStandWithScenery(START.x,START.y),true,'start is never hidden by props');
+ assert.ok(!sceneryCollision(START.x,START.y));
+ assert.equal(canStandWithScenery(0,0),false,'ocean remains blocked');
+});
+
 test('preview is independent of the production village and cove, reuses approved 32px images',()=>{
  const html=readFileSync('previews/shoreline-study/index.html','utf8');
  assert.match(html,/from '..\/..\/data\/maps\/shoreline-study\/scene\.mjs'/);
@@ -88,7 +111,12 @@ test('preview is independent of the production village and cove, reuses approved
  assert.ok(!html.includes('drawImage(ground.staticMap,x*TILE,y*TILE,TILE,TILE'),'never cut a composed map into cells again');
  assert.equal(html.includes('ctx.drawImage(tideLayers['),false,'do not redraw full-frame tide canvases');
  assert.equal(html.includes('buildTideLayers('),false,'remove the old overlay implementation');
- assert.ok(html.includes('drawCharacter(ctx,'));
+ assert.ok(html.includes("ctx.drawImage(bitmap,Math.round(actor.x-w/2),Math.round(actor.y-h))"),
+   'scenery sprites must be drawn at their native image pixel dimensions');
+ assert.ok(html.includes("sort((a,b)=>a.y-b.y"),'occlusion is sorted by contact foot');
+ assert.ok(html.includes("canStandWithScenery(nx,ny)"),'actor collision respects rock foot');
+ assert.ok(html.includes("sceneryRender:'unscaled-native-sprites-sorted-by-foot'"));
+  assert.ok(html.includes('drawCharacter(ctx,'));
  assert.ok(html.includes("characterSheet:'village-80x112'"));
  assert.match(html,/data-dir="up"/);
  assert.match(html,/aria-label="四方向移動"/);
@@ -97,6 +125,8 @@ test('preview is independent of the production village and cove, reuses approved
  const manifest=JSON.parse(readFileSync('assets/manifest.json','utf8'));
  for(const asset of [
    'assets/characters/hizuki/walk-4dir-80x112.png',
+   'assets/village/objects/rocks.png',
+   'assets/village/terrain/grass-tuft.png',
    'assets/field/effects/water-motion.png',
    'assets/field/terrain/atlas/coast-mask-32.png',
    'assets/field/terrain/atlas/coast-shallow-32.png',

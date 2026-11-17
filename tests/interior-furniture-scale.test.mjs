@@ -30,6 +30,9 @@ test('all 16 furniture objects have independent native sizes and contact footpri
       assert.ok(fx+fw<=w && fy+fh<=h,name+' collision stays inside drawn sprite');
     }
   }
+  // A chest should not exceed the 80x112 hero frame by a large factor.
+  assert.deepEqual(furniture.tansu.sprite.slice(2),[120,108]);
+  assert.deepEqual(furniture.tansu.foot,[6,72,108,30]);
   assert.deepEqual(pngSize('source-assets/village/interiors/furniture-master.png'),[448,352]);
   assert.deepEqual(pngSize('assets/village/interiors/furniture.png'),[896,704]);
 });

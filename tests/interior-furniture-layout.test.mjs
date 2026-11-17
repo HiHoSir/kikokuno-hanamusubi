@@ -1,14 +1,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {rooms, furniture, prepareInterior} from '../src/game/interiors/rooms.mjs';
+import {rooms, furniture, prepareInterior, resolveFurniturePlacement} from '../src/game/interiors/rooms.mjs';
+import {BACK_WALL_FLOOR_Y,BACK_WALL_CONTACT_Y,SIDE_WALL_CLEAR_X,FRONT_WALL_TOP_OFFSET,FRONT_WALL_FURNITURE_GAP} from '../src/game/interiors/room-geometry.mjs';
 
 const HERO_RADIUS = 8;
 const GRID_STEP = 4;
 const CUSHION_COUNTS = {teahouse:4, inn:2, 'house-farm':2, 'house-family':2, 'house-craft':1};
 
 function layoutObjects(room) {
-  return room.furniture.map(([asset,x,y]) => {
-    const {sprite,foot} = furniture[asset];
+  return room.furniture.map(entry => {
+    const {asset,x,y,sprite,foot} = resolveFurniturePlacement(room,entry);
     const [, ,width,height] = sprite;
     return {asset,x,y,width,height,foot,depth:foot ? y+foot[1]+foot[3] : y+height};
   });
@@ -97,4 +98,23 @@ test('all seven rooms retain walkable routes, conversations, and hidden tansu se
       assert.ok(withinReach(x+w/2,y+h-4,true),`${name}: hidden item chest is no longer reachable`);
     }
   }
+});
+
+test('wall-mounted furniture stays aligned to actual architecture rather than fixed coordinates',()=>{
+  assert.equal(BACK_WALL_FLOOR_Y,128);
+  assert.equal(BACK_WALL_CONTACT_Y,BACK_WALL_FLOOR_Y+16);
+  for (const [name,room] of Object.entries(rooms)) {
+    for (const entry of room.furniture) {
+      const [asset,requestX,requestY]=entry;
+      const {x,y,foot,sprite}=resolveFurniturePlacement(room,entry);
+      if(requestY==='back-wall')assert.equal(y+foot[1],BACK_WALL_CONTACT_Y,name+':'+asset+' rear contact');
+      if(requestX==='left-wall')assert.equal(x,SIDE_WALL_CLEAR_X,name+':'+asset+' left contact');
+      if(requestX==='right-wall')assert.equal(x+sprite[2],room.width-SIDE_WALL_CLEAR_X,name+':'+asset+' right contact');
+      if(requestY==='front-wall')assert.equal(y+sprite[3],room.height-FRONT_WALL_TOP_OFFSET-FRONT_WALL_FURNITURE_GAP,name+':'+asset+' front contact');
+    }
+  }
+  const mandatory={teahouse:['merchantShelf','kitchen'],shop:['merchantShelf','tansu'],inn:['tansu'],armory:['weaponRack','tansu'],
+    'house-farm':['supplies','tansu'],'house-family':['tansu'],'house-craft':['merchantShelf','tansu','supplies']};
+  for(const [name,assets] of Object.entries(mandatory))for(const asset of assets)
+    assert.ok(rooms[name].furniture.some(([id,,y])=>id===asset&&y==='back-wall'),name+':'+asset+' missing rear wall anchor');
 });

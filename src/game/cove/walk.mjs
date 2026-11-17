@@ -33,7 +33,13 @@ const scenery={
  flowers:'assets/field/objects/wildflowers.png',
  water:'assets/field/effects/water-motion.png',
  coastMask:'assets/field/terrain/atlas/coast-mask-32.png',
- coastShallow:'assets/field/terrain/atlas/coast-shallow-32.png'
+ coastShallow:'assets/field/terrain/atlas/coast-shallow-32.png',
+ // Exact accepted shoreline-study atlas set: one connected coast chip from
+ // the four existing 16-corner sand atlases, no newly drawn substitute.
+ coastSand0:'assets/field/terrain/atlas/coast-sand-0-32.png',
+ coastSand1:'assets/field/terrain/atlas/coast-sand-1-32.png',
+ coastSand2:'assets/field/terrain/atlas/coast-sand-2-32.png',
+ coastSand3:'assets/field/terrain/atlas/coast-sand-3-32.png'
 };
 const image=async path=>{
  const resource=new Image();
@@ -84,7 +90,7 @@ async function start(){
   if(images[id].naturalWidth<32||images[id].naturalHeight<32)
    throw Error('32pxマップチップの寸法が不足しています: '+id);
  }
- for(const id of ['coastMask','coastShallow']){
+ for(const id of ['coastMask','coastShallow','coastSand0','coastSand1','coastSand2','coastSand3']){
   if(images[id].naturalWidth!==128||images[id].naturalHeight!==128)
    throw Error('海岸線の16チップアトラスが不正です: '+id);
  }

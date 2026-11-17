@@ -308,6 +308,10 @@ for(const b of buttons){
  b.addEventListener('contextmenu',e=>e.preventDefault());
 }
 addEventListener('keydown',e=>{
+ if((e.key==='z'||e.key==='Z'||e.key==='Enter')&&!e.metaKey&&!e.ctrlKey&&!e.altKey){
+   if(e.target?.tagName==='BUTTON')return;
+   e.preventDefault();if(!e.repeat)pickShell();return;
+ }
  if(!keyToDir[e.key]||e.metaKey||e.altKey||e.ctrlKey)return;
  e.preventDefault();if(!e.repeat)input(e.key,keyToDir[e.key]);
 });
@@ -318,6 +322,16 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden)stop()});
 document.querySelector('#reset').addEventListener('click',()=>{hero={...START};stride=0;stop()});
 document.querySelector('#grid').addEventListener('click',e=>{
  grid=!grid;e.currentTarget.setAttribute('aria-pressed',String(grid));
+});
+canvas.addEventListener('pointerup',e=>{
+ if(e.pointerType==='mouse'&&e.button!==0)return;
+ const bounds=canvas.getBoundingClientRect();
+ const scale=(canvas.width/bounds.width)/(Math.min(devicePixelRatio||1,2)*1.18);
+ const x=Math.floor(camera.x)+(e.clientX-bounds.left)*scale;
+ const y=Math.floor(camera.y)+(e.clientY-bounds.top)*scale;
+ const tapped=remainingShells().find(shell=>
+   Math.hypot(x-shell.x,y-(shell.y-8))<16);
+ if(tapped)pickShell(tapped.id);
 });
 function resize(){
  const ratio=Math.min(devicePixelRatio||1,2),w=Math.round(innerWidth*ratio),h=Math.round(innerHeight*ratio);
@@ -374,6 +388,7 @@ function paint(now,art,ground,tileAtlas){
  // No stretched tile sprites, floating rocks or arbitrary camera-scale factors.
  const actors=[
    ...SCENERY.map(object=>({type:'object',...object})),
+   ...remainingShells().map(shell=>({type:'shell',...shell})),
    {type:'hero',x:hero.x,y:hero.y}
  ].sort((a,b)=>a.y-b.y||(a.type==='hero'?1:-1));
  for(const actor of actors){
@@ -382,6 +397,12 @@ function paint(now,art,ground,tileAtlas){
      const w=bitmap.naturalWidth??bitmap.width;
      const h=bitmap.naturalHeight??bitmap.height;
      ctx.drawImage(bitmap,Math.round(actor.x-w/2),Math.round(actor.y-h));
+   }else if(actor.type==='shell'){
+     const index=shellIndex[actor.kind];
+     ctx.drawImage(shellAtlas.canvas,index*SHELL_ART_SIZE,0,
+       SHELL_ART_SIZE,SHELL_ART_SIZE,
+       Math.round(actor.x-SHELL_ART_SIZE/2),Math.round(actor.y-SHELL_ART_SIZE+4),
+       SHELL_ART_SIZE,SHELL_ART_SIZE);
    }else{
      ctx.fillStyle='rgba(14,28,39,.34)';
      ctx.beginPath();ctx.ellipse(hero.x,hero.y-2,23,6,0,0,Math.PI*2);ctx.fill();
@@ -414,6 +435,15 @@ function paint(now,art,ground,tileAtlas){
    maxSandRows:Math.max(...SHORE_Y.map(y=>HEIGHT-y)),
    dryMapGenerated:true,shorelineTechnique:'4-corner-16-tile-mask',
    waveLayer:'synchronous-8-frame-32px-surf-mapchip-atlas',
+   shells:{seed:shellState.seed,spawned:SHELL_COUNT,
+     visible:remainingShells().length,
+     picked:shellState.picked.length,bag:{...shellState.bag},
+     gold:shellState.gold,worth:bagValue(shellState),
+     nearest:nearbyShell()?.id??null,
+     atlas:[shellAtlas.canvas.width,shellAtlas.canvas.height],
+     render:'native-20px-pixel-atlas',
+     savedSeparately:true,
+     positions:shellPoints.map(({id,kind,x,y})=>({id,kind,x,y}))},
    hero:{...hero},grid,draws};
 }
 async function start(){
@@ -463,6 +493,7 @@ async function start(){
      const nx=hero.x+dx*step,ny=hero.y+dy*step;
      if(canStandWithScenery(nx,ny)){hero.x=nx;hero.y=ny;stride+=step;walking=true;}
    }
+   refreshShellHud();
    paint(now,art,ground,tileAtlas);requestAnimationFrame(tick);
  }
  requestAnimationFrame(tick);

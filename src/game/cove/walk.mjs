@@ -6,10 +6,16 @@ import {pixelViewport} from '../village/render.mjs';
 import {readStoryStage,advanceStoryStage,objectiveForStage} from '../story/chapter-one.mjs';
 import {consumeRestorePosition} from '../save/save-game.mjs?v=save-slots-1';
 import {createCoveRenderer} from './render.mjs';
+import {readPlayer,savePlayer} from '../battle/rules.mjs';
+import {SHELL_KINDS,shellBagCount} from '../items/shells.mjs';
+import {
+ coveVisibleShells,nearestCoveShell,collectCoveShell,validateCoveShellSites
+} from '../../../data/maps/sea-cove/shells.mjs';
 
 const scene=document.querySelector('#scene');
 const load=document.querySelector('#load');
 const objective=document.querySelector('#objective');
+const shellHint=document.querySelector('#shell-hint');
 const buttons=[...document.querySelectorAll('[data-dir]')];
 const directions={up:[0,-1,1],down:[0,1,0],left:[-1,0,3],right:[1,0,2]};
 const keys={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',
@@ -67,6 +73,11 @@ export function linesForFisher(stage){
  ];
 }
 async function start(){
+ const invalidShellSites=validateCoveShellSites();
+ if(invalidShellSites.length)throw Error('貝殻の位置が不正です: '+invalidShellSites.join(', '));
+ // Normalize and persist new five-fight batches in the canonical player save.
+ let heroInventory=savePlayer(readPlayer());
+ let shells=coveVisibleShells(heroInventory);
  const images=Object.fromEntries(await Promise.all(
   Object.entries(scenery).map(async([id,path])=>[id,await image(path)])));
  for(const id of ['grass','sand','forest','rocks','water']){
@@ -110,6 +121,14 @@ async function start(){
    const stage=readStoryStage();
    objective.textContent=stage==='cove'?'浜辺にいる潮平を探そう':objectiveForStage(stage);
  };
+ function refreshShellHint(){
+   const nearest=nearestCoveShell(heroInventory,x,y);
+   const bag=shellBagCount(heroInventory.shells.bag);
+   const next=nearest?
+     SHELL_KINDS[nearest.kind].name+'を拾う：A':
+     '貝殻 '+bag+'個所持／浜辺 '+shells.length+'個（戦闘5回で補充）';
+   if(shellHint.textContent!==next)shellHint.textContent=next;
+ }
  refreshObjective();
  const viewport={step:1,bufferWidth:1,bufferHeight:1};
  const resize=()=>{
@@ -141,9 +160,10 @@ async function start(){
    }
    fishermen.lines=linesForFisher(readStoryStage());
    dialogue.update(residentInFront(x,y,face,[fishermen]),x,y);
+   refreshShellHint();
    const tick=Math.floor(now/180);
    if(!menuPaused&&(moving||tick!==lastRenderedFrame)){
-     renderer({x,y,face,distance,moving},fishermen,now,viewport);
+     renderer({x,y,face,distance,moving},fishermen,now,viewport,shells);
      lastRenderedFrame=tick;
    }
    scene.dataset.x=String(Math.floor(x/tileSize));
@@ -151,7 +171,24 @@ async function start(){
    requestAnimationFrame(frame);
  };
  const interact=()=>{
-   if(dialogue.advance())return;
+   if(dialogue.active){dialogue.advance();return;}
+   // Talking to the story NPC always takes precedence.
+   if(residentInFront(x,y,face,[fishermen])){
+     dialogue.open();return;
+   }
+   const shell=nearestCoveShell(heroInventory,x,y);
+   if(shell){
+     const result=collectCoveShell(heroInventory,shell.id,x,y);
+     if(result.accepted){
+       heroInventory=savePlayer(result.player);
+       shells=coveVisibleShells(heroInventory);
+       objective.textContent=result.message;
+       window.parent?.KIKOKU_GAME?.autosave?.(window);
+       lastRenderedFrame=-1;
+       refreshShellHint();
+       return;
+     }
+   }
    dialogue.open();
  };
  document.querySelector('#action-a')?.addEventListener('click',interact);
@@ -184,9 +221,18 @@ async function start(){
  addEventListener('game-menu-close',()=>{menuPaused=false;lastRenderedFrame=-1;});
  document.addEventListener('visibilitychange',()=>{if(document.hidden)clearInputs();});
  resize();new ResizeObserver(resize).observe(scene.parentElement);
- renderer({x,y,face,distance,moving:false},fishermen,performance.now(),viewport);
+ renderer({x,y,face,distance,moving:false},fishermen,performance.now(),viewport,shells);
+ refreshShellHint();
  load.hidden=true;
  window.KIKOKU_SAVE_SNAPSHOT=()=>({scene:'cove',position:{x,y,face}});
+ window.__COVE_SHELL_QA=()=>({
+   available:shells.length,
+   species:shells.map(item=>item.kind),
+   spots:shells.map(({id,x,y})=>({id,x,y})),
+   bag:{...heroInventory.shells.bag},
+   gold:heroInventory.gold,
+   completedBattles:heroInventory.completedBattles
+ });
  window.parent?.KIKOKU_GAME?.autosave?.(window);
  requestAnimationFrame(frame);
 }

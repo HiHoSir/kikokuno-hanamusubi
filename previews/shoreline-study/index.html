@@ -299,6 +299,9 @@ function paint(now,art,ground,tileAtlas){
    landJoin:ground.landJoin,
    sandCells:MAP.flat().filter(t=>t==='sand').length,
    seaCells:MAP.flat().filter(t=>t==='sea').length,
+   grassCells:MAP.flat().filter(t=>t==='grass').length,
+   minSandRows:Math.min(...SHORE_Y.map(y=>HEIGHT-y)),
+   maxSandRows:Math.max(...SHORE_Y.map(y=>HEIGHT-y)),
    dryMapGenerated:true,shorelineTechnique:'4-corner-16-tile-mask',
    waveLayer:'synchronous-8-frame-32px-surf-mapchip-atlas',
    hero:{...hero},grid,draws};

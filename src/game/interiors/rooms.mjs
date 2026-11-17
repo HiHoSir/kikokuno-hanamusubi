@@ -44,8 +44,9 @@ export const rooms = {
     name:'茶店', width:768, height:576, floor:'cedar', windows:[176,480],
     tatami:{origin:[64,300],rows:['AABCCDEF','GGBIIDEF']},
     furniture:[
-      ['merchantShelf',76,100], ['teaCounter',276,132], ['kitchen',540,124],
-      ['teaTable',108,328], ['teaTable',488,328],
+      ['merchantShelf',68,100], ['teaCounter',274,132], ['kitchen',544,124],
+      ['teaTable',130,324], ['teaTable',484,324],
+      ['cushion',72,362], ['cushion',300,362], ['cushion',426,362], ['cushion',646,362],
     ],
     destinations:[[388,276],[188,480],[568,480]],
     resident:{asset:'shop-clerk',name:'茶店の店番',counter:'teaCounter',lines:['いらっしゃい。おにぎりと団子もあるよ。旅のお供にどうだい？']},
@@ -53,8 +54,8 @@ export const rooms = {
   shop: {
     name:'物販店', width:704, height:544, floor:'cedar', windows:[294],
     furniture:[
-      ['merchantShelf',56,100], ['merchantShelf',480,100],
-      ['shopCounter',240,224], ['supplies',76,340], ['tansu',508,340],
+      ['merchantShelf',56,102], ['merchantShelf',500,102],
+      ['shopCounter',246,238], ['supplies',56,326], ['tansu',512,308],
     ],
     destinations:[[352,376],[180,268],[528,292]],
     resident:{asset:'shop-clerk',name:'物販店の店番',counter:'shopCounter',lines:['旅支度なら、うちの品を見ていってくださいな。']},
@@ -64,9 +65,9 @@ export const rooms = {
     tatami:{origin:[56,140],rows:['ABCCDEEFH','ABGIDJJFK','LLGIMMNNK']},
     partitions:[[32,380,88],[216,380,400],[712,380,88]],
     furniture:[
-      ['blueFuton',192,150], ['redFuton',368,150], ['blueFuton',592,150],
-      ['tansu',48,144], ['tansu',656,422],
-      ['innCounter',72,426], ['cushion',496,490], ['cushion',572,490], ['shoeRack',548,564],
+      ['blueFuton',220,158], ['redFuton',388,158], ['blueFuton',592,158],
+      ['tansu',56,150], ['tansu',652,430],
+      ['innCounter',96,432], ['cushion',332,532], ['cushion',400,532], ['shoeRack',534,534],
     ],
     destinations:[[176,592],[168,380],[664,380],[240,320],[416,320],[640,320]],
     resident:{asset:'shop-clerk',name:'宿の店番',counter:'innCounter',lines:['お疲れさまです。客間は奥にございます。']},
@@ -74,8 +75,8 @@ export const rooms = {
   armory: {
     name:'兵具屋', width:736, height:544, floor:'walnut', windows:[312],
     furniture:[
-      ['weaponRack',92,94], ['weaponRack',520,94], ['tansu',302,116],
-      ['weaponCounter',256,224], ['supplies',80,350], ['supplies',548,350],
+      ['weaponRack',92,108], ['weaponRack',520,108], ['tansu',302,112],
+      ['weaponCounter',266,268], ['supplies',72,332], ['supplies',548,332],
     ],
     destinations:[[368,400],[156,272],[584,272]],
     resident:{asset:'shop-clerk',name:'兵具屋の店番',counter:'weaponCounter',lines:['いらっしゃい。初めての旅なら、丈夫な兵具を揃えていきな。']},
@@ -85,8 +86,8 @@ export const rooms = {
     earth:[[36,136,164,284]],
     tatami:{origin:[200,140],rows:['ABCCH','ABDEE','FFDGG']},
     furniture:[
-      ['supplies',56,136], ['kitchen',48,284], ['tansu',436,128],
-      ['hearth',264,204], ['cushion',212,316], ['cushion',412,316],
+      ['supplies',56,138], ['kitchen',44,270], ['tansu',446,138],
+      ['hearth',274,218], ['cushion',208,312], ['cushion',420,312],
     ],
     destinations:[[132,408],[336,376],[516,276]],
     resident:{asset:'farm-worker',name:'農家の住人',at:[470,292],lines:['朝摘みの野菜をしまったところだよ。畑は家の外にあるよ。']},
@@ -95,8 +96,8 @@ export const rooms = {
     name:'家族の民家', width:672, height:528, floor:'cedar', windows:[112,410],
     tatami:{origin:[64,140],rows:['AABBCDD','EFFGCIJ','EKKGLIJ','MMNNLOO']},
     furniture:[
-      ['tansu',74,124], ['redFuton',412,140], ['blueFuton',524,140],
-      ['teaTable',140,292], ['cushion',368,324],
+      ['tansu',82,140], ['redFuton',408,152], ['blueFuton',524,152],
+      ['teaTable',156,296], ['cushion',96,342], ['cushion',330,342],
     ],
     destinations:[[220,452],[480,300],[584,300]],
     resident:{asset:'villager',name:'民家の住人',at:[448,330],lines:['緋月さま、いらっしゃい。どうぞ上がっていって。']},
@@ -105,8 +106,8 @@ export const rooms = {
     name:'仕事場のある民家', width:672, height:528, floor:'cedar', windows:[288,476],
     tatami:{origin:[364,140],rows:['AAB','CDB','CDE','FFE']},
     furniture:[
-      ['workbench',64,144], ['merchantShelf',76,276], ['supplies',238,136],
-      ['blueFuton',504,144], ['tansu',364,136], ['cushion',472,364],
+      ['workbench',68,150], ['merchantShelf',72,290], ['supplies',242,142],
+      ['blueFuton',516,150], ['tansu',370,140], ['cushion',470,350],
     ],
     destinations:[[192,436],[420,300],[540,316],[272,272]],
     resident:{asset:'elder',name:'職人',at:[264,306],lines:['道具は使ったあとが肝心じゃ。手入れをすれば長くもつぞ。']},

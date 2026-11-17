@@ -48,7 +48,7 @@ button{color:#faf2de;background:#243a4cdd;border:1px solid #c8b38e;border-radius
     <strong>浜辺の貝殻</strong>
     <p id="shell-bag">所持 0個｜買取 0両</p>
     <p id="shell-money">換金済み 0両（検証用）</p>
-    <p id="shell-progress">戦闘5勝ごとに貝殻補充</p>
+    <p id="shell-progress">戦闘5回ごとに貝殻補充</p>
     <div class="actions">
       <button id="sell-shells" type="button" disabled>まとめて売る（試作）</button>
     </div>
@@ -72,8 +72,8 @@ button{color:#faf2de;background:#243a4cdd;border:1px solid #c8b38e;border-radius
 import {TILE,WIDTH,HEIGHT,MAP,START,SHORE_Y,SCENERY,canStandWithScenery,shoreCover,safeFoot,validateShore} from '../../data/maps/shoreline-study/scene.mjs';
 import {TIDE_FRAMES,tideFrame,surfSample} from '../../data/maps/shoreline-study/tide.mjs';
 import {drawCharacter} from '../../src/game/village/residents.mjs';
-import {SHELL_SAVE_KEY,SHELL_KINDS,SHELL_COUNT,PICKUP_DISTANCE,
-  normalizeShellState,initialShellState,syncVictoryShells,validateShellSites,
+import {SHELL_SAVE_KEY,SHELL_KINDS,PICKUP_DISTANCE,
+  normalizeShellState,initialShellState,syncBattleShells,validateShellSites,
   gatherShell,sellAllShells,bagValue}
  from '../../data/maps/shoreline-study/shells.mjs';
 import {SHELL_ART_SIZE,createShellAtlas} from '../../data/maps/shoreline-study/shell-art.mjs';
@@ -98,12 +98,12 @@ const shellHud={
 function loadShells(){
  let stored=null;
  try{stored=JSON.parse(localStorage.getItem(SHELL_SAVE_KEY)||'null');}catch{}
- const wins=readPlayer().wins;
- const initial=stored?normalizeShellState(stored,wins):initialShellState(wins);
- return syncVictoryShells(initial,wins).state;
+ const battles=readPlayer().completedBattles;
+ const initial=stored?normalizeShellState(stored,battles):initialShellState(battles);
+ return syncBattleShells(initial,battles).state;
 }
 let shellState=loadShells();
-let shellMessage='戦闘5勝ごとに貝殻が補充される',lastShellHud='';
+let shellMessage='戦闘5回ごとに貝殻が補充される',lastShellHud='';
 function persistShells(){
  try{localStorage.setItem(SHELL_SAVE_KEY,JSON.stringify(shellState));}
  catch{shellMessage='このブラウザでは採集記録を保存できません。';}
@@ -117,12 +117,12 @@ function nearbyShell(){
  }
  return best;
 }
-function syncShellsWithWins(){
- const wins=readPlayer().wins;
- if(wins===shellState.lastWins)return;
- const result=syncVictoryShells(shellState,wins);
+function syncShellsWithBattles(){
+ const battles=readPlayer().completedBattles;
+ if(battles===shellState.lastBattles)return;
+ const result=syncBattleShells(shellState,battles);
  shellState=result.state;
- if(result.spawned) shellMessage='戦闘5勝達成！ 貝殻が'+result.spawned+'個流れ着いた。';
+ if(result.spawned) shellMessage='戦闘5回経過！ 貝殻が'+result.spawned+'個流れ着いた。';
  if(result.reset) shellMessage='冒険の記録が変わったので貝殻を初期化した。';
  persistShells();lastShellHud='';
 }
@@ -131,14 +131,14 @@ function refreshShellHud(){
  const count=Object.values(bag).reduce((sum,n)=>sum+n,0);
  const worth=bagValue(shellState);
  const nearby=nearbyShell();
- const wins=shellState.lastWins,until=5-wins%5;
+ const battles=shellState.lastBattles,until=5-battles%5;
  const value=[count,worth,shellState.gold,nearby?.id,shellMessage,
-   shellState.picked.length,shellState.onBeach.length,wins].join('|');
+   shellState.picked.length,shellState.onBeach.length,battles].join('|');
  if(value===lastShellHud)return;
  lastShellHud=value;
  shellHud.bag.textContent='所持 '+count+'個｜買取 '+worth+'両';
  shellHud.money.textContent='買取累計 '+shellState.gold+'両（検証用）';
- shellHud.progress.textContent='勝利 '+wins+'回／次の補充まで '+until+'勝';
+ shellHud.progress.textContent='戦闘 '+battles+'回／次の補充まで '+until+'回';
  shellHud.sell.disabled=worth===0;
  shellHud.pick.disabled=!nearby;
  shellHud.message.textContent=nearby?
@@ -425,8 +425,8 @@ function paint(now,art,ground,tileAtlas){
    maxSandRows:Math.max(...SHORE_Y.map(y=>HEIGHT-y)),
    dryMapGenerated:true,shorelineTechnique:'4-corner-16-tile-mask',
    waveLayer:'synchronous-8-frame-32px-surf-mapchip-atlas',
-   shells:{wins:shellState.lastWins,processedCycles:shellState.processedCycles,
-     untilNextBatch:5-shellState.lastWins%5,visible:remainingShells().length,
+   shells:{battles:shellState.lastBattles,processedCycles:shellState.processedCycles,
+     untilNextBatch:5-shellState.lastBattles%5,visible:remainingShells().length,
      picked:shellState.picked.length,bag:{...shellState.bag},
      gold:shellState.gold,worth:bagValue(shellState),
      nearest:nearbyShell()?.id??null,
@@ -484,7 +484,7 @@ async function start(){
      const nx=hero.x+dx*step,ny=hero.y+dy*step;
      if(canStandWithScenery(nx,ny)){hero.x=nx;hero.y=ny;stride+=step;walking=true;}
    }
-   if(draws%30===0)syncShellsWithWins();
+   if(draws%30===0)syncShellsWithBattles();
    refreshShellHud();
    paint(now,art,ground,tileAtlas);requestAnimationFrame(tick);
  }

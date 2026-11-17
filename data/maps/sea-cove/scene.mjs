@@ -7,6 +7,13 @@ export const COVE_SHORE=[
   31,32,33,34,35,35,34,33,31,30,29,28,27,26,25,25,26,
   26,27,28,29,30,31,33,34,35,36,37,38,39,39,39,39,39
 ];
+// The approved study demonstrated that a 3–5-cell beach is too narrow.
+// These authored depths give the cove 10–14 cells of open sand, not a forced
+// grass border running parallel to the foam. Terrain edits remain map data.
+export const COVE_SAND_DEPTH=Object.freeze([
+  10,10,11,11,12,12,11,11,10,10,10,11,11,12,12,12,12,
+  12,11,11,10,10,10,11,11,12,12,12,12,12,13,14,14,14
+]);
 const cellKey=(x,y)=>x+','+y;
 const rockCells=new Set([
   [9,5],[10,5],[11,5],[6,11],[7,11],[8,11],
@@ -17,27 +24,35 @@ const clusters=[
   [4,4,5,4],[10,2,5,4],[17,3,6,4],[4,15,5,6],
   [9,17,5,4],[4,23,5,3],[12,27,4,4],[21,27,5,4]
 ];
+// Break the old rectangular dark forest blocks into authored clipped
+// silhouettes, while keeping every blocked tile explicit in the map data.
+const denseScrub=(x,y)=>clusters.some(([left,top,w,h],index)=>{
+ const dx=x-left,dy=y-top;
+ if(dx<0||dx>=w||dy<0||dy>=h)return false;
+ if((dx===0&&dy===0)||(dx===w-1&&dy===h-1))return false;
+ if(index%2===0&&dx===w-1&&dy===0)return false;
+ if(index%2===1&&dx===0&&dy===h-1)return false;
+ return true;
+});
 // Terrain legend: g grass, s sandy foreshore, ~ moving sea,
 // t thick impassable scrub, r boulders. No hidden object collisions.
 const rows=Array.from({length:COVE_HEIGHT},(_,y)=>
   Array.from({length:COVE_WIDTH},(_,x)=>{
     if(x>=COVE_SHORE[y])return '~';
     if(x===0||x===COVE_WIDTH-1)return 't';
-    if(y>=32||y<=1)return 't';
+    if(y<=1)return 't';
+    // The southern gateway remains sand, without a blocky green corridor.
+    if(y>=32)return (x>=COVE_SHORE[y]-COVE_SAND_DEPTH[y])?'s':'t';
     if(rockCells.has(cellKey(x,y)))return 'r';
-    if(clusters.some(([left,top,w,h])=>x>=left&&x<left+w&&y>=top&&y<top+h))return 't';
-    const shoreWidth=(y<8||y>26)?3:5;
-    if(x>=COVE_SHORE[y]-shoreWidth)return 's';
+    // Beach takes priority over inland scrub so collision blobs cannot
+    // accidentally eat a walking corridor along the accepted coast.
+    if(x>=COVE_SHORE[y]-COVE_SAND_DEPTH[y])return 's';
+    if(denseScrub(x,y))return 't';
     return 'g';
   })
 );
-// A narrow way to the field, and a safe dry approach to the coast.
-for(let y=26;y<COVE_HEIGHT;y++)for(let x=26;x<=30;x++)rows[y][x]='g';
-for(let x=25;x<=31;x++)rows[31][x]='g';
-for(let x=26;x<=30;x++)rows[32][x]='g';
-for(let x=27;x<=29;x++)rows[33][x]='g';
-// The beach includes enough space on all sides of the fisher to talk to him.
-for(let y=14;y<=18;y++)for(let x=19;x<=24;x++)rows[y][x]='s';
+// The field entry, the southern exit and all sides of Ushiohei sit inside
+// the authored broad sand. Do not paint a rectangular grass path over it.
 const tiles=rows.map(row=>row.join(''));
 export const COVE_MAP=Object.freeze({
  id:'sea-cove',name:'海の入り江',tileSize:COVE_TILE_SIZE,
@@ -48,8 +63,8 @@ export const COVE_MAP=Object.freeze({
  objects:Object.freeze([
   {kind:'basket',x:20,y:18},{kind:'barrel',x:18,y:19},
   {kind:'rocks',x:17,y:9},{kind:'rocks',x:13,y:25},
-  {kind:'flowers',x:17,y:13},{kind:'flowers',x:22,y:25},
-  {kind:'flowers',x:28,y:26}
+  {kind:'flowers',x:17,y:13,chip:1},{kind:'flowers',x:22,y:25,chip:5},
+  {kind:'flowers',x:28,y:26,chip:11}
  ])
 });
 export function tileAt(x,y,map=COVE_MAP){

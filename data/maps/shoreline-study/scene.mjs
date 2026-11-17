@@ -26,6 +26,31 @@ export function safeFoot(px,py){
   return [[-9,-3],[9,-3],[-9,1],[9,1]].every(([dx,dy])=>
     walkable(Math.floor((px+dx)/TILE),Math.floor((py+dy)/TILE)));
 }
+
+// Stage 2 review: small, authored shoreline dressing only. Approved village
+// sprites are displayed in their ORIGINAL pixel dimensions, never resized.
+// Each foot is in world coordinates, independent of the terrain 32px grid.
+// Avoid regular cell-centre repetition so the coastline stays the focus.
+const foot=(tx,ty,dx=0,dy=0)=>Object.freeze({x:tx*TILE+16+dx,y:(ty+1)*TILE+dy});
+export const SCENERY=Object.freeze([
+  Object.freeze({id:'rock-west',kind:'rock',...foot(4,12,4,-4),solid:true,radius:13}),
+  Object.freeze({id:'rock-east',kind:'rock',...foot(18,13,-8,-5),solid:true,radius:13}),
+  Object.freeze({id:'rock-headland',kind:'rock',...foot(25,10,3,-3),solid:true,radius:13}),
+  Object.freeze({id:'grass-west',kind:'grass-tuft',...foot(2,14,-5,-7),solid:false,radius:0}),
+  Object.freeze({id:'grass-path',kind:'grass-tuft',...foot(8,12,-2,-5),solid:false,radius:0}),
+  Object.freeze({id:'grass-center',kind:'grass-tuft',...foot(15,13,7,-4),solid:false,radius:0}),
+  Object.freeze({id:'grass-east',kind:'grass-tuft',...foot(22,14,-3,-7),solid:false,radius:0}),
+  Object.freeze({id:'grass-headland',kind:'grass-tuft',...foot(27,11,5,-5),solid:false,radius:0})
+]);
+export function sceneryCollision(px,py){
+  // 9px actor-foot width. Tall sprite art does not create an invisible
+  // rectangle above the character's feet.
+  return SCENERY.some(o=>o.solid&&Math.hypot(px-o.x,py-o.y)<o.radius+9);
+}
+export function canStandWithScenery(px,py){
+  return safeFoot(px,py)&&!sceneryCollision(px,py);
+}
+
 // Cover in NW, NE, SE, SW order. This indexes the existing approved 4x4 atlas.
 export function shoreCover(x,y){
   return (terrainAt(x,y)!=='sea'?1:0)|

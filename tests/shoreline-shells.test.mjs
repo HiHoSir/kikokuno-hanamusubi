@@ -53,7 +53,7 @@ test('shell scatter is seeded, random-looking, sparse and never enters sea or ro
   assert.ok(Math.hypot(a[i].x-a[j].x,a[i].y-a[j].y)>=32,'no stacked shells');
  for(let seed=0;seed<12;seed++){
   const group=generateShells(seed);
-  assert.equal(group.length,SHELL_COUNT,'all tested seeds produce the requested 20');
+  assert.equal(group.length,SHELL_COUNT,'all tested seeds produce the requested shell count');
  }
 });
 

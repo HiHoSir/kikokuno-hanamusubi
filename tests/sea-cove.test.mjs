@@ -42,6 +42,9 @@ test('the sea cove is an authored 46x34 grid of native 32px tiles',()=>{
  assert.ok(COVE_MAP.tiles.join('').includes('t'));
  assert.ok(COVE_MAP.tiles.join('').includes('s'));
  assert.ok(COVE_MAP.tiles.join('').includes('r'));
+ const flowers=COVE_MAP.objects.filter(o=>o.kind==='flowers');
+ assert.equal(flowers.length,3,'do not paste a whole wildflower sheet as one prop');
+ assert.ok(flowers.every(o=>Number.isInteger(o.chip)&&o.chip>=0&&o.chip<16));
  const {x,y}=COVE_MAP.entry;
  assert.equal(walkablePoint(x,y),true);
  assert.equal(walkableCell(45,0),false);
@@ -124,6 +127,11 @@ test('masked native atlases preserve diagonal coastline and animated sea is sepa
  assert.match(renderer,/grassCornerMask\(map,x,y\)/);
  assert.match(renderer,/chip\(greenCoverage\.ctx,art\.coastMask,cover,px,py\)/);
  assert.match(renderer,/landJoin:'masked-16-corner-grass-sand'/);
+ assert.ok(renderer.includes("if(actor.kind==='flowers')"));
+ assert.ok(renderer.includes('ctx.drawImage(actor.image,sx,sy,TILE,TILE,'));
+ assert.ok(renderer.includes('Math.round(actor.x-TILE/2),Math.round(actor.y-TILE),TILE,TILE'));
+ assert.doesNotMatch(renderer,/if\(actor\.kind==='flowers'\)\{[^}]*actor\.image\.naturalWidth/,
+  'flower sprites must be cropped to one 32px source tile, not scaled entire sheets');
  assert.match(renderer,/const frame=Math\.floor\(time\/200\)/);
  assert.match(renderer,/staticArt\.ground/);
  assert.match(renderer,/coastShallow/);

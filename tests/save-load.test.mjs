@@ -161,7 +161,7 @@ test('title continue opens distinct selectable manual and automatic checkpoints'
  assert.ok(slots[0].children[0].textContent.includes('手動'));
  assert.ok(slots[1].children[0].textContent.includes('自動'));
  slots[1].click();
- assert.match(calls.at(-1),/src\/game\/\?build=save-slots-1/);
+ assert.match(String(calls.at(-1)),/src\/game\/\?build=save-slots-1/);
  nodes['#title-load-back'].click();
  assert.equal(nodes['.title-menu'].hidden,false);
  assert.match(readFileSync('index.html','utf8'),/id="title-continue"/);

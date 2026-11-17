@@ -70,7 +70,7 @@ test('the actor can approach the tide but the actual foot cannot enter the sea',
 test('preview is independent of the production village and cove, reuses approved 32px images',()=>{
  const html=readFileSync('previews/shoreline-study/index.html','utf8');
  assert.match(html,/from '..\/..\/data\/maps\/shoreline-study\/scene\.mjs'/);
- assert.match(html,/YK_LANDSCAPE\\.groundLayer\\(map\\)/);
+ assert.ok(html.includes('window.YK_LANDSCAPE.groundLayer(map)'));
  assert.ok(html.includes("grassCover=(x,y)=>"),'sand/grass is a separate 4-corner tile junction');
  assert.ok(html.includes("cutChip(grassMask,art.mask,cover,px,py)"),
    'grass shapes reuse the existing 16-shape chip atlas');

@@ -46,6 +46,12 @@ try{
  assert.ok(first.tileSheet[0]%32===0&&first.tileSheet[1]%32===0,
    '8-frame atlas dimensions align to native 32px source rectangles');
  assert.equal(first.characterSheet,'village-80x112','use the town-scale 80x112 Hizuki');
+ assert.equal(first.sceneryCount,8,'only a few props in the reviewed coast');
+ assert.equal(first.sceneryRender,'unscaled-native-sprites-sorted-by-foot');
+ assert.equal(first.scenery.filter(o=>o.solid).length,3);
+ assert.ok(Object.values(first.sceneryNativeSizes).every(([w,h])=>
+   Number.isInteger(w)&&Number.isInteger(h)&&w>0&&h>0&&w<=112&&h<=112),
+   'approved native-size objects must fit within the intended character scale');
  assert.ok(first.foamPixels>0,'actual visible surf pixels');
  assert.ok(first.seaCells>100&&first.sandCells>50);
  assert.ok(first.dryMapGenerated);
@@ -106,7 +112,8 @@ try{
    lowTide:{reach:low.tideReach,washed:low.washedPixels},
    highTide:{reach:high.tideReach,washed:high.washedPixels},
    retreat:{reach:retreat.tideReach,wet:retreat.wetPixels},
-   villageHero:true,landJoin:first.landJoin,grassEdgeChips:first.grassEdgeChips,
+   villageHero:true,sceneryCount:first.sceneryCount,sceneryNativeSizes:first.sceneryNativeSizes,
+   landJoin:first.landJoin,grassEdgeChips:first.grassEdgeChips,
    grassDiagonalChips:first.grassDiagonalChips,tileAtlas:true,
    animatedTileCount:first.animatedTileCount,
    tileSheet:first.tileSheet,yBefore,yAfter:after.hero.y,

@@ -76,7 +76,7 @@ import {SHELL_SAVE_KEY,SHELL_KINDS,PICKUP_DISTANCE,
   normalizeShellState,initialShellState,syncBattleShells,validateShellSites,
   gatherShell,sellAllShells,bagValue}
  from '../../data/maps/shoreline-study/shells.mjs';
-import {SHELL_ART_SIZE,createShellAtlas} from '../../data/maps/shoreline-study/shell-art.mjs';
+import {SHELL_ART_SIZE,createShellAtlas} from '../../src/game/items/shell-art.mjs';
 import {readPlayer} from '../../src/game/battle/rules.mjs';
 const canvas=document.querySelector('#scene'),ctx=canvas.getContext('2d',{alpha:false});
 const loading=document.querySelector('#loading');

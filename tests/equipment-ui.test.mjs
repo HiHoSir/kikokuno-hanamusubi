@@ -129,7 +129,7 @@ test('D-pad navigates slots and gear; empty head and feet remain visible and une
  assert.equal(detail.querySelectorAll('.equipment-gear-choice')[0].dataset.equipmentId,'none');
  ui.accept.click();
  assert.equal(ui.readPlayer().equipment.head,null);
- assert.match(ui.roots['#field-menu-message'].textContent,/装備中/);
+ assert.match(ui.roots['#field-menu-message'].textContent,/装備している/);
  ui.direction('left');
  assert.equal(detail.querySelectorAll('.equipment-slot-choice')[2].classList.contains('menu-focus'),true);
 });

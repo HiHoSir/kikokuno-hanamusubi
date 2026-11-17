@@ -107,6 +107,6 @@ test('rebuilt kitchen is whole, style-matched and has no static steam above the 
   }
   assert.ok(colors.size>=40 && colors.size<=52,'palette follows the other 48-colour interior props');
   const rendered=readFileSync('src/game/interiors/walk.mjs','utf8');
-  assert.match(rendered,/furniture\\.png\\?v=interior-kamado-replace-1/,'Safari must load the new atlas');
-  assert.match(rendered,/life-effects\\.mjs\\?v=indoor-life-3-kamado/,'the kettle steam must be animated');
+  assert.ok(rendered.includes('furniture.png?v=interior-kamado-replace-1'),'Safari must load the new atlas');
+  assert.ok(rendered.includes('life-effects.mjs?v=indoor-life-3-kamado'),'the kettle steam must be animated');
 });

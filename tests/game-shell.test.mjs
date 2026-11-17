@@ -6,7 +6,7 @@ import {runInNewContext} from 'node:vm';
 const shellSource=readFileSync('src/game/navigation/game-shell.mjs','utf8');
 const html=readFileSync('src/game/index.html','utf8');
 const boot=readFileSync('src/game/audio/boot.mjs','utf8');
-test('one top-level game document hosts all five production areas',()=>{
+test('one top-level game document hosts all production areas',()=>{
   assert.match(html,/id="game-scene"/);
   assert.match(html,/id="sound-toggle"/);
   assert.match(html,/game-shell\.mjs/);
@@ -14,6 +14,7 @@ test('one top-level game document hosts all five production areas',()=>{
   assert.match(shellSource,/src\/game\/interiors\//);
   assert.match(shellSource,/src\/field\//);
   assert.match(shellSource,/src\/game\/tenyo\//);
+  assert.ok(shellSource.includes("src/game/cove/"),'production cove route is in the game shell');
   assert.match(shellSource,/src\/game\/battle\//);
   assert.match(shellSource,/new URL\('src\/game\/village\/',root\)/);
   assert.match(boot,/const shared=parentGame\?\.audio/);

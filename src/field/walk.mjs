@@ -53,10 +53,22 @@ function shrineReturnPosition(){
   }catch{}
   return placeArrival('shrine');
 }
+function coveReturnPosition(){
+  try{
+    const prior=JSON.parse(sessionStorage.getItem(RETURN_KEY)||'null');
+    if(prior?.place==='cove'&&Number.isFinite(prior.x)&&Number.isFinite(prior.y)&&
+      world.walkable(prior.x,prior.y)&&contact(prior.x,prior.y)!=='cove'&&
+      Math.hypot(prior.x-world.places.cove.point[0],prior.y-world.places.cove.point[1])<256)
+      return [prior.x,prior.y];
+  }catch{}
+  return placeArrival('cove');
+}
 async function start() {
   const art=await loadFieldArt();
   const from=new URLSearchParams(location.search).get('from');
-  const [x, y] = from==='shrine' ? shrineReturnPosition() : from==='battle' ? battleReturnPosition() : villageArrival();
+  const [x, y] = from==='shrine' ? shrineReturnPosition() :
+    from==='cove' ? coveReturnPosition() :
+    from==='battle' ? battleReturnPosition() : villageArrival();
   const resumed=consumeRestorePosition('field');
   const safeResume=resumed&&world.walkable(resumed.x,resumed.y)&&!contact(resumed.x,resumed.y);
   const state = {x:safeResume?resumed.x:x,y:safeResume?resumed.y:y,
@@ -118,14 +130,15 @@ async function start() {
         window.KIKOKU_ROUTE.go(new URL('../game/village/?focus=field-exit', import.meta.url));
         return;
       }
-      if(destination==='shrine'){
+      if(destination==='shrine'||destination==='cove'){
         clearInput();
         try{
           sessionStorage.setItem(RETURN_KEY,JSON.stringify({
-            place:'shrine',x:completed.x,y:completed.y
+            place:destination,x:completed.x,y:completed.y
           }));
         }catch{}
-        window.KIKOKU_ROUTE.go(new URL('../game/tenyo/', import.meta.url));
+        const next=destination==='shrine'?'../game/tenyo/':'../game/cove/';
+        window.KIKOKU_ROUTE.go(new URL(next,import.meta.url));
         return;
       }
       // Enter battle only after several completed, walkable wilderness steps.
@@ -167,13 +180,14 @@ async function start() {
     if(destination==='village'){
       clearInput();
       window.KIKOKU_ROUTE.go(new URL('../game/village/?focus=field-exit',location.href));
-    }else if(destination==='shrine'){
+    }else if(destination==='shrine'||destination==='cove'){
       clearInput();
       const prior=state.motion??state;
       try{sessionStorage.setItem(RETURN_KEY,JSON.stringify({
-        place:'shrine',x:prior.x,y:prior.y
+        place:destination,x:prior.x,y:prior.y
       }));}catch{}
-      window.KIKOKU_ROUTE.go(new URL('../game/tenyo/',location.href));
+      const next=destination==='shrine'?'../game/tenyo/':'../game/cove/';
+      window.KIKOKU_ROUTE.go(new URL(next,location.href));
     }
   });
   const backAction=document.querySelector('#action-b');

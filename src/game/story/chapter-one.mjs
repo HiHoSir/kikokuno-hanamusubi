@@ -1,7 +1,7 @@
 // Shared chapter-one progression across the village, shrine and future field areas.
 // Keep the legacy localStorage key for existing iPhone saves.
 export const CHAPTER_ONE_KEY='kikokuno-hanamusubi-chapter-one';
-export const CHAPTER_ONE_STAGES=Object.freeze(['chief','shrine','cove']);
+export const CHAPTER_ONE_STAGES=Object.freeze(['chief','shrine','cove','forest']);
 export function normalizeStage(value){
   return CHAPTER_ONE_STAGES.includes(value)?value:'chief';
 }
@@ -19,6 +19,7 @@ export function objectiveForStage(stage){
   switch(normalizeStage(stage)){
     case 'shrine':return '結び札を手に入れた。天妖の社で白妙を探そう';
     case 'cove':return '白妙の話を聞いた。海の入り江で潮平を探そう';
+    case 'forest':return '潮花の花びらを手に入れた。北東の忘れの森へ';
     default:return '里長の話を聞こう';
   }
 }

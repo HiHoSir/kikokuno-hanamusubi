@@ -2,16 +2,16 @@
 // Existing live player/story keys remain unchanged.
 // Save data is not uploaded; Safari may erase site storage when website data is cleared.
 import {PLAYER_KEY,DEFAULT_PLAYER,normalizePlayer,readPlayer,FIELD_RETURN_KEY,BATTLE_REQUEST_KEY} from '../battle/rules.mjs';
-import {CHAPTER_ONE_KEY,normalizeStage,readStoryStage} from '../story/chapter-one.mjs';
+import {CHAPTER_ONE_KEY,CHAPTER_ONE_STAGES,normalizeStage,readStoryStage} from '../story/chapter-one.mjs';
 
 export const MANUAL_SAVE_KEY='kikokuno-hanamusubi-manual-save';
 export const AUTO_SAVE_KEY='kikokuno-hanamusubi-auto-save';
 export const RESTORE_POSITION_KEY='kikokuno-hanamusubi-restore-position';
 const FIELD_PLACE_RETURN_KEY='kikokuno-hanamusubi-field-return';
-const SCENES=Object.freeze({village:'鬼灯村',interiors:'室内',field:'花霞野',tenyo:'天妖の社'});
+const SCENES=Object.freeze({village:'鬼灯村',interiors:'室内',field:'花霞野',tenyo:'天妖の社',cove:'海の入り江'});
 const ROUTES=Object.freeze({
   village:'src/game/village/',interiors:'src/game/interiors/',
-  field:'src/field/',tenyo:'src/game/tenyo/'
+  field:'src/field/',tenyo:'src/game/tenyo/',cove:'src/game/cove/'
 });
 const own=(object,key)=>Object.prototype.hasOwnProperty.call(object,key);
 function normalizeLocation(source){
@@ -37,7 +37,7 @@ export function readSavedGame(slot='manual',storage=globalThis.localStorage){
     const raw=JSON.parse(storage?.getItem(key)||'null');
     if(raw?.version!==1||!raw.player||typeof raw.player!=='object')return null;
     const location=normalizeLocation(raw.location);
-    if(!location||!['chief','shrine','cove'].includes(raw.story))return null;
+    if(!location||!CHAPTER_ONE_STAGES.includes(raw.story))return null;
     if(!Number.isFinite(Date.parse(raw.savedAt)))return null;
     return {version:1,savedAt:raw.savedAt,player:normalizePlayer(raw.player),
       story:normalizeStage(raw.story),location};

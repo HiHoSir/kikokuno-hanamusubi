@@ -81,6 +81,8 @@ try{
    'sand/grass boundary uses auto-connected native chips');
  assert.ok(initial.surf.grassCornerChips>12,
    'visible irregular grass border has several connected corner chips');
+ assert.ok(initial.surf.scrubCornerChips>=8,
+   'dense inland scrub also uses irregular masked mapchip edges');
  assert.ok(initial.surf.tileCount>=25,'entire authored cove coast is covered by surf chips');
  assert.equal(initial.surf.atlas[0]%32,0);
  assert.equal(initial.surf.atlas[1]%32,0);

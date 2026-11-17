@@ -1,5 +1,6 @@
 // REVIEW-ONLY: 32px water -> sand -> grass connectivity contract.
-// No fishing village, cliffs, NPCs, props, story or battle. Not a production map.
+// No fishing village, cliffs, NPCs, story or battle. Approved native-size
+// rock/grass samples are review-only props, not a production map.
 export const TILE=32;
 export const WIDTH=30;
 export const HEIGHT=18;

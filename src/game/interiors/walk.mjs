@@ -45,7 +45,7 @@ function clearInput() {
 async function start() {
   const assets = new Set(Object.values(rooms).map(room=>room.resident.asset));
   const [furniture, hizuki, portraits] = await Promise.all([
-    loadImage('../../../assets/village/interiors/furniture.png'),
+    loadImage('../../../assets/village/interiors/furniture.png?v=native-pixel-4px-1'),
     loadImage('../../../assets/characters/hizuki/walk-4dir-80x112.png?v=fb40c1b'),
     Promise.all([...assets].map(async asset=>[asset,await loadImage('../../../assets/characters/npc/'+asset+'-walk-4dir-80x112.png')])),
   ]);

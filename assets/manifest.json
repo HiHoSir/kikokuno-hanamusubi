@@ -1587,10 +1587,13 @@
       "type": "object",
       "path": "assets/village/interiors/furniture.png",
       "status": "approved",
+      "sourcePath": "source-assets/village/interiors/furniture-generator.py",
+      "usage": "hozuki-village-interiors",
       "origin": {
-        "repo": "HiHoSir/kikokuno-hanamusubi",
-        "ref": "gh-pages",
-        "path": "previews/village-interiors/furniture.png"
+        "method": "native-4px-pixel-art-redraw",
+        "sourceRevision": 1,
+        "priorGitBlobSha": "4cdfd11a25acc2de80f6ea3d0ba47524d637aeca",
+        "priorSourcePath": "previews/village-interiors/furniture.png"
       }
     },
     {

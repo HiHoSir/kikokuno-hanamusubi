@@ -1,7 +1,7 @@
 import {RESIDENT_RADIUS} from '../village/residents.mjs';
 
 // Atlas rectangles and floor footprints use the same world pixels as the village.
-const furniture = {
+export const furniture = {
   teaCounter:    {sprite:[0,0,240,124],     foot:[4,46,232,74]},
   teaTable:      {sprite:[248,0,172,116],   foot:[8,24,156,88]},
   blueFuton:     {sprite:[496,0,100,128],   foot:[4,8,92,116]},

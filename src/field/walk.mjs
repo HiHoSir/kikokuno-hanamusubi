@@ -147,10 +147,13 @@ async function start() {
         dirty = true;
       }
     }
-    const waterFrame = Math.floor(now / 360);
-    if (!renderPaused && (dirty || waterFrame !== lastWaterFrame)) {
+    // Sea/river frames still change every 360ms. Update this shared canvas
+    // at 180ms to display all four approved waterfall frames while idle.
+    // Rendering remains suspended behind the menu and rotation gate.
+    const animatedFrame = Math.floor(now / 180);
+    if (!renderPaused && (dirty || animatedFrame !== lastWaterFrame)) {
       render(state, now);
-      lastWaterFrame = waterFrame;
+      lastWaterFrame = animatedFrame;
     }
     requestAnimationFrame(frame);
   }

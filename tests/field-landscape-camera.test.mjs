@@ -91,12 +91,17 @@ test('terrain rework QA judges camera, height and shoreline fidelity rather than
 test('the production atlases are registered and match their 32px tile layout',()=>{
  const manifest=JSON.parse(readFileSync('assets/manifest.json','utf8'));
  const assets=manifest.assets.filter(asset=>asset.usage==='field-terrain-atlas');
- assert.equal(assets.length,14);
+ assert.equal(assets.length,15);
  for(const asset of assets){
   assert.equal(asset.status,'approved');
   const png=readFileSync(asset.path);
-  assert.deepEqual([png.readUInt32BE(16),png.readUInt32BE(20),png[25]],[128,128,6]);
+  const dimensions=asset.id==='field-waterfall-south-4w-2h-32'?[512,128,6]:[128,128,6];
+  assert.deepEqual([png.readUInt32BE(16),png.readUInt32BE(20),png[25]],dimensions);
  }
  assert.ok(assets.some(asset=>asset.id==='field-coast-mask-32'));
  assert.equal(assets.filter(asset=>asset.id.startsWith('field-cliff-forest-')).length,3);
+ assert.equal(assets.filter(asset=>asset.id==='field-waterfall-south-4w-2h-32').length,1,
+   'approved four-frame waterfall atlas must be registered exactly once');
+ assert.match(readFileSync('src/field/walk.mjs','utf8'),/Math\.floor\(now\s*\/\s*180\)/,
+   'idle field redraw must advance through all four 180ms waterfall frames');
 });

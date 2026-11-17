@@ -84,7 +84,7 @@ test('three sparse native rocks rest on sand and preserve foot collisions',()=>{
 test('review HTML draws approved mapchips, not grass band, preserves sprite and tide',()=>{
  const html=readFileSync('previews/shoreline-study/index.html','utf8');
  assert.ok(html.includes('window.YK_LANDSCAPE.groundLayer(dryMap)'));
- assert.ok(html.includes('奥まで広がる砂浜'));
+ assert.ok(html.includes('貝殻採集と買取の試作'));
  assert.ok(html.includes('ctx.drawImage(ground.staticMap,0,0)'));
  assert.match(html,/destination-in/);
  assert.match(html,/drawImage\(art\.water,frame\*64/);

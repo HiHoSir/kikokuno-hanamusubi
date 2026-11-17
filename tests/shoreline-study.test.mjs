@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {TILE,WIDTH,HEIGHT,MAP,SHORE_Y,SAND_DEPTH,START,terrainAt,walkable,safeFoot,shoreCover,validateShore}
  from '../data/maps/shoreline-study/scene.mjs';
+import {TIDE_FRAMES,TIDE_INTERVAL_MS,tideFrame,tidePixel}
+ from '../data/maps/shoreline-study/tide.mjs';
 
 test('only a fixed 32px sea, sand, grass prototype is authored',()=>{
  assert.equal(TILE,32);
@@ -36,6 +38,20 @@ test('all 4-way coast turns preserve the sand buffer and 16-corner chip masks',(
   assert.ok(SAND_DEPTH[x]>=3);
  }
 });
+test('eight wave states make the surf advance, break and retreat over sand',()=>{
+ assert.equal(TIDE_FRAMES.length,8);
+ assert.equal(TIDE_INTERVAL_MS,260);
+ assert.deepEqual(Array.from({length:8},(_,i)=>tideFrame(i*260).reach),
+  [2,4,7,11,14,11,7,4]);
+ assert.equal(tideFrame(0).phase,0);
+ assert.equal(tideFrame(TIDE_INTERVAL_MS*8).phase,0,'loop repeats');
+ assert.equal(tideFrame(TIDE_INTERVAL_MS*5).retreat,true);
+ assert.equal(tidePixel(13,'sand',0,1),0,'low tide leaves exposed sand');
+ assert.equal(tidePixel(13,'sand',4,1),3,'high tide carries a crest onto the beach');
+ assert.equal(tidePixel(8,'sand',7,1),1,'wet sand stays visible after retreat');
+ assert.equal(tidePixel(8,'grass',4,1),0,'grass stays dry');
+ assert.equal(tidePixel(8,'sea',4,1),0,'overlay is not a sea replacement');
+});
 test('the actor can approach the tide but the actual foot cannot enter the sea',()=>{
  assert.equal(safeFoot(START.x,START.y),true);
  const x=8*TILE+16,boundary=SHORE_Y[8];
@@ -54,13 +70,18 @@ test('preview is independent of the production village and cove, reuses approved
  assert.match(html,/destination-in/);
  assert.match(html,/drawImage\(art\.water,frame\*64/);
  assert.match(html,/32px地形チップ/);
+ assert.ok(html.includes('buildTideLayers(ground)'));
+ assert.ok(html.includes('tidePixel('));
+ assert.ok(html.includes('tideLayers[tide.phase].canvas'));
+ assert.ok(html.includes('drawCharacter(ctx,'));
+ assert.ok(html.includes("characterSheet:'village-80x112'"));
  assert.match(html,/data-dir="up"/);
  assert.match(html,/aria-label="四方向移動"/);
  assert.match(html,/waterFrames:2/);
  assert.doesNotMatch(html,/src\/game\/cove|data\/maps\/sea-cove|ushiohei|潮平/);
  const manifest=JSON.parse(readFileSync('assets/manifest.json','utf8'));
  for(const asset of [
-   'assets/characters/hizuki/walk-sd-32.png',
+   'assets/characters/hizuki/walk-4dir-80x112.png''assets/characters/hizuki/walk-4dir-80x112.png',
    'assets/field/effects/water-motion.png',
    'assets/field/terrain/atlas/coast-mask-32.png',
    'assets/field/terrain/atlas/coast-shallow-32.png',

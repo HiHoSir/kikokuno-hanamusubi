@@ -32,18 +32,18 @@ const rows=Array.from({length:COVE_HEIGHT},(_,y)=>
   })
 );
 // A narrow way to the field, and a safe dry approach to the coast.
-for(let y=26;y<COVE_HEIGHT;y++)for(let x=6;x<=9;x++)rows[y][x]='g';
-for(let x=4;x<=8;x++)rows[31][x]='g';
-for(let x=7;x<=10;x++)rows[32][x]='g';
-for(let x=7;x<=9;x++)rows[33][x]='g';
+for(let y=26;y<COVE_HEIGHT;y++)for(let x=26;x<=30;x++)rows[y][x]='g';
+for(let x=25;x<=31;x++)rows[31][x]='g';
+for(let x=26;x<=30;x++)rows[32][x]='g';
+for(let x=27;x<=29;x++)rows[33][x]='g';
 // The beach includes enough space on all sides of the fisher to talk to him.
 for(let y=14;y<=18;y++)for(let x=19;x<=24;x++)rows[y][x]='s';
 const tiles=rows.map(row=>row.join(''));
 export const COVE_MAP=Object.freeze({
  id:'sea-cove',name:'海の入り江',tileSize:COVE_TILE_SIZE,
  width:COVE_WIDTH,height:COVE_HEIGHT,tiles:Object.freeze(tiles),
- entry:Object.freeze({x:8*32+16,y:29*32+16,face:1}),
- exit:Object.freeze({row:33,columns:Object.freeze([7,8,9])}),
+ entry:Object.freeze({x:28*32+16,y:29*32+16,face:1}),
+ exit:Object.freeze({row:33,columns:Object.freeze([27,28,29])}),
  fisher:Object.freeze({id:'ushiohei',name:'潮平',x:22*32+16,y:16*32+16,face:3}),
  objects:Object.freeze([
   {kind:'basket',x:20,y:18},{kind:'barrel',x:18,y:19},

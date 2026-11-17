@@ -8,7 +8,7 @@ export const SHELL_KINDS=Object.freeze({
   spiral:Object.freeze({id:'spiral',name:'巻貝',value:7,weight:0.30}),
   white:Object.freeze({id:'white',name:'白貝',value:3,weight:0.53})
 });
-export const SHELL_COUNT=20;
+export const SHELL_COUNT=14;
 export const PICKUP_DISTANCE=36;
 
 const rng=seed=>{

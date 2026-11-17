@@ -5,12 +5,11 @@ export const SHELL_ART_SIZE=20;
 export const SHELL_ART=Object.freeze({
  white:Object.freeze([
    '....................','....................',
-   '.........OO.........','.......OOddOO.......',
-   '......OddmddO.......','.....OddrfrddO......',
-   '....OddfrhrfddO.....','...OddfrhhrfddO.....',
-   '..OddfrfhhfrfddO....','..OddffhfhhrffddO...',
-   '.OdddffhhhhhffdddO..','.OddddfffffffddddO..',
-   '..OddddddfdddddddO..','...OddddddddddddO...',
+   '.......OOOOOO.......','.....OOddddddOO.....',
+   '....OddrrfrffddO....','...OddrfhfhfrrddO...',
+   '..OddrfhhfhhfrrddO..','..OddrfhfhfhfrrddO..',
+   '.OddrffhhhhhffrrddO.','.OddrffhhhhfffrddO..',
+   '..OddrfffffffrrddO..','...OddddddddddddO...',
    '....OOOOOOOOOOOO....','......ssssssss......',
    '....................','....................',
    '....................','....................'

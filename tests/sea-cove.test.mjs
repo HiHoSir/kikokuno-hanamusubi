@@ -47,6 +47,25 @@ test('the sea cove is an authored 46x34 grid of native 32px tiles',()=>{
  assert.equal(walkableCell(-1,5),false);
  assert.equal(tileAt(45,12),'~');
 });
+test('reused coastal textures and native character sheets have usable PNG source dimensions',()=>{
+ const images=[
+  ['assets/field/terrain/grass-base.png',32,32],
+  ['assets/field/terrain/sand.png',32,32],
+  ['assets/field/terrain/forest-core.png',32,32],
+  ['assets/field/effects/water-motion.png',32,32],
+  ['assets/village/objects/rocks.png',32,32],
+  ['assets/field/terrain/atlas/coast-mask-32.png',128,128],
+  ['assets/field/terrain/atlas/coast-shallow-32.png',128,128],
+  ['assets/characters/hizuki/walk-4dir-80x112.png',240,448],
+  ['assets/characters/npc/villager-walk-4dir-80x112.png',240,448]
+ ];
+ for(const [path,minWidth,minHeight] of images){
+  const buffer=readFileSync(path);
+  assert.equal(buffer.subarray(1,4).toString('ascii'),'PNG',path);
+  assert.ok(buffer.readUInt32BE(16)>=minWidth, path+' width');
+  assert.ok(buffer.readUInt32BE(20)>=minHeight,path+' height');
+ }
+});
 test('the starting inlet route reaches a talkable spot around Ushiohei and the south exit',()=>{
  const entry=[Math.floor(COVE_MAP.entry.x/32),Math.floor(COVE_MAP.entry.y/32)];
  const fisher=[Math.floor(COVE_MAP.fisher.x/32),Math.floor(COVE_MAP.fisher.y/32)];

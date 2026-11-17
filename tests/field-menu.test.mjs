@@ -23,38 +23,56 @@ test('inventory exposes only acquired consumables together with their exact coun
   assert.deepEqual(items?.map(({name,count})=>[name,count]),[['おにぎり',2]]);
 });
 
-test('purchased gear stays owned through saving, equipping, and removing',async()=>{
+test('all four slots persist purchases and sum distinct combat bonuses',async()=>{
   const rules=await import('../src/game/battle/rules.mjs');
-  const shop=rules.purchaseArmory({...DEFAULT_PLAYER,gold:205,hp:7,mp:3});
-  const storage=new Map();
-  const adapter={getItem:key=>storage.get(key),setItem:(key,value)=>storage.set(key,value)};
-  rules.savePlayer(shop.player,adapter);
-  const before=rules.readPlayer(adapter);
-  const equipped=rules.changeEquipment?.(before,'T1');
-  assert.equal(equipped?.accepted,true);
-  assert.equal(equipped.player.attack,29);
-  assert.equal(equipped.player.defense,20);
-  assert.equal(equipped.player.hp,7);
-  assert.equal(equipped.player.mp,3);
-  assert.equal(equipped.player.gold,5);
-  assert.equal(rules.createBattle('field-oni',equipped.player).state.hero.attack,29);
-  rules.savePlayer(equipped.player,adapter);
-  const removed=rules.changeEquipment(rules.readPlayer(adapter),'T0');
-  assert.equal(removed.accepted,true);
-  assert.equal(removed.player.attack,9);
-  assert.equal(rules.changeEquipment(removed.player,'T1').accepted,true);
-  assert.equal(rules.changeEquipment(DEFAULT_PLAYER,'T1').accepted,false);
+  let hero={...DEFAULT_PLAYER,gold:200,hp:7,mp:3};
+  for(const [id,price] of [['wakizashi',40],['padded-body',32],['headband',20],['tabi',12]]){
+    const bought=rules.purchaseArmory(hero,id);
+    assert.equal(bought.accepted,true,id);
+    hero=bought.player;
+    assert.equal(hero.equipmentInventory[id],1);
+  }
+  assert.equal(hero.gold,96);
+  assert.equal(hero.attack,9,'buying does not equip automatically');
+  const saved=new Map(),adapter={getItem:key=>saved.get(key),setItem:(key,value)=>saved.set(key,value)};
+  rules.savePlayer(hero,adapter);
+  hero=rules.readPlayer(adapter);
+  for(const [slot,id] of [['weapon','wakizashi'],['body','padded-body'],['head','headband'],['feet','tabi']]){
+    const equipped=rules.changeEquipment(hero,slot,id);
+    assert.equal(equipped.accepted,true,slot);
+    hero=equipped.player;
+  }
+  assert.equal(hero.attack,13);
+  assert.equal(hero.defense,13);
+  assert.equal(hero.hp,7);
+  assert.equal(hero.mp,3);
+  assert.equal(hero.gold,96);
+  assert.equal(rules.createBattle('field-oni',hero).state.hero.attack,13);
+  rules.savePlayer(hero,adapter);
+  const persisted=rules.readPlayer(adapter);
+  assert.equal(persisted.equipment.weapon,'wakizashi');
+  assert.equal(persisted.equipment.feet,'tabi');
+  assert.equal(rules.changeEquipment(persisted,'weapon','starter-weapon').player.attack,9);
+  assert.equal(rules.changeEquipment(persisted,'head',null).player.defense,11);
+  assert.equal(rules.changeEquipment(persisted,'weapon','tabi').accepted,false);
+  assert.equal(rules.changeEquipment(DEFAULT_PLAYER,'weapon','wakizashi').accepted,false);
+  assert.deepEqual(rules.normalizePlayer(persisted),persisted);
 });
 
-test('previously auto-equipped armory gear stays equipped and can be put back in inventory',async()=>{
+test('retired bundle owners keep four pieces and their story resources on migration',async()=>{
   const rules=await import('../src/game/battle/rules.mjs');
-  const old=rules.normalizePlayer({...DEFAULT_PLAYER,equipmentTier:'T1',hp:8});
-  assert.equal(old.equipmentTier,'T1');
-  assert.equal(old.attack,29);
-  assert.equal(old.ownsArmoryGear,true);
-  const removed=rules.changeEquipment(old,'T0');
-  assert.equal(removed.player.ownsArmoryGear,true);
-  assert.equal(removed.player.hp,8);
+  const equipped=rules.normalizePlayer({...DEFAULT_PLAYER,equipmentTier:'T1',hp:8,gold:12});
+  assert.equal(equipped.equipmentTier,'T0');
+  assert.equal(equipped.attack,13);
+  assert.equal(equipped.defense,13);
+  assert.equal(equipped.hp,8);
+  assert.equal(equipped.gold,12);
+  assert.deepEqual(equipped.equipment,{weapon:'wakizashi',body:'padded-body',head:'headband',feet:'tabi'});
+  assert.deepEqual(rules.normalizePlayer(equipped),equipped);
+  const owned=rules.normalizePlayer({...DEFAULT_PLAYER,ownsArmoryGear:true,equipmentTier:'T0'});
+  assert.equal(owned.attack,9);
+  assert.equal(owned.equipmentInventory.wakizashi,1);
+  assert.equal(owned.equipment.weapon,'starter-weapon');
 });
 
 test('an interior find is recorded once alongside the consumable count and can be retried when full',async()=>{

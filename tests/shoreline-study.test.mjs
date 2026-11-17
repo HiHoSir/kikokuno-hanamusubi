@@ -80,8 +80,8 @@ test('preview is independent of the production village and cove, reuses approved
  assert.ok(html.includes('animated-32px-atlas-chips'));
  assert.ok(html.includes('ctx.putImageData(tile,'));
  assert.ok(html.includes('drawImage(ground.staticMap,x*TILE,y*TILE,TILE,TILE'));
- assert.doesNotMatch(html,/ctx\\.drawImage\\(tideLayers\\[/,'do not redraw full-frame tide canvases');
- assert.doesNotMatch(html,/buildTideLayers\\(/,'remove the old overlay implementation');
+ assert.equal(html.includes('ctx.drawImage(tideLayers['),false,'do not redraw full-frame tide canvases');
+ assert.equal(html.includes('buildTideLayers('),false,'remove the old overlay implementation');
  assert.ok(html.includes('drawCharacter(ctx,'));
  assert.ok(html.includes("characterSheet:'village-80x112'"));
  assert.match(html,/data-dir="up"/);

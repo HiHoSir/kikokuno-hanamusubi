@@ -1,0 +1,41 @@
+name: Shoreline connection prototype browser QA
+on:
+  pull_request:
+    paths:
+      - 'previews/shoreline-study/**'
+      - 'data/maps/shoreline-study/**'
+      - 'tests/shoreline-study.test.mjs'
+      - 'tools/qa-shoreline-study.mjs'
+      - '.github/workflows/shoreline-study-qa.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'previews/shoreline-study/**'
+      - 'data/maps/shoreline-study/**'
+      - 'tools/qa-shoreline-study.mjs'
+      - '.github/workflows/shoreline-study-qa.yml'
+  workflow_dispatch:
+jobs:
+  test-shoreline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install temporary browser QA
+        run: |
+          npm install --no-save playwright@1.62.1
+          npx playwright install --with-deps chromium
+      - name: Verify real sea/sand/grass canvas and character walk
+        run: node tools/qa-shoreline-study.mjs
+      - name: Keep real screenshots for visual inspection
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: shoreline-study-screenshots
+          path: |
+            artifacts/shoreline-study-*.png
+            artifacts/shoreline-study-report.json
+          if-no-files-found: warn

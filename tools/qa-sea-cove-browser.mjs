@@ -63,7 +63,7 @@ try{
    return {label:frame.title,position,canvas:[canvas.width,canvas.height],
      rightmostWorldX:cameraX+width,waterVisible:cameraX+width>39*32,
      menuVisible:!document.querySelector('#field-menu-toggle').hidden,
-     shells:child.__COVE_SHELL_QA?.()};
+     shells:child.__COVE_SHELL_QA?.(),surf:child.__COVE_SURF_QA?.()};
  });
  assert.equal(initial.position.scene,'cove');
  assert.equal(initial.waterVisible,true,'first view includes the moving sea, not only grass');
@@ -73,6 +73,19 @@ try{
  assert.ok(initial.shells.available>=1&&initial.shells.available<=3,
    'real stored fifth battle deposits 1–3 shells on fixed sand sites');
  assert.equal(initial.shells.gold,0,'shells do not print money on spawn');
+ assert.equal(initial.surf.frames,8,'production shore uses approved 8-frame tide');
+ assert.equal(initial.surf.chipSize,32,'surf must be native 32px animated mapchips');
+ assert.equal(initial.surf.mode,'animated-native-32px-mapchips');
+ assert.equal(initial.surf.orientation,'sea-east');
+ assert.ok(initial.surf.tileCount>=25,'entire authored cove coast is covered by surf chips');
+ assert.equal(initial.surf.atlas[0]%32,0);
+ assert.equal(initial.surf.atlas[1]%32,0);
+ assert.ok(initial.surf.coverage[4].washedPixels>
+   initial.surf.coverage[0].washedPixels+400,
+   'high-tide 32px chips visibly cover more sand than low tide');
+ assert.ok(initial.surf.coverage[4].foamPixels>
+   initial.surf.coverage[0].foamPixels+250,
+   'white-crest effect really animates across the sand');
  const waterBefore=await page.screenshot({path:'artifacts/sea-cove-entry.png'});
  await page.waitForTimeout(260);
  const middle=await page.screenshot({path:'artifacts/sea-cove-water.png'});

@@ -5,7 +5,8 @@ import {runInNewContext} from 'node:vm';
 import * as rules from '../src/game/battle/rules.mjs';
 
 const source=readFileSync('src/game/ui/field-menu.mjs','utf8')
- .replace(/import \{[\s\S]*?\} from '\.\.\/battle\/rules\.mjs\?v=[^']+';\nimport \{readStoryStage\} from '\.\.\/story\/chapter-one\.mjs';\n/,'');
+ .replace(/import \{[\s\S]*?\} from '\.\.\/battle\/rules\.mjs\?v=[^']+';\nimport \{readStoryStage\} from '\.\.\/story\/chapter-one\.mjs';\n/,'')
+ .replace(/import \{readManualGame,readAutoGame,manualSaveLabel\} from '\.\.\/save\/save-game\.mjs\?v=[^']+';\n/,'');
 if(source.includes('import {'))throw Error('Unable to isolate field menu for DOM interaction test');
 
 function makeNode(tag='div'){

@@ -10,7 +10,8 @@ import {
 const TILE=COVE_MAP.tileSize;
 const siteRows=Object.freeze([24,22,20,28,27,26,25,23,21,19,17,15,13,11,9,7]);
 export const COVE_SHELL_SITES=Object.freeze(siteRows.map((row,index)=>{
- const xCell=COVE_SHORE[row]-2;
+ const desired=COVE_SHORE[row]-2;
+ const xCell=tileAt(desired,row)==='s'?desired:desired+1;
  return Object.freeze({id:'cove-shell-site-'+index,cell:[xCell,row],
    x:xCell*TILE+16,y:row*TILE+16});
 }));

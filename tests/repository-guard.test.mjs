@@ -16,6 +16,12 @@ const entry = (id, path) => ({ id, type: 'character', path, status: 'approved' }
 test('空の採用台帳と必要なファイルは合格', () => {
   assert.deepEqual(validateInventory(base, empty), []);
 });
+test('main ルートの .nojekyll を許可し、無関係な隠しファイルは拒否する', () => {
+  assert.deepEqual(validateInventory([...base,'.nojekyll'],empty),[]);
+  assert.ok(validateInventory([...base,'.unexpected'],empty)
+    .some(error=>error.includes('不許可の保存先')));
+});
+
 test('旧版フォルダ・名前違いコピーは禁止', () => {
   const errors = validateInventory([...base, 'old/x.png', 'assets/hizuki-final2.png'], empty);
   assert.ok(errors.some(x => x.includes('旧版・一時')));

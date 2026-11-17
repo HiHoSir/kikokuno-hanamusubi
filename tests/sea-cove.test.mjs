@@ -58,7 +58,7 @@ test('the starting inlet route reaches a talkable spot around Ushiohei and the s
  assert.equal(isSouthExit(6,33),false);
 });
 test('masked native atlases preserve diagonal coastline and animated sea is separate',()=>{
- const land={tiles:['sg','g~']};
+ const land={tiles:['gg~','gg~','~~~']};
  assert.equal(coastMask(land,0,0),15,'all four corners dry');
  assert.equal(coastMask(land,1,0),9,'both left corners dry');
  const renderer=source('src/game/cove/render.mjs');

@@ -101,6 +101,6 @@
   },
   "meta": {
     "source": "user-confirmed hizuki-status-v2.json / conversation",
-    "notes": "T0-T6 approved aggregate bonuses; equipment slots, sales and T7-T8 are not approved as game data. Spell details remain provisional."
+    "notes": "T0–T6 aggregate bonuses remain approved reference values. The temporary T1 bundle is retired from village sales; separately equipped weapon/body/head/feet village gear uses the confirmed 2026-11-15 catalog. Spell details remain provisional."
   }
 }

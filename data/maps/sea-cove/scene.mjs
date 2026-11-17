@@ -24,6 +24,16 @@ const clusters=[
   [4,4,5,4],[10,2,5,4],[17,3,6,4],[4,15,5,6],
   [9,17,5,4],[4,23,5,3],[12,27,4,4],[21,27,5,4]
 ];
+// Break the old rectangular dark forest blocks into authored clipped
+// silhouettes, while keeping every blocked tile explicit in the map data.
+const denseScrub=(x,y)=>clusters.some(([left,top,w,h],index)=>{
+ const dx=x-left,dy=y-top;
+ if(dx<0||dx>=w||dy<0||dy>=h)return false;
+ if((dx===0&&dy===0)||(dx===w-1&&dy===h-1))return false;
+ if(index%2===0&&dx===w-1&&dy===0)return false;
+ if(index%2===1&&dx===0&&dy===h-1)return false;
+ return true;
+});
 // Terrain legend: g grass, s sandy foreshore, ~ moving sea,
 // t thick impassable scrub, r boulders. No hidden object collisions.
 const rows=Array.from({length:COVE_HEIGHT},(_,y)=>
@@ -37,7 +47,7 @@ const rows=Array.from({length:COVE_HEIGHT},(_,y)=>
     // Beach takes priority over inland scrub so collision blobs cannot
     // accidentally eat a walking corridor along the accepted coast.
     if(x>=COVE_SHORE[y]-COVE_SAND_DEPTH[y])return 's';
-    if(clusters.some(([left,top,w,h])=>x>=left&&x<left+w&&y>=top&&y<top+h))return 't';
+    if(denseScrub(x,y))return 't';
     return 'g';
   })
 );

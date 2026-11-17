@@ -12,6 +12,10 @@ import {
  coveVisibleShells,nearestCoveShell,collectCoveShell,validateCoveShellSites
 } from '../../../data/maps/sea-cove/shells.mjs';
 
+// Review-only mode reuses production rendering and movement but must not
+// change the player's story, bag, scene checkpoint or persistent game state.
+const previewMode=location.pathname.endsWith('/previews/sea-cove-review/')&&
+  new URL(import.meta.url).searchParams.get('cove-review')==='1';
 const scene=document.querySelector('#scene');
 const load=document.querySelector('#load');
 const objective=document.querySelector('#objective');
@@ -82,7 +86,7 @@ async function start(){
  const invalidShellSites=validateCoveShellSites();
  if(invalidShellSites.length)throw Error('貝殻の位置が不正です: '+invalidShellSites.join(', '));
  // Normalize and persist new five-fight batches in the canonical player save.
- let heroInventory=savePlayer(readPlayer());
+ let heroInventory=previewMode?readPlayer():savePlayer(readPlayer());
  let shells=coveVisibleShells(heroInventory);
  const images=Object.fromEntries(await Promise.all(
   Object.entries(scenery).map(async([id,path])=>[id,await image(path)])));
@@ -112,14 +116,14 @@ async function start(){
  const occupied=(px,py)=>
    Math.hypot(px-fishermen.x,py-fishermen.y)<24||
    collisionObjects.some(([ox,oy])=>Math.hypot(px-ox,py-oy)<22);
- const restored=consumeRestorePosition('cove');
+ const restored=previewMode?null:consumeRestorePosition('cove');
  const usable=restored&&walk.canStand(restored.x,restored.y)&&!occupied(restored.x,restored.y);
  let x=usable?restored.x:entry.x,y=usable?restored.y:entry.y;
  let face=usable?(restored.face??entry.face):entry.face;
  let elapsedMs=0,lastFrame=0,distance=0,menuPaused=false,lastRenderedFrame=-1;
  const renderer=createCoveRenderer(scene.getContext('2d',{alpha:false}),images);
  const dialogue=bindDialogue(clearInputs,ended=>{
-   if(ended.id==='ushiohei'&&readStoryStage()==='cove'){
+   if(!previewMode&&ended.id==='ushiohei'&&readStoryStage()==='cove'){
      advanceStoryStage('forest');
      objective.textContent=objectiveForStage(readStoryStage());
      fishermen.lines=linesForFisher(readStoryStage());
@@ -147,6 +151,7 @@ async function start(){
  };
  const leave=()=>{
    clearInputs();
+   if(previewMode){location.reload();return;}
    window.KIKOKU_ROUTE.go(new URL('../../field/?from=cove',import.meta.url));
  };
  const frame=now=>{
@@ -188,10 +193,10 @@ async function start(){
    if(shell){
      const result=collectCoveShell(heroInventory,shell.id,x,y);
      if(result.accepted){
-       heroInventory=savePlayer(result.player);
+       heroInventory=previewMode?result.player:savePlayer(result.player);
        shells=coveVisibleShells(heroInventory);
        objective.textContent=result.message;
-       window.parent?.KIKOKU_GAME?.autosave?.(window);
+       if(!previewMode)window.parent?.KIKOKU_GAME?.autosave?.(window);
        lastRenderedFrame=-1;
        refreshShellHint();
        return;
@@ -232,6 +237,7 @@ async function start(){
  renderer({x,y,face,distance,moving:false},fishermen,performance.now(),viewport,shells);
  refreshShellHint();
  load.hidden=true;
+ window.__COVE_PREVIEW_MODE=previewMode;
  window.KIKOKU_SAVE_SNAPSHOT=()=>({scene:'cove',position:{x,y,face}});
  window.__COVE_SURF_QA=()=>({...renderer.surfInfo,
    phase:Math.floor(performance.now()/260)%renderer.surfInfo.frames});
@@ -244,7 +250,7 @@ async function start(){
    gold:heroInventory.gold,
    completedBattles:heroInventory.completedBattles
  });
- window.parent?.KIKOKU_GAME?.autosave?.(window);
+ if(!previewMode)window.parent?.KIKOKU_GAME?.autosave?.(window);
  requestAnimationFrame(frame);
 }
 start().catch(error=>{

@@ -6,6 +6,7 @@ import { bindDialogue } from './dialogue.mjs?v=field-menu-1';
 import {collectFind,readPlayer,savePlayer} from '../battle/rules.mjs?v=equipment-4slots-2';
 import {consumeRestorePosition} from '../save/save-game.mjs?v=save-slots-1';
 import {VILLAGE_FINDS} from '../../../data/maps/hozuki-village/finds.mjs';
+import {drawFindHint,shouldShowFindHint} from './find-indicator.mjs';
 import {readStoryStage,advanceStoryStage,objectiveForStage} from '../story/chapter-one.mjs';
 
 const scene = document.querySelector('#scene');
@@ -75,9 +76,10 @@ async function start() {
     clearInput();
     for(const npc of residents) npc.moving=false;
   }, completeStoryDialogue);
+  const collectedFinds=new Set(readPlayer().foundItems);
   const finds=Object.entries(VILLAGE_FINDS).filter(([,site])=>site.sprite).map(([id,site])=>{
     const [x,y]=data.sprites.find(sprite=>sprite.id===site.sprite).feet;
-    return {id,x,y};
+    return {id,x,y,hintX:x,hintY:y-76};
   });
   const entrances=data.markers.filter(marker=>marker.entrance && Object.hasOwn(villageRooms,marker.id));
   const fieldExit=data.markers.find(marker=>marker.southExit);
@@ -244,6 +246,11 @@ async function start() {
     while(drawn<characters.length) drawCharacter(context,characters[drawn++],data.hero.frame,data.hero.feet);
     const eave = houses.find(house => rectangleContains(house.eaveZone,x,y));
     if(eave) context.drawImage(art.get(eave.eave),...eave.eaveRect,...eave.eavePoint,eave.eaveRect[2],eave.eaveRect[3]);
+    // Discoverable objects are marked only nearby, and only until collected.
+    if(!dialogue.active) for(const find of finds){
+      if(shouldShowFindHint({x,y},find,collectedFinds))
+        drawFindHint(context,find.hintX,find.hintY,time);
+    }
 
     dialogue.update(residentInFront(x,y,face,residents),x,y);
 
@@ -305,7 +312,7 @@ async function start() {
     const find=residentInFront(x,y,face,finds);
     if(!find)return;
     const result=collectFind(readPlayer(),find.id);
-    if(result.accepted)savePlayer(result.player);
+    if(result.accepted){savePlayer(result.player);collectedFinds.add(find.id);}
     dialogue.openMessage(result.message);
   }
   const actionA=document.querySelector('#action-a');

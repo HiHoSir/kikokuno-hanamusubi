@@ -7,6 +7,7 @@ import {paintRoom, paintPartition, paintContactShadow} from './room-art.mjs';
 import {FOOD_ITEMS,ARMORY_STOCK,purchaseFood,purchaseArmory,collectFind,readPlayer,savePlayer} from '../battle/rules.mjs?v=equipment-4slots-2';
 import {consumeRestorePosition} from '../save/save-game.mjs?v=save-slots-1';
 import {VILLAGE_FINDS} from '../../../data/maps/hozuki-village/finds.mjs';
+import {drawFindHint,shouldShowFindHint} from '../village/find-indicator.mjs';
 
 const scene = document.querySelector('#scene');
 const context = scene.getContext('2d', {alpha:false});
@@ -49,6 +50,7 @@ async function start() {
     Promise.all([...assets].map(async asset=>[asset,await loadImage('../../../assets/characters/npc/'+asset+'-walk-4dir-80x112.png')])),
   ]);
   const residentArt = new Map(portraits);
+  const collectedFinds = new Set(readPlayer().foundItems);
   let selectedRoom='';
   let shopActive=false,shopSelected=0;
   const shopPanel=document.getElementById('shop-panel');
@@ -125,7 +127,9 @@ async function start() {
     roomFind=null;
     if(furniture){
       const [left,top,width,height]=furniture.footprint;
-      roomFind={id:find[0],talkPoint:[left+width/2,top+height-4]};
+      roomFind={id:find[0],talkPoint:[left+width/2,top+height-4],
+        x:left+width/2,y:top+height-4,
+        hintX:furniture.x+furniture.sprite[2]/2,hintY:furniture.y+14};
     }
     walk = makeWalk(room.width,room.height,plan.blocked,8);
     [x,y] = plan.spawn;
@@ -193,6 +197,8 @@ async function start() {
       }
     }
     if (!drewHero) drawHero();
+    if(!dialogue.active && !shopActive && shouldShowFindHint({x,y},roomFind,collectedFinds))
+      drawFindHint(context,roomFind.hintX,roomFind.hintY,lastFrame);
     dialogue.update(residentInFront(x,y,face,[plan.resident]),x,y);
 
     const currentX=String(Math.round(x)), currentY=String(Math.round(y));
@@ -241,7 +247,7 @@ async function start() {
   function interact(){
     if(dialogue.open()||!roomFind||!residentInFront(x,y,face,[roomFind]))return;
     const result=collectFind(readPlayer(),roomFind.id);
-    if(result.accepted)savePlayer(result.player);
+    if(result.accepted){savePlayer(result.player);collectedFinds.add(roomFind.id);}
     dialogue.openMessage(result.message);
   }
   const actionA=document.querySelector('#action-a');

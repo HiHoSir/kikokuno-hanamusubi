@@ -1,4 +1,4 @@
-import {BATTLE_REQUEST_KEY,ENEMIES,carriedConsumables,createBattle,readPlayer,savePlayer} from './rules.mjs?v=equipment-4slots-2';
+import {BATTLE_REQUEST_KEY,ENEMIES,carriedConsumables,createBattle,readPlayer,savePlayer} from './rules.mjs?v=equipment-4slots-2-cove-shells-1';
 
 const root=new URL('../../../',import.meta.url);
 const el=id=>document.getElementById(id);

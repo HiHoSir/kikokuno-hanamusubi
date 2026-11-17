@@ -4,7 +4,7 @@ import {drawCharacter, RESIDENT_RADIUS, residentInFront} from '../village/reside
 import {bindDialogue} from '../village/dialogue.mjs?v=field-menu-1';
 import {rooms, resolveInterior, prepareInterior} from './rooms.mjs?v=village-finds-1';
 import {paintRoom, paintPartition, paintContactShadow} from './room-art.mjs';
-import {FOOD_ITEMS,ARMORY_STOCK,purchaseFood,purchaseArmory,collectFind,readPlayer,savePlayer} from '../battle/rules.mjs?v=village-finds-1';
+import {FOOD_ITEMS,ARMORY_STOCK,purchaseFood,purchaseArmory,collectFind,readPlayer,savePlayer} from '../battle/rules.mjs?v=equipment-slots-1';
 import {VILLAGE_FINDS} from '../../../data/maps/hozuki-village/finds.mjs';
 
 const scene = document.querySelector('#scene');
@@ -58,7 +58,7 @@ async function start() {
   function options(){
     return selectedRoom==='teahouse'
       ?[...Object.values(FOOD_ITEMS).map(item=>({id:item.id,label:item.name+'　'+item.price+'両（体力+'+item.heal+'）'})),{id:'exit',label:'もどる'}]
-      :selectedRoom==='armory'?[{id:ARMORY_STOCK.id,label:ARMORY_STOCK.name+'　'+ARMORY_STOCK.price+'両'},{id:'exit',label:'もどる'}]:[];
+      :selectedRoom==='armory'?[...ARMORY_STOCK.map(item=>({id:item.id,label:item.name+'　'+item.price+'両（'+(item.attack?'攻撃+'+item.attack:'守備+'+item.defense')+'）'})),{id:'exit',label:'もどる'}]:[];
   }
   function refreshShop(){
     const hero=readPlayer();
@@ -69,7 +69,7 @@ async function start() {
       const button=document.createElement('button');
       button.type='button';button.dataset.shopItem=item.id;
       button.classList.toggle('selected',shopSelected===i);
-      button.textContent=item.label+(hero.foods[item.id]!==undefined?'　所持'+hero.foods[item.id]:item.id===ARMORY_STOCK.id&&hero.ownsArmoryGear?'　購入済':'');
+      button.textContent=item.label+(hero.foods[item.id]!==undefined?'　所持'+hero.foods[item.id]:hero.equipmentInventory?.[item.id]?'　購入済':'');
       button.addEventListener('click',()=>{shopSelected=i;confirmShop();});
       shopOptions.append(button);
     }
@@ -93,7 +93,7 @@ async function start() {
     const choice=options()[shopSelected];
     if(!choice)return;
     if(choice.id==='exit'){closeShop();return;}
-    const result=selectedRoom==='teahouse'?purchaseFood(readPlayer(),choice.id):purchaseArmory(readPlayer());
+    const result=selectedRoom==='teahouse'?purchaseFood(readPlayer(),choice.id):purchaseArmory(readPlayer(),choice.id);
     if(result.accepted)savePlayer(result.player);
     shopMessage.textContent=result.message;refreshShop();
     globalThis.KIKOKU_AUDIO?.se?.(result.accepted?'confirm':'cancel');

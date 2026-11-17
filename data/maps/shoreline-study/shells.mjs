@@ -1,4 +1,4 @@
-// Beachcombing prototype. Real saved battle battles, not time or random re-rolls,
+// Beachcombing prototype. Real saved completed battles, not time or random re-rolls,
 // unlock shell batches once after each FIVE completed battles.
 import {TILE,WIDTH,HEIGHT,MAP,SHORE_Y,SCENERY,START} from './scene.mjs';
 
@@ -19,7 +19,7 @@ const SITE_COLUMNS=Object.freeze([
   [3,2,3,4],[5,2,-4,1],[7,2,4,2],[9,3,-3,-4],
   [11,2,4,2],[13,3,0,-2],[15,2,-4,0],[17,2,3,1],
   [19,2,-3,-2],[21,3,2,-3],[23,2,-2,1],[25,2,3,-2],
-  [27,2,-3,1],[4,3,1,0],[12,3,-3,-2],[20,3,4,2]
+  [27,2,-3,1],[4,4,1,0],[12,3,-3,-2],[20,4,4,2]
 ]);
 export const SHELL_SITES=Object.freeze(SITE_COLUMNS.map(([tx,dy,dx,oy],i)=>
   Object.freeze({id:'spot-'+i,x:tx*TILE+16+dx,y:(SHORE_Y[tx]+dy)*TILE+16+oy})

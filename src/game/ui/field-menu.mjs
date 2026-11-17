@@ -19,9 +19,15 @@ const entries=[
   ['magic','術'], ['equipment','装備']
 ];
 const commandColumns=3;
+const equipmentSlots=Object.entries(EQUIPMENT_SLOTS);
 let selected=0,opened=false,pane='commands',detailIndex=0,actionIndex=0,selection=null,scenePad=null;
+let equipmentSlotIndex=0,equipmentOptionIndex=0,equipmentFocus='slots',equipmentOptions=[];
 const el=(tag,txt)=>{const node=document.createElement(tag);node.textContent=txt;return node};
-const activeButtons=()=>[...(pane==='commands'?commands:detail).querySelectorAll('button:not([disabled])')];
+const isEquipment=()=>pane==='detail'&&entries[selected][0]==='equipment';
+const activeButtons=()=>{
+  if(isEquipment())return [...detail.querySelectorAll(equipmentFocus==='slots'?'.equipment-slot-choice':'.equipment-gear-choice')];
+  return [...(pane==='commands'?commands:detail).querySelectorAll('button:not([disabled])')];
+};
 function isBattle(){return frame.src.includes('/src/game/battle/')}
 function hide(){
   if(!opened)return;
@@ -38,6 +44,7 @@ function show(){
   try{frame.contentWindow?.dispatchEvent(new Event('blur'))}catch{}
   try{frame.contentWindow?.dispatchEvent(new Event('game-menu-open'))}catch{}
   opened=true;selected=0;pane='commands';detailIndex=0;selection=null;
+  equipmentSlotIndex=0;equipmentOptionIndex=0;equipmentFocus='slots';
   scenePad=frame.contentDocument?.getElementById('pad');
   if(scenePad)scenePad.style.visibility='hidden';
   frame.style.pointerEvents='none';backdrop.hidden=false;
@@ -56,11 +63,23 @@ function refreshScene(){
 }
 function updateCursor(){
   const buttons=activeButtons();
-  const index=pane==='commands'?selected:pane==='action'?actionIndex:detailIndex;
-  for(const [i,button] of buttons.entries()){
-    button.classList.toggle('menu-focus',i===index);
-    button.setAttribute('aria-current',i===index?'true':'false');
-    button.tabIndex=i===index?0:-1;
+  const index=isEquipment()?(equipmentFocus==='slots'?equipmentSlotIndex:equipmentOptionIndex)
+    :pane==='commands'?selected:pane==='action'?actionIndex:detailIndex;
+  const focused=buttons[index];
+  if(isEquipment()){
+    for(const node of detail.querySelectorAll('.equipment-slot-choice,.equipment-gear-choice')){
+      const active=node===focused;
+      node.classList.toggle('menu-focus',active);
+      node.setAttribute('aria-current',active?'true':'false');
+      node.tabIndex=active?0:-1;
+    }
+    updateEquipmentPreview(readPlayer());
+    return;
+  }
+  for(const [i,node] of buttons.entries()){
+    node.classList.toggle('menu-focus',i===index);
+    node.setAttribute('aria-current',i===index?'true':'false');
+    node.tabIndex=i===index?0:-1;
   }
 }
 function button(parent,label,callback){
@@ -91,6 +110,80 @@ function addItem(list,item,index){
     selectAction(item);
   });
 }
+// The equipment view stays on one screen: slots left, carried gear right.
+function equipmentChoices(hero,slot){
+  const owned=Object.values(EQUIPMENT_ITEMS).filter(item=>item.slot===slot&&hero.equipmentInventory[item.id]);
+  return ['head','feet'].includes(slot)?[{id:null,name:'なし',attack:0,defense:0},...owned]:owned;
+}
+function updateEquipmentPreview(hero){
+  const preview=detail.querySelector('.equipment-stat-preview');
+  if(!preview)return;
+  const [slot]=equipmentSlots[equipmentSlotIndex];
+  const choice=equipmentOptions[equipmentOptionIndex];
+  const comparing=equipmentFocus==='gear';
+  const next=comparing&&choice?equipmentPreview(hero,slot,choice.id):null;
+  const attack=next?.attack??hero.attack,defense=next?.defense??hero.defense;
+  preview.replaceChildren();
+  const heading=el('span',comparing?'変更後の能力':'現在の能力');
+  heading.className='equipment-preview-heading';
+  const atk=el('strong',comparing?'攻撃 '+hero.attack+' → '+attack:'攻撃 '+hero.attack);
+  const def=el('strong',comparing?'守備 '+hero.defense+' → '+defense:'守備 '+hero.defense);
+  if(comparing&&attack>hero.attack)atk.className='equipment-stat-up';
+  if(comparing&&defense>hero.defense)def.className='equipment-stat-up';
+  preview.append(heading,atk,def);
+}
+function renderEquipment(hero){
+  const layout=document.createElement('div');
+  layout.className='equipment-layout';
+  const left=document.createElement('section'),right=document.createElement('section');
+  left.className='equipment-panel';right.className='equipment-panel';
+  left.append(el('h3','装備部位'));right.append(el('h3','所持している兵具'));
+  const slotList=document.createElement('div'),gearList=document.createElement('div');
+  slotList.className='equipment-slot-list';gearList.className='equipment-choice-list';
+  const currentSlot=equipmentSlots[equipmentSlotIndex][0];
+  equipmentOptions=equipmentChoices(hero,currentSlot);
+  equipmentOptionIndex=Math.min(equipmentOptionIndex,Math.max(0,equipmentOptions.length-1));
+  equipmentSlots.forEach(([slot,label],index)=>{
+    const item=EQUIPMENT_ITEMS[hero.equipment[slot]];
+    const node=button(slotList,'',()=>{
+      equipmentSlotIndex=index;equipmentFocus='gear';
+      const current=readPlayer();
+      const choices=equipmentChoices(current,slot);
+      const alternative=choices.findIndex(choice=>choice.id!==current.equipment[slot]);
+      equipmentOptionIndex=Math.max(0,alternative);
+      message.textContent='';render();
+    });
+    node.className='equipment-slot-choice';
+    node.dataset.equipmentSlot=slot;
+    node.classList.toggle('equipment-current-slot',slot===currentSlot);
+    node.append(el('span',label),el('strong',item?.name||'なし'));
+  });
+  equipmentOptions.forEach((item,index)=>{
+    const equipped=hero.equipment[currentSlot]===item.id;
+    const bonus=item.attack?'攻撃 +'+item.attack:item.defense?'守備 +'+item.defense:'補正なし';
+    const node=button(gearList,'',()=>{
+      equipmentOptionIndex=index;equipmentFocus='gear';
+      if(readPlayer().equipment[currentSlot]===item.id){
+        message.textContent='現在装備している兵具です。';
+        updateCursor();return;
+      }
+      apply(changeEquipment(readPlayer(),currentSlot,item.id));
+    });
+    node.className='equipment-gear-choice';
+    node.dataset.equipmentId=item.id??'none';
+    node.setAttribute('aria-pressed',equipped?'true':'false');
+    node.append(el('span',item.name),el('small',equipped?'装備中':bonus));
+  });
+  left.append(slotList);right.append(gearList);
+  layout.append(left,right);
+  detail.append(layout);
+  const preview=document.createElement('div');
+  preview.className='equipment-stat-preview';
+  preview.setAttribute('aria-label','装備変更後の能力値');
+  detail.append(preview);
+  const help=el('p','← → 部位と兵具の切替　A 決定　B 戻る');
+  help.className='equipment-help';detail.append(help);
+}
 function renderDetails(hero,id){
   const rows=[];
   if(id==='items'){
@@ -108,26 +201,8 @@ function renderDetails(hero,id){
     }
     if(readStoryStage()!=='chief')rows.push({label:'結び札',caption:'里長から預かった札。'});
   }else if(id==='equipment'){
-    const equippedList=document.createElement('dl');
-    for(const [slot,label] of Object.entries(EQUIPMENT_SLOTS)){
-      const current=hero.equipment[slot];
-      const pair=document.createElement('div');
-      pair.append(el('dt',label),el('dd',current?EQUIPMENT_ITEMS[current].name:'なし'));
-      equippedList.append(pair);
-      const owned=Object.values(EQUIPMENT_ITEMS).filter(item=>item.slot===slot&&hero.equipmentInventory[item.id]&&item.id!==current);
-      const choices=[...owned,...(['head','feet'].includes(slot)&&current?[null]:[])];
-      for(const item of choices){
-        const id=item?.id??null;
-        const next=equipmentPreview(hero,slot,id);
-        const name=item?.name||'はずす';
-        rows.push({
-          label:label+'：'+name,
-          caption:'攻撃 '+hero.attack+' → '+next.attack+'　守備 '+hero.defense+' → '+next.defense,
-          action:'装備する',run:()=>apply(changeEquipment(readPlayer(),slot,id))
-        });
-      }
-    }
-    detail.append(equippedList);
+    renderEquipment(hero);
+    return;
   }else if(id==='magic'){
     rows.push({label:'つむぎ',caption:'技 5　体力を回復',action:'使う',run:()=>apply(useExplorationResource(readPlayer(),'heal'))});
     if(hero.lv>=3)rows.push({label:'糸遊',caption:'戦闘で使う術。'});
@@ -149,7 +224,7 @@ function renderDetails(hero,id){
     rows.forEach((row,i)=>addItem(list,row,i));
     detail.append(list);
   }else if(id==='items')detail.append(el('p','道具を持っていない。'));
-  else if(id==='equipment')detail.append(el('p','替えの兵具を持っていない。'));
+
 }
 function render(){
   const hero=readPlayer();
@@ -159,6 +234,7 @@ function render(){
   detail.hidden=pane==='commands';
   commands.replaceChildren();
   detail.replaceChildren();
+  detail.classList.toggle('equipment-view',isEquipment());
   if(pane==='commands'){
     for(const [index,[key,label]] of entries.entries()){
       button(commands,label,()=>openCommand(index)).dataset.menuCommand=key;
@@ -178,11 +254,32 @@ function openCommand(index){
   selected=index;
   detailIndex=0;
   pane='detail';
+  if(entries[index][0]==='equipment'){
+    equipmentSlotIndex=0;equipmentOptionIndex=0;equipmentFocus='slots';
+  }
   message.textContent='';
   render();
 }
 function direction(dir){
   if(!opened)return;
+  if(isEquipment()){
+    if(dir==='left'||dir==='right'){
+      equipmentFocus=dir==='left'?'slots':'gear';
+      updateCursor();
+    }else if(equipmentFocus==='slots'){
+      const count=equipmentSlots.length;
+      equipmentSlotIndex=(equipmentSlotIndex+(dir==='up'?-1:1)+count)%count;
+      equipmentOptionIndex=0;
+      render();
+    }else{
+      const count=equipmentOptions.length;
+      if(count)equipmentOptionIndex=(equipmentOptionIndex+(dir==='up'?-1:1)+count)%count;
+      updateCursor();
+    }
+    activeButtons()[equipmentFocus==='slots'?equipmentSlotIndex:equipmentOptionIndex]
+      ?.scrollIntoView({block:'nearest'});
+    return;
+  }
   if(pane==='commands'){
     const column=selected%commandColumns;
     const rowStart=selected-column;
@@ -213,12 +310,16 @@ function direction(dir){
 }
 function confirm(){
   if(!opened)return;
-  const index=pane==='commands'?selected:pane==='action'?actionIndex:detailIndex;
+  const index=isEquipment()?(equipmentFocus==='slots'?equipmentSlotIndex:equipmentOptionIndex)
+    :pane==='commands'?selected:pane==='action'?actionIndex:detailIndex;
   activeButtons()[index]?.click();
 }
 function back(){
   if(!opened)return;
   if(pane==='commands'){hide();return;}
+  if(isEquipment()&&equipmentFocus==='gear'){
+    equipmentFocus='slots';message.textContent='';updateCursor();return;
+  }
   pane=pane==='action'?'detail':'commands';
   selection=null;
   message.textContent='';

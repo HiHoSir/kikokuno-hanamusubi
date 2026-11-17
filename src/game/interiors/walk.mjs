@@ -58,7 +58,7 @@ async function start() {
   function options(){
     return selectedRoom==='teahouse'
       ?[...Object.values(FOOD_ITEMS).map(item=>({id:item.id,label:item.name+'　'+item.price+'両（体力+'+item.heal+'）'})),{id:'exit',label:'もどる'}]
-      :selectedRoom==='armory'?[...ARMORY_STOCK.map(item=>({id:item.id,label:item.name+'　'+item.price+'両（'+(item.attack?'攻撃+'+item.attack:'守備+'+item.defense')+'）'})),{id:'exit',label:'もどる'}]:[];
+      :selectedRoom==='armory'?[...ARMORY_STOCK.map(item=>({id:item.id,label:item.name+'　'+item.price+'両（'+(item.attack?'攻撃+'+item.attack:'守備+'+item.defense)+'）'})),{id:'exit',label:'もどる'}]:[];
   }
   function refreshShop(){
     const hero=readPlayer();

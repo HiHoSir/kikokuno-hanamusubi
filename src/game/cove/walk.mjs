@@ -225,6 +225,8 @@ async function start(){
  refreshShellHint();
  load.hidden=true;
  window.KIKOKU_SAVE_SNAPSHOT=()=>({scene:'cove',position:{x,y,face}});
+ window.__COVE_SURF_QA=()=>({...renderer.surfInfo,
+   phase:Math.floor(performance.now()/260)%renderer.surfInfo.frames});
  window.__COVE_SHELL_QA=()=>({
    available:shells.length,
    species:shells.map(item=>item.kind),

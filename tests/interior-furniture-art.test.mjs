@@ -84,20 +84,29 @@ test('the 2px furniture atlas is the exact unscaled rendering of the logical-pix
   assert.ok(readFileSync('assets/manifest.json','utf8').includes('source-assets/village/interiors/furniture-master.png'));
 });
 
-test('kitchen sprite removes the permanently painted steam above the kettle',()=>{
+test('rebuilt kitchen is whole, style-matched and has no static steam above the lid',()=>{
   const master=decodeRGBA('source-assets/village/interiors/furniture-master.png');
-  const [atlasX,atlasY]=furniture.kitchen.sprite;
-  const px=atlasX/2, py=atlasY/2;
-  const alpha=(x,y)=>master.pixels[((py+y)*master.width+px+x)*4+3];
-  // This used to be a large white steam plume, painted into the static sprite.
-  for(let y=2;y<=17;y++) for(let x=14;x<=34;x++)
-    assert.equal(alpha(x,y),0,`static kitchen steam at logical pixel (${x},${y})`);
-  for(let x=14;x<24;x++)assert.equal(alpha(x,18),0,'bottom of painted plume must also be removed');
-  // The underlying stove, lid and firebox retain their authored pixels.
-  assert.ok(alpha(20,26)>0,'wooden kettle lid survives');
-  assert.ok(alpha(24,46)>0,'stone stove survives');
-  assert.ok(alpha(23,59)>0,'firebox survives');
+  const [atlasX,atlasY,w,h]=furniture.kitchen.sprite;
+  assert.deepEqual([w,h],[148,144],'kitchen must retain its approved native size and collision geometry');
+  const px=atlasX/2,py=atlasY/2;
+  const rgba=(x,y)=>{
+    const offset=((py+y)*master.width+px+x)*4;
+    return [...master.pixels.subarray(offset,offset+4)];
+  };
+  // Blank air above the newly rebuilt closed lid. No white baked-in vapour.
+  for(let y=0;y<12;y++)for(let x=0;x<w/2;x++)
+    assert.equal(rgba(x,y)[3],0,`fixed steam in the blank sky at (${x},${y})`);
+  // Check that steam removal did not erase the lid, kettle, hearth or mortar.
+  for(const [part,x,y] of [['pot handle',28,16],['wood lid',20,20],
+    ['stone stove',35,44],['firebox',28,60],['mortar',60,40],['stone foot',60,65]])
+    assert.equal(rgba(x,y)[3],255,`${part} is damaged`);
+  const colors=new Set();
+  for(let y=0;y<h/2;y++)for(let x=0;x<w/2;x++){
+    const pixel=rgba(x,y);
+    if(pixel[3]===255)colors.add(pixel.slice(0,3).join(','));
+  }
+  assert.ok(colors.size>=40 && colors.size<=52,'palette follows the other 48-colour interior props');
   const rendered=readFileSync('src/game/interiors/walk.mjs','utf8');
-  assert.match(rendered,/furniture\.png\?v=interior-wall-anchor-1-no-baked-steam-1/,'Safari should not load old artwork');
-  assert.match(rendered,/life-effects\.mjs\?v=indoor-life-2/,'moving steam must load');
+  assert.ok(rendered.includes('furniture.png?v=interior-kamado-replace-1'),'Safari must load the new atlas');
+  assert.ok(rendered.includes('life-effects.mjs?v=indoor-life-3-kamado'),'the kettle steam must be animated');
 });

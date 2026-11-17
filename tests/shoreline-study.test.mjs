@@ -81,7 +81,7 @@ test('preview is independent of the production village and cove, reuses approved
  assert.doesNotMatch(html,/src\/game\/cove|data\/maps\/sea-cove|ushiohei|潮平/);
  const manifest=JSON.parse(readFileSync('assets/manifest.json','utf8'));
  for(const asset of [
-   'assets/characters/hizuki/walk-4dir-80x112.png''assets/characters/hizuki/walk-4dir-80x112.png',
+   'assets/characters/hizuki/walk-4dir-80x112.png',
    'assets/field/effects/water-motion.png',
    'assets/field/terrain/atlas/coast-mask-32.png',
    'assets/field/terrain/atlas/coast-shallow-32.png',

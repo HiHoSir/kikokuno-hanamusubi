@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#153147">
+<title>海辺32px接続・歩行検査｜鬼哭の花結び</title>
+<style>
+:root{color-scheme:dark;background:#152b3d;color:#f6f1e4;font:13px "Hiragino Kaku Gothic ProN",system-ui,sans-serif}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;overscroll-behavior:none}
+main{position:fixed;inset:0;overflow:hidden}
+canvas{width:100%;height:100%;display:block;image-rendering:pixelated;touch-action:none}
+#heading{position:absolute;top:max(7px,env(safe-area-inset-top));left:max(9px,env(safe-area-inset-left));background:#142432dd;border:1px solid #c9b185aa;padding:7px 10px;pointer-events:none;max-width:65%;font-size:14px}
+#heading small{display:block;font-size:10px;margin-top:3px;color:#d8d8c8}
+#controls{position:absolute;bottom:calc(7px + env(safe-area-inset-bottom));left:max(9px,env(safe-area-inset-left));display:grid;grid-template-columns:repeat(3,47px);grid-template-rows:repeat(2,47px);gap:3px}
+button{color:#faf2de;background:#243a4cdd;border:1px solid #c8b38e;border-radius:6px;cursor:pointer;min-height:44px;font:16px system-ui,sans-serif;touch-action:none;user-select:none;-webkit-user-select:none}
+#controls button:active,#controls button.held{background:#a28357;color:#102536}
+[data-dir="up"]{grid-column:2;grid-row:1}
+[data-dir="left"]{grid-column:1;grid-row:2}
+[data-dir="down"]{grid-column:2;grid-row:2}
+[data-dir="right"]{grid-column:3;grid-row:2}
+#tools{position:absolute;right:max(9px,env(safe-area-inset-right));bottom:calc(9px + env(safe-area-inset-bottom));display:flex;gap:6px}
+#tools button{font:12px system-ui,sans-serif;padding:6px 10px}
+#loading{position:absolute;inset:0;display:grid;place-items:center;background:#162d39e8;color:#fbefcf;text-align:center;font-size:15px;z-index:3;padding:25px}
+#loading[hidden]{display:none}
+#rotate{display:none}
+@media (orientation:portrait){#rotate{position:absolute;inset:0;background:#152b3df2;display:grid;place-items:center;z-index:4;text-align:center;padding:20px}}
+</style>
+<script src="../../src/field/assets.js"></script>
+<script src="../../src/field/landscape.js"></script>
+<script src="../../src/field/autotile.js"></script>
+</head>
+<body>
+<main>
+  <canvas id="scene" role="img" aria-label="32ピクセルの海・波打ち際・砂浜・草地を組み合わせた歩行検証"></canvas>
+  <div id="heading">海辺の接続検証 <small>32px地形チップ／波あり・緋月は歩行可／本編未採用</small></div>
+  <div id="controls" aria-label="四方向移動">
+    <button data-dir="up" aria-label="北">▲</button>
+    <button data-dir="left" aria-label="西">◀</button>
+    <button data-dir="down" aria-label="南">▼</button>
+    <button data-dir="right" aria-label="東">▶</button>
+  </div>
+  <div id="tools">
+    <button id="grid" type="button" aria-pressed="false">境界表示</button>
+    <button id="reset" type="button">開始位置</button>
+  </div>
+  <div id="loading">既存の海岸チップと水面画像を読み込み中…</div>
+  <div id="rotate">iPhoneを横向きにしてください</div>
+</main>
+<script type="module">
+import {TILE,WIDTH,HEIGHT,MAP,START,SHORE_Y,SAND_DEPTH,shoreCover,safeFoot,validateShore} from '../../data/maps/shoreline-study/scene.mjs';
+const canvas=document.querySelector('#scene'),ctx=canvas.getContext('2d',{alpha:false});
+const loading=document.querySelector('#loading');
+const directions={up:[0,-1,1],down:[0,1,0],right:[1,0,2],left:[-1,0,3]};
+const keyToDir={ArrowUp:'up',ArrowDown:'down',ArrowRight:'right',ArrowLeft:'left',w:'up',s:'down',d:'right',a:'left'};
+const pressed=new Map(),buttons=[...document.querySelectorAll('[data-dir]')];
+let hero={...START},stride=0,walking=false,lastTime=0,grid=false,draws=0;
+const camera={x:0,y:0};
+const buffer=(w,h)=>{const c=document.createElement('canvas');c.width=w;c.height=h;const q=c.getContext('2d');q.imageSmoothingEnabled=false;return [c,q];};
+const image=(src)=>new Promise((resolve,reject)=>{
+ const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(Error('画像取得失敗: '+src));im.src=src;
+});
+const asset=path=>new URL('../../'+path,import.meta.url);
+const initImage=async path=>image(asset(path).href);
+const source={
+ hero:'assets/characters/hizuki/walk-sd-32.png',
+ water:'assets/field/effects/water-motion.png',
+ mask:'assets/field/terrain/atlas/coast-mask-32.png',
+ foam:'assets/field/terrain/atlas/coast-shallow-32.png',
+ sand:['assets/field/terrain/atlas/coast-sand-0-32.png',
+       'assets/field/terrain/atlas/coast-sand-1-32.png',
+       'assets/field/terrain/atlas/coast-sand-2-32.png',
+       'assets/field/terrain/atlas/coast-sand-3-32.png']
+};
+function cutChip(c,im,variant,x,y){
+ c.drawImage(im,(variant%4)*TILE,Math.floor(variant/4)*TILE,
+   TILE,TILE,x,y,TILE,TILE);
+}
+function composeDryLand(art){
+ // Draw actual 32px grass and sand using the approved field autotile renderer;
+ // replace the sea with sand *for this dry-source texture only*. The alpha
+ // mask below clips it back to a curved shoreline.
+ const paint=MAP.map(row=>row.map(type=>type==='sea'?'sand':type));
+ paint.paths=[];paint.decorations=[];paint.projectedHeights=false;
+ paint.referencePlacedObjects=true;paint.bridgeWaterCells=new Set();
+ paint.textureOrigin={x:0,y:0};
+ const [staticMap,c]=buffer(WIDTH*TILE,HEIGHT*TILE);
+ c.drawImage(window.YK_LANDSCAPE.groundLayer(paint),0,0);
+ const [coverage,m]=buffer(WIDTH*TILE,HEIGHT*TILE);
+ m.fillStyle='#fff';m.fillRect(0,0,coverage.width,coverage.height);
+ const coastline=[];
+ for(let y=-1;y<HEIGHT;y++)for(let x=-1;x<WIDTH;x++){
+   const cover=shoreCover(x,y);if(cover===15)continue;
+   const px=x*TILE+16,py=y*TILE+16;
+   m.clearRect(px,py,TILE,TILE);
+   if(cover>0){
+     cutChip(m,art.mask,cover,px,py);
+     coastline.push({px,py,cover,x,y});
+   }
+ }
+ c.globalCompositeOperation='destination-in';c.drawImage(coverage,0,0);
+ c.globalCompositeOperation='source-over';
+ // The original 16-corner foam and sand chips keep the diagonal rule
+ // consistent at concave/convex shoreline joints.
+ for(const {px,py,cover,x,y} of coastline){
+   cutChip(c,art.foam,cover,px,py);
+   const phase=((x&1)+2*(y&1));
+   cutChip(c,art.sand[phase],cover,px,py);
+ }
+ return {staticMap,coastline,shoreMask:coverage};
+}
+function input(id,dir){
+ if(dir)pressed.set(id,dir);else pressed.delete(id);
+ const active=[...pressed.values()].at(-1);
+ for(const b of buttons)b.classList.toggle('held',b.dataset.dir===active);
+}
+function stop(){
+ pressed.clear();for(const b of buttons)b.classList.remove('held');
+}
+for(const b of buttons){
+ b.addEventListener('pointerdown',e=>{
+   if(e.button!==0)return;e.preventDefault();b.setPointerCapture(e.pointerId);
+   input(e.pointerId,b.dataset.dir);
+ });
+ for(const event of ['pointerup','pointercancel','lostpointercapture'])
+   b.addEventListener(event,e=>input(e.pointerId,null));
+ b.addEventListener('contextmenu',e=>e.preventDefault());
+}
+addEventListener('keydown',e=>{
+ if(!keyToDir[e.key]||e.metaKey||e.altKey||e.ctrlKey)return;
+ e.preventDefault();if(!e.repeat)input(e.key,keyToDir[e.key]);
+});
+addEventListener('keyup',e=>{if(keyToDir[e.key])input(e.key,null);});
+addEventListener('blur',stop);
+addEventListener('pagehide',stop);
+document.addEventListener('visibilitychange',()=>{if(document.hidden)stop()});
+document.querySelector('#reset').addEventListener('click',()=>{hero={...START};stride=0;stop()});
+document.querySelector('#grid').addEventListener('click',e=>{
+ grid=!grid;e.currentTarget.setAttribute('aria-pressed',String(grid));
+});
+function resize(){
+ const ratio=Math.min(devicePixelRatio||1,2),w=Math.round(innerWidth*ratio),h=Math.round(innerHeight*ratio);
+ if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}
+ return ratio;
+}
+function paint(now,art,ground){
+ const dpr=resize(),zoom=1.18,scale=dpr*zoom;
+ const viewW=canvas.width/scale,viewH=canvas.height/scale;
+ camera.x=Math.max(0,Math.min(WIDTH*TILE-viewW,hero.x-viewW/2));
+ camera.y=Math.max(0,Math.min(HEIGHT*TILE-viewH,hero.y-viewH/2-42));
+ ctx.setTransform(1,0,0,1,0,0);ctx.imageSmoothingEnabled=false;
+ ctx.fillStyle='#28678e';ctx.fillRect(0,0,canvas.width,canvas.height);
+ ctx.setTransform(scale,0,0,scale,-Math.floor(camera.x)*scale,-Math.floor(camera.y)*scale);
+ const frame=Math.floor(now/360)%2;
+ // Two APPROVED 64x64 water frames, composed from native 32px quarters.
+ // The animated sea is behind (never over) the transparent land mask.
+ for(let y=0;y<HEIGHT;y++)for(let x=0;x<WIDTH;x++)
+   if(MAP[y][x]==='sea'||Math.abs(y-SHORE_Y[x])<=1){
+     ctx.drawImage(art.water,frame*64+(x&1)*TILE,(y&1)*TILE,
+       TILE,TILE,x*TILE,y*TILE,TILE,TILE);
+   }
+ ctx.drawImage(ground.staticMap,0,0);
+ if(grid){
+   ctx.save();ctx.strokeStyle='rgba(252,229,162,.42)';ctx.lineWidth=.7;
+   for(let x=0;x<=WIDTH;x++){ctx.beginPath();ctx.moveTo(x*TILE,0);ctx.lineTo(x*TILE,HEIGHT*TILE);ctx.stroke();}
+   for(let y=0;y<=HEIGHT;y++){ctx.beginPath();ctx.moveTo(0,y*TILE);ctx.lineTo(WIDTH*TILE,y*TILE);ctx.stroke();}
+   ctx.restore();
+ }
+ ctx.fillStyle='rgba(14,28,39,.42)';
+ ctx.beginPath();ctx.ellipse(hero.x,hero.y-2,11,3.2,0,0,Math.PI*2);ctx.fill();
+ const column=walking?[0,1,0,2][Math.floor(stride/13)%4]:0;
+ ctx.drawImage(art.hero,column*TILE,hero.row*TILE,TILE,TILE,hero.x-16,hero.y-30,TILE,TILE);
+ draws++;
+ window.__SHORE_QA={ready:true,tileSize:TILE,map:[WIDTH,HEIGHT],
+   waterFrames:2,waterFrame:frame,coastCount:ground.coastline.length,
+   sandCells:MAP.flat().filter(t=>t==='sand').length,
+   seaCells:MAP.flat().filter(t=>t==='sea').length,
+   dryMapGenerated:true,shorelineTechnique:'4-corner-16-tile-mask',
+   waveLayer:'animated-before-alpha-ground',hero:{...hero},grid,draws};
+}
+async function start(){
+ const invalid=validateShore();if(invalid.length)throw Error('地形接続の規則違反: '+invalid.join('; '));
+ const [art]=await Promise.all([
+   (async()=>({
+     hero:await initImage(source.hero),
+     water:await initImage(source.water),
+     mask:await initImage(source.mask),
+     foam:await initImage(source.foam),
+     sand:await Promise.all(source.sand.map(initImage))
+   }))(),
+   new Promise((resolve,reject)=>{
+     const LAND=window.YK_LANDSCAPE,AUTO=window.YK_AUTOTILE;
+     const until=setTimeout(()=>reject(Error('元の地形画像が読み込めません')),25000);
+     const check=()=>{
+       const errors={...LAND.errors,...AUTO.errors};
+       if(Object.keys(errors).length){clearTimeout(until);reject(Error(JSON.stringify(errors)));return;}
+       if(LAND.ready()&&AUTO.ready()){clearTimeout(until);resolve();}
+     };
+     LAND.load(check);AUTO.load(check);check();
+   })
+ ]);
+ if(art.hero.naturalWidth<96||art.hero.naturalHeight<128)throw Error('緋月の32pxシートではありません');
+ if(art.water.width!==128||art.water.height!==64)throw Error('承認済み水面2コマと異なります');
+ if([art.mask,art.foam,...art.sand].some(a=>a.width!==128||a.height!==128))
+   throw Error('海岸16チップアトラスの寸法が異なります');
+ const ground=composeDryLand(art);
+ loading.hidden=true;
+ function tick(now){
+   const dt=lastTime?Math.min(50,now-lastTime):0;lastTime=now;
+   const dir=[...pressed.values()].at(-1);walking=false;
+   if(dir){
+     const [dx,dy,row]=directions[dir];hero.row=row;
+     const step=150*dt/1000;
+     const nx=hero.x+dx*step,ny=hero.y+dy*step;
+     if(safeFoot(nx,ny)){hero.x=nx;hero.y=ny;stride+=step;walking=true;}
+   }
+   paint(now,art,ground);requestAnimationFrame(tick);
+ }
+ requestAnimationFrame(tick);
+}
+start().catch(e=>{console.error(e);loading.textContent='読み込みエラー: '+e.message;});
+</script>
+</body>
+</html>

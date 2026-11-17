@@ -184,7 +184,9 @@ try{
     'diagonal cliff shapes survive even where mountain sprites are restored');
   assert.equal(info.waterfallBasin.retired.length,16,'only verified waterfall mountain cells are cleaned');
   assert.equal(info.mountainThinning.sourceCount,168,'keep mountain sprites everywhere except the waterfall corridor');
-  assert.ok(info.mountainThinning.runtimeCount>=98,'preserve most original mountain sprites');
+  assert.equal(info.mountainThinning.runtimeCount,
+    info.mountainThinning.sourceCount-71,
+    'only waterfall-adjacent mountains change; all unrelated runtime scenery is retained');
   assert.ok(info.mountainThinning.removed.every(o=>
     o.terrain==='mountain'?o.stillPresent&&!o.walkable:!o.stillPresent),
     'solid mountain ground stays visible, while water and grass have no phantom mountain');

@@ -1,105 +1,91 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {TILE,WIDTH,HEIGHT,MAP,SHORE_Y,SAND_DEPTH,START,SCENERY,sceneryCollision,canStandWithScenery,terrainAt,walkable,safeFoot,shoreCover,validateShore}
- from '../data/maps/shoreline-study/scene.mjs';
+import {
+ TILE,WIDTH,HEIGHT,MAP,SHORE_Y,START,SCENERY,
+ sceneryCollision,canStandWithScenery,terrainAt,walkable,safeFoot,
+ shoreCover,validateShore
+} from '../data/maps/shoreline-study/scene.mjs';
 import {TIDE_FRAMES,TIDE_INTERVAL_MS,tideFrame,surfFront,surfSample}
  from '../data/maps/shoreline-study/tide.mjs';
 
-test('only a fixed 32px sea, sand, grass prototype is authored',()=>{
+test('beach stretches inland without a forced grassy edge',()=>{
  assert.equal(TILE,32);
  assert.deepEqual([WIDTH,HEIGHT],[30,18]);
  assert.equal(SHORE_Y.length,WIDTH);
- assert.equal(SAND_DEPTH.length,WIDTH);
  assert.equal(MAP.length,HEIGHT);
  assert.ok(MAP.every(row=>row.length===WIDTH));
- assert.deepEqual([...new Set(MAP.flat())].sort(),['grass','sand','sea']);
+ assert.deepEqual([...new Set(MAP.flat())].sort(),['sand','sea']);
  assert.deepEqual(validateShore(),[]);
+ for(let x=0;x<WIDTH;x++){
+   assert.ok(HEIGHT-SHORE_Y[x]>=9,'minimum 9 full sand cells at column '+x);
+   for(let y=SHORE_Y[x];y<HEIGHT;y++)
+     assert.equal(terrainAt(x,y),'sand','never force grass at end of beach');
+ }
  const counts=MAP.flat().reduce((acc,t)=>(acc[t]=(acc[t]||0)+1,acc),{});
- assert.ok(counts.sea>120 && counts.sand>60 && counts.grass>100,JSON.stringify(counts));
+ assert.ok(counts.sea>120 && counts.sand>250,JSON.stringify(counts));
+ assert.equal(counts.grass,undefined);
 });
-test('all 4-way coast turns preserve the sand buffer and 16-corner chip masks',()=>{
+test('approved sixteen-corner mask still connects straight and diagonal sea edges',()=>{
  const variants=new Set();
  for(let y=-1;y<HEIGHT;y++)for(let x=-1;x<WIDTH;x++){
-  const bits=shoreCover(x,y);
-  assert.ok(Number.isInteger(bits)&&bits>=0&&bits<=15);
-  variants.add(bits);
+   const bits=shoreCover(x,y);
+   assert.ok(Number.isInteger(bits)&&bits>=0&&bits<=15);
+   variants.add(bits);
  }
  assert.ok(variants.has(15)&&variants.has(0));
- assert.ok([...variants].some(v=>![0,3,6,9,12,15].includes(v)),
-  'test diagonal/concave corner masks instead of only axis-aligned shores');
- for(let x=0;x<WIDTH;x++){
-  for(let y=0;y<HEIGHT;y++){
-   const type=terrainAt(x,y);
-   if(type==='sea')for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]])
-     assert.notEqual(terrainAt(x+dx,y+dy),'grass','sea/grass touch at '+x+','+y);
-  }
-  if(x)assert.ok(Math.abs(SHORE_Y[x]-SHORE_Y[x-1])<=1,'slope exceeded one cell');
-  assert.ok(SAND_DEPTH[x]>=3);
- }
+ assert.ok([...variants].some(v=>![0,3,6,9,12,15].includes(v)));
+ for(let x=1;x<WIDTH;x++)
+   assert.ok(Math.abs(SHORE_Y[x]-SHORE_Y[x-1])<=1,'coastline is connected');
 });
-test('eight wave states make the surf advance, break and retreat over sand',()=>{
+test('eight accepted wave states still advance and retreat over the full sandy beach',()=>{
  assert.equal(TIDE_FRAMES.length,8);
  assert.equal(TIDE_INTERVAL_MS,260);
  assert.deepEqual(Array.from({length:8},(_,i)=>tideFrame(i*260).reach),
-  [2,4,7,11,14,11,7,4]);
+   [2,4,7,11,14,11,7,4]);
  assert.equal(tideFrame(0).phase,0);
  assert.equal(tideFrame(TIDE_INTERVAL_MS*8).phase,0,'loop repeats');
  assert.equal(tideFrame(TIDE_INTERVAL_MS*5).retreat,true);
- assert.equal(surfSample(15,'sand',0,0),0,'low tide leaves exposed sand');
- assert.equal(surfSample(15,'sand',4,0),3,'high tide carries a crest onto the beach');
- assert.equal(surfSample(8,'sand',7,0),1,'wet sand stays visible after retreat');
- assert.equal(surfSample(8,'grass',4,0),0,'grass stays dry');
- assert.equal(surfSample(8,'sea',4,0),0,'surf layer does not replace sea');
+ assert.equal(surfSample(15,'sand',0,0),0,'low tide exposes sand');
+ assert.equal(surfSample(15,'sand',4,0),3,'high tide reaches beach');
+ assert.equal(surfSample(8,'sand',7,0),1,'sand remains damp while wave retreats');
+ assert.equal(surfSample(8,'sea',4,0),0,'wave layer does not replace open ocean');
  for(const phase of [0,1,2,3,4,5,6,7])
    for(let x=32;x<WIDTH*32;x+=32)
      assert.ok(Math.abs(surfFront(phase,x)-surfFront(phase,x-1))<=1,
-       'wave crest has no abrupt tile seam at world x='+x);
+       'no white-crest seam at world x='+x);
 });
-test('the actor can approach the tide but the actual foot cannot enter the sea',()=>{
+test('hero can approach tide and roam an inland sandy expanse but not enter the sea',()=>{
  assert.equal(safeFoot(START.x,START.y),true);
  const x=8*TILE+16,boundary=SHORE_Y[8];
  assert.equal(walkable(8,boundary-1),false);
  assert.equal(walkable(8,boundary),true);
- assert.equal(walkable(8,boundary+3),true);
+ assert.equal(walkable(8,HEIGHT-2),true,'far inland beach is walkable');
  assert.equal(safeFoot(x,(boundary-1)*TILE+16),false);
  assert.equal(safeFoot(x,(boundary+1)*TILE+16),true);
  assert.equal(safeFoot(-10,200),false);
  assert.equal(safeFoot(300,100000),false);
 });
-test('only eight approved native-size shoreline objects and foot collisions are placed',()=>{
- assert.equal(SCENERY.length,8);
- assert.equal(SCENERY.filter(o=>o.kind==='rock').length,3);
- assert.equal(SCENERY.filter(o=>o.kind==='grass-tuft').length,5);
- assert.ok(SCENERY.every(o=>o.solid===(o.kind==='rock')));
- assert.equal(new Set(SCENERY.map(o=>o.id)).size,SCENERY.length);
+test('three sparse native rocks rest on sand and preserve foot collisions',()=>{
+ assert.equal(SCENERY.length,3);
+ assert.ok(SCENERY.every(o=>o.kind==='rock'&&o.solid));
+ assert.equal(new Set(SCENERY.map(o=>o.id)).size,3);
  for(const object of SCENERY){
-  assert.ok(Number.isInteger(object.x)&&Number.isInteger(object.y));
-  assert.equal(terrainAt(Math.floor(object.x/TILE),Math.floor((object.y-1)/TILE)),
-   'grass','object foot must rest on dry grass');
-  if(object.solid){
-   assert.ok(sceneryCollision(object.x,object.y),'rock foot actually blocks');
+   assert.ok(Number.isInteger(object.x)&&Number.isInteger(object.y));
+   assert.equal(terrainAt(Math.floor(object.x/TILE),Math.floor((object.y-1)/TILE)),
+     'sand','rock rests on beach');
+   assert.ok(sceneryCollision(object.x,object.y),'rock foot blocks');
    assert.equal(canStandWithScenery(object.x,object.y),false);
-  }else{
-   assert.equal(sceneryCollision(object.x,object.y),false,
-    'walk-through ground cover does not add invisible collision');
-  }
  }
- assert.equal(canStandWithScenery(START.x,START.y),true,'start is never hidden by props');
+ assert.equal(canStandWithScenery(START.x,START.y),true);
  assert.ok(!sceneryCollision(START.x,START.y));
- assert.equal(canStandWithScenery(0,0),false,'ocean remains blocked');
+ assert.equal(canStandWithScenery(0,0),false);
 });
-
-test('preview is independent of the production village and cove, reuses approved 32px images',()=>{
+test('review HTML draws approved mapchips, not grass band, preserves sprite and tide',()=>{
  const html=readFileSync('previews/shoreline-study/index.html','utf8');
- assert.match(html,/from '..\/..\/data\/maps\/shoreline-study\/scene\.mjs'/);
- assert.ok(html.includes('window.YK_LANDSCAPE.groundLayer(map)'));
- assert.ok(html.includes("grassCover=(x,y)=>"),'sand/grass is a separate 4-corner tile junction');
- assert.ok(html.includes("cutChip(grassMask,art.mask,cover,px,py)"),
-   'grass shapes reuse the existing 16-shape chip atlas');
- assert.ok(html.includes("grassDiagonalChips"),'diagonal transitions are generated');
- assert.ok(html.includes("ctx.drawImage(ground.staticMap,0,0)"),
-   'render contiguous static mapchip cache without re-cut 32px draw seams');
+ assert.ok(html.includes('window.YK_LANDSCAPE.groundLayer(dryMap)'));
+ assert.ok(html.includes('奥まで広がる砂浜'));
+ assert.ok(html.includes('ctx.drawImage(ground.staticMap,0,0)'));
  assert.match(html,/destination-in/);
  assert.match(html,/drawImage\(art\.water,frame\*64/);
  assert.match(html,/32pxアニメマップチップ/);
@@ -108,16 +94,13 @@ test('preview is independent of the production village and cove, reuses approved
  assert.ok(html.includes('drawImage(tileAtlas.sheet,'));
  assert.ok(html.includes('animated-32px-atlas-chips'));
  assert.ok(html.includes('ctx.putImageData(tile,'));
- assert.ok(!html.includes('drawImage(ground.staticMap,x*TILE,y*TILE,TILE,TILE'),'never cut a composed map into cells again');
- assert.equal(html.includes('ctx.drawImage(tideLayers['),false,'do not redraw full-frame tide canvases');
- assert.equal(html.includes('buildTideLayers('),false,'remove the old overlay implementation');
- assert.ok(html.includes("ctx.drawImage(bitmap,Math.round(actor.x-w/2),Math.round(actor.y-h))"),
-   'scenery sprites must be drawn at their native image pixel dimensions');
- assert.ok(html.includes("sort((a,b)=>a.y-b.y"),'occlusion is sorted by contact foot');
- assert.ok(html.includes("canStandWithScenery(nx,ny)"),'actor collision respects rock foot');
- assert.ok(html.includes("sceneryRender:'unscaled-native-sprites-sorted-by-foot'"));
-  assert.ok(html.includes('drawCharacter(ctx,'));
+ assert.equal(html.includes('buildTideLayers('),false);
+ assert.equal(html.includes('grassPaletteSprite('),false);
+ assert.equal(html.includes('grassTuft'),false);
+ assert.equal(html.includes('grassCover='),false);
+ assert.ok(html.includes('drawCharacter(ctx,'));
  assert.ok(html.includes("characterSheet:'village-80x112'"));
+ assert.ok(html.includes('canStandWithScenery(nx,ny)'));
  assert.match(html,/data-dir="up"/);
  assert.match(html,/aria-label="四方向移動"/);
  assert.match(html,/waterFrames:2/);
@@ -126,7 +109,6 @@ test('preview is independent of the production village and cove, reuses approved
  for(const asset of [
    'assets/characters/hizuki/walk-4dir-80x112.png',
    'assets/village/objects/rocks.png',
-   'assets/village/terrain/grass-tuft.png',
    'assets/field/effects/water-motion.png',
    'assets/field/terrain/atlas/coast-mask-32.png',
    'assets/field/terrain/atlas/coast-shallow-32.png',

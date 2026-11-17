@@ -22,6 +22,15 @@ button{color:#faf2de;background:#243a4cdd;border:1px solid #c8b38e;border-radius
 [data-dir="right"]{grid-column:3;grid-row:2}
 #tools{position:absolute;right:max(9px,env(safe-area-inset-right));bottom:calc(9px + env(safe-area-inset-bottom));display:flex;gap:6px}
 #tools button{font:12px system-ui,sans-serif;padding:6px 10px}
+#pickup-shell{min-width:104px;font-weight:700}
+#pickup-shell:disabled,#shell-hud button:disabled{opacity:.4;cursor:default}
+#shell-hud{position:absolute;z-index:2;right:max(9px,env(safe-area-inset-right));top:max(7px,env(safe-area-inset-top));width:215px;max-width:41%;border:1px solid #c9b185aa;background:#142432e8;padding:7px 9px;color:#f5eee0;display:grid;gap:4px;font-size:11px}
+#shell-hud strong{font-size:13px}
+#shell-hud p{margin:0;line-height:1.3}
+#shell-hud .actions{display:flex;gap:4px}
+#shell-hud button{flex:1;min-height:31px;font-size:11px;border-color:#bca581}
+#shell-message{color:#ecd0a2;min-height:14px}
+@media (max-width:720px){#shell-hud{width:190px;font-size:10px}#shell-hud button{font-size:10px}}
 #loading{position:absolute;inset:0;display:grid;place-items:center;background:#162d39e8;color:#fbefcf;text-align:center;font-size:15px;z-index:3;padding:25px}
 #loading[hidden]{display:none}
 #rotate{display:none}
@@ -34,7 +43,17 @@ button{color:#faf2de;background:#243a4cdd;border:1px solid #c8b38e;border-radius
 <body>
 <main>
   <canvas id="scene" role="img" aria-label="32ピクセルの海・波打ち際・広い砂浜を組み合わせた歩行検証"></canvas>
-  <div id="heading">海辺の接続検証 <small>32pxアニメマップチップ（8コマ）／奥まで広がる砂浜／村用緋月／本編未採用</small></div>
+  <div id="heading">海辺の接続検証 <small>32pxアニメマップチップ（8コマ）／貝殻採集と買取の試作／村用緋月／本編未採用</small></div>
+  <aside id="shell-hud" aria-label="貝殻採集と買取の検証">
+    <strong>浜辺の貝殻</strong>
+    <p id="shell-bag">所持 0個｜買取 0両</p>
+    <p id="shell-money">換金済み 0両（検証用）</p>
+    <p id="shell-progress">戦闘5回ごとに貝殻補充</p>
+    <div class="actions">
+      <button id="sell-shells" type="button" disabled>まとめて売る（試作）</button>
+    </div>
+    <p id="shell-message" aria-live="polite">貝殻に近づいて A で拾う</p>
+  </aside>
   <div id="controls" aria-label="四方向移動">
     <button data-dir="up" aria-label="北">▲</button>
     <button data-dir="left" aria-label="西">◀</button>
@@ -42,6 +61,7 @@ button{color:#faf2de;background:#243a4cdd;border:1px solid #c8b38e;border-radius
     <button data-dir="right" aria-label="東">▶</button>
   </div>
   <div id="tools">
+    <button id="pickup-shell" type="button" disabled aria-label="A 貝殻を拾う">A ひろう</button>
     <button id="grid" type="button" aria-pressed="false">境界表示</button>
     <button id="reset" type="button">開始位置</button>
   </div>
@@ -52,6 +72,12 @@ button{color:#faf2de;background:#243a4cdd;border:1px solid #c8b38e;border-radius
 import {TILE,WIDTH,HEIGHT,MAP,START,SHORE_Y,SCENERY,canStandWithScenery,shoreCover,safeFoot,validateShore} from '../../data/maps/shoreline-study/scene.mjs';
 import {TIDE_FRAMES,tideFrame,surfSample} from '../../data/maps/shoreline-study/tide.mjs';
 import {drawCharacter} from '../../src/game/village/residents.mjs';
+import {SHELL_SAVE_KEY,SHELL_KINDS,PICKUP_DISTANCE,
+  normalizeShellState,initialShellState,syncBattleShells,validateShellSites,
+  gatherShell,sellAllShells,bagValue}
+ from '../../data/maps/shoreline-study/shells.mjs';
+import {SHELL_ART_SIZE,createShellAtlas} from '../../data/maps/shoreline-study/shell-art.mjs';
+import {readPlayer} from '../../src/game/battle/rules.mjs';
 const canvas=document.querySelector('#scene'),ctx=canvas.getContext('2d',{alpha:false});
 const loading=document.querySelector('#loading');
 const directions={up:[0,-1,1],down:[0,1,0],right:[1,0,2],left:[-1,0,3]};
@@ -59,6 +85,80 @@ const keyToDir={ArrowUp:'up',ArrowDown:'down',ArrowRight:'right',ArrowLeft:'left
 const pressed=new Map(),buttons=[...document.querySelectorAll('[data-dir]')];
 let hero={...START},stride=0,walking=false,lastTime=0,grid=false,draws=0;
 const camera={x:0,y:0};
+const shellAtlas=createShellAtlas(),shellIndex=Object.fromEntries(
+ shellAtlas.ids.map((id,i)=>[id,i]));
+const shellHud={
+ bag:document.querySelector('#shell-bag'),
+ money:document.querySelector('#shell-money'),
+ message:document.querySelector('#shell-message'),
+ progress:document.querySelector('#shell-progress'),
+ pick:document.querySelector('#pickup-shell'),
+ sell:document.querySelector('#sell-shells')
+};
+function loadShells(){
+ let stored=null;
+ try{stored=JSON.parse(localStorage.getItem(SHELL_SAVE_KEY)||'null');}catch{}
+ const battles=readPlayer().completedBattles;
+ const initial=stored?normalizeShellState(stored,battles):initialShellState(battles);
+ return syncBattleShells(initial,battles).state;
+}
+let shellState=loadShells();
+let shellMessage='戦闘5回ごとに貝殻が補充される',lastShellHud='';
+function persistShells(){
+ try{localStorage.setItem(SHELL_SAVE_KEY,JSON.stringify(shellState));}
+ catch{shellMessage='このブラウザでは採集記録を保存できません。';}
+}
+function remainingShells(){return shellState.onBeach;}
+function nearbyShell(){
+ let best=null,least=PICKUP_DISTANCE;
+ for(const shell of remainingShells()){
+   const d=Math.hypot(shell.x-hero.x,shell.y-hero.y);
+   if(d<=least){best=shell;least=d;}
+ }
+ return best;
+}
+function syncShellsWithBattles(){
+ const battles=readPlayer().completedBattles;
+ if(battles===shellState.lastBattles)return;
+ const result=syncBattleShells(shellState,battles);
+ shellState=result.state;
+ if(result.spawned) shellMessage='戦闘5回経過！ 貝殻が'+result.spawned+'個流れ着いた。';
+ if(result.reset) shellMessage='冒険の記録が変わったので貝殻を初期化した。';
+ persistShells();lastShellHud='';
+}
+function refreshShellHud(){
+ const bag=shellState.bag;
+ const count=Object.values(bag).reduce((sum,n)=>sum+n,0);
+ const worth=bagValue(shellState);
+ const nearby=nearbyShell();
+ const battles=shellState.lastBattles,until=5-battles%5;
+ const value=[count,worth,shellState.gold,nearby?.id,shellMessage,
+   shellState.picked.length,shellState.onBeach.length,battles].join('|');
+ if(value===lastShellHud)return;
+ lastShellHud=value;
+ shellHud.bag.textContent='所持 '+count+'個｜買取 '+worth+'両';
+ shellHud.money.textContent='買取累計 '+shellState.gold+'両（検証用）';
+ shellHud.progress.textContent='戦闘 '+battles+'回／次の補充まで '+until+'回';
+ shellHud.sell.disabled=worth===0;
+ shellHud.pick.disabled=!nearby;
+ shellHud.message.textContent=nearby?
+   SHELL_KINDS[nearby.kind].name+'：Aで拾う':shellMessage;
+}
+function pickShell(id){
+ const shell=nearbyShell();
+ const result=gatherShell(shellState,id??shell?.id,hero.x,hero.y);
+ shellState=result.state;shellMessage=result.message;
+ if(result.accepted)persistShells();
+ lastShellHud='';refreshShellHud();
+}
+shellHud.pick.addEventListener('click',()=>pickShell());
+shellHud.sell.addEventListener('click',()=>{
+ const result=sellAllShells(shellState);
+ shellState=result.state;shellMessage=result.message;
+ if(result.accepted)persistShells();
+ lastShellHud='';refreshShellHud();
+});
+persistShells();refreshShellHud();
 const buffer=(w,h)=>{const c=document.createElement('canvas');c.width=w;c.height=h;const q=c.getContext('2d');q.imageSmoothingEnabled=false;return [c,q];};
 const image=(src)=>new Promise((resolve,reject)=>{
  const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(Error('画像取得失敗: '+src));im.src=src;
@@ -198,6 +298,10 @@ for(const b of buttons){
  b.addEventListener('contextmenu',e=>e.preventDefault());
 }
 addEventListener('keydown',e=>{
+ if((e.key==='z'||e.key==='Z'||e.key==='Enter')&&!e.metaKey&&!e.ctrlKey&&!e.altKey){
+   if(e.target?.tagName==='BUTTON')return;
+   e.preventDefault();if(!e.repeat)pickShell();return;
+ }
  if(!keyToDir[e.key]||e.metaKey||e.altKey||e.ctrlKey)return;
  e.preventDefault();if(!e.repeat)input(e.key,keyToDir[e.key]);
 });
@@ -208,6 +312,16 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden)stop()});
 document.querySelector('#reset').addEventListener('click',()=>{hero={...START};stride=0;stop()});
 document.querySelector('#grid').addEventListener('click',e=>{
  grid=!grid;e.currentTarget.setAttribute('aria-pressed',String(grid));
+});
+canvas.addEventListener('pointerup',e=>{
+ if(e.pointerType==='mouse'&&e.button!==0)return;
+ const bounds=canvas.getBoundingClientRect();
+ const scale=(canvas.width/bounds.width)/(Math.min(devicePixelRatio||1,2)*1.18);
+ const x=Math.floor(camera.x)+(e.clientX-bounds.left)*scale;
+ const y=Math.floor(camera.y)+(e.clientY-bounds.top)*scale;
+ const tapped=remainingShells().find(shell=>
+   Math.hypot(x-shell.x,y-(shell.y-8))<16);
+ if(tapped)pickShell(tapped.id);
 });
 function resize(){
  const ratio=Math.min(devicePixelRatio||1,2),w=Math.round(innerWidth*ratio),h=Math.round(innerHeight*ratio);
@@ -264,6 +378,7 @@ function paint(now,art,ground,tileAtlas){
  // No stretched tile sprites, floating rocks or arbitrary camera-scale factors.
  const actors=[
    ...SCENERY.map(object=>({type:'object',...object})),
+   ...remainingShells().map(shell=>({type:'shell',...shell})),
    {type:'hero',x:hero.x,y:hero.y}
  ].sort((a,b)=>a.y-b.y||(a.type==='hero'?1:-1));
  for(const actor of actors){
@@ -272,6 +387,12 @@ function paint(now,art,ground,tileAtlas){
      const w=bitmap.naturalWidth??bitmap.width;
      const h=bitmap.naturalHeight??bitmap.height;
      ctx.drawImage(bitmap,Math.round(actor.x-w/2),Math.round(actor.y-h));
+   }else if(actor.type==='shell'){
+     const index=shellIndex[actor.kind];
+     ctx.drawImage(shellAtlas.canvas,index*SHELL_ART_SIZE,0,
+       SHELL_ART_SIZE,SHELL_ART_SIZE,
+       Math.round(actor.x-SHELL_ART_SIZE/2),Math.round(actor.y-SHELL_ART_SIZE+4),
+       SHELL_ART_SIZE,SHELL_ART_SIZE);
    }else{
      ctx.fillStyle='rgba(14,28,39,.34)';
      ctx.beginPath();ctx.ellipse(hero.x,hero.y-2,23,6,0,0,Math.PI*2);ctx.fill();
@@ -304,10 +425,20 @@ function paint(now,art,ground,tileAtlas){
    maxSandRows:Math.max(...SHORE_Y.map(y=>HEIGHT-y)),
    dryMapGenerated:true,shorelineTechnique:'4-corner-16-tile-mask',
    waveLayer:'synchronous-8-frame-32px-surf-mapchip-atlas',
+   shells:{battles:shellState.lastBattles,processedCycles:shellState.processedCycles,
+     untilNextBatch:5-shellState.lastBattles%5,visible:remainingShells().length,
+     picked:shellState.picked.length,bag:{...shellState.bag},
+     gold:shellState.gold,worth:bagValue(shellState),
+     nearest:nearbyShell()?.id??null,
+     atlas:[shellAtlas.canvas.width,shellAtlas.canvas.height],
+     render:'native-20px-pixel-atlas',
+     savedSeparately:true,
+     positions:remainingShells().map(({id,kind,x,y,site})=>({id,kind,x,y,site}))},
    hero:{...hero},grid,draws};
 }
 async function start(){
- const invalid=validateShore();if(invalid.length)throw Error('地形接続の規則違反: '+invalid.join('; '));
+ const invalid=[...validateShore(),...validateShellSites()];
+ if(invalid.length)throw Error('地形接続の規則違反: '+invalid.join('; '));
  const [art]=await Promise.all([
    (async()=>({
      hero:await initImage(source.hero),
@@ -353,6 +484,8 @@ async function start(){
      const nx=hero.x+dx*step,ny=hero.y+dy*step;
      if(canStandWithScenery(nx,ny)){hero.x=nx;hero.y=ny;stride+=step;walking=true;}
    }
+   if(draws%30===0)syncShellsWithBattles();
+   refreshShellHud();
    paint(now,art,ground,tileAtlas);requestAnimationFrame(tick);
  }
  requestAnimationFrame(tick);

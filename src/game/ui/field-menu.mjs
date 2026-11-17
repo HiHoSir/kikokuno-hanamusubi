@@ -120,15 +120,16 @@ function updateEquipmentPreview(hero){
   if(!preview)return;
   const [slot]=equipmentSlots[equipmentSlotIndex];
   const choice=equipmentOptions[equipmentOptionIndex];
-  const next=choice?equipmentPreview(hero,slot,choice.id):null;
+  const comparing=equipmentFocus==='gear';
+  const next=comparing&&choice?equipmentPreview(hero,slot,choice.id):null;
   const attack=next?.attack??hero.attack,defense=next?.defense??hero.defense;
   preview.replaceChildren();
-  const heading=el('span',equipmentFocus==='slots'?'現在の能力':'変更後の能力');
+  const heading=el('span',comparing?'変更後の能力':'現在の能力');
   heading.className='equipment-preview-heading';
-  const atk=el('strong','攻撃 '+hero.attack+' → '+attack);
-  const def=el('strong','守備 '+hero.defense+' → '+defense);
-  if(attack>hero.attack)atk.className='equipment-stat-up';
-  if(defense>hero.defense)def.className='equipment-stat-up';
+  const atk=el('strong',comparing?'攻撃 '+hero.attack+' → '+attack:'攻撃 '+hero.attack);
+  const def=el('strong',comparing?'守備 '+hero.defense+' → '+defense:'守備 '+hero.defense);
+  if(comparing&&attack>hero.attack)atk.className='equipment-stat-up';
+  if(comparing&&defense>hero.defense)def.className='equipment-stat-up';
   preview.append(heading,atk,def);
 }
 function renderEquipment(hero){

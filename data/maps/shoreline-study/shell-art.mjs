@@ -12,6 +12,7 @@ export const SHELL_ART=Object.freeze({
    '..OddrfffffffrrddO..','...OddddddddddddO...',
    '....OOOOOOOOOOOO....','......ssssssss......',
    '....................','....................',
+   '....................','....................',
    '....................','....................'
  ]),
  sakura:Object.freeze([

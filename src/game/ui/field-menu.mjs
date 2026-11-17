@@ -201,6 +201,9 @@ function renderDetails(hero,id){
       }});
     }
     if(readStoryStage()!=='chief')rows.push({label:'結び札',caption:'里長から預かった札。'});
+    if(readStoryStage()==='forest')rows.push({
+      label:'潮花の花びら',caption:'潮平が海の入り江で拾った、淡く光る花びら。'
+    });
   }else if(id==='equipment'){
     renderEquipment(hero);
     return;

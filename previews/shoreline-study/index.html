@@ -34,7 +34,7 @@ button{color:#faf2de;background:#243a4cdd;border:1px solid #c8b38e;border-radius
 <body>
 <main>
   <canvas id="scene" role="img" aria-label="32ピクセルの海・波打ち際・砂浜・草地を組み合わせた歩行検証"></canvas>
-  <div id="heading">海辺の接続検証 <small>32px地形チップ／波あり・緋月は歩行可／本編未採用</small></div>
+  <div id="heading">海辺の接続検証 <small>水面2コマ＋8段階の寄せ波・引き波／村用緋月／本編未採用</small></div>
   <div id="controls" aria-label="四方向移動">
     <button data-dir="up" aria-label="北">▲</button>
     <button data-dir="left" aria-label="西">◀</button>
@@ -50,6 +50,8 @@ button{color:#faf2de;background:#243a4cdd;border:1px solid #c8b38e;border-radius
 </main>
 <script type="module">
 import {TILE,WIDTH,HEIGHT,MAP,START,SHORE_Y,SAND_DEPTH,shoreCover,safeFoot,validateShore} from '../../data/maps/shoreline-study/scene.mjs';
+import {TIDE_FRAMES,tideFrame,tidePixel} from '../../data/maps/shoreline-study/tide.mjs';
+import {drawCharacter} from '../../src/game/village/residents.mjs';
 const canvas=document.querySelector('#scene'),ctx=canvas.getContext('2d',{alpha:false});
 const loading=document.querySelector('#loading');
 const directions={up:[0,-1,1],down:[0,1,0],right:[1,0,2],left:[-1,0,3]};
@@ -64,7 +66,7 @@ const image=(src)=>new Promise((resolve,reject)=>{
 const asset=path=>new URL('../../'+path,import.meta.url);
 const initImage=async path=>image(asset(path).href);
 const source={
- hero:'assets/characters/hizuki/walk-sd-32.png',
+ hero:'assets/characters/hizuki/walk-4dir-80x112.png',
  water:'assets/field/effects/water-motion.png',
  mask:'assets/field/terrain/atlas/coast-mask-32.png',
  foam:'assets/field/terrain/atlas/coast-shallow-32.png',
@@ -101,14 +103,56 @@ function composeDryLand(art){
  }
  c.globalCompositeOperation='destination-in';c.drawImage(coverage,0,0);
  c.globalCompositeOperation='source-over';
- // The original 16-corner foam and sand chips keep the diagonal rule
- // consistent at concave/convex shoreline joints.
+ // Sand stays static. The moving foam is composed separately and is never
+ // baked here: a fixed coast foam line would defeat the ebb-and-flow motion.
  for(const {px,py,cover,x,y} of coastline){
-   cutChip(c,art.foam,cover,px,py);
    const phase=((x&1)+2*(y&1));
    cutChip(c,art.sand[phase],cover,px,py);
  }
  return {staticMap,coastline,shoreMask:coverage};
+}
+// One-time precomposition of an 8-phase translucent wash. Distance is taken
+// from the 16-corner alpha coastline at full pixel resolution, so the front
+// follows natural diagonals, not a stepped 32px tile boundary.
+function buildTideLayers(ground){
+ const {width,height}=ground.shoreMask;
+ const alpha=ground.shoreMask.getContext('2d',{willReadFrequently:true})
+   .getImageData(0,0,width,height).data;
+ return TIDE_FRAMES.map((state,phase)=>{
+   const [canvas,c]=buffer(width,height),imageData=c.createImageData(width,height);
+   const pixels=imageData.data;
+   let wetPixels=0,foamPixels=0,washedPixels=0;
+   for(let x=0;x<width;x++){
+     let lastSea=-1;
+     for(let y=0;y<height;y++){
+       const pixel=(y*width+x)*4;
+       if(alpha[pixel+3]<128){lastSea=y;continue;}
+       if(lastSea<0)continue;
+       const terrain=MAP[Math.floor(y/TILE)]?.[Math.floor(x/TILE)];
+       const hash=((x*13+y*29+((x>>2)*7))>>>0);
+       const effect=tidePixel(y-lastSea,terrain,phase,hash);
+       if(!effect)continue;
+       wetPixels++;
+       if(effect===1){
+         // Damp sand persists after a retreating wave.
+         pixels[pixel]=47;pixels[pixel+1]=93;pixels[pixel+2]=103;pixels[pixel+3]=72;
+       }else if(effect===2){
+         // Translucent water advances onto the existing sand texture.
+         washedPixels++;
+         pixels[pixel]=68;pixels[pixel+1]=164;pixels[pixel+2]=174;pixels[pixel+3]=112;
+       }else{
+         // Broken, dithered foam marks the front, not a permanent shore rim.
+         foamPixels++;
+         pixels[pixel]=205+(hash%3)*7;
+         pixels[pixel+1]=223+(hash%4)*5;
+         pixels[pixel+2]=205+(hash%5)*6;
+         pixels[pixel+3]=200;
+       }
+     }
+   }
+   c.putImageData(imageData,0,0);
+   return {canvas,phase,wetPixels,foamPixels,washedPixels,reach:state.reach};
+ });
 }
 function input(id,dir){
  if(dir)pressed.set(id,dir);else pressed.delete(id);
@@ -144,7 +188,7 @@ function resize(){
  if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}
  return ratio;
 }
-function paint(now,art,ground){
+function paint(now,art,ground,tideLayers){
  const dpr=resize(),zoom=1.18,scale=dpr*zoom;
  const viewW=canvas.width/scale,viewH=canvas.height/scale;
  camera.x=Math.max(0,Math.min(WIDTH*TILE-viewW,hero.x-viewW/2));
@@ -153,6 +197,7 @@ function paint(now,art,ground){
  ctx.fillStyle='#28678e';ctx.fillRect(0,0,canvas.width,canvas.height);
  ctx.setTransform(scale,0,0,scale,-Math.floor(camera.x)*scale,-Math.floor(camera.y)*scale);
  const frame=Math.floor(now/360)%2;
+ const tide=tideFrame(now);
  // Two APPROVED 64x64 water frames, composed from native 32px quarters.
  // The animated sea is behind (never over) the transparent land mask.
  for(let y=0;y<HEIGHT;y++)for(let x=0;x<WIDTH;x++)
@@ -161,23 +206,33 @@ function paint(now,art,ground){
        TILE,TILE,x*TILE,y*TILE,TILE,TILE);
    }
  ctx.drawImage(ground.staticMap,0,0);
+ // The tide overlay only contains pixels on SAND, after the static shore,
+ // and never paints onto grass or alters the map's collision cells.
+ ctx.drawImage(tideLayers[tide.phase].canvas,0,0);
  if(grid){
    ctx.save();ctx.strokeStyle='rgba(252,229,162,.42)';ctx.lineWidth=.7;
    for(let x=0;x<=WIDTH;x++){ctx.beginPath();ctx.moveTo(x*TILE,0);ctx.lineTo(x*TILE,HEIGHT*TILE);ctx.stroke();}
    for(let y=0;y<=HEIGHT;y++){ctx.beginPath();ctx.moveTo(0,y*TILE);ctx.lineTo(WIDTH*TILE,y*TILE);ctx.stroke();}
    ctx.restore();
  }
- ctx.fillStyle='rgba(14,28,39,.42)';
- ctx.beginPath();ctx.ellipse(hero.x,hero.y-2,11,3.2,0,0,Math.PI*2);ctx.fill();
- const column=walking?[0,1,0,2][Math.floor(stride/13)%4]:0;
- ctx.drawImage(art.hero,column*TILE,hero.row*TILE,TILE,TILE,hero.x-16,hero.y-30,TILE,TILE);
+ ctx.fillStyle='rgba(14,28,39,.34)';
+ ctx.beginPath();ctx.ellipse(hero.x,hero.y-2,23,6,0,0,Math.PI*2);ctx.fill();
+ // Use precisely the same 80x112 frame and foot anchor as village NPC logic.
+ drawCharacter(ctx,{bitmap:art.hero,x:hero.x,y:hero.y,
+   face:hero.row,distance:stride,moving:walking});
  draws++;
  window.__SHORE_QA={ready:true,tileSize:TILE,map:[WIDTH,HEIGHT],
-   waterFrames:2,waterFrame:frame,coastCount:ground.coastline.length,
+   waterFrames:2,waterFrame:frame,tideFrames:TIDE_FRAMES.length,
+   tidePhase:tide.phase,tideReach:tide.reach,
+   foamPixels:tideLayers[tide.phase].foamPixels,
+   wetPixels:tideLayers[tide.phase].wetPixels,
+   washedPixels:tideLayers[tide.phase].washedPixels,
+   coastCount:ground.coastline.length,characterSheet:'village-80x112',
    sandCells:MAP.flat().filter(t=>t==='sand').length,
    seaCells:MAP.flat().filter(t=>t==='sea').length,
    dryMapGenerated:true,shorelineTechnique:'4-corner-16-tile-mask',
-   waveLayer:'animated-before-alpha-ground',hero:{...hero},grid,draws};
+   waveLayer:'animated-sea-under-alpha-ground-and-advancing-surf-over-sand',
+   hero:{...hero},grid,draws};
 }
 async function start(){
  const invalid=validateShore();if(invalid.length)throw Error('地形接続の規則違反: '+invalid.join('; '));
@@ -200,11 +255,13 @@ async function start(){
      LAND.load(check);AUTO.load(check);check();
    })
  ]);
- if(art.hero.naturalWidth<96||art.hero.naturalHeight<128)throw Error('緋月の32pxシートではありません');
+ if(art.hero.naturalWidth!==240||art.hero.naturalHeight!==448)
+   throw Error('緋月の村用80x112・3列×4行シートではありません');
  if(art.water.width!==128||art.water.height!==64)throw Error('承認済み水面2コマと異なります');
  if([art.mask,art.foam,...art.sand].some(a=>a.width!==128||a.height!==128))
    throw Error('海岸16チップアトラスの寸法が異なります');
  const ground=composeDryLand(art);
+ const tideLayers=buildTideLayers(ground);
  loading.hidden=true;
  function tick(now){
    const dt=lastTime?Math.min(50,now-lastTime):0;lastTime=now;
@@ -215,7 +272,7 @@ async function start(){
      const nx=hero.x+dx*step,ny=hero.y+dy*step;
      if(safeFoot(nx,ny)){hero.x=nx;hero.y=ny;stride+=step;walking=true;}
    }
-   paint(now,art,ground);requestAnimationFrame(tick);
+   paint(now,art,ground,tideLayers);requestAnimationFrame(tick);
  }
  requestAnimationFrame(tick);
 }

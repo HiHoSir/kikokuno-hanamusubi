@@ -1591,7 +1591,7 @@
       "usage": "hozuki-village-interiors",
       "origin": {
         "method": "illustrated-native-2px-pixel-master-with-wall-aligned-layout",
-        "sourceRevision": 3,
+        "sourceRevision": 4,
         "previousSourcePath": "source-assets/village/interiors/furniture-generator.py",
         "priorOrigin": {
           "method": "native-4px-pixel-art-redraw",
@@ -1599,7 +1599,8 @@
           "priorGitBlobSha": "4cdfd11a25acc2de80f6ea3d0ba47524d637aeca",
           "priorSourcePath": "previews/village-interiors/furniture.png"
         },
-        "scaleQA": "tansu resized in logical-pixel master to 120x108"
+        "scaleQA": "tansu resized in logical-pixel master to 120x108",
+        "staticSteamFix": "Removed 224 logical pixels of baked-in kitchen vapour; preserved kettle, hearth, mortar and other 15 sprites"
       }
     },
     {

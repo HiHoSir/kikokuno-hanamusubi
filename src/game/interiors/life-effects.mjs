@@ -3,7 +3,8 @@
 // No independent RAF, textures, collision, scale or random allocations.
 export const FURNITURE_LIFE_EMITTERS = Object.freeze({
   hearth: Object.freeze([{kind:'fire',x:64,y:112},{kind:'smoke',x:66,y:70}]),
-  kitchen: Object.freeze([{kind:'fire',x:58,y:115},{kind:'smoke',x:56,y:63}]),
+  // The stove's source PNG contains no baked-in plume. Steam is fully dynamic.
+  kitchen: Object.freeze([{kind:'fire',x:58,y:115},{kind:'steam',x:56,y:48}]),
   teaCounter: Object.freeze([{kind:'steam',x:169,y:36}]),
   teaTable: Object.freeze([{kind:'steam',x:85,y:37}]),
 });

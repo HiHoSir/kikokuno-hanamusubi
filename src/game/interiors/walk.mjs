@@ -4,7 +4,7 @@ import {drawCharacter, RESIDENT_RADIUS, residentInFront} from '../village/reside
 import {bindDialogue} from '../village/dialogue.mjs?v=field-menu-1';
 import {rooms, resolveInterior, prepareInterior} from './rooms.mjs?v=interior-wall-anchor-1';
 import {paintRoom, paintPartition, paintContactShadow} from './room-art.mjs?v=interior-wall-anchor-1';
-import {drawFurnitureLife} from './life-effects.mjs?v=indoor-life-1';
+import {drawFurnitureLife} from './life-effects.mjs?v=indoor-life-2';
 import {FOOD_ITEMS,ARMORY_STOCK,purchaseFood,purchaseArmory,collectFind,readPlayer,savePlayer} from '../battle/rules.mjs?v=equipment-4slots-2';
 import {consumeRestorePosition} from '../save/save-game.mjs?v=save-slots-1';
 import {VILLAGE_FINDS} from '../../../data/maps/hozuki-village/finds.mjs';
@@ -47,7 +47,7 @@ async function start() {
   const assets = new Set(Object.values(rooms).map(room=>room.resident.asset));
   const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');
   const [furniture, hizuki, portraits] = await Promise.all([
-    loadImage('../../../assets/village/interiors/furniture.png?v=interior-wall-anchor-1'),
+    loadImage('../../../assets/village/interiors/furniture.png?v=interior-wall-anchor-1-no-baked-steam-1'),
     loadImage('../../../assets/characters/hizuki/walk-4dir-80x112.png?v=fb40c1b'),
     Promise.all([...assets].map(async asset=>[asset,await loadImage('../../../assets/characters/npc/'+asset+'-walk-4dir-80x112.png')])),
   ]);

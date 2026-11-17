@@ -11,7 +11,7 @@ const allowedRoots = new Set([
   'source-assets', 'tools', 'tests',
 ]);
 // One explicit, unapproved Pages review artifact; not a general previews/ allowance.
-const allowedPreviewFiles = new Set(['previews/cave-prototype/index.html', 'previews/field-overlook/index.html', 'previews/field-exploration/index.html', 'previews/shoreline-study/index.html']);
+const allowedPreviewFiles = new Set(['previews/cave-prototype/index.html', 'previews/field-overlook/index.html', 'previews/field-exploration/index.html', 'previews/shoreline-study/index.html', 'previews/sea-cove-review/index.html']);
 const bgmReviewFile = /^review\/audio\/bgm-pack\/(?:README\.md|[a-z0-9_]+\.(?:ogg|mid))$/;
 const forbiddenDirectories = new Set([
   'old', 'archive', 'archives', 'backup', 'backups', 'experimental',

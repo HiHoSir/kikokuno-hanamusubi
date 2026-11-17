@@ -150,6 +150,51 @@ try{
  assert.equal(Object.values(persisted.bag).reduce((a,b)=>a+b,0),1);
  await page.screenshot({path:'artifacts/sea-cove-shell-picked.png'});
  assert.deepEqual(errors,[],'no runtime JS exceptions or missing local assets');
+ // Verify the public Pages review with the *same* real production renderer.
+ // Opening and walking the review must not alter the user's saved game.
+ {
+ const review=await browser.newPage({viewport:{width:874,height:402},
+   deviceScaleFactor:2,isMobile:true,hasTouch:true});
+ await review.addInitScript(()=>{
+   window.__STORAGE_AT_LOAD=JSON.stringify(Object.entries(localStorage).sort());
+ });
+ const previewErrors=[];
+ review.on('pageerror',e=>previewErrors.push(e.message));
+ review.on('response',r=>{
+   if(r.status()>=400&&r.url().startsWith('http://127.0.0.1:'))
+     previewErrors.push('HTTP '+r.status()+' '+r.url());
+ });
+ await review.goto('http://127.0.0.1:'+server.address().port+
+   '/previews/sea-cove-review/',{waitUntil:'domcontentloaded'});
+ await review.waitForFunction(()=>window.__COVE_PREVIEW_MODE===true&&
+   window.KIKOKU_SAVE_SNAPSHOT?.().scene==='cove'&&
+   document.querySelector('#load')?.hidden===true,null,{timeout:40000});
+ const reviewInitial=await review.evaluate(()=>window.KIKOKU_SAVE_SNAPSHOT().position);
+ const surf=await review.evaluate(()=>window.__COVE_SURF_QA());
+ assert.equal(surf.frames,8);
+ assert.ok(surf.tileCount>=25);
+ const before=await review.screenshot({path:'artifacts/sea-cove-pages-review-start.png'});
+ await review.waitForTimeout(600);
+ const reviewAfter=await review.screenshot({path:'artifacts/sea-cove-pages-review-wave.png'});
+ assert.ok(!before.equals(reviewAfter),'Pages preview shows genuinely moving sea');
+ await review.evaluate(()=>window.dispatchEvent(new KeyboardEvent('keydown',
+   {key:'ArrowUp',bubbles:true,cancelable:true})));
+ await review.waitForTimeout(420);
+ await review.evaluate(()=>window.dispatchEvent(new KeyboardEvent('keyup',
+   {key:'ArrowUp',bubbles:true,cancelable:true})));
+ const reviewMoved=await review.evaluate(()=>window.KIKOKU_SAVE_SNAPSHOT().position);
+ assert.ok(reviewMoved.y<reviewInitial.y,'Pages preview allows real walking');
+ const persisted=await review.evaluate(()=>({
+   initial:window.__STORAGE_AT_LOAD,
+   current:JSON.stringify(Object.entries(localStorage).sort())
+ }));
+ assert.equal(persisted.current,persisted.initial,
+   'preview must not write player saves, story or local settings');
+ assert.deepEqual(previewErrors,[],'Pages preview loads all actual runtime assets');
+ await review.close();
+ console.log(JSON.stringify({review:'pages-cove-live-passed',reviewInitial,reviewMoved}));
+ }
+
  console.log(JSON.stringify({result:'sea-cove-shells-passed',entry:initial,yBefore,yAfter,
    shellPickup:{before:initial.shells.available,after:afterPickup.available,
      bag:afterPickup.bag,nearest:near.nearest},

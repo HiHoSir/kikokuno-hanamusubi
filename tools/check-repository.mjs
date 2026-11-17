@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const allowedRoots = new Set([
-  'AGENTS.md', 'README.md', '.gitignore', '.gitattributes', 'package.json',
+  'AGENTS.md', 'README.md', '.gitignore', '.gitattributes', '.nojekyll', 'package.json',
   '.github', '.agents', 'docs', 'src', 'data', 'assets',
   'source-assets', 'tools', 'tests',
 ]);

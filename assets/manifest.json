@@ -1591,7 +1591,7 @@
       "usage": "hozuki-village-interiors",
       "origin": {
         "method": "illustrated-native-2px-pixel-master-with-wall-aligned-layout",
-        "sourceRevision": 5,
+        "sourceRevision": 6,
         "previousSourcePath": "source-assets/village/interiors/furniture-generator.py",
         "priorOrigin": {
           "method": "native-4px-pixel-art-redraw",
@@ -1601,7 +1601,8 @@
         },
         "scaleQA": "tansu resized in logical-pixel master to 120x108",
         "staticSteamFix": "Removed 224 logical pixels of baked-in kitchen vapour; preserved kettle, hearth, mortar and other 15 sprites",
-        "kitchenRebuild": "Regenerated kamado art reauthored on 2px logical grid with 48-color palette at original 148x144 slot; steam excluded from static sprite; other fifteen objects untouched"
+        "kitchenRebuild": "Regenerated kamado art reauthored on 2px logical grid with 48-color palette at original 148x144 slot; steam excluded from static sprite; other fifteen objects untouched",
+        "kamadoStyle": "Restyled pixel texture: hearth gray-brown stone, shelf-brown wood, clustered stone shading, stronger dark edge; native 2px pitch and 47 colors. No other sprite changed"
       }
     },
     {

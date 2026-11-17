@@ -1,6 +1,8 @@
 // The browser stays on /src/game/ while independent scene renderers swap.
 // Only this parent document owns the BGM player and the sound toggle.
 import {makeAudioEngine} from '../audio/audio.mjs';
+import {pendingRestoreLocation,routeForSavedGame,saveAutoGame,saveManualGame}
+  from '../save/save-game.mjs?v=save-slots-1';
 
 const root = new URL('../../../', import.meta.url);
 // Scene HTML itself needs a fresh URL, not just the top-level title page.
@@ -37,6 +39,7 @@ function navigate(target, sourceWindow) {
   if (sourceWindow && sourceWindow !== frame.contentWindow) {
     throw new Error('現在のゲーム画面からのみ遷移できます');
   }
+  if(sourceWindow) autosave(sourceWindow);
   const next = normalize(target);
   const route = next.pathname + next.search;
   if (route === active) return;
@@ -47,7 +50,31 @@ function navigate(target, sourceWindow) {
   if (audio.trackName !== nextTrack) audio.switchTrack(nextTrack);
   frame.src = next.href;
 }
-window.KIKOKU_GAME = Object.freeze({acceptsChild, navigate, audio});
+// The scene's own state is the only reliable position source (village pixels,
+// field world pixels, sanctuary tiles). Never infer location from DOM offsets.
+function snapshot(sourceWindow){
+  try{
+    if(sourceWindow&&sourceWindow!==frame.contentWindow)return null;
+    const scene=normalize(frame.contentWindow.location.href);
+    if(scene.pathname+scene.search!==active)return null;
+    const getter=frame.contentWindow.KIKOKU_SAVE_SNAPSHOT;
+    return typeof getter==='function'?getter():null;
+  }catch{return null;}
+}
+function autosave(sourceWindow){
+  const position=snapshot(sourceWindow);
+  if(!position)return {accepted:false,message:'自動保存できる場面ではありません。'};
+  return saveAutoGame(position);
+}
+function manualSave(){
+  const position=snapshot();
+  if(!position)return {accepted:false,message:'読み込み中は記録できません。'};
+  return saveManualGame(position);
+}
+window.KIKOKU_GAME = Object.freeze({acceptsChild, navigate, audio, autosave,manualSave});
+globalThis.setInterval?.(()=>{
+  if(!document.hidden)autosave();
+},15000);
 frame.addEventListener('load', () => {
   try {
     const target = normalize(frame.contentWindow.location.href);
@@ -56,4 +83,5 @@ frame.addEventListener('load', () => {
     // Keep the transition cover if a scene was unexpectedly replaced.
   }
 });
-navigate(new URL('src/game/village/',root));
+const restore=pendingRestoreLocation();
+navigate((restore&&routeForSavedGame({location:restore},root))||new URL('src/game/village/',root));

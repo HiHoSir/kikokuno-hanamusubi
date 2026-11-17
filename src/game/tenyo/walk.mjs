@@ -3,6 +3,7 @@
 import {bindDialogue} from '../village/dialogue.mjs';
 import {residentInFront} from '../village/residents.mjs';
 import {readStoryStage,advanceStoryStage,objectiveForStage} from '../story/chapter-one.mjs';
+import {consumeRestorePosition} from '../save/save-game.mjs?v=save-slots-1';
 
 const {SMModel,SMRender}=globalThis;
 const scene=document.querySelector('#scene');
@@ -104,7 +105,11 @@ async function start(){
   }));
   const paintedMap={...map,objects:[...map.objects,...residentObjects]};
 
-  const state={x:entry[0],y:entry[1],face:1,dir:'u',motion:null,steps:0};
+  const resumed=consumeRestorePosition('tenyo');
+  const savedPoint=resumed&&canEnter(resumed.x,resumed.y)?resumed:null;
+  const face=savedPoint?.face??1;
+  const state={x:savedPoint?.x??entry[0],y:savedPoint?.y??entry[1],
+    face,dir:facing[face],motion:null,steps:0};
   function refreshObjective(){
     objective.textContent=objectiveForStage(readStoryStage());
     for(const npc of residents)npc.lines=storyLines(npc);
@@ -254,7 +259,10 @@ async function start(){
   resize();
   new ResizeObserver(resize).observe(scene.parentElement);
   render(performance.now());
-  load.hidden=true;requestAnimationFrame(frame);
+  load.hidden=true;
+  window.KIKOKU_SAVE_SNAPSHOT=()=>({scene:'tenyo',position:{x:state.x,y:state.y,face:state.face}});
+  window.parent?.KIKOKU_GAME?.autosave?.(window);
+  requestAnimationFrame(frame);
 }
 start().catch(error=>{
   console.error(error);

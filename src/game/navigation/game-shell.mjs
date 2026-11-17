@@ -3,6 +3,8 @@
 import {makeAudioEngine} from '../audio/audio.mjs';
 
 const root = new URL('../../../', import.meta.url);
+// Scene HTML itself needs a fresh URL, not just the top-level title page.
+const build = new URL(location.href).searchParams.get('build');
 const frame = document.querySelector('#game-scene');
 const curtain = document.querySelector('#scene-transition');
 const audio = makeAudioEngine('village', document.querySelector('#sound-toggle'));
@@ -21,6 +23,7 @@ function normalize(url) {
   if (target.origin !== root.origin || !routes.has(target.pathname)) {
     throw new Error('ゲーム本編以外への画面切替は禁止: ' + target.href);
   }
+  if(build) target.searchParams.set('build',build);
   return target;
 }
 function acceptsChild(url, sourceWindow) {

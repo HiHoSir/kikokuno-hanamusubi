@@ -4,7 +4,7 @@ import {drawCharacter, RESIDENT_RADIUS, residentInFront} from '../village/reside
 import {bindDialogue} from '../village/dialogue.mjs?v=field-menu-1';
 import {rooms, resolveInterior, prepareInterior} from './rooms.mjs?v=village-finds-1';
 import {paintRoom, paintPartition, paintContactShadow} from './room-art.mjs';
-import {FOOD_ITEMS,ARMORY_STOCK,purchaseFood,purchaseArmory,collectFind,readPlayer,savePlayer} from '../battle/rules.mjs?v=equipment-slots-1';
+import {FOOD_ITEMS,ARMORY_STOCK,purchaseFood,purchaseArmory,collectFind,readPlayer,savePlayer} from '../battle/rules.mjs?v=equipment-4slots-2';
 import {VILLAGE_FINDS} from '../../../data/maps/hozuki-village/finds.mjs';
 
 const scene = document.querySelector('#scene');

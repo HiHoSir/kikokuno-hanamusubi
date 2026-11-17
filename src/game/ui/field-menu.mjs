@@ -4,7 +4,7 @@ import {
   ARMORY_STOCK, EQUIPMENT_ITEMS, EQUIPMENT_SLOTS, carriedConsumables,
   changeEquipment, equipmentPreview, nextLevelXp, readPlayer, savePlayer,
   useExplorationResource
-} from '../battle/rules.mjs?v=equipment-slots-1';
+} from '../battle/rules.mjs?v=equipment-4slots-2';
 import {readStoryStage} from '../story/chapter-one.mjs';
 
 const frame=document.querySelector('#game-scene');

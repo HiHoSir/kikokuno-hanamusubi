@@ -445,14 +445,19 @@ test('teahouse purchases preserve currency and recovery stock without a village 
   assert.equal(full.act('food:onigiri').accepted,false);
 });
 
-test('buying the armory gear keeps the old combat stats until it is equipped',()=>{
-  const result=purchaseArmory({...DEFAULT_PLAYER,gold:210});
-  assert.equal(result.accepted,true);
-  assert.equal(result.player.gold,10);
-  assert.equal(result.player.equipmentTier,'T0');
-  assert.equal(result.player.attack,9);
-  assert.equal(result.player.defense,6);
-  assert.equal(result.player.hp,DEFAULT_PLAYER.hp);
-  assert.equal(purchaseArmory(result.player).accepted,false);
-  assert.equal(purchaseArmory(DEFAULT_PLAYER).accepted,false);
+test('armory sells exactly four approved pieces with individual prices and bonuses',()=>{
+  assert.deepEqual(ARMORY_STOCK.map(({name,price,attack,defense})=>[name,price,attack,defense]),[
+    ['脇差',40,4,0],['厚布の胴当て',32,0,4],['鉢巻',20,0,2],['足袋',12,0,1]
+  ]);
+  const hero={...DEFAULT_PLAYER,gold:100};
+  const bought=purchaseArmory(hero,'wakizashi');
+  assert.equal(bought.accepted,true);
+  assert.equal(bought.player.gold,60);
+  assert.equal(bought.player.attack,9);
+  assert.equal(bought.player.equipmentInventory.wakizashi,1);
+  assert.equal(purchaseArmory(bought.player,'wakizashi').accepted,false);
+  assert.equal(purchaseArmory(hero,'unknown').accepted,false);
+  assert.equal(purchaseArmory({...hero,gold:0},'headband').accepted,false);
+  assert.equal(purchaseArmory(hero,'starter-gear').accepted,false);
+  assert.equal(normalizePlayer(DEFAULT_PLAYER).equipment.weapon,'starter-weapon');
 });

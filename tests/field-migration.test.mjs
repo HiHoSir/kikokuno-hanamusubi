@@ -51,6 +51,33 @@ test('the field foreground clouds and shadows share a registered moving layer', 
   assert.equal(png[25], 6, 'RGBA texture supplies the shadow alpha mask');
 });
 
+// A fixed 23-cell basin revision. Reconstructing the old terrain with these
+// cells must recover the original hashes, so unrelated field cells stay safe.
+const waterfallBasinEdits=[
+ [65,15,'mountain','grass'],
+ [66,15,'mountain','river'],
+ [68,15,'mountain','grass'],
+ [65,16,'mountain','river'],
+ [66,16,'mountain','river'],
+ [68,16,'mountain','river'],
+ [65,17,'mountain','river'],
+ [66,17,'mountain','river'],
+ [64,18,'mountain','grass'],
+ [65,18,'grass','river'],
+ [69,18,'grass','river'],
+ [70,18,'mountain','river'],
+ [71,18,'mountain','grass'],
+ [72,18,'mountain','grass'],
+ [64,19,'mountain','grass'],
+ [65,19,'grass','river'],
+ [66,19,'grass','river'],
+ [71,19,'mountain','river'],
+ [68,20,'grass','river'],
+ [71,20,'mountain','river'],
+ [68,21,'grass','river'],
+ [71,21,'mountain','grass'],
+ [68,22,'grass','river']
+];
 test('the field entry loads the approved exploration map and elevation data', () => {
   assert.match(source('data/maps/field/terrain.js'), /referenceComposition/);
   const {YK_WORLD: world, YK_FIELD_TERRAIN: terrain} = loadField();
@@ -59,9 +86,20 @@ test('the field entry loads the approved exploration map and elevation data', ()
   assert.equal(world.mapData.length, 80);
   assert.ok(world.mapData.every(row => row.length === 80));
   assert.equal(world.mapData.elevationEnabled, true);
-  assert.equal(digest(terrain.tiles), 'de21dabdd8125fe4be430cb1dc4714d1a7e797c5cec361384817e3778f512999');
-  assert.equal(digest(terrain.heights), 'a2281bea3735928cb1197099852b7b1a89dcdb678a51cbb840dc54fe2581c16e');
-  assert.equal(terrain.referenceComposition.decorations.length,1032);
+  const restoredTiles=terrain.tiles.map(row=>row.slice());
+  const restoredHeights=terrain.heights.map(row=>row.slice());
+  for(const [x,y,from,to] of waterfallBasinEdits){
+    assert.equal(terrain.tiles[y][x],to,'waterfall basin '+x+','+y);
+    restoredTiles[y][x]=from;
+  }
+  // The basin replaces only one originally raised grass cell with flat water.
+  assert.equal(terrain.heights[21][68],0,'waterline is zero at the lower pool');
+  restoredHeights[21][68]=1;
+  assert.equal(digest(restoredTiles),'de21dabdd8125fe4be430cb1dc4714d1a7e797c5cec361384817e3778f512999',
+    'terrain outside the waterfall basin remains unmodified');
+  assert.equal(digest(restoredHeights),'a2281bea3735928cb1197099852b7b1a89dcdb678a51cbb840dc54fe2581c16e',
+    'heights outside the waterfall basin remain unmodified');
+  assert.equal(terrain.referenceComposition.decorations.length,1019);
   assert.equal(terrain.referenceComposition.waterfallChipLayer.tiles.length,16);
   assert.equal(terrain.referenceComposition.decorations.some(o=>o.kind==='waterfall'),false);
   assert.equal(world.walkable(...world.start), true);
@@ -107,6 +145,51 @@ test('author-approved four-frame waterfall atlas preserves the entrance collisio
   assert.equal(transitions.contact(world,67*32+16,20*32+16),null);
   assert.ok(world.walkable(67*32+16,18*32+16),'old entrance is passable');
   assert.equal(world.mapData.occupiedTiles.has('67,18'),false);
+});
+
+test('waterfall basin uses moving river tiles, clears ghost mountains and preserves the cliff entrance',()=>{
+  const {YK_WORLD:world,YK_AREA_TRANSITIONS:transitions}=loadField();
+  const m=world.mapData,at=(x,y)=>[x*32+16,y*32+16];
+  const wet=waterfallBasinEdits.filter(cell=>cell[3]==='river').map(([x,y])=>[x,y]);
+  const formerMountains=waterfallBasinEdits.filter(cell=>cell[2]==='mountain').map(([x,y])=>[x,y]);
+  assert.equal(wet.length,16);
+  for(const [x,y] of wet){
+    assert.equal(m[y][x],'river','falls into animated water, not a grass decal');
+    assert.equal(m.heights[y][x],0,'river is at its natural water level');
+    assert.equal(world.walkable(...at(x,y)),false,'water collision matches visible water');
+  }
+  for(const [x,y] of formerMountains){
+    assert.equal(m.occupiedTiles.has(x+','+y),false,'retired mountains have no invisible collision');
+    assert.ok(!m.decorations.some(o=>['newMountainLarge','newMountainSmall'].includes(o.kind)&&
+      o.contactTiles.some(([tx,ty])=>tx===x&&ty===y)),
+      'no stray mountains cover the waterfall or plunge pool');
+  }
+  for(const x of [69,70,71]){
+    assert.ok(m.decorations.some(o=>o.kind==='newMountainSmall'&&
+      o.contactTiles.some(([tx,ty])=>tx===x&&ty===16)),
+      'solid right-bank mountains keep matching 32px sprites');
+  }
+  const route=[[67,21],[67,20],[67,19],[67,18]];
+  for(let i=1;i<route.length;i++){
+    assert.ok(world.canMove(...at(...route[i-1]),...at(...route[i])),'entrance route remains walkable');
+    assert.ok(world.canMove(...at(...route[i]),...at(...route[i-1])),'entrance has a return route');
+  }
+  assert.ok(route.every(([x,y])=>m.travelReachable.has(x+','+y)));
+  assert.ok(m.ladders.some(l=>l.lower.join(',')==='67,21'&&l.upper.join(',')==='67,20'),
+    'original automatically selected ladder is made explicit after basin reshaping');
+  assert.equal(transitions.contact(world,...at(67,18)),'waterfall');
+  assert.equal(transitions.contact(world,...at(67,19)),null);
+  // All 16 added wet cells must join the same flowing water system and reach
+  // the already authored downstream river, rather than forming isolated pools.
+  const visited=new Set(['67,16']),queue=[[67,16]];
+  for(let i=0;i<queue.length;i++)for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
+    const x=queue[i][0]+dx,y=queue[i][1]+dy,key=x+','+y;
+    if(m[y]?.[x]==='river'&&!visited.has(key)){visited.add(key);queue.push([x,y]);}
+  }
+  assert.ok(wet.every(([x,y])=>visited.has(x+','+y)),'plunge pool connects to upstream water');
+  assert.ok(visited.has('69,25'),'plunge pool feeds the downstream river');
+  const actual=new Set(m.decorations.flatMap(o=>o.occupiedTiles.map(c=>c.join(','))));
+  assert.deepEqual([...m.occupiedTiles].filter(k=>!actual.has(k)),[]);
 });
 
 test('the field projection and image loader retain the original perspective and art', () => {

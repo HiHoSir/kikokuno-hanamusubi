@@ -46,8 +46,8 @@ test('eight wave states make the surf advance, break and retreat over sand',()=>
  assert.equal(tideFrame(0).phase,0);
  assert.equal(tideFrame(TIDE_INTERVAL_MS*8).phase,0,'loop repeats');
  assert.equal(tideFrame(TIDE_INTERVAL_MS*5).retreat,true);
- assert.equal(tidePixel(13,'sand',0,1),0,'low tide leaves exposed sand');
- assert.equal(tidePixel(13,'sand',4,1),3,'high tide carries a crest onto the beach');
+ assert.equal(tidePixel(14,'sand',0,1),0,'low tide leaves exposed sand');
+ assert.equal(tidePixel(14,'sand',4,1),3,'high tide carries a crest onto the beach');
  assert.equal(tidePixel(8,'sand',7,1),1,'wet sand stays visible after retreat');
  assert.equal(tidePixel(8,'grass',4,1),0,'grass stays dry');
  assert.equal(tidePixel(8,'sea',4,1),0,'overlay is not a sea replacement');

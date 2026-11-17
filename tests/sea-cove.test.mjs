@@ -2,10 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {
- COVE_MAP,COVE_WIDTH,COVE_HEIGHT,COVE_TILE_SIZE,COVE_SHORE,COVE_SAND_DEPTH,
+ COVE_MAP,COVE_WIDTH,COVE_HEIGHT,COVE_TILE_SIZE,COVE_SHORE,COVE_SAND_DEPTH,COVE_GROVES,
  tileAt,walkableCell,walkablePoint,isSouthExit
 } from '../data/maps/sea-cove/scene.mjs';
 import {coastMask,grassCornerMask,scrubCornerMask} from '../src/game/cove/render.mjs';
+import {COVE_SHELL_SITES,validateCoveShellSites} from '../data/maps/sea-cove/shells.mjs';
 import {TIDE_FRAMES,tideFrame,surfSample} from '../src/game/terrain/surf.mjs';
 import {CHAPTER_ONE_STAGES,objectiveForStage,normalizeStage} from '../src/game/story/chapter-one.mjs';
 import {readSavedGame,saveGame,restoreSavedGame,routeForSavedGame}
@@ -43,13 +44,48 @@ test('the sea cove is an authored 46x34 grid of native 32px tiles',()=>{
  assert.ok(COVE_MAP.tiles.join('').includes('s'));
  assert.ok(COVE_MAP.tiles.join('').includes('r'));
  const flowers=COVE_MAP.objects.filter(o=>o.kind==='flowers');
- assert.equal(flowers.length,3,'do not paste a whole wildflower sheet as one prop');
+ assert.equal(flowers.length,10,'native wildflowers form a sparse authored sequence');
  assert.ok(flowers.every(o=>Number.isInteger(o.chip)&&o.chip>=0&&o.chip<16));
  const {x,y}=COVE_MAP.entry;
  assert.equal(walkablePoint(x,y),true);
  assert.equal(walkableCell(45,0),false);
  assert.equal(walkableCell(-1,5),false);
  assert.equal(tileAt(45,12),'~');
+});
+test('cove groves have curved 32px footprints, not blocked rectangles',()=>{
+ assert.equal(COVE_GROVES.length,8);
+ for(const [north,spans] of COVE_GROVES){
+  assert.ok(north>=2&&north+spans.length<=COVE_HEIGHT);
+  const edges=new Set();
+  spans.forEach(([left,right],offset)=>{
+   assert.ok(Number.isInteger(left)&&Number.isInteger(right)&&left>=1&&right<COVE_WIDTH-1&&left<=right);
+   edges.add(left+','+right);
+   if(offset>0){
+    const [prevLeft,prevRight]=spans[offset-1];
+    assert.ok(left<=prevRight&&right>=prevLeft,'a grove may not fracture into disconnected rows');
+   }
+   const type=tileAt(Math.floor((left+right)/2),north+offset);
+   assert.ok(['t','r','s'].includes(type),'grove footprint remains mapped, not empty');
+  });
+  assert.ok(edges.size>=3,'each grove needs a visibly irregular silhouette');
+ }
+});
+test('shoreline scenery remains native size, unique and away from shell collection lanes',()=>{
+ const flowers=COVE_MAP.objects.filter(o=>o.kind==='flowers');
+ const occupied=new Set();
+ for(const flower of flowers){
+  const key=flower.x+','+flower.y;
+  assert.equal(occupied.has(key),false,'duplicate scenery chip at '+key);
+  occupied.add(key);
+  assert.ok(walkableCell(flower.x,flower.y),'wildflowers should not block the player');
+  assert.ok(flower.chip>=0&&flower.chip<16,'native 4x4 atlas chip only');
+ }
+ assert.deepEqual(validateCoveShellSites(),[],'preserve every fixed shell pickup');
+ const entry=[Math.floor(COVE_MAP.entry.x/32),Math.floor(COVE_MAP.entry.y/32)];
+ for(const site of COVE_SHELL_SITES){
+  assert.ok(bfs(entry,cell=>cell[0]===site.cell[0]&&cell[1]===site.cell[1]),
+    'each shell site remains reachable from south entrance: '+site.id);
+ }
 });
 test('broad beach is authored 10–14 tiles deep; no rectangular grass walkway to the field',()=>{
  assert.equal(COVE_SAND_DEPTH.length,COVE_HEIGHT);

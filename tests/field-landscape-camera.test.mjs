@@ -43,7 +43,7 @@ test('coastline shapes and beach strips cache in world coordinates only',()=>{
  assert.match(source,/shore\.darkEdges/);
 });
 
-test('production water/river/waterfall motion uses the same RAF phase as field scheduling',()=>{
+test('approved waterfall redraw uses 180ms while water and Tenyo keep their own phases',()=>{
  const landscape=readFileSync('src/field/landscape.js','utf8');
  const runtime=readFileSync('src/field/runtime.mjs','utf8');
  const walk=readFileSync('src/field/walk.mjs','utf8');
@@ -52,7 +52,7 @@ test('production water/river/waterfall motion uses the same RAF phase as field s
  assert.match(landscape,/movingWater=motionArt\('water',motionTime\)/);
  assert.match(landscape,/sea:movingWater,river:movingWater,waterfall:movingFall/);
  assert.match(runtime,/renderer\.draw\(context,\{x,foot:y,height\},frameTime/);
- assert.match(walk,/Math\.floor\(now \/ 360\)/);
+ assert.match(walk,/Math\.floor\(now \/ 180\)/);
  assert.match(tenyo,/waterKinds=\['shallow','mid','deep'\]/);
  assert.match(tenyo,/Math\.floor\(\(o\.animationTime\|\|0\)\/360\)%4/);
 });

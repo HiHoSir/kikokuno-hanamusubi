@@ -110,7 +110,7 @@ test('world menu sends pause/resume signals to field without touching the BGM en
  assert.match(menu,/new Event\('game-menu-close'\)/);
  assert.match(field,/addEventListener\('game-menu-open'/);
  assert.match(field,/addEventListener\('game-menu-close'/);
- assert.match(field,/if \(!renderPaused && \(dirty \|\| waterFrame !== lastWaterFrame\)\)/);
+ assert.match(field,/if \(!renderPaused && \(dirty \|\| animatedFrame !== lastWaterFrame\)\)/);
  assert.match(field,/portraitMedia\.addEventListener\?\.\('change',updateSuspension\)/);
  assert.match(field,/else lastWaterFrame=-1/);
 });

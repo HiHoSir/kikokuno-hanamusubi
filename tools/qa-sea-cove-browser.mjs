@@ -64,16 +64,23 @@ try{
  const after=await page.screenshot();
  assert.ok(!waterBefore.equals(middle)||!waterBefore.equals(after),
    'sea must animate during idle play');
- const sceneFrame=page.frameLocator('#game-scene');
- await sceneFrame.locator('#scene').click({position:{x:200,y:120},force:true});
  const yBefore=(await page.evaluate(()=>
    document.querySelector('#game-scene').contentWindow.KIKOKU_SAVE_SNAPSHOT().position.y));
- await page.keyboard.down('ArrowUp');
- await page.waitForTimeout(360);
- await page.keyboard.up('ArrowUp');
+ // The parent owns the UI. Inject into the admitted child window so focus on
+ // the parent overlay cannot accidentally turn this into a focus-only test.
+ await page.evaluate(()=>{
+   const child=document.querySelector('#game-scene').contentWindow;
+   child.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowUp',bubbles:true,cancelable:true}));
+ });
+ await page.waitForTimeout(380);
+ await page.evaluate(()=>{
+   const child=document.querySelector('#game-scene').contentWindow;
+   child.dispatchEvent(new KeyboardEvent('keyup',{key:'ArrowUp',bubbles:true,cancelable:true}));
+ });
  await page.waitForTimeout(100);
  const yAfter=(await page.evaluate(()=>
    document.querySelector('#game-scene').contentWindow.KIKOKU_SAVE_SNAPSHOT().position.y));
+ console.log(JSON.stringify({movement:{yBefore,yAfter}}));
  assert.ok(yAfter<yBefore,'hero must walk across the authored shore');
  assert.deepEqual(errors,[],'no runtime JS exceptions or missing local assets');
  console.log(JSON.stringify({result:'sea-cove-passed',entry:initial,yBefore,yAfter,

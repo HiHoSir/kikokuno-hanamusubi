@@ -52,6 +52,9 @@ try{
  assert.ok(Object.values(first.sceneryNativeSizes).every(([w,h])=>
    Number.isInteger(w)&&Number.isInteger(h)&&w>0&&h>0&&w<=112&&h<=112),
    'approved native-size objects must fit within the intended character scale');
+ assert.equal(first.grassColorStudy.scale,1,'grass palette transformation must not enlarge source pixels');
+ assert.equal(first.grassColorStudy.paletteSize,5,'fixed terrain palette');
+ assert.ok(first.grassColorStudy.pixelPreserved>70,'retain source tuft alpha geometry');
  assert.ok(first.foamPixels>0,'actual visible surf pixels');
  assert.ok(first.seaCells>100&&first.sandCells>50);
  assert.ok(first.dryMapGenerated);
@@ -113,6 +116,7 @@ try{
    highTide:{reach:high.tideReach,washed:high.washedPixels},
    retreat:{reach:retreat.tideReach,wet:retreat.wetPixels},
    villageHero:true,sceneryCount:first.sceneryCount,sceneryNativeSizes:first.sceneryNativeSizes,
+   grassColorStudy:first.grassColorStudy,
    landJoin:first.landJoin,grassEdgeChips:first.grassEdgeChips,
    grassDiagonalChips:first.grassDiagonalChips,tileAtlas:true,
    animatedTileCount:first.animatedTileCount,

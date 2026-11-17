@@ -261,6 +261,9 @@ export function createBattle(enemyId='field-oni',player=DEFAULT_PLAYER,random=Ma
     // This drives the optional beach-shell replenishment every five battles.
     if(state.outcome!==null)return;
     hero.completedBattles++;
+    // Keep the in-memory battle reward and saved player snapshot identical.
+    // This also grants the new shell batch exactly when fight #5, #10 ... ends.
+    hero.shells=normalizeCoveShells(hero.shells,hero.completedBattles);
     state.phase='result';state.outcome=outcome;
   }
   function reward(){

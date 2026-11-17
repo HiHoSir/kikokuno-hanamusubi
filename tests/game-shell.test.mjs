@@ -47,8 +47,11 @@ test('game shell navigation is delegated and validates scene and frame identity'
   const window={};
   const location={href:new URL('src/game/',base).href};
   const source=shellSource.replace(/import \{makeAudioEngine\} from '[^']+';\s*/,'')
+    .replace(/import \{pendingRestoreLocation,[\s\S]*?save-game\.mjs\?v=[^']+';\s*/,'')
     .replaceAll('import.meta.url',JSON.stringify(new URL('src/game/navigation/game-shell.mjs',base).href));
-  runInNewContext(source,{document,window,globalThis:window,location,URL,makeAudioEngine:()=>audio});
+  runInNewContext(source,{document,window,globalThis:window,location,URL,makeAudioEngine:()=>audio,
+    pendingRestoreLocation:()=>null,routeForSavedGame:()=>null,
+    saveAutoGame:()=>({accepted:false}),saveManualGame:()=>({accepted:false})});
   assert.equal(frame.src,new URL('src/game/village/',base).href);
   frame.listeners.load();
   assert.equal(curtain.hidden,true);
@@ -129,8 +132,11 @@ test('equipment build version reaches every scene HTML without losing route para
   const window={};
   const location={href:new URL('src/game/?build='+version,base).href};
   const source=shellSource.replace(/import \{makeAudioEngine\} from '[^']+';\s*/,'')
+    .replace(/import \{pendingRestoreLocation,[\s\S]*?save-game\.mjs\?v=[^']+';\s*/,'')
     .replaceAll('import.meta.url',JSON.stringify(new URL('src/game/navigation/game-shell.mjs',base).href));
-  runInNewContext(source,{document,window,globalThis:window,location,URL,makeAudioEngine:()=>audio});
+  runInNewContext(source,{document,window,globalThis:window,location,URL,makeAudioEngine:()=>audio,
+    pendingRestoreLocation:()=>null,routeForSavedGame:()=>null,
+    saveAutoGame:()=>({accepted:false}),saveManualGame:()=>({accepted:false})});
   assert.equal(new URL(frame.src).searchParams.get('build'),version);
   const host=window.KIKOKU_GAME;
   frame.contentWindow.location.href=frame.src;
@@ -160,9 +166,10 @@ test('equipment release invalidates every nested shop and inventory module URL',
     battleJs:readFileSync('src/game/battle/walk.mjs','utf8'),
     menuJs:readFileSync('src/game/ui/field-menu.mjs','utf8')
   };
-  for(const [key,source] of Object.entries(sources))
-    assert.ok(source.includes('equipment-4slots-2'),key+' is missing the equipment cache key');
-  assert.match(sources.title,/src\/opening\/\?build=equipment-4slots-2/);
+  for(const key of ['title','opening','openingJs','shell','village','villageJs',
+    'interior','interiorJs','field','fieldJs','menuJs'])
+    assert.ok(sources[key].includes('save-slots-1'),key+' is missing the save/load cache key');
+  assert.match(sources.title,/src\/opening\/\?build=save-slots-1/);
   assert.match(sources.openingJs,/gameUrl\.searchParams\.set\('build'/);
   assert.match(readFileSync('src/game/navigation/game-shell.mjs','utf8'),/target\.searchParams\.set\('build',build\)/);
   for(const key of ['villageJs','interiorJs','fieldJs','battleJs','menuJs'])

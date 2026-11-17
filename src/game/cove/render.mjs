@@ -1,6 +1,7 @@
 import {COVE_MAP,tileAt} from '../../../data/maps/sea-cove/scene.mjs';
 import {drawCharacter} from '../village/residents.mjs';
 import {createShellAtlas,SHELL_ART_SIZE} from '../items/shell-art.mjs';
+import {TIDE_FRAMES,tideFrame,surfSample} from '../terrain/surf.mjs';
 
 const TILE=32;
 function canvas(width,height){
@@ -58,10 +59,74 @@ export function prepareCoveArt(map=COVE_MAP,art){
  ground.ctx.globalCompositeOperation='destination-in';
  ground.ctx.drawImage(mask.surface,0,0);
  ground.ctx.globalCompositeOperation='source-over';
- return {ground:ground.surface,foam};
+ return {ground:ground.surface,foam,shoreMask:mask.surface};
+}
+// Compile the accepted 8-phase shoreline animation into 32x32 mapchip frames.
+// This cove has sea to the EAST, so the sea/land boundary is measured from
+// right to left in *world coordinates*. It is not a per-cell local-x wave,
+// and no full-scene translucent water overlay is drawn during playback.
+export function prepareCoveSurf(map,shoreMask){
+ const pixelWidth=map.width*TILE,pixelHeight=map.height*TILE;
+ const alpha=shoreMask.getContext('2d',{willReadFrequently:true})
+   .getImageData(0,0,pixelWidth,pixelHeight).data;
+ const edgeX=new Int32Array(pixelHeight).fill(-1);
+ const cells=new Map();
+ for(let y=0;y<pixelHeight;y++){
+   let sawSea=false;
+   for(let x=pixelWidth-1;x>=0;x--){
+     if(alpha[(y*pixelWidth+x)*4+3]<128){sawSea=true;continue;}
+     if(sawSea){edgeX[y]=x;break;}
+   }
+   if(edgeX[y]<0)continue;
+   for(let x=Math.max(0,edgeX[y]-18);x<=edgeX[y];x++){
+     const tx=Math.floor(x/TILE),ty=Math.floor(y/TILE);
+     if(tileAt(tx,ty,map)!=='s')continue;
+     const id=tx+','+ty;
+     if(!cells.has(id))cells.set(id,{x:tx,y:ty});
+   }
+ }
+ const entries=[...cells.values()].sort((a,b)=>a.y-b.y||a.x-b.x)
+   .map((cell,index)=>({...cell,index}));
+ const columns=16,rows=Math.max(1,Math.ceil(entries.length/columns));
+ const {surface:sheet,ctx}=canvas(columns*TILE,rows*TIDE_FRAMES.length*TILE);
+ const coverage=[];
+ for(let phase=0;phase<TIDE_FRAMES.length;phase++){
+   let wetPixels=0,washedPixels=0,foamPixels=0;
+   for(const {x:tx,y:ty,index} of entries){
+     const tile=ctx.createImageData(TILE,TILE);
+     for(let py=0;py<TILE;py++)for(let px=0;px<TILE;px++){
+       const wx=tx*TILE+px,wy=ty*TILE+py;
+       if(alpha[(wy*pixelWidth+wx)*4+3]<128||edgeX[wy]<0)continue;
+       const effect=surfSample(edgeX[wy]-wx,'sand',phase,wy);
+       if(effect===0)continue;
+       wetPixels++;
+       const i=(py*TILE+px)*4;
+       if(effect===1){
+         tile.data[i]=55;tile.data[i+1]=100;
+         tile.data[i+2]=105;tile.data[i+3]=68;
+       }else if(effect===2){
+         washedPixels++;
+         tile.data[i]=69;tile.data[i+1]=158;
+         tile.data[i+2]=177;tile.data[i+3]=118;
+       }else{
+         foamPixels++;
+         const grain=(wy*7+wx*13+(wy>>2))%9;
+         tile.data[i]=225+(grain%3)*7;
+         tile.data[i+1]=235+(grain%3)*5;
+         tile.data[i+2]=220+(grain%4)*7;
+         tile.data[i+3]=grain===0?142:208;
+       }
+     }
+     ctx.putImageData(tile,(index%columns)*TILE,
+       (phase*rows+Math.floor(index/columns))*TILE);
+   }
+   coverage.push({wetPixels,washedPixels,foamPixels});
+ }
+ return {sheet,entries,columns,rows,frames:TIDE_FRAMES.length,coverage};
 }
 export function createCoveRenderer(ctx,art,map=COVE_MAP){
  const staticArt=prepareCoveArt(map,art);
+ const surf=prepareCoveSurf(map,staticArt.shoreMask);
  const shellArt=createShellAtlas();
  const shellTypes=Object.fromEntries(shellArt.ids.map((kind,index)=>[kind,index]));
  const {width,height}=map;
@@ -70,7 +135,7 @@ export function createCoveRenderer(ctx,art,map=COVE_MAP){
    image:art[object.kind]
  })).filter(s=>s.image);
  let lastDims='';
- return function draw(player,fisher,time,viewport,shells=[]){
+ const render=function draw(player,fisher,time,viewport,shells=[]){
    const {step,bufferWidth,bufferHeight}=viewport;
    const visibleWidth=bufferWidth/step,visibleHeight=bufferHeight/step;
    const cameraX=Math.max(0,Math.min(width*TILE-visibleWidth,player.x-visibleWidth/2));
@@ -97,6 +162,16 @@ export function createCoveRenderer(ctx,art,map=COVE_MAP){
      chip(ctx,art.coastShallow,cover,px,py);
    ctx.globalAlpha=1;
    ctx.drawImage(staticArt.ground,0,0);
+   // Draw only precompiled 32px animation atlas chips. Each wave phase
+   // contains the same stable tile positions and is synchronized to the
+   // accepted shoreline prototype. No 32px line reappears during motion.
+   const tide=tideFrame(time);
+   for(const cell of surf.entries){
+     const sx=(cell.index%surf.columns)*TILE;
+     const sy=(tide.phase*surf.rows+Math.floor(cell.index/surf.columns))*TILE;
+     ctx.drawImage(surf.sheet,sx,sy,TILE,TILE,
+       cell.x*TILE,cell.y*TILE,TILE,TILE);
+   }
    const actors=[
      ...sprites.map(s=>({type:'sprite',y:s.y,x:s.x,image:s.image})),
      ...shells.map(shell=>({type:'shell',...shell})),
@@ -125,4 +200,10 @@ export function createCoveRenderer(ctx,art,map=COVE_MAP){
      drawCharacter(ctx,actor);
    }
  };
+ render.surfInfo={
+   chipSize:TILE,frames:surf.frames,tileCount:surf.entries.length,
+   atlas:[surf.sheet.width,surf.sheet.height],coverage:surf.coverage,
+   mode:'animated-native-32px-mapchips',orientation:'sea-east'
+ };
+ return render;
 }

@@ -1,5 +1,6 @@
-// Shoreline feasibility study only. Tide motion is independent of the
-// approved two-frame open-water atlas; changing sea color alone is NOT surf.
+// Eight synchronous surf-animation frames. Each phase is baked into 32px
+// map chips at load time; gameplay only selects the corresponding atlas row.
+// Signed distance is measured from the APPROVED 16-corner shoreline mask.
 export const TIDE_INTERVAL_MS=260;
 export const TIDE_FRAMES=Object.freeze([
   Object.freeze({reach:2,wetReach:12,retreat:true}),
@@ -15,19 +16,23 @@ export function tideFrame(time){
   const phase=Math.floor(Math.max(0,time)/TIDE_INTERVAL_MS)%TIDE_FRAMES.length;
   return {phase,...TIDE_FRAMES[phase]};
 }
-// Distances are measured from the ALPHA EDGE of the actual authored coast
-// mask, not the raw 32px tile boundary. This prevents 32px staircase foam.
-export function tidePixel(distance,terrain,phase,hash=0){
-  if(terrain!=='sand'||!Number.isFinite(distance)||distance<1)return 0;
+// World-coordinate variation, deliberately NOT indexed from a 32px tile's
+// local x. Both sides of any vertical grid boundary share a continuous crest.
+// This is used only while authoring an atlas, never per pixel during animation.
+export function surfFront(phase,worldX){
   const state=TIDE_FRAMES[phase];
-  if(!state)return 0;
-  const roughness=hash%3===0?1:hash%5===0?-1:0;
-  const front=Math.max(1,state.reach+roughness);
-  if(distance>state.wetReach+1)return 0;
-  if(distance<=front){
-    // Surf reaches the sand. Crest is 2-3px wide in a consistent palette.
-    if(distance>=front-2&&hash%7!==0)return 3;
-    return 2;
-  }
-  return 1; // damp sand persists as the wash retreats
+  if(!state||!Number.isFinite(worldX))return 0;
+  const variation=Math.sin(worldX/19)*1.15+Math.sin(worldX/43+1.7)*.85;
+  return Math.max(1,state.reach+Math.round(variation));
+}
+// 0: clear, 1: exposed damp sand, 2: thin water sheet, 3: foamy crest.
+// Tile pixels are produced from this single rule and packed into a sheet.
+export function surfSample(distance,terrain,phase,worldX){
+  if(terrain!=='sand'||!Number.isFinite(distance)||distance<0)return 0;
+  const state=TIDE_FRAMES[phase];if(!state)return 0;
+  const front=surfFront(phase,worldX);
+  if(distance>state.wetReach+2)return 0;
+  if(distance>front)return 1;
+  if(distance>=front-2)return 3;
+  return 2;
 }

@@ -110,12 +110,19 @@ export function prepareCoveArt(map=COVE_MAP,art){
    mask.ctx.clearRect(px,py,TILE,TILE);
    if(cover>0){
      chip(mask.ctx,art.coastMask,cover,px,py);
-     foam.push({cover,px,py});
+     foam.push({cover,px,py,x,y});
    }
  }
  ground.ctx.globalCompositeOperation='destination-in';
  ground.ctx.drawImage(mask.surface,0,0);
  ground.ctx.globalCompositeOperation='source-over';
+ // Keep the EXACT accepted shoreline-study 16-corner sand variants, even
+ // though the production coast runs north/south instead of east/west.
+ // These translucent contour chips hide the hard 32px stepping without
+ // replacing the shared broad beach or drawing unrelated foam overlays.
+ const sandEdges=[art.coastSand0,art.coastSand1,art.coastSand2,art.coastSand3];
+ for(const {cover,px,py,x,y} of foam)
+   chip(ground.ctx,sandEdges[(x&1)+2*(y&1)],cover,px,py);
  return {ground:ground.surface,foam,shoreMask:mask.surface,
    grassCornerChips,scrubCornerChips};
 }
@@ -207,19 +214,17 @@ export function createCoveRenderer(ctx,art,map=COVE_MAP){
    ctx.imageSmoothingEnabled=false;
    // The moving water atlas sits behind the transparent coast mask.
    const waterImage=art.water;
-   const frame=Math.floor(time/200);
-   const cols=Math.max(1,Math.floor(waterImage.naturalWidth/TILE));
-   const rows=Math.max(1,Math.floor(waterImage.naturalHeight/TILE));
+   // Same approved 64x64 two-frame water atlas and world-aligned
+   // (x&1,y&1) chips as shoreline-study: no desynchronized tile phases.
+   const frame=Math.floor(time/360)%2;
    for(let y=0;y<height;y++)for(let x=0;x<width;x++){
      if(tileAt(x,y,map)!=='~')continue;
-     drawTile(ctx,waterImage,x,y,(frame+x%3+Math.floor(y/3))%(cols*rows));
+     ctx.drawImage(waterImage,frame*64+(x&1)*TILE,(y&1)*TILE,
+       TILE,TILE,x*TILE,y*TILE,TILE,TILE);
    }
-   // Native authored foam chips are part of the sea layer, not an overlaid
-   // opaque shoreline that could obscure the player's feet.
-   ctx.globalAlpha=.74;
-   for(const {cover,px,py} of staticArt.foam)
-     chip(ctx,art.coastShallow,cover,px,py);
-   ctx.globalAlpha=1;
+   // The accepted study does not add a separate semi-transparent shallow
+   // atlas on top of the sea. Coastal color and foam come from the native
+   // coast-sand chips and synchronized eight-frame surf atlas instead.
    ctx.drawImage(staticArt.ground,0,0);
    // Draw only precompiled 32px animation atlas chips. Each wave phase
    // contains the same stable tile positions and is synchronized to the

@@ -9,6 +9,8 @@ import {FOOD_ITEMS,ARMORY_STOCK,purchaseFood,purchaseArmory,collectFind,readPlay
 import {consumeRestorePosition} from '../save/save-game.mjs?v=save-slots-1';
 import {VILLAGE_FINDS} from '../../../data/maps/hozuki-village/finds.mjs';
 import {drawFindHint,shouldShowFindHint} from '../village/find-indicator.mjs?v=nearby-1';
+import {shellBagCount,shellBagValue} from '../items/shells.mjs';
+import {sellCoveShells} from '../../../data/maps/sea-cove/shells.mjs';
 
 const scene = document.querySelector('#scene');
 const context = scene.getContext('2d', {alpha:false});
@@ -61,8 +63,11 @@ async function start() {
   const shopOptions=document.getElementById('shop-options');
   const shopMessage=document.getElementById('shop-message');
   function options(){
+    const shells=readPlayer().shells.bag;
     return selectedRoom==='teahouse'
-      ?[...Object.values(FOOD_ITEMS).map(item=>({id:item.id,label:item.name+'　'+item.price+'両（体力+'+item.heal+'）'})),{id:'exit',label:'もどる'}]
+      ?[...Object.values(FOOD_ITEMS).map(item=>({id:item.id,label:item.name+'　'+item.price+'両（体力+'+item.heal+'）'})),
+        {id:'sell-shells',label:'貝殻を売る　'+shellBagCount(shells)+'個（'+shellBagValue(shells)+'両）'},
+        {id:'exit',label:'もどる'}]
       :selectedRoom==='armory'?[...ARMORY_STOCK.map(item=>({id:item.id,label:item.name+'　'+item.price+'両（'+(item.attack?'攻撃+'+item.attack:'守備+'+item.defense)+'）'})),{id:'exit',label:'もどる'}]:[];
   }
   function refreshShop(){
@@ -98,7 +103,8 @@ async function start() {
     const choice=options()[shopSelected];
     if(!choice)return;
     if(choice.id==='exit'){closeShop();return;}
-    const result=selectedRoom==='teahouse'?purchaseFood(readPlayer(),choice.id):purchaseArmory(readPlayer(),choice.id);
+    const result=choice.id==='sell-shells'?sellCoveShells(readPlayer()):
+      selectedRoom==='teahouse'?purchaseFood(readPlayer(),choice.id):purchaseArmory(readPlayer(),choice.id);
     if(result.accepted)savePlayer(result.player);
     shopMessage.textContent=result.message;refreshShop();
     globalThis.KIKOKU_AUDIO?.se?.(result.accepted?'confirm':'cancel');

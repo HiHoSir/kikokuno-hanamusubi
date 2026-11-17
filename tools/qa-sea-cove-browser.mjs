@@ -41,7 +41,11 @@ try{
  await page.evaluate(()=>window.KIKOKU_GAME.navigate(new URL('./cove/',location.href)));
  await page.waitForFunction(()=>{
    const child=document.querySelector('#game-scene')?.contentWindow;
-   return Boolean(child?.KIKOKU_SAVE_SNAPSHOT && child.document.querySelector('#load')?.hidden);
+   try{
+     return child?.location.pathname.endsWith('/src/game/cove/') &&
+       typeof child.KIKOKU_SAVE_SNAPSHOT==='function' &&
+       child.document.querySelector('#load')?.hidden===true;
+   }catch{return false;}
  },null,{timeout:40000});
  const initial=await page.evaluate(()=>{
    const frame=document.querySelector('#game-scene'),child=frame.contentWindow;

@@ -80,36 +80,72 @@ function cutChip(c,im,variant,x,y){
    TILE,TILE,x,y,TILE,TILE);
 }
 function composeDryLand(art){
- // Draw actual 32px grass and sand using the approved field autotile renderer;
- // replace the sea with sand *for this dry-source texture only*. The alpha
- // mask below clips it back to a curved shoreline.
- const paint=MAP.map(row=>row.map(type=>type==='sea'?'sand':type));
- paint.paths=[];paint.decorations=[];paint.projectedHeights=false;
- paint.referencePlacedObjects=true;paint.bridgeWaterCells=new Set();
- paint.textureOrigin={x:0,y:0};
- const [staticMap,c]=buffer(WIDTH*TILE,HEIGHT*TILE);
- c.drawImage(window.YK_LANDSCAPE.groundLayer(paint),0,0);
- const [coverage,m]=buffer(WIDTH*TILE,HEIGHT*TILE);
- m.fillStyle='#fff';m.fillRect(0,0,coverage.width,coverage.height);
+ // The original field groundLayer applies the sand texture to complete 32px
+ // cells; at grass boundaries that leaves conspicuous square green corners.
+ // Render homogeneous 32px *terrain tiles* and compose their junction using
+ // exactly the approved 16-shape atlas already used at the sea edge.
+ const layer=type=>{
+   const map=MAP.map(row=>row.map(()=>type));
+   map.paths=[];map.decorations=[];map.projectedHeights=false;
+   map.referencePlacedObjects=true;map.bridgeWaterCells=new Set();
+   map.textureOrigin={x:0,y:0};
+   return window.YK_LANDSCAPE.groundLayer(map);
+ };
+ const w=WIDTH*TILE,h=HEIGHT*TILE;
+ const [staticMap,c]=buffer(w,h);
+ const [grassLayer,g]=buffer(w,h);
+ // Sand is behind every land cell; grass is clipped to an independent
+ // connected boundary mask. Neither material is stretched or retinted.
+ c.drawImage(layer('sand'),0,0);
+ g.drawImage(layer('grass'),0,0);
+ const [grassCoverage,grassMask]=buffer(w,h);
+ grassMask.fillStyle='#fff';
+ grassMask.fillRect(0,0,w,h);
+ const grassCover=(x,y)=>{
+   const isGrass=(cx,cy)=>MAP[cy]?.[cx]==='grass';
+   return (isGrass(x,y)?1:0)|(isGrass(x+1,y)?2:0)|
+     (isGrass(x+1,y+1)?4:0)|(isGrass(x,y+1)?8:0);
+ };
+ let grassEdgeChips=0,grassDiagonalChips=0;
+ for(let y=-1;y<HEIGHT;y++)for(let x=-1;x<WIDTH;x++){
+   const cover=grassCover(x,y);
+   if(cover===15)continue;
+   const px=x*TILE+TILE/2,py=y*TILE+TILE/2;
+   grassMask.clearRect(px,py,TILE,TILE);
+   if(cover>0){
+     cutChip(grassMask,art.mask,cover,px,py);
+     grassEdgeChips++;
+     if(![0,3,5,10,12,15].includes(cover))grassDiagonalChips++;
+   }
+ }
+ g.globalCompositeOperation='destination-in';
+ g.drawImage(grassCoverage,0,0);
+ g.globalCompositeOperation='source-over';
+ c.drawImage(grassLayer,0,0);
+ // Apply the same 16-corner native chip atlas at the ocean boundary.
+ // Terrain junctions are baked ONCE, not repainted per frame as overlays.
+ const [coverage,m]=buffer(w,h);
+ m.fillStyle='#fff';m.fillRect(0,0,w,h);
  const coastline=[];
  for(let y=-1;y<HEIGHT;y++)for(let x=-1;x<WIDTH;x++){
    const cover=shoreCover(x,y);if(cover===15)continue;
-   const px=x*TILE+16,py=y*TILE+16;
+   const px=x*TILE+TILE/2,py=y*TILE+TILE/2;
    m.clearRect(px,py,TILE,TILE);
    if(cover>0){
      cutChip(m,art.mask,cover,px,py);
      coastline.push({px,py,cover,x,y});
    }
  }
- c.globalCompositeOperation='destination-in';c.drawImage(coverage,0,0);
+ c.globalCompositeOperation='destination-in';
+ c.drawImage(coverage,0,0);
  c.globalCompositeOperation='source-over';
- // Sand stays static. The moving foam is composed separately and is never
- // baked here: a fixed coast foam line would defeat the ebb-and-flow motion.
  for(const {px,py,cover,x,y} of coastline){
    const phase=((x&1)+2*(y&1));
    cutChip(c,art.sand[phase],cover,px,py);
  }
- return {staticMap,coastline,shoreMask:coverage};
+ return {staticMap,coastline,shoreMask:coverage,
+   grassEdgeChips,grassDiagonalChips,
+   landJoin:'approved-16-corner-alpha-autotiles'};
 }
 // Compile an honest 32x32 animated mapchip sheet at scene load. Each beach
 // tile receives 8 source frames; runtime ONLY copies 32x32 atlas rectangles.
@@ -237,11 +273,11 @@ function paint(now,art,ground,tileAtlas){
        TILE,TILE,x*TILE,y*TILE,TILE,TILE);
    }
  }
- for(let y=minY;y<=maxY;y++)for(let x=minX;x<=maxX;x++){
-   ctx.drawImage(ground.staticMap,x*TILE,y*TILE,TILE,TILE,
-     x*TILE,y*TILE,TILE,TILE);
-   baseTiles++;
- }
+ // Cache the static 32px-tile layer as ONE contiguous surface instead
+ // of slicing a previously composed texture back into 32px draw calls.
+ // At non-integer camera zoom, independent copies can leave one-pixel gaps.
+ ctx.drawImage(ground.staticMap,0,0);
+ baseTiles=(maxX-minX+1)*(maxY-minY+1);
  // Synchronously swap every surf tile to the same phase. The full map
  // is never repainted by ImageData and there is no full-canvas tide overlay.
  for(const chip of tileAtlas.entries){
@@ -276,6 +312,9 @@ function paint(now,art,ground,tileAtlas){
    animatedTileDraws:animatedTiles,baseTileDraws:baseTiles,
    surfRender:'animated-32px-atlas-chips',
    coastCount:ground.coastline.length,characterSheet:'village-80x112',
+   grassEdgeChips:ground.grassEdgeChips,
+   grassDiagonalChips:ground.grassDiagonalChips,
+   landJoin:ground.landJoin,
    sandCells:MAP.flat().filter(t=>t==='sand').length,
    seaCells:MAP.flat().filter(t=>t==='sea').length,
    dryMapGenerated:true,shorelineTechnique:'4-corner-16-tile-mask',

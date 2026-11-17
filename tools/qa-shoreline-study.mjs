@@ -39,6 +39,12 @@ try{
  assert.ok(first.coastCount>20);
  assert.equal(first.waterFrames,2);
  assert.equal(first.tideFrames,8,'shore moves independently of the open sea frames');
+ assert.equal(first.surfRender,'animated-32px-atlas-chips','actual 32px map-chip sprite sheet');
+ assert.ok(first.animatedTileCount>=20,'beach edge has independent animated tiles');
+ assert.ok(first.animatedTileDraws>0,'map chips are drawn in viewport');
+ assert.ok(first.baseTileDraws>100,'base terrain is rendered in 32px tiles');
+ assert.ok(first.tileSheet[0]%32===0&&first.tileSheet[1]%32===0,
+   '8-frame atlas dimensions align to native 32px source rectangles');
  assert.equal(first.characterSheet,'village-80x112','use the town-scale 80x112 Hizuki');
  assert.ok(first.foamPixels>0,'actual visible surf pixels');
  assert.ok(first.seaCells>100&&first.sandCells>50);
@@ -67,6 +73,8 @@ try{
  await page.screenshot({path:'artifacts/shoreline-study-high-tide.png'});
  assert.ok(high.tideReach>low.tideReach,'wave front must advance on sand');
  assert.ok(high.washedPixels>low.washedPixels+300,'actual more sand covered at incoming high surf');
+ assert.equal(high.animatedTileCount,low.animatedTileCount,'tile layout never changes with wave phase');
+ assert.deepEqual(high.tileSheet,low.tileSheet,'atlas allocation does not change each frame');
  await page.waitForFunction(()=>window.__SHORE_QA?.tidePhase===7,null,{timeout:4500});
  const retreat=await page.evaluate(()=>({...window.__SHORE_QA}));
  assert.ok(retreat.tideReach<high.tideReach,'surf must retreat');
@@ -94,7 +102,8 @@ try{
    lowTide:{reach:low.tideReach,washed:low.washedPixels},
    highTide:{reach:high.tideReach,washed:high.washedPixels},
    retreat:{reach:retreat.tideReach,wet:retreat.wetPixels},
-   villageHero:true,yBefore,yAfter:after.hero.y,
+   villageHero:true,tileAtlas:true,animatedTileCount:initial.animatedTileCount,
+   tileSheet:initial.tileSheet,yBefore,yAfter:after.hero.y,
    screenshots:['artifacts/shoreline-study-initial.png',
    'artifacts/shoreline-study-water.png','artifacts/shoreline-study-grid.png',
    'artifacts/shoreline-study-low-tide.png','artifacts/shoreline-study-high-tide.png',

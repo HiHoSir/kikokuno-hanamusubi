@@ -137,15 +137,15 @@ test('masked native atlases preserve diagonal coastline and animated sea is sepa
  assert.ok(renderer.includes('Math.round(actor.x-TILE/2),Math.round(actor.y-TILE),TILE,TILE'));
  assert.doesNotMatch(renderer,/if\(actor\.kind==='flowers'\)\{[^}]*actor\.image\.naturalWidth/,
   'flower sprites must be cropped to one 32px source tile, not scaled entire sheets');
- assert.match(renderer,/const frame=Math\\.floor\\(time\\/360\\)%2/);
+ assert.match(renderer,/const frame=Math\.floor\(time\/360\)%2/);
  assert.match(renderer,/staticArt\.ground/);
- assert.match(renderer,/sandEdges\\[\\(x&1\\)\\+2\\*\\(y&1\\)\\]/,
+ assert.match(renderer,/sandEdges\[\(x&1\)\+2\*\(y&1\)\]/,
    'coast contour uses approved four 16-corner sand atlases');
- assert.match(renderer,/ctx\\.drawImage\\(waterImage,frame\\*64\\+\\(x&1\\)\\*TILE,\\(y&1\\)\\*TILE/,
+ assert.match(renderer,/ctx\.drawImage\(waterImage,frame\*64\+\(x&1\)\*TILE,\(y&1\)\*TILE/,
    '2x2 water chips are synchronized in native atlas frames');
- assert.doesNotMatch(renderer,/drawTile\\(ctx,waterImage/,
+ assert.doesNotMatch(renderer,/drawTile\(ctx,waterImage/,
    'do not introduce individual water tile phase shifts');
- assert.doesNotMatch(renderer,/ctx\\.globalAlpha=\\.74/,
+ assert.doesNotMatch(renderer,/ctx\.globalAlpha=\.74/,
    'do not paint an unapproved translucent coast foam layer');
  assert.doesNotMatch(renderer,/imageSmoothingEnabled=true/);
  for(const name of ['field/terrain/sand.png','field/terrain/grass-base.png',

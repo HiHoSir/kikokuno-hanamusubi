@@ -88,6 +88,8 @@ async function start(){
   if(images[id].naturalWidth!==128||images[id].naturalHeight!==128)
    throw Error('海岸線の16チップアトラスが不正です: '+id);
  }
+ if(images.flowers.naturalWidth<128||images.flowers.naturalHeight<128)
+   throw Error('野花の4×4マップチップ集を読み込めません');
  const {width,height,tileSize,fisher:site,entry}=COVE_MAP;
  const blocked=Uint8Array.from({length:width*height},(_,i)=>
    walkableCell(i%width,Math.floor(i/width))?0:1);

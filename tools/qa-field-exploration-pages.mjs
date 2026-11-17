@@ -55,6 +55,24 @@ try{
           }))
       };
     })(),
+    waterfallBasin:(()=>{
+      const m=window.YK_WORLD.mapData,w=window.YK_WORLD;
+      const wet=[[66,15],[65,16],[66,16],[68,16],[65,17],[66,17],[65,18],[69,18],
+         [70,18],[65,19],[66,19],[71,19],[68,20],[71,20],[68,21],[68,22]];
+      const retired=[[65,15],[66,15],[68,15],[65,16],[66,16],[68,16],[65,17],[66,17],
+        [64,18],[70,18],[71,18],[72,18],[64,19],[71,19],[71,20],[71,21]];
+      const at=(x,y)=>[x*32+16,y*32+16],route=[[67,21],[67,20],[67,19],[67,18]];
+      return {
+       wet:wet.map(([x,y])=>({x,y,river:m[y][x]==='river',blocked:!w.walkable(...at(x,y))})),
+       retired:retired.map(([x,y])=>({x,y,unoccupied:!m.occupiedTiles.has(x+','+y),
+         noMountain:!m.decorations.some(o=>['newMountainLarge','newMountainSmall'].includes(o.kind)&&
+           o.contactTiles.some(c=>c[0]===x&&c[1]===y))})),
+       approach:route.slice(1).every((p,i)=>w.canMove(...at(...route[i]),...at(...p))&&w.canMove(...at(...p),...at(...route[i]))),
+       reachable:route.every(([x,y])=>m.travelReachable.has(x+','+y)),
+       ladder:m.ladders.some(l=>l.lower.join(',')==='67,21'&&l.upper.join(',')==='67,20'),
+       downstream:m[25][69]==='river'
+      };
+    })(),
     cornerWalk:(()=>{
       // Exact coordinates of the reported Hirozuki forest gap near the east cliff.
       const m=window.YK_WORLD.mapData,W=window.YK_WORLD,E=window.YK_ELEVATION;
@@ -132,7 +150,7 @@ try{
     base:document.baseURI, url:location.href
   }));
   assert.equal(info.qa.source,'production','review scene must reference the live game');
-  assert.equal(info.qa.tiles,61);assert.equal(info.qa.heights,71);
+  assert.equal(info.qa.tileSize,32);assert.equal(info.qa.phase,'production-waterfall-basin');
   assert.equal(info.cornerWalk.cutWidth,28,'small diagonal clipping must not consume walkable tile centers');
   assert.equal(info.cornerWalk.originalPassable,true,'Hizuki remains on valid highland');
   assert.equal(info.cornerWalk.exits.west.canMove,true,'forest tile west of Hizuki must remain traversable');
@@ -151,7 +169,9 @@ try{
   assert.ok(info.scenery.byKind.newTrees>0,'trees adjacent to diagonal cliffs are thinned');
   assert.equal(info.scenery.remainingForestAtBevel,0,'no original forest tree remains within one tile of a bevel');
   assert.ok(info.scenery.preservedMountainScenery>=90,'solid mountains retain visible sprites');
-  assert.ok(info.collisionConsistency.restoredMountainAnchors.every(o=>o.visible),'restored mountain anchor must have a visible mountain or tree stand-in');
+  assert.ok(info.collisionConsistency.restoredMountainAnchors.every(o=>
+    o.terrain==='mountain'?o.visible:!o.visible),
+    'mountain material must retain a sprite; water/grass converted from mountains must not');
   assert.deepEqual(info.collisionConsistency.stale,[],'removed sprites must not retain collision-only occupied cells');
   assert.deepEqual(info.collisionConsistency.missing,[],'every live object footprint must be in collision map');
   assert.ok(info.collisionConsistency.retiredCount>=8,'check actual removed tree footholds');
@@ -162,12 +182,20 @@ try{
   assert.ok(info.regionCoverage.east>=125&&info.regionCoverage.central>=45,'restored plateaus are traversable');
   assert.ok(info.cliffObjects.every(o=>o.cuts>0&&!o.protected),
     'diagonal cliff shapes survive even where mountain sprites are restored');
-  assert.equal(info.qa.thinnedMountains,0,'mountain sprite deletion must not leave invisible mountain terrain');
-  assert.equal(info.qa.restoredMountains,16,'prior deliberately suppressed mountain anchors return');
-  assert.equal(info.mountainThinning.sourceCount,181);
+  assert.equal(info.waterfallBasin.retired.length,16,'only verified waterfall mountain cells are cleaned');
+  assert.equal(info.mountainThinning.sourceCount,168,'keep mountain sprites everywhere except the waterfall corridor');
   assert.ok(info.mountainThinning.runtimeCount>=98,'preserve most original mountain sprites');
-  assert.ok(info.mountainThinning.removed.every(o=>o.stillPresent&&o.terrain==='mountain'&&!o.walkable),'impassable mountain cells remain visibly represented');
+  assert.ok(info.mountainThinning.removed.every(o=>
+    o.terrain==='mountain'?o.stillPresent&&!o.walkable:!o.stillPresent),
+    'solid mountain ground stays visible, while water and grass have no phantom mountain');
   assert.ok(info.mountainThinning.remainingAnchors,'mountain range remains legible');
+  assert.ok(info.waterfallBasin.wet.every(o=>o.river&&o.blocked),
+    'waterfall foot and downstream must share animated river surface with water collision');
+  assert.ok(info.waterfallBasin.retired.every(o=>o.noMountain&&o.unoccupied),
+    'replaced mountain sprites cannot leave invisible collisions or floating mountains');
+  assert.ok(info.waterfallBasin.approach&&info.waterfallBasin.reachable&&
+    info.waterfallBasin.ladder&&info.waterfallBasin.downstream,
+    'entry staircase and streaming river remain connected after basin reshape');
 
   assert.equal(info.height,2);assert.equal(info.flowers,34);assert.equal(info.nav,14);assert.deepEqual(info.ramps,['s','s','n','n','e','e','w','w']);
   assert.equal(info.localLadders,0,'overlook uses ramps, not ladder sprites');

@@ -1,5 +1,7 @@
 // A small in-world hint for uncollected village finds; no additional art asset.
-export const FIND_HINT_RADIUS=148;
+// Keep this just beyond the 65px interaction reach: the marker appears only
+// when the player is immediately beside the object, not elsewhere on screen.
+export const FIND_HINT_RADIUS=82;
 
 export function shouldShowFindHint(hero,find,foundItems,radius=FIND_HINT_RADIUS) {
   if (!find || foundItems.has(find.id)) return false;

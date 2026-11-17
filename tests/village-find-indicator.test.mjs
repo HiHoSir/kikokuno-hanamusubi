@@ -6,7 +6,10 @@ import {VILLAGE_FINDS} from '../data/maps/hozuki-village/finds.mjs';
 
 test('nearby uncollected finds show a question mark; obtained or distant finds do not',()=>{
   const find={id:'hozuki-bridge-shrub',x:100,y:200};
+  assert.equal(FIND_HINT_RADIUS,82);
   assert.ok(shouldShowFindHint({x:100,y:200},find,new Set()));
+  assert.ok(shouldShowFindHint({x:100+65,y:200},find,new Set()));
+  assert.equal(shouldShowFindHint({x:100+100,y:200},find,new Set()),false);
   assert.ok(shouldShowFindHint({x:100+FIND_HINT_RADIUS,y:200},find,new Set()));
   assert.equal(shouldShowFindHint({x:100+FIND_HINT_RADIUS+1,y:200},find,new Set()),false);
   assert.equal(shouldShowFindHint({x:100,y:200},find,new Set([find.id])),false);

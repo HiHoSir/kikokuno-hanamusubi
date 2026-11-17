@@ -6,7 +6,7 @@ import { bindDialogue } from './dialogue.mjs?v=field-menu-1';
 import {collectFind,readPlayer,savePlayer} from '../battle/rules.mjs?v=equipment-4slots-2';
 import {consumeRestorePosition} from '../save/save-game.mjs?v=save-slots-1';
 import {VILLAGE_FINDS} from '../../../data/maps/hozuki-village/finds.mjs';
-import {drawFindHint,shouldShowFindHint} from './find-indicator.mjs';
+import {drawFindHint,shouldShowFindHint} from './find-indicator.mjs?v=nearby-1';
 import {readStoryStage,advanceStoryStage,objectiveForStage} from '../story/chapter-one.mjs';
 
 const scene = document.querySelector('#scene');

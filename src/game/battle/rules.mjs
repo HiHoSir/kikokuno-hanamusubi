@@ -53,9 +53,33 @@ export const FOOD_ITEMS=Object.freeze({
   onigiri:Object.freeze({id:'onigiri',name:'おにぎり',price:8,heal:12}),
   dango:Object.freeze({id:'dango',name:'団子',price:16,heal:22})
 });
-// One early equipment tier is available from the existing armory interior.
-// Price and item name are playtest values, not a final equipment catalog.
-export const ARMORY_STOCK=Object.freeze({id:'starter-gear',name:'旅の兵具一式',price:200,tier:'T1'});
+// Four approved village-shop pieces replace the trial T1 bundle.
+// The historical T0–T6 aggregate table above remains unchanged for reference.
+export const EQUIPMENT_SLOTS=Object.freeze({weapon:'武器',body:'胴',head:'頭',feet:'足'});
+export const STARTER_EQUIPMENT=Object.freeze({weapon:'starter-weapon',body:'starter-body',head:null,feet:null});
+export const EQUIPMENT_ITEMS=Object.freeze({
+ 'starter-weapon':Object.freeze({id:'starter-weapon',name:'手持ちの刀',slot:'weapon',attack:0,defense:0,price:null}),
+ 'starter-body':Object.freeze({id:'starter-body',name:'緋月の旅装',slot:'body',attack:0,defense:0,price:null}),
+ wakizashi:Object.freeze({id:'wakizashi',name:'脇差',slot:'weapon',attack:4,defense:0,price:40}),
+ 'padded-body':Object.freeze({id:'padded-body',name:'厚布の胴当て',slot:'body',attack:0,defense:4,price:32}),
+ headband:Object.freeze({id:'headband',name:'鉢巻',slot:'head',attack:0,defense:2,price:20}),
+ tabi:Object.freeze({id:'tabi',name:'足袋',slot:'feet',attack:0,defense:1,price:12})
+});
+export const ARMORY_STOCK=Object.freeze(['wakizashi','padded-body','headband','tabi'].map(id=>EQUIPMENT_ITEMS[id]));
+function applyEquipmentStats(stats,equipment){
+ const result={...stats};
+ for(const [slot,id] of Object.entries(equipment||{})){
+  const item=EQUIPMENT_ITEMS[id];
+  if(item?.slot===slot){result.attack+=item.attack;result.defense+=item.defense;}
+ }
+ return result;
+}
+export function equipmentPreview(player,slot,id){
+ const hero=normalizePlayer(player);
+ if(!Object.hasOwn(EQUIPMENT_SLOTS,slot)||(id===null&&['weapon','body'].includes(slot))||
+   (id!==null&&(EQUIPMENT_ITEMS[id]?.slot!==slot||!hero.equipmentInventory[id])))return null;
+ return applyEquipmentStats(levelStats(hero.lv,hero.equipmentTier,hero.awakening),{...hero.equipment,[slot]:id});
+}
 export const HERB=Object.freeze({name:'薬草',heal:26});
 export const ENEMIES=Object.freeze({
   // Initial field only. These are provisional first-area numbers, not the planned late regions.
@@ -73,7 +97,25 @@ export function normalizePlayer(input={}){
   const lv=clamp(nonNegative(input?.lv,1),1,99);
   const equipmentTier=STATUS_V2.equipment.some(x=>x.id===input?.equipmentTier)?input.equipmentTier:'T0';
   const awakening=clamp(nonNegative(input?.awakening,0),0,3);
-  const stats=levelStats(lv,equipmentTier,awakening);
+  // Retired bundle owners keep their purchase as all four individual pieces.
+  // This migration is idempotent and preserves HP, MP, money and progression.
+  const hasInventory=input?.equipmentInventory&&typeof input.equipmentInventory==='object'&&!Array.isArray(input.equipmentInventory);
+  const migrateBundle=!hasInventory&&(input?.ownsArmoryGear===true||equipmentTier==='T1');
+  const inventory={};
+  for(const id of Object.values(STARTER_EQUIPMENT))if(id)inventory[id]=1;
+  for(const item of ARMORY_STOCK){
+   inventory[item.id]=migrateBundle?1:clamp(nonNegative(input?.equipmentInventory?.[item.id],0),0,1);
+  }
+  const equippedBundle=migrateBundle&&equipmentTier==='T1';
+  const savedEquipment=equippedBundle?Object.fromEntries(ARMORY_STOCK.map(item=>[item.slot,item.id])):input?.equipment;
+  const equipment={};
+  for(const [slot,fallback] of Object.entries(STARTER_EQUIPMENT)){
+   const id=Object.hasOwn(savedEquipment||{},slot)?savedEquipment[slot]:fallback;
+   equipment[slot]=((id===null&&['head','feet'].includes(slot))||
+     (EQUIPMENT_ITEMS[id]?.slot===slot&&inventory[id]>0))?id:fallback;
+  }
+  const activeTier=equippedBundle?'T0':equipmentTier;
+  const stats=applyEquipmentStats(levelStats(lv,activeTier,awakening),equipment);
   // No completed user-facing save system exists. Old battle-only data must not
   // import v1 combat stats into the approved v2 formula.
   const v2=input?.balanceVersion===2;
@@ -81,8 +123,7 @@ export function normalizePlayer(input={}){
   return {
     lv,...stats, hp:v2?clamp(nonNegative(input.hp,stats.maxhp),0,stats.maxhp):stats.maxhp,
     mp:v2?clamp(nonNegative(input.mp,stats.maxmp),0,stats.maxmp):stats.maxmp,
-    equipmentTier,awakening,balanceVersion:2,
-    ownsArmoryGear:input?.ownsArmoryGear===true||equipmentTier===ARMORY_STOCK.tier,
+    equipmentTier:activeTier,equipment,equipmentInventory:inventory,awakening,balanceVersion:2,
     foundItems:Array.isArray(savedFinds)?Object.keys(VILLAGE_FINDS).filter(id=>savedFinds.includes(id)):[],
     xp:nonNegative(input?.xp,0),gold:nonNegative(input?.gold,0),
     potions:nonNegative(input?.potions,3),
@@ -155,21 +196,23 @@ export function purchaseFood(player,id){
   hero.gold-=item.price;hero.foods[id]++;
   return {accepted:true,player:hero,message:item.name+'を買いました。'};
 }
-export function purchaseArmory(player){
-  const hero=normalizePlayer(player),item=ARMORY_STOCK;
-  if(hero.ownsArmoryGear)return {accepted:false,player:hero,message:'その兵具はもう持っています。'};
-  if(hero.gold<item.price)return {accepted:false,player:hero,message:'両が足りません。'};
-  hero.gold-=item.price;
-  hero.ownsArmoryGear=true;
-  return {accepted:true,player:hero,message:item.name+'を買いました。'};
+export function purchaseArmory(player,id){
+ const hero=normalizePlayer(player),item=ARMORY_STOCK.find(entry=>entry.id===id);
+ if(!item)return {accepted:false,player:hero,message:'商品を選んでください。'};
+ if(hero.equipmentInventory[id])return {accepted:false,player:hero,message:'その兵具はもう持っています。'};
+ if(hero.gold<item.price)return {accepted:false,player:hero,message:'両が足りません。'};
+ hero.gold-=item.price;
+ hero.equipmentInventory[id]=1;
+ return {accepted:true,player:hero,message:item.name+'を買いました。'};
 }
-export function changeEquipment(player,tier){
-  const hero=normalizePlayer(player);
-  if(!hero.ownsArmoryGear||hero.equipmentTier===tier||![ARMORY_STOCK.tier,'T0'].includes(tier))
-    return {accepted:false,player:hero,message:'装備を変更できない。'};
-  const updated=normalizePlayer({...hero,equipmentTier:tier});
-  const message=tier==='T0'?ARMORY_STOCK.name+'を外した。':ARMORY_STOCK.name+'を装備した。';
-  return {accepted:true,player:updated,message};
+export function changeEquipment(player,slot,id){
+ const hero=normalizePlayer(player);
+ if(hero.equipment[slot]===id||!equipmentPreview(hero,slot,id))
+  return {accepted:false,player:hero,message:'装備を変更できない。'};
+ const previous=hero.equipment[slot];
+ const updated=normalizePlayer({...hero,equipment:{...hero.equipment,[slot]:id}});
+ const name=id===null?EQUIPMENT_ITEMS[previous]?.name:EQUIPMENT_ITEMS[id].name;
+ return {accepted:true,player:updated,message:name+(id===null?'を外した。':'を装備した。')};
 }
 export function chooseEnemy(steps=0){
   return ['field-oni','tanuki','onibi'][Math.floor(Math.max(0,steps)/8)%3];
@@ -214,7 +257,7 @@ export function createBattle(enemyId='field-oni',player=DEFAULT_PLAYER,random=Ma
     event(original.name+'を倒した！　心'+xp+'、'+gold+'両を獲得。','victory');
     while(hero.lv<STATUS_V2.maxLevel&&hero.xp>=nextLevelXp(hero.lv)){
       hero.xp-=nextLevelXp(hero.lv);hero.lv++;
-      Object.assign(hero,levelStats(hero.lv,hero.equipmentTier,hero.awakening));
+      Object.assign(hero,applyEquipmentStats(levelStats(hero.lv,hero.equipmentTier,hero.awakening),hero.equipment));
       hero.hp=hero.maxhp;hero.mp=hero.maxmp;
       event('緋月は'+hero.lv+'段に上がった！','levelup');
     }

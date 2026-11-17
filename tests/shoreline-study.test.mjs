@@ -73,7 +73,7 @@ test('preview is independent of the production village and cove, reuses approved
  assert.match(html,/YK_LANDSCAPE\.groundLayer\(paint\)/);
  assert.match(html,/destination-in/);
  assert.match(html,/drawImage\(art\.water,frame\*64/);
- assert.match(html,/32px地形チップ/);
+ assert.match(html,/32pxアニメマップチップ/);
  assert.ok(html.includes('buildAnimatedTileAtlas(ground)'));
  assert.ok(html.includes('surfSample('));
  assert.ok(html.includes('drawImage(tileAtlas.sheet,'));

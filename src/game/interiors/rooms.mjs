@@ -1,23 +1,24 @@
 import {RESIDENT_RADIUS} from '../village/residents.mjs';
 
-// Atlas rectangles and floor footprints use the same world pixels as the village.
+// Every sprite uses original 2px-world-pixel artwork (never stretched at draw time).
+// The floor-contact rectangle is authored independently of each visible silhouette.
 export const furniture = {
-  teaCounter:    {sprite:[0,0,240,124],     foot:[4,46,232,74]},
-  teaTable:      {sprite:[248,0,172,116],   foot:[8,24,156,88]},
-  blueFuton:     {sprite:[496,0,100,128],   foot:[4,8,92,116]},
-  redFuton:      {sprite:[744,0,100,128],   foot:[4,8,92,116]},
-  weaponRack:    {sprite:[0,176,128,156],   foot:[12,112,104,40]},
-  merchantShelf: {sprite:[248,176,168,144], foot:[8,96,152,44]},
-  hearth:        {sprite:[496,176,136,148], foot:[4,56,128,88]},
-  tansu:         {sprite:[744,176,132,120], foot:[4,76,124,40]},
-  kitchen:       {sprite:[0,352,152,92],    foot:[4,32,144,56]},
-  supplies:      {sprite:[248,352,112,80],  foot:[4,40,104,36]},
-  weaponCounter: {sprite:[496,352,224,140], foot:[4,64,216,72]},
-  cushion:       {sprite:[744,352,48,36]},
-  shopCounter:   {sprite:[0,528,224,100],   foot:[4,40,216,56]},
-  innCounter:    {sprite:[248,528,228,140], foot:[4,64,220,72]},
-  workbench:     {sprite:[496,528,156,72],  foot:[4,28,148,40]},
-  shoeRack:      {sprite:[744,528,96,60],   foot:[4,24,88,32]},
+  teaCounter: {sprite:[0,0,212,124], foot:[8,56,196,62]},
+  teaTable: {sprite:[248,0,156,114], foot:[10,32,136,76]},
+  blueFuton: {sprite:[496,0,108,132], foot:[8,12,92,116]},
+  redFuton: {sprite:[744,0,108,132], foot:[8,12,92,116]},
+  weaponRack: {sprite:[0,176,128,150], foot:[12,100,104,42]},
+  merchantShelf: {sprite:[248,176,148,148], foot:[10,100,128,42]},
+  hearth: {sprite:[496,176,136,146], foot:[8,65,120,76]},
+  tansu: {sprite:[744,176,136,128], foot:[8,86,120,36]},
+  kitchen: {sprite:[0,352,148,144], foot:[8,74,132,66]},
+  supplies: {sprite:[248,352,116,124], foot:[4,76,108,44]},
+  weaponCounter: {sprite:[496,352,204,136], foot:[8,70,188,60]},
+  cushion: {sprite:[744,352,52,44]},
+  shopCounter: {sprite:[0,528,212,118], foot:[8,48,196,64]},
+  innCounter: {sprite:[248,528,212,122], foot:[8,58,196,58]},
+  workbench: {sprite:[496,528,168,106], foot:[8,64,152,36]},
+  shoeRack: {sprite:[744,528,112,94], foot:[8,62,96,26]},
 };
 
 const TATAMI_SHORT_SIDE=80;

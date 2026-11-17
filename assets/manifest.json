@@ -1587,13 +1587,18 @@
       "type": "object",
       "path": "assets/village/interiors/furniture.png",
       "status": "approved",
-      "sourcePath": "source-assets/village/interiors/furniture-generator.py",
+      "sourcePath": "source-assets/village/interiors/furniture-master.png",
       "usage": "hozuki-village-interiors",
       "origin": {
-        "method": "native-4px-pixel-art-redraw",
-        "sourceRevision": 1,
-        "priorGitBlobSha": "4cdfd11a25acc2de80f6ea3d0ba47524d637aeca",
-        "priorSourcePath": "previews/village-interiors/furniture.png"
+        "method": "illustrated-native-2px-pixel-master",
+        "sourceRevision": 2,
+        "previousSourcePath": "source-assets/village/interiors/furniture-generator.py",
+        "priorOrigin": {
+          "method": "native-4px-pixel-art-redraw",
+          "sourceRevision": 1,
+          "priorGitBlobSha": "4cdfd11a25acc2de80f6ea3d0ba47524d637aeca",
+          "priorSourcePath": "previews/village-interiors/furniture.png"
+        }
       }
     },
     {

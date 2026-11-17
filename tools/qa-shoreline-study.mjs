@@ -108,6 +108,19 @@ try{
    window.__SHORE_QA?.hero?.y===432,null,{timeout:2000});
  const reset=await page.evaluate(()=>window.__SHORE_QA.hero);
  assert.equal(reset.x,336);assert.equal(reset.y,432);
+ // Hold left into the native rock footprint. The figure should stop at its
+ // visible foot instead of passing through or hitting a large hidden rectangle.
+ const rock=first.scenery.find(object=>object.id==='rock-west');
+ assert.ok(rock&&rock.solid);
+ await page.keyboard.down('ArrowLeft');
+ await page.waitForTimeout(1900);
+ await page.keyboard.up('ArrowLeft');
+ await page.waitForTimeout(90);
+ const beforeRock=await page.evaluate(()=>({...window.__SHORE_QA.hero}));
+ assert.equal(beforeRock.y,reset.y,'walking left does not change row');
+ assert.ok(beforeRock.x>rock.x&&beforeRock.x<rock.x+35,
+   'walk stops at the 13px rock foot collision, not at a sprite-size box');
+ await page.screenshot({path:'artifacts/shoreline-study-rock-collision.png'});
  assert.deepEqual(errors,[],'no broken assets or runtime exceptions');
  const report={result:'pass',map:first.map,coastCount:first.coastCount,
    seaCells:first.seaCells,sandCells:first.sandCells,
@@ -117,6 +130,7 @@ try{
    retreat:{reach:retreat.tideReach,wet:retreat.wetPixels},
    villageHero:true,sceneryCount:first.sceneryCount,sceneryNativeSizes:first.sceneryNativeSizes,
    grassColorStudy:first.grassColorStudy,
+   rockCollision:{rockX:rock.x,heroX:beforeRock.x,heroY:beforeRock.y},
    landJoin:first.landJoin,grassEdgeChips:first.grassEdgeChips,
    grassDiagonalChips:first.grassDiagonalChips,tileAtlas:true,
    animatedTileCount:first.animatedTileCount,
@@ -124,7 +138,8 @@ try{
    screenshots:['artifacts/shoreline-study-initial.png',
    'artifacts/shoreline-study-water.png','artifacts/shoreline-study-grid.png',
    'artifacts/shoreline-study-low-tide.png','artifacts/shoreline-study-high-tide.png',
-   'artifacts/shoreline-study-retreat.png']};
+   'artifacts/shoreline-study-retreat.png',
+   'artifacts/shoreline-study-rock-collision.png']};
  await writeFile('artifacts/shoreline-study-report.json',JSON.stringify(report,null,2));
  console.log('SHORELINE STUDY '+JSON.stringify(report));
 }finally{

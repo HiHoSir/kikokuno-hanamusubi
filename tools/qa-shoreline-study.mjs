@@ -46,6 +46,15 @@ try{
  assert.ok(first.tileSheet[0]%32===0&&first.tileSheet[1]%32===0,
    '8-frame atlas dimensions align to native 32px source rectangles');
  assert.equal(first.characterSheet,'village-80x112','use the town-scale 80x112 Hizuki');
+ assert.equal(first.sceneryCount,8,'only a few props in the reviewed coast');
+ assert.equal(first.sceneryRender,'unscaled-native-sprites-sorted-by-foot');
+ assert.equal(first.scenery.filter(o=>o.solid).length,3);
+ assert.ok(Object.values(first.sceneryNativeSizes).every(([w,h])=>
+   Number.isInteger(w)&&Number.isInteger(h)&&w>0&&h>0&&w<=112&&h<=112),
+   'approved native-size objects must fit within the intended character scale');
+ assert.equal(first.grassColorStudy.scale,1,'grass palette transformation must not enlarge source pixels');
+ assert.equal(first.grassColorStudy.paletteSize,5,'fixed terrain palette');
+ assert.ok(first.grassColorStudy.pixelPreserved>70,'retain source tuft alpha geometry');
  assert.ok(first.foamPixels>0,'actual visible surf pixels');
  assert.ok(first.seaCells>100&&first.sandCells>50);
  assert.ok(first.dryMapGenerated);
@@ -99,6 +108,19 @@ try{
    window.__SHORE_QA?.hero?.y===432,null,{timeout:2000});
  const reset=await page.evaluate(()=>window.__SHORE_QA.hero);
  assert.equal(reset.x,336);assert.equal(reset.y,432);
+ // Hold left into the native rock footprint. The figure should stop at its
+ // visible foot instead of passing through or hitting a large hidden rectangle.
+ const rock=first.scenery.find(object=>object.id==='rock-west');
+ assert.ok(rock&&rock.solid);
+ await page.keyboard.down('ArrowLeft');
+ await page.waitForTimeout(1900);
+ await page.keyboard.up('ArrowLeft');
+ await page.waitForTimeout(90);
+ const beforeRock=await page.evaluate(()=>({...window.__SHORE_QA.hero}));
+ assert.equal(beforeRock.y,reset.y,'walking left does not change row');
+ assert.ok(beforeRock.x>rock.x&&beforeRock.x<rock.x+35,
+   'walk stops at the 13px rock foot collision, not at a sprite-size box');
+ await page.screenshot({path:'artifacts/shoreline-study-rock-collision.png'});
  assert.deepEqual(errors,[],'no broken assets or runtime exceptions');
  const report={result:'pass',map:first.map,coastCount:first.coastCount,
    seaCells:first.seaCells,sandCells:first.sandCells,
@@ -106,14 +128,18 @@ try{
    lowTide:{reach:low.tideReach,washed:low.washedPixels},
    highTide:{reach:high.tideReach,washed:high.washedPixels},
    retreat:{reach:retreat.tideReach,wet:retreat.wetPixels},
-   villageHero:true,landJoin:first.landJoin,grassEdgeChips:first.grassEdgeChips,
+   villageHero:true,sceneryCount:first.sceneryCount,sceneryNativeSizes:first.sceneryNativeSizes,
+   grassColorStudy:first.grassColorStudy,
+   rockCollision:{rockX:rock.x,heroX:beforeRock.x,heroY:beforeRock.y},
+   landJoin:first.landJoin,grassEdgeChips:first.grassEdgeChips,
    grassDiagonalChips:first.grassDiagonalChips,tileAtlas:true,
    animatedTileCount:first.animatedTileCount,
    tileSheet:first.tileSheet,yBefore,yAfter:after.hero.y,
    screenshots:['artifacts/shoreline-study-initial.png',
    'artifacts/shoreline-study-water.png','artifacts/shoreline-study-grid.png',
    'artifacts/shoreline-study-low-tide.png','artifacts/shoreline-study-high-tide.png',
-   'artifacts/shoreline-study-retreat.png']};
+   'artifacts/shoreline-study-retreat.png',
+   'artifacts/shoreline-study-rock-collision.png']};
  await writeFile('artifacts/shoreline-study-report.json',JSON.stringify(report,null,2));
  console.log('SHORELINE STUDY '+JSON.stringify(report));
 }finally{

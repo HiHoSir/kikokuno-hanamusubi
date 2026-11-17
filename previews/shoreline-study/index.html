@@ -77,6 +77,31 @@ const source={
        'assets/field/terrain/atlas/coast-sand-2-32.png',
        'assets/field/terrain/atlas/coast-sand-3-32.png']
 };
+// Existing approved tuft is a saturated village accent. Keep every alpha
+// pixel and its native 32x32 outline, but match this *preview's* grass
+// material palette so independent sprites do not look fluorescent.
+// This is a reversible runtime comparison, not a change to approved PNGs.
+function grassPaletteSprite(source){
+ const [canvas,ctx]=buffer(source.naturalWidth,source.naturalHeight);
+ ctx.drawImage(source,0,0);
+ const pixels=ctx.getImageData(0,0,canvas.width,canvas.height);
+ const data=pixels.data;
+ const palette=[
+   [51,84,39],[69,111,46],[91,136,51],
+   [118,163,59],[159,189,76]
+ ];
+ let changed=0;
+ for(let i=0;i<data.length;i+=4){
+   if(data[i+3]===0)continue;
+   // Pixel-level discrete palette matching, no filtering, resampling or blur.
+   const tone=data[i]*.25+data[i+1]*.7+data[i+2]*.05;
+   const rank=tone<72?0:tone<106?1:tone<140?2:tone<174?3:4;
+   const [r,g,b]=palette[rank];
+   data[i]=r;data[i+1]=g;data[i+2]=b;changed++;
+ }
+ ctx.putImageData(pixels,0,0);
+ return {canvas,changed,paletteEntries:palette.length};
+}
 function cutChip(c,im,variant,x,y){
  c.drawImage(im,(variant%4)*TILE,Math.floor(variant/4)*TILE,
    TILE,TILE,x,y,TILE,TILE);
@@ -306,8 +331,9 @@ function paint(now,art,ground,tileAtlas){
  ].sort((a,b)=>a.y-b.y||(a.type==='hero'?1:-1));
  for(const actor of actors){
    if(actor.type==='object'){
-     const bitmap=art[actor.kind==='rock'?'rock':'grassTuft'];
-     const w=bitmap.naturalWidth,h=bitmap.naturalHeight;
+     const bitmap=actor.kind==='rock'?art.rock:art.grassTuftRender.canvas;
+     const w=bitmap.naturalWidth??bitmap.width;
+     const h=bitmap.naturalHeight??bitmap.height;
      ctx.drawImage(bitmap,Math.round(actor.x-w/2),Math.round(actor.y-h));
    }else{
      ctx.fillStyle='rgba(14,28,39,.34)';
@@ -334,6 +360,8 @@ function paint(now,art,ground,tileAtlas){
    sceneryNativeSizes:{rock:[art.rock.naturalWidth,art.rock.naturalHeight],
      grassTuft:[art.grassTuft.naturalWidth,art.grassTuft.naturalHeight]},
    sceneryRender:'unscaled-native-sprites-sorted-by-foot',
+   grassColorStudy:{pixelPreserved:art.grassTuftRender.changed,
+     paletteSize:art.grassTuftRender.paletteEntries,scale:1},
    grassEdgeChips:ground.grassEdgeChips,
    grassDiagonalChips:ground.grassDiagonalChips,
    landJoin:ground.landJoin,
@@ -381,6 +409,7 @@ async function start(){
  if(!canStandWithScenery(hero.x,hero.y))throw Error('初期位置が岩と重なっています');
  if([art.mask,art.foam,...art.sand].some(a=>a.width!==128||a.height!==128))
    throw Error('海岸16チップアトラスの寸法が異なります');
+ art.grassTuftRender=grassPaletteSprite(art.grassTuft);
  const ground=composeDryLand(art);
  const tileAtlas=buildAnimatedTileAtlas(ground);
  loading.hidden=true;

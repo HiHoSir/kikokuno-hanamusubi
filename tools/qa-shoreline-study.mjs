@@ -38,6 +38,9 @@ try{
  assert.equal(first.tileSize,32);
  assert.ok(first.coastCount>20);
  assert.equal(first.waterFrames,2);
+ assert.equal(first.tideFrames,8,'shore moves independently of the open sea frames');
+ assert.equal(first.characterSheet,'village-80x112','use the town-scale 80x112 Hizuki');
+ assert.ok(first.foamPixels>0,'actual visible surf pixels');
  assert.ok(first.seaCells>100&&first.sandCells>50);
  assert.ok(first.dryMapGenerated);
  await page.screenshot({path:'artifacts/shoreline-study-initial.png'});
@@ -54,6 +57,21 @@ try{
  assert.ok(screenshots.some(b=>!b.equals(screenshots[0])),
   'actual rendered sea must visibly change while character is idle');
  await page.screenshot({path:'artifacts/shoreline-study-water.png'});
+ // Review snapshots at actual low/high/receding tide phases. This proves
+ // a shoreline moves OVER THE BEACH rather than swapping open-ocean colors.
+ await page.waitForFunction(()=>window.__SHORE_QA?.tidePhase===0,null,{timeout:4500});
+ const low=await page.evaluate(()=>({...window.__SHORE_QA}));
+ await page.screenshot({path:'artifacts/shoreline-study-low-tide.png'});
+ await page.waitForFunction(()=>window.__SHORE_QA?.tidePhase===4,null,{timeout:4500});
+ const high=await page.evaluate(()=>({...window.__SHORE_QA}));
+ await page.screenshot({path:'artifacts/shoreline-study-high-tide.png'});
+ assert.ok(high.tideReach>low.tideReach,'wave front must advance on sand');
+ assert.ok(high.washedPixels>low.washedPixels+300,'actual more sand covered at incoming high surf');
+ await page.waitForFunction(()=>window.__SHORE_QA?.tidePhase===7,null,{timeout:4500});
+ const retreat=await page.evaluate(()=>({...window.__SHORE_QA}));
+ assert.ok(retreat.tideReach<high.tideReach,'surf must retreat');
+ assert.ok(retreat.wetPixels>0,'wet sand persists behind the wave');
+ await page.screenshot({path:'artifacts/shoreline-study-retreat.png'});
  const yBefore=await page.evaluate(()=>window.__SHORE_QA.hero.y);
  await page.keyboard.down('ArrowUp');await page.waitForTimeout(380);
  await page.keyboard.up('ArrowUp');await page.waitForTimeout(100);
@@ -72,9 +90,15 @@ try{
  assert.deepEqual(errors,[],'no broken assets or runtime exceptions');
  const report={result:'pass',map:first.map,coastCount:first.coastCount,
    seaCells:first.seaCells,sandCells:first.sandCells,
-   animatedFrames:[...phases].sort(),yBefore,yAfter:after.hero.y,
+   animatedFrames:[...phases].sort(),tideFrames:8,
+   lowTide:{reach:low.tideReach,washed:low.washedPixels},
+   highTide:{reach:high.tideReach,washed:high.washedPixels},
+   retreat:{reach:retreat.tideReach,wet:retreat.wetPixels},
+   villageHero:true,yBefore,yAfter:after.hero.y,
    screenshots:['artifacts/shoreline-study-initial.png',
-   'artifacts/shoreline-study-water.png','artifacts/shoreline-study-grid.png']};
+   'artifacts/shoreline-study-water.png','artifacts/shoreline-study-grid.png',
+   'artifacts/shoreline-study-low-tide.png','artifacts/shoreline-study-high-tide.png',
+   'artifacts/shoreline-study-retreat.png']};
  await writeFile('artifacts/shoreline-study-report.json',JSON.stringify(report,null,2));
  console.log('SHORELINE STUDY '+JSON.stringify(report));
 }finally{

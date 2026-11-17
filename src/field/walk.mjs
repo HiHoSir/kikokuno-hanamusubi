@@ -1,5 +1,6 @@
 import {contact, createFieldRenderer, fieldStep, loadFieldArt, villageArrival, placeArrival, world} from './runtime.mjs?v=authored-waterfall-1';
 import {BATTLE_REQUEST_KEY,FIELD_RETURN_KEY,chooseFieldEncounter} from '../game/battle/rules.mjs?v=equipment-4slots-2';
+import {consumeRestorePosition} from '../game/save/save-game.mjs?v=save-slots-1';
 
 const scene = document.querySelector('#scene');
 const load = document.querySelector('#load');
@@ -56,7 +57,10 @@ async function start() {
   const art=await loadFieldArt();
   const from=new URLSearchParams(location.search).get('from');
   const [x, y] = from==='shrine' ? shrineReturnPosition() : from==='battle' ? battleReturnPosition() : villageArrival();
-  const state = {x, y, row: from==='village' ? 0 : 1, column: 0};
+  const resumed=consumeRestorePosition('field');
+  const safeResume=resumed&&world.walkable(resumed.x,resumed.y)&&!contact(resumed.x,resumed.y);
+  const state = {x:safeResume?resumed.x:x,y:safeResume?resumed.y:y,
+    row:safeResume?(resumed.row??1):from==='village' ? 0 : 1,column:0};
   let walkedSteps=0;
   const encounterAfter=9+Math.floor(Math.random()*5);
   function startBattle(){
@@ -203,6 +207,8 @@ async function start() {
   updatePosition();
   render(state, performance.now());
   load.hidden = true;
+  window.KIKOKU_SAVE_SNAPSHOT=()=>({scene:'field',position:{x:state.x,y:state.y,row:state.row}});
+  window.parent?.KIKOKU_GAME?.autosave?.(window);
   requestAnimationFrame(frame);
 }
 

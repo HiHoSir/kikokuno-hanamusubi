@@ -49,6 +49,10 @@ try{
  assert.ok(first.foamPixels>0,'actual visible surf pixels');
  assert.ok(first.seaCells>100&&first.sandCells>50);
  assert.ok(first.dryMapGenerated);
+ assert.equal(first.landJoin,'approved-16-corner-alpha-autotiles',
+   'grass-to-sand transitions must use authored corner-mask mapchips');
+ assert.ok(first.grassEdgeChips>20,'grass/sand border has real connection chips');
+ assert.ok(first.grassDiagonalChips>0,'grass/sand diagonal corners exist');
  await page.screenshot({path:'artifacts/shoreline-study-initial.png'});
  // The approved ocean atlas has two frames, alternating every 360ms.
  let phases=new Set([first.waterFrame]);
@@ -102,7 +106,9 @@ try{
    lowTide:{reach:low.tideReach,washed:low.washedPixels},
    highTide:{reach:high.tideReach,washed:high.washedPixels},
    retreat:{reach:retreat.tideReach,wet:retreat.wetPixels},
-   villageHero:true,tileAtlas:true,animatedTileCount:first.animatedTileCount,
+   villageHero:true,landJoin:first.landJoin,grassEdgeChips:first.grassEdgeChips,
+   grassDiagonalChips:first.grassDiagonalChips,tileAtlas:true,
+   animatedTileCount:first.animatedTileCount,
    tileSheet:first.tileSheet,yBefore,yAfter:after.hero.y,
    screenshots:['artifacts/shoreline-study-initial.png',
    'artifacts/shoreline-study-water.png','artifacts/shoreline-study-grid.png',

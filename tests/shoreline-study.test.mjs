@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {TILE,WIDTH,HEIGHT,MAP,SHORE_Y,SAND_DEPTH,START,terrainAt,walkable,safeFoot,shoreCover,validateShore}
  from '../data/maps/shoreline-study/scene.mjs';
-import {TIDE_FRAMES,TIDE_INTERVAL_MS,tideFrame,tidePixel}
+import {TIDE_FRAMES,TIDE_INTERVAL_MS,tideFrame,surfFront,surfSample}
  from '../data/maps/shoreline-study/tide.mjs';
 
 test('only a fixed 32px sea, sand, grass prototype is authored',()=>{
@@ -46,11 +46,15 @@ test('eight wave states make the surf advance, break and retreat over sand',()=>
  assert.equal(tideFrame(0).phase,0);
  assert.equal(tideFrame(TIDE_INTERVAL_MS*8).phase,0,'loop repeats');
  assert.equal(tideFrame(TIDE_INTERVAL_MS*5).retreat,true);
- assert.equal(tidePixel(14,'sand',0,1),0,'low tide leaves exposed sand');
- assert.equal(tidePixel(14,'sand',4,1),3,'high tide carries a crest onto the beach');
- assert.equal(tidePixel(8,'sand',7,1),1,'wet sand stays visible after retreat');
- assert.equal(tidePixel(8,'grass',4,1),0,'grass stays dry');
- assert.equal(tidePixel(8,'sea',4,1),0,'overlay is not a sea replacement');
+ assert.equal(surfSample(15,'sand',0,0),0,'low tide leaves exposed sand');
+ assert.equal(surfSample(15,'sand',4,0),3,'high tide carries a crest onto the beach');
+ assert.equal(surfSample(8,'sand',7,0),1,'wet sand stays visible after retreat');
+ assert.equal(surfSample(8,'grass',4,0),0,'grass stays dry');
+ assert.equal(surfSample(8,'sea',4,0),0,'surf layer does not replace sea');
+ for(const phase of [0,1,2,3,4,5,6,7])
+   for(let x=32;x<WIDTH*32;x+=32)
+     assert.ok(Math.abs(surfFront(phase,x)-surfFront(phase,x-1))<=1,
+       'wave crest has no abrupt tile seam at world x='+x);
 });
 test('the actor can approach the tide but the actual foot cannot enter the sea',()=>{
  assert.equal(safeFoot(START.x,START.y),true);
@@ -69,10 +73,15 @@ test('preview is independent of the production village and cove, reuses approved
  assert.match(html,/YK_LANDSCAPE\.groundLayer\(paint\)/);
  assert.match(html,/destination-in/);
  assert.match(html,/drawImage\(art\.water,frame\*64/);
- assert.match(html,/32px地形チップ/);
- assert.ok(html.includes('buildTideLayers(ground)'));
- assert.ok(html.includes('tidePixel('));
- assert.ok(html.includes('tideLayers[tide.phase].canvas'));
+ assert.match(html,/32pxアニメマップチップ/);
+ assert.ok(html.includes('buildAnimatedTileAtlas(ground)'));
+ assert.ok(html.includes('surfSample('));
+ assert.ok(html.includes('drawImage(tileAtlas.sheet,'));
+ assert.ok(html.includes('animated-32px-atlas-chips'));
+ assert.ok(html.includes('ctx.putImageData(tile,'));
+ assert.ok(html.includes('drawImage(ground.staticMap,x*TILE,y*TILE,TILE,TILE'));
+ assert.equal(html.includes('ctx.drawImage(tideLayers['),false,'do not redraw full-frame tide canvases');
+ assert.equal(html.includes('buildTideLayers('),false,'remove the old overlay implementation');
  assert.ok(html.includes('drawCharacter(ctx,'));
  assert.ok(html.includes("characterSheet:'village-80x112'"));
  assert.match(html,/data-dir="up"/);

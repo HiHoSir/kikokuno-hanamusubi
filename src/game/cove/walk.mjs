@@ -229,6 +229,7 @@ async function start(){
    available:shells.length,
    species:shells.map(item=>item.kind),
    spots:shells.map(({id,x,y})=>({id,x,y})),
+   nearest:nearestCoveShell(heroInventory,x,y)?.id??null,
    bag:{...heroInventory.shells.bag},
    gold:heroInventory.gold,
    completedBattles:heroInventory.completedBattles

@@ -152,6 +152,7 @@ try{
  assert.deepEqual(errors,[],'no runtime JS exceptions or missing local assets');
  // Verify the public Pages review with the *same* real production renderer.
  // Opening and walking the review must not alter the user's saved game.
+ {
  const review=await browser.newPage({viewport:{width:874,height:402},
    deviceScaleFactor:2,isMobile:true,hasTouch:true});
  await review.addInitScript(()=>{
@@ -192,6 +193,7 @@ try{
  assert.deepEqual(previewErrors,[],'Pages preview loads all actual runtime assets');
  await review.close();
  console.log(JSON.stringify({review:'pages-cove-live-passed',reviewInitial,reviewMoved}));
+ }
 
  console.log(JSON.stringify({result:'sea-cove-shells-passed',entry:initial,yBefore,yAfter,
    shellPickup:{before:initial.shells.available,after:afterPickup.available,

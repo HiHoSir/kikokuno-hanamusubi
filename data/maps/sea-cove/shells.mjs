@@ -8,7 +8,7 @@ import {
 } from '../../../src/game/items/shells.mjs';
 
 const TILE=COVE_MAP.tileSize;
-const siteRows=Object.freeze([28,26,24,22,20,18,16,14,12,10,8,6,4,29,3,27]);
+const siteRows=Object.freeze([24,22,20,28,27,26,25,23,21,19,17,15,13,11,9,7]);
 export const COVE_SHELL_SITES=Object.freeze(siteRows.map((row,index)=>{
  const xCell=COVE_SHORE[row]-2;
  return Object.freeze({id:'cove-shell-site-'+index,cell:[xCell,row],

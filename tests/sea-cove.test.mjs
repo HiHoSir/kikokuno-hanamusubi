@@ -5,7 +5,7 @@ import {
  COVE_MAP,COVE_WIDTH,COVE_HEIGHT,COVE_TILE_SIZE,COVE_SHORE,COVE_SAND_DEPTH,
  tileAt,walkableCell,walkablePoint,isSouthExit
 } from '../data/maps/sea-cove/scene.mjs';
-import {coastMask,grassCornerMask} from '../src/game/cove/render.mjs';
+import {coastMask,grassCornerMask,scrubCornerMask} from '../src/game/cove/render.mjs';
 import {TIDE_FRAMES,tideFrame,surfSample} from '../src/game/terrain/surf.mjs';
 import {CHAPTER_ONE_STAGES,objectiveForStage,normalizeStage} from '../src/game/story/chapter-one.mjs';
 import {readSavedGame,saveGame,restoreSavedGame,routeForSavedGame}
@@ -120,6 +120,8 @@ test('masked native atlases preserve diagonal coastline and animated sea is sepa
  const green={tiles:['ggs','gss','sss']};
  assert.equal(grassCornerMask(green,0,0),11,'three grass corners connect without square beach patch');
  assert.equal(grassCornerMask(green,1,0),1,'partial grass corner is clipped by the native mask');
+ const scrub={tiles:['tts','tss','sss']};
+ assert.equal(scrubCornerMask(scrub,0,0),11,'forest has natural masked corners');
  const renderer=source('src/game/cove/render.mjs');
  const walker=source('src/game/cove/walk.mjs');
  assert.match(renderer,/drawImage\(mask\.surface/);
@@ -127,6 +129,8 @@ test('masked native atlases preserve diagonal coastline and animated sea is sepa
  assert.match(renderer,/grassCornerMask\(map,x,y\)/);
  assert.match(renderer,/chip\(greenCoverage\.ctx,art\.coastMask,cover,px,py\)/);
  assert.match(renderer,/landJoin:'masked-16-corner-grass-sand'/);
+ assert.match(renderer,/scrubCornerMask\(map,x,y\)/);
+ assert.match(renderer,/chip\(scrubCoverage\.ctx,art\.coastMask,cover,px,py\)/);
  assert.ok(renderer.includes("if(actor.kind==='flowers')"));
  assert.ok(renderer.includes('ctx.drawImage(actor.image,sx,sy,TILE,TILE,'));
  assert.ok(renderer.includes('Math.round(actor.x-TILE/2),Math.round(actor.y-TILE),TILE,TILE'));

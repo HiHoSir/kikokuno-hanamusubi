@@ -1,9 +1,10 @@
 // Single parent-owned landscape command menu; neither scene iframe nor BGM is replaced.
 // The on-screen D-pad/A/B is menu-local. Scene controls cannot receive input behind it.
 import {
-  ARMORY_STOCK, carriedConsumables, changeEquipment, levelStats, nextLevelXp,
-  readPlayer, savePlayer, useExplorationResource
-} from '../battle/rules.mjs?v=village-finds-1';
+  ARMORY_STOCK, EQUIPMENT_ITEMS, EQUIPMENT_SLOTS, carriedConsumables,
+  changeEquipment, equipmentPreview, nextLevelXp, readPlayer, savePlayer,
+  useExplorationResource
+} from '../battle/rules.mjs?v=equipment-slots-1';
 import {readStoryStage} from '../story/chapter-one.mjs';
 
 const frame=document.querySelector('#game-scene');
@@ -99,25 +100,34 @@ function renderDetails(hero,id){
         run:()=>apply(useExplorationResource(readPlayer(),item.kind,item.id))
       });
     }
-    if(hero.ownsArmoryGear&&hero.equipmentTier!==ARMORY_STOCK.tier){
-      rows.push({label:ARMORY_STOCK.name,caption:'兵具',action:'装備を開く',run:()=>{
+    if(ARMORY_STOCK.some(item=>hero.equipmentInventory[item.id]&&hero.equipment[item.slot]!==item.id)){
+      rows.push({label:'持っている兵具',caption:'装備を変更する',action:'装備を開く',run:()=>{
         selected=entries.findIndex(([key])=>key==='equipment');
         pane='detail';detailIndex=0;selection=null;render();
       }});
     }
     if(readStoryStage()!=='chief')rows.push({label:'結び札',caption:'里長から預かった札。'});
   }else if(id==='equipment'){
-    const equipped=hero.equipmentTier===ARMORY_STOCK.tier;
-    detail.append(el('p','装備中　'+(equipped?ARMORY_STOCK.name:hero.equipmentTier==='T0'?'初期の兵具':'現在の兵具')));
-    if(hero.ownsArmoryGear){
-      const tier=equipped?'T0':ARMORY_STOCK.tier;
-      const next=levelStats(hero.lv,tier,hero.awakening);
-      rows.push({
-        label:equipped?'初期の兵具':ARMORY_STOCK.name,
-        caption:'攻撃 '+hero.attack+' → '+next.attack+'　守備 '+hero.defense+' → '+next.defense, action:'装備する',
-        run:()=>apply(changeEquipment(readPlayer(),tier))
-      });
+    const equippedList=document.createElement('dl');
+    for(const [slot,label] of Object.entries(EQUIPMENT_SLOTS)){
+      const current=hero.equipment[slot];
+      const pair=document.createElement('div');
+      pair.append(el('dt',label),el('dd',current?EQUIPMENT_ITEMS[current].name:'なし'));
+      equippedList.append(pair);
+      const owned=Object.values(EQUIPMENT_ITEMS).filter(item=>item.slot===slot&&hero.equipmentInventory[item.id]&&item.id!==current);
+      const choices=[...owned,...(['head','feet'].includes(slot)&&current?[null]:[])];
+      for(const item of choices){
+        const id=item?.id??null;
+        const next=equipmentPreview(hero,slot,id);
+        const name=item?.name||'はずす';
+        rows.push({
+          label:label+'：'+name,
+          caption:'攻撃 '+hero.attack+' → '+next.attack+'　守備 '+hero.defense+' → '+next.defense,
+          action:'装備する',run:()=>apply(changeEquipment(readPlayer(),slot,id))
+        });
+      }
     }
+    detail.append(equippedList);
   }else if(id==='magic'){
     rows.push({label:'つむぎ',caption:'技 5　体力を回復',action:'使う',run:()=>apply(useExplorationResource(readPlayer(),'heal'))});
     if(hero.lv>=3)rows.push({label:'糸遊',caption:'戦闘で使う術。'});

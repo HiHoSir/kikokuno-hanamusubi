@@ -143,5 +143,5 @@ test('landscape equipment has separate compact columns and clear focus affordanc
  assert.match(css,/\.equipment-stat-preview/);
  assert.match(css,/@media\(orientation:landscape\) and \(max-height:420px\)/);
  assert.match(game,/field-menu\.css\?v=equipment-ui-1/);
- assert.match(game,/field-menu\.mjs\?v=equipment-4slots-2-ui-1/);
+ assert.match(game,/field-menu\.mjs\?v=save-slots-1/);
 });

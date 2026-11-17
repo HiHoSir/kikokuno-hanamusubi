@@ -282,6 +282,7 @@ test('a direction tap between animation frames still moves one cell', async () =
     location: {search: ''}, URL, URLSearchParams, console, performance: {now: () => 0},
     addEventListener() {}, requestAnimationFrame: frame => frames.push(frame),
     contact: () => null, createFieldRenderer: () => () => {}, loadFieldArt: async () => ({}),
+    consumeRestorePosition:()=>null,window:{parent:{}},
     villageArrival: () => [1200, 2256], world: {tileSize: 32},
     fieldStep: ({x, y}, dx, dy, at) => ({x: x + dx * 32, y: y + dy * 32, motion: {x, y, at, duration: 192}}),
   });

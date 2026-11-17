@@ -7,7 +7,7 @@ const message = document.querySelector('#playback-message');
 const skipButton = document.querySelector('#skip-opening');
 const gameUrl = new URL('../game/', document.baseURI);
 // Propagate the build through the opening into the persistent game shell.
-gameUrl.searchParams.set('build',new URL(location.href).searchParams.get('build')||'equipment-4slots-2');
+gameUrl.searchParams.set('build',new URL(location.href).searchParams.get('build')||'save-slots-1');
 let navigating = false;
 const portrait=matchMedia('(orientation: portrait)');
 let resumeAfterRotation=false;

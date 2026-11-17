@@ -1,3 +1,7 @@
+import {
+  readManualGame,readAutoGame,restoreSavedGame,startNewGame,manualSaveLabel
+} from '../game/save/save-game.mjs?v=save-slots-1';
+
 const scenes = [
   { name: '鬼灯村', url: new URL('../../assets/ui/title/village.webp', import.meta.url) },
   { name: '花霞野', url: new URL('../../assets/ui/title/field.webp', import.meta.url) },
@@ -7,8 +11,57 @@ const scenes = [
 document.querySelector('.title-start').addEventListener('click', event => {
   if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
   event.preventDefault();
+  const reset=startNewGame();
+  if(!reset.accepted){loadMessage.textContent=reset.message;return;}
   window.KIKOKU_ROUTE.go(event.currentTarget.href);
 });
+
+const continueButton=document.querySelector('#title-continue');
+const loadPanel=document.querySelector('#title-load');
+const loadSlots=document.querySelector('#title-load-slots');
+const loadMessage=document.querySelector('#title-load-message');
+const loadBack=document.querySelector('#title-load-back');
+const titleMenu=document.querySelector('.title-menu');
+function displayDate(iso){
+  try{return new Intl.DateTimeFormat('ja-JP',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).format(new Date(iso));}
+  catch{return '';}
+}
+function refreshSaveChoices(){
+  const choices=[['manual','手動セーブ',readManualGame()],['auto','自動保存',readAutoGame()]];
+  continueButton.disabled=!choices.some(([, ,save])=>save);
+  loadSlots.replaceChildren();
+  for(const [slot,name,save] of choices){
+    const button=document.createElement('button');
+    button.type='button';button.className='title-load-slot';
+    button.disabled=!save;button.dataset.saveSlot=slot;
+    const heading=document.createElement('strong');
+    heading.textContent=name;
+    const detail=document.createElement('span');
+    detail.textContent=save?manualSaveLabel(save)+'　'+displayDate(save.savedAt):'記録なし';
+    button.append(heading,detail);
+    button.addEventListener('click',()=>{
+      const restored=restoreSavedGame(slot);
+      if(!restored.accepted){loadMessage.textContent=restored.message;refreshSaveChoices();return;}
+      const target=new URL('src/game/',document.baseURI);
+      target.searchParams.set('build','save-slots-1');
+      window.KIKOKU_ROUTE.go(target);
+    });
+    loadSlots.append(button);
+  }
+}
+continueButton.addEventListener('click',()=>{
+  refreshSaveChoices();
+  if(continueButton.disabled)return;
+  loadMessage.textContent='';
+  titleMenu.hidden=true;loadPanel.hidden=false;
+  loadSlots.querySelector('button:not([disabled])')?.focus({preventScroll:true});
+});
+function hideLoad(){
+  loadPanel.hidden=true;titleMenu.hidden=false;loadMessage.textContent='';
+  continueButton.focus({preventScroll:true});
+}
+loadBack.addEventListener('click',hideLoad);
+refreshSaveChoices();
 
 const home = document.querySelector('.title-home');
 const demo = document.querySelector('.title-demo');
@@ -48,5 +101,6 @@ nextScene.addEventListener('click', () => {
 
 closeDemo.addEventListener('click', showTitle);
 document.addEventListener('keydown', event => {
-  if (event.key === 'Escape' && !demo.hidden) showTitle();
+  if (event.key === 'Escape' && !loadPanel.hidden) hideLoad();
+  else if (event.key === 'Escape' && !demo.hidden) showTitle();
 });

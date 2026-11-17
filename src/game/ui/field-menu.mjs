@@ -6,6 +6,7 @@ import {
   useExplorationResource
 } from '../battle/rules.mjs?v=equipment-4slots-2';
 import {readStoryStage} from '../story/chapter-one.mjs';
+import {readManualGame,readAutoGame,manualSaveLabel} from '../save/save-game.mjs?v=save-slots-1';
 
 const frame=document.querySelector('#game-scene');
 const opener=document.querySelector('#field-menu-toggle');
@@ -16,7 +17,7 @@ const detail=document.querySelector('#field-menu-detail');
 const message=document.querySelector('#field-menu-message');
 const entries=[
   ['items','道具'], ['status','強さ'], ['settings','設定'],
-  ['magic','術'], ['equipment','装備']
+  ['magic','術'], ['equipment','装備'], ['record','記録']
 ];
 const commandColumns=3;
 const equipmentSlots=Object.entries(EQUIPMENT_SLOTS);
@@ -217,6 +218,19 @@ function renderDetails(hero,id){
   }else if(id==='settings'){
     const audio=window.KIKOKU_GAME?.audio;
     if(audio)button(detail,'音声 '+(audio.enabled?'ON':'OFF'),()=>{audio.setEnabled(!audio.enabled);render()});
+  }else if(id==='record'){
+    const manual=readManualGame(),automatic=readAutoGame();
+    const info=el('p',manual?'前回の記録　'+manualSaveLabel(manual):'手動セーブ　記録なし');
+    detail.append(info);
+    detail.append(el('p',automatic?'自動保存　'+manualSaveLabel(automatic):'自動保存　記録なし'));
+    button(detail,manual?'記録を上書きする':'記録する',()=>{
+      const result=window.KIKOKU_GAME?.manualSave?.()||
+        {accepted:false,message:'現在地を取得できません。'};
+      window.KIKOKU_GAME?.audio?.se?.(result.accepted?'confirm':'cancel');
+      render();
+      message.textContent=result.message;
+    });
+    detail.append(el('p','手動セーブと自動保存は別々に保持されます。'));
   }
   if(rows.length){
     const list=document.createElement('div');

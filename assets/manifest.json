@@ -1590,15 +1590,16 @@
       "sourcePath": "source-assets/village/interiors/furniture-master.png",
       "usage": "hozuki-village-interiors",
       "origin": {
-        "method": "illustrated-native-2px-pixel-master",
-        "sourceRevision": 2,
+        "method": "illustrated-native-2px-pixel-master-with-wall-aligned-layout",
+        "sourceRevision": 3,
         "previousSourcePath": "source-assets/village/interiors/furniture-generator.py",
         "priorOrigin": {
           "method": "native-4px-pixel-art-redraw",
           "sourceRevision": 1,
           "priorGitBlobSha": "4cdfd11a25acc2de80f6ea3d0ba47524d637aeca",
           "priorSourcePath": "previews/village-interiors/furniture.png"
-        }
+        },
+        "scaleQA": "tansu resized in logical-pixel master to 120x108"
       }
     },
     {

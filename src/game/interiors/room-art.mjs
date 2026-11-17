@@ -1,6 +1,7 @@
 import {tatamiMats} from './rooms.mjs';
+import {BACK_WALL_FLOOR_Y} from './room-geometry.mjs';
 
-// Match the four-world-pixel pitch and warm wood shades of the furniture atlas.
+// Room architecture uses a 4px pitch; furniture sprites have a separate 2px pitch.
 const wood = {
   ink:'#35221c', edge:'#573526', shade:'#6d462b', face:'#8c5932',
   light:'#aa7646', grain:'#966434',
@@ -131,7 +132,7 @@ export function paintRoom(context, room) {
 
   fill('#241a17',16,28,width-32,height-40);
   const courseWidths=[];
-  for (let remaining=floorBottom-128;remaining>0;) {
+  for (let remaining=floorBottom-BACK_WALL_FLOOR_Y;remaining>0;) {
     const row=courseWidths.length;
     const index=(width/4+row*11+Math.floor(row/3)*3)%boardWidths.length;
     const next=boardWidths[index];
@@ -140,7 +141,7 @@ export function paintRoom(context, room) {
     remaining-=h;
   }
   const courses=floorboardJoints(28,width-28,courseWidths.length,(width+height)/4);
-  let y=128;
+  let y=BACK_WALL_FLOOR_Y;
   for (const [row,joints] of courses.entries()) {
     const h=courseWidths[row];
     fill(timber.seam,28,y,width-56,h);
@@ -191,7 +192,7 @@ export function paintRoom(context, room) {
     panelLeft=panelRight+140;
   }
   beam(fill,16,28,width-32,24,4);
-  beam(fill,24,124,width-48,16,7);
+  beam(fill,24,BACK_WALL_FLOOR_Y-4,width-48,16,7);
   for (const x of windows) shoji(fill,x);
   for (const x of [24,width-40]) post(fill,x,44,16,height-80,3);
 

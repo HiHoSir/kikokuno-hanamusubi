@@ -80,6 +80,6 @@ test('the 2px furniture atlas is the exact unscaled rendering of the logical-pix
   }
   const render=readFileSync('src/game/interiors/walk.mjs','utf8');
   assert.ok(render.includes('context.drawImage(furniture,...object.sprite,object.x,object.y,w,h)'));
-  assert.ok(render.includes('interior-furniture-2px-1'));
+  assert.ok(render.includes('interior-wall-anchor-1'));
   assert.ok(readFileSync('assets/manifest.json','utf8').includes('source-assets/village/interiors/furniture-master.png'));
 });

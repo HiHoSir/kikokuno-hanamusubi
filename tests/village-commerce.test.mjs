@@ -10,7 +10,7 @@ test('teahouse and armory expose real store UI without a village item shop',()=>
  assert.match(html,/src="\.\/walk\.mjs\?v=[^"]+"/);
  for(const s of ['purchaseFood(','purchaseArmory(readPlayer(),choice.id)','ARMORY_STOCK.map(','readPlayer(','savePlayer(','shopActive','confirmShop()','closeShop()'])assert.ok(code.includes(s),s);
  const menu=readFileSync('src/game/ui/field-menu.mjs','utf8');
- for(const s of ['Object.entries(EQUIPMENT_SLOTS)','equipmentPreview(hero,slot,id)','changeEquipment(readPlayer(),slot,id)'])assert.ok(menu.includes(s),s);
+ for(const s of ['Object.entries(EQUIPMENT_SLOTS)','equipmentPreview(hero,slot,choice.id)','changeEquipment(readPlayer(),currentSlot,item.id)','equipment-slot-choice','equipment-gear-choice'])assert.ok(menu.includes(s),s);
  assert.equal(villageRooms['teahouse-northeast'],'teahouse');
  assert.equal(villageRooms['house-southeast-tile'],'armory');
  assert.ok(!Object.values(villageRooms).includes('shop'));

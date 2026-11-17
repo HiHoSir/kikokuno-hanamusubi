@@ -34,7 +34,7 @@ button{color:#faf2de;background:#243a4cdd;border:1px solid #c8b38e;border-radius
 <body>
 <main>
   <canvas id="scene" role="img" aria-label="32ピクセルの海・波打ち際・砂浜・草地を組み合わせた歩行検証"></canvas>
-  <div id="heading">海辺の接続検証 <small>32pxアニメマップチップ（8コマ）／村用緋月／本編未採用</small></div>
+  <div id="heading">海辺の接続検証 <small>8コマ海岸チップ＋岩・草の縮尺検証／村用緋月／本編未採用</small></div>
   <div id="controls" aria-label="四方向移動">
     <button data-dir="up" aria-label="北">▲</button>
     <button data-dir="left" aria-label="西">◀</button>
@@ -49,7 +49,7 @@ button{color:#faf2de;background:#243a4cdd;border:1px solid #c8b38e;border-radius
   <div id="rotate">iPhoneを横向きにしてください</div>
 </main>
 <script type="module">
-import {TILE,WIDTH,HEIGHT,MAP,START,SHORE_Y,SAND_DEPTH,shoreCover,safeFoot,validateShore} from '../../data/maps/shoreline-study/scene.mjs';
+import {TILE,WIDTH,HEIGHT,MAP,START,SHORE_Y,SAND_DEPTH,SCENERY,canStandWithScenery,shoreCover,safeFoot,validateShore} from '../../data/maps/shoreline-study/scene.mjs';
 import {TIDE_FRAMES,tideFrame,surfSample} from '../../data/maps/shoreline-study/tide.mjs';
 import {drawCharacter} from '../../src/game/village/residents.mjs';
 const canvas=document.querySelector('#scene'),ctx=canvas.getContext('2d',{alpha:false});
@@ -67,6 +67,8 @@ const asset=path=>new URL('../../'+path,import.meta.url);
 const initImage=async path=>image(asset(path).href);
 const source={
  hero:'assets/characters/hizuki/walk-4dir-80x112.png',
+ rock:'assets/village/objects/rocks.png',
+ grassTuft:'assets/village/terrain/grass-tuft.png',
  water:'assets/field/effects/water-motion.png',
  mask:'assets/field/terrain/atlas/coast-mask-32.png',
  foam:'assets/field/terrain/atlas/coast-shallow-32.png',
@@ -295,11 +297,26 @@ function paint(now,art,ground,tileAtlas){
    for(let y=0;y<=HEIGHT;y++){ctx.beginPath();ctx.moveTo(0,y*TILE);ctx.lineTo(WIDTH*TILE,y*TILE);ctx.stroke();}
    ctx.restore();
  }
- ctx.fillStyle='rgba(14,28,39,.34)';
- ctx.beginPath();ctx.ellipse(hero.x,hero.y-2,23,6,0,0,Math.PI*2);ctx.fill();
- // Use precisely the same 80x112 frame and foot anchor as village NPC logic.
- drawCharacter(ctx,{bitmap:art.hero,x:hero.x,y:hero.y,
-   face:hero.row,distance:stride,moving:walking});
+ // Dress the coast with approved sprites at their *native* image size.
+ // Their feet share the same world-Y sorting order as village characters.
+ // No stretched tile sprites, floating rocks or arbitrary camera-scale factors.
+ const actors=[
+   ...SCENERY.map(object=>({type:'object',...object})),
+   {type:'hero',x:hero.x,y:hero.y}
+ ].sort((a,b)=>a.y-b.y||(a.type==='hero'?1:-1));
+ for(const actor of actors){
+   if(actor.type==='object'){
+     const bitmap=art[actor.kind==='rock'?'rock':'grassTuft'];
+     const w=bitmap.naturalWidth,h=bitmap.naturalHeight;
+     ctx.drawImage(bitmap,Math.round(actor.x-w/2),Math.round(actor.y-h));
+   }else{
+     ctx.fillStyle='rgba(14,28,39,.34)';
+     ctx.beginPath();ctx.ellipse(hero.x,hero.y-2,23,6,0,0,Math.PI*2);ctx.fill();
+     // Same 80x112 image size and (40,106) foot anchor as village NPCs.
+     drawCharacter(ctx,{bitmap:art.hero,x:hero.x,y:hero.y,
+       face:hero.row,distance:stride,moving:walking});
+   }
+ }
  draws++;
  window.__SHORE_QA={ready:true,tileSize:TILE,map:[WIDTH,HEIGHT],
    waterFrames:2,waterFrame:frame,tideFrames:TIDE_FRAMES.length,
@@ -312,6 +329,11 @@ function paint(now,art,ground,tileAtlas){
    animatedTileDraws:animatedTiles,baseTileDraws:baseTiles,
    surfRender:'animated-32px-atlas-chips',
    coastCount:ground.coastline.length,characterSheet:'village-80x112',
+   scenery:SCENERY.map(({id,kind,x,y,solid,radius})=>({id,kind,x,y,solid,radius})),
+   sceneryCount:SCENERY.length,
+   sceneryNativeSizes:{rock:[art.rock.naturalWidth,art.rock.naturalHeight],
+     grassTuft:[art.grassTuft.naturalWidth,art.grassTuft.naturalHeight]},
+   sceneryRender:'unscaled-native-sprites-sorted-by-foot',
    grassEdgeChips:ground.grassEdgeChips,
    grassDiagonalChips:ground.grassDiagonalChips,
    landJoin:ground.landJoin,
@@ -326,6 +348,8 @@ async function start(){
  const [art]=await Promise.all([
    (async()=>({
      hero:await initImage(source.hero),
+     rock:await initImage(source.rock),
+     grassTuft:await initImage(source.grassTuft),
      water:await initImage(source.water),
      mask:await initImage(source.mask),
      foam:await initImage(source.foam),
@@ -345,6 +369,16 @@ async function start(){
  if(art.hero.naturalWidth!==240||art.hero.naturalHeight!==448)
    throw Error('緋月の村用80x112・3列×4行シートではありません');
  if(art.water.width!==128||art.water.height!==64)throw Error('承認済み水面2コマと異なります');
+ for(const [id,bitmap] of [['岩',art.rock],['草',art.grassTuft]]){
+   if(!bitmap.naturalWidth||!bitmap.naturalHeight||
+      bitmap.naturalWidth>112||bitmap.naturalHeight>112)
+     throw Error('原寸で置けない大きな'+id+'素材です');
+ }
+ for(const object of SCENERY){
+   const tx=Math.floor(object.x/TILE),ty=Math.floor((object.y-1)/TILE);
+   if(MAP[ty]?.[tx]!=='grass')throw Error('草地外のオブジェクト: '+object.id);
+ }
+ if(!canStandWithScenery(hero.x,hero.y))throw Error('初期位置が岩と重なっています');
  if([art.mask,art.foam,...art.sand].some(a=>a.width!==128||a.height!==128))
    throw Error('海岸16チップアトラスの寸法が異なります');
  const ground=composeDryLand(art);
@@ -357,7 +391,7 @@ async function start(){
      const [dx,dy,row]=directions[dir];hero.row=row;
      const step=150*dt/1000;
      const nx=hero.x+dx*step,ny=hero.y+dy*step;
-     if(safeFoot(nx,ny)){hero.x=nx;hero.y=ny;stride+=step;walking=true;}
+     if(canStandWithScenery(nx,ny)){hero.x=nx;hero.y=ny;stride+=step;walking=true;}
    }
    paint(now,art,ground,tileAtlas);requestAnimationFrame(tick);
  }

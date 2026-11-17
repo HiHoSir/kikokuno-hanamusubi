@@ -39,6 +39,7 @@ button:active,button.held,button[aria-pressed=true]{background:#e8cc8b;color:#27
 .screen-reader{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
 .village-hud{position:absolute;z-index:2;top:8px;left:8px;max-width:min(80%,340px);padding:7px 11px;border:1px solid #81785c;border-radius:5px;background:rgba(18,25,20,.83);display:grid;gap:3px;pointer-events:none;font-size:12px}
 .village-hud #objective{margin:0;font-size:12px;line-height:1.4;color:#f1ead9}
+.village-hud #shell-hint{margin:0;font-size:11px;line-height:1.35;color:#e9ce95}
 </style>
 <link rel="stylesheet" href="../village/dialogue.css?v=dotgothic16">
 <link rel="stylesheet" href="../ui/controls.css?v=dotgothic16">
@@ -50,7 +51,7 @@ button:active,button.held,button[aria-pressed=true]{background:#e8cc8b;color:#27
 <main data-bgm="field">
 <h1 class="screen-reader">海の入り江</h1>
 <section class="viewport" aria-label="海の入り江">
-<div class="village-hud"><p id="objective" aria-live="polite">浜辺にいる潮平を探そう</p></div>
+<div class="village-hud"><p id="objective" aria-live="polite">浜辺にいる潮平を探そう</p><p id="shell-hint" aria-live="polite">貝殻を調べる：A</p></div>
 <canvas id="scene"></canvas><p id="load">海の入り江を読み込んでいます</p>
 <button id="talk" type="button" hidden>話す</button>
 <section id="dialogue" aria-labelledby="speaker" hidden>
@@ -73,6 +74,6 @@ button:active,button.held,button[aria-pressed=true]{background:#e8cc8b;color:#27
 </section>
 <button id="sound-toggle" type="button" aria-label="サウンドを再生" aria-pressed="false">♪ 再生</button>
 </main>
-<script type="module" src="./walk.mjs?v=sea-cove-1"></script>
+<script type="module" src="./walk.mjs?v=sea-cove-1-shell-1"></script>
 </body>
 </html>

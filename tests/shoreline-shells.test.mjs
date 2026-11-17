@@ -9,7 +9,7 @@ import {
  visibleShells,nearestShell,gatherShell,bagValue,sellAllShells,batchCount
 } from '../data/maps/shoreline-study/shells.mjs';
 import {SHELL_ART,SHELL_COLORS,SHELL_ART_SIZE}
- from '../data/maps/shoreline-study/shell-art.mjs';
+ from '../src/game/items/shell-art.mjs';
 import {createBattle,normalizePlayer} from '../src/game/battle/rules.mjs';
 
 test('native 20px pixel art for three shell kinds has closed palette',()=>{

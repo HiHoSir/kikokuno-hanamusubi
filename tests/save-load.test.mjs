@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
 import {DEFAULT_PLAYER,PLAYER_KEY,savePlayer,readPlayer,FIELD_RETURN_KEY,BATTLE_REQUEST_KEY} from '../src/game/battle/rules.mjs';
+import {coveVisibleShells,collectCoveShell,sellCoveShells} from '../data/maps/sea-cove/shells.mjs';
 import {readStoryStage,advanceStoryStage,CHAPTER_ONE_KEY} from '../src/game/story/chapter-one.mjs';
 import {
   AUTO_SAVE_KEY,MANUAL_SAVE_KEY,RESTORE_POSITION_KEY,
@@ -165,4 +166,36 @@ test('title continue opens distinct selectable manual and automatic checkpoints'
  nodes['#title-load-back'].click();
  assert.equal(nodes['.title-menu'].hidden,false);
  assert.match(readFileSync('index.html','utf8'),/id="title-continue"/);
+});
+
+test('manual/auto saves restore gathered cove shells and money without double credit',()=>{
+ const storage=makeStorage(),session=makeStorage();
+ const before=savePlayer({...DEFAULT_PLAYER,completedBattles:4},storage);
+ const deposited=savePlayer({...before,completedBattles:5},storage);
+ assert.ok(deposited.shells.onBeach.length>=1);
+ const shell=coveVisibleShells(deposited)[0];
+ const picked=collectCoveShell(deposited,shell.id,shell.x,shell.y);
+ assert.equal(picked.accepted,true);
+ const carrying=savePlayer(picked.player,storage);
+ assert.equal(carrying.shells.bag[shell.kind],1);
+ assert.equal(saveManualGame({scene:'cove',position:{x:shell.x,y:shell.y,face:2}},storage).accepted,true);
+ const sold=sellCoveShells(readPlayer(storage));
+ assert.equal(sold.accepted,true);
+ savePlayer(sold.player,storage);
+ assert.equal(saveAutoGame({scene:'village',position:{x:520,y:430,face:1}},storage).accepted,true);
+ assert.equal(readPlayer(storage).shells.bag[shell.kind],0);
+ assert.equal(restoreSavedGame('manual',storage,session).accepted,true);
+ const restored=readPlayer(storage);
+ assert.equal(restored.gold,0);
+ assert.equal(restored.shells.bag[shell.kind],1);
+ assert.ok(!coveVisibleShells(restored).some(s=>s.id===shell.id),
+   'collected shell must not reappear after manual restore');
+ assert.equal(restoreSavedGame('auto',storage,session).accepted,true);
+ const afterSale=readPlayer(storage);
+ assert.equal(afterSale.gold,sold.amount);
+ assert.equal(afterSale.shells.bag[shell.kind],0);
+ assert.equal(sellCoveShells(afterSale).accepted,false);
+ assert.equal(startNewGame(storage,session).accepted,true);
+ assert.equal(readPlayer(storage).shells.onBeach.length,0);
+ assert.equal(readPlayer(storage).shells.bag[shell.kind],0);
 });

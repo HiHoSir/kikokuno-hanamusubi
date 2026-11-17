@@ -3,9 +3,12 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
 import * as rules from '../src/game/battle/rules.mjs';
+import {SHELL_KINDS} from '../src/game/items/shells.mjs';
 
 const source=readFileSync('src/game/ui/field-menu.mjs','utf8')
- .replace(/import \{[\s\S]*?\} from '\.\.\/battle\/rules\.mjs\?v=[^']+';\nimport \{readStoryStage\} from '\.\.\/story\/chapter-one\.mjs';\n/,'')
+ .replace(/import \{[\s\S]*?\} from '\.\.\/battle\/rules\.mjs\?v=[^']+';\n/,'')
+ .replace(/import \{SHELL_KINDS\} from '\.\.\/items\/shells\.mjs';\n/,'')
+ .replace(/import \{readStoryStage\} from '\.\.\/story\/chapter-one\.mjs';\n/,'')
  .replace(/import \{readManualGame,readAutoGame,manualSaveLabel\} from '\.\.\/save\/save-game\.mjs\?v=[^']+';\n/,'');
 if(source.includes('import {'))throw Error('Unable to isolate field menu for DOM interaction test');
 
@@ -78,7 +81,7 @@ function createMenu(player){
  const context={document,window,Event:class{constructor(name){this.type=name;}},
   matchMedia:()=>({matches:false}),getComputedStyle:()=>({gridTemplateColumns:'100px'}),
   readPlayer:()=>rules.readPlayer(adapter),savePlayer:p=>rules.savePlayer(p,adapter),
-  carriedConsumables:rules.carriedConsumables,ARMORY_STOCK:rules.ARMORY_STOCK,
+  carriedConsumables:rules.carriedConsumables,SHELL_KINDS,ARMORY_STOCK:rules.ARMORY_STOCK,
   EQUIPMENT_ITEMS:rules.EQUIPMENT_ITEMS,EQUIPMENT_SLOTS:rules.EQUIPMENT_SLOTS,
   equipmentPreview:rules.equipmentPreview,changeEquipment:rules.changeEquipment,
   useExplorationResource:rules.useExplorationResource,nextLevelXp:rules.nextLevelXp,

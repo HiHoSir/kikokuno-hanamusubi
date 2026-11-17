@@ -1,4 +1,4 @@
-// Review-only native pixel-art shell atlas. Glyphs are hand-authored, not
+// Shared, native-size shell artwork for the cove and its shoreline preview. Glyphs are hand-authored, not
 // scaled photos, browser emoji or canvas vector strokes. Pixel density is
 // 1 source pixel = 1 world pixel; preview may zoom the whole camera only.
 export const SHELL_ART_SIZE=20;

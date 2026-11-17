@@ -4,7 +4,8 @@ import {
   ARMORY_STOCK, EQUIPMENT_ITEMS, EQUIPMENT_SLOTS, carriedConsumables,
   changeEquipment, equipmentPreview, nextLevelXp, readPlayer, savePlayer,
   useExplorationResource
-} from '../battle/rules.mjs?v=equipment-4slots-2';
+} from '../battle/rules.mjs?v=equipment-4slots-2-cove-shells-1';
+import {SHELL_KINDS} from '../items/shells.mjs';
 import {readStoryStage} from '../story/chapter-one.mjs';
 import {readManualGame,readAutoGame,manualSaveLabel} from '../save/save-game.mjs?v=save-slots-1';
 
@@ -192,6 +193,12 @@ function renderDetails(hero,id){
       rows.push({
         label:item.name+' ×'+item.count, caption:'体力を'+item.heal+'回復', action:'使う',
         run:()=>apply(useExplorationResource(readPlayer(),item.kind,item.id))
+      });
+    }
+    for(const shell of Object.values(SHELL_KINDS)){
+      const count=hero.shells?.bag?.[shell.id]??0;
+      if(count)rows.push({
+        label:shell.name+' ×'+count,caption:'茶店で1個'+shell.value+'両で売れる'
       });
     }
     if(ARMORY_STOCK.some(item=>hero.equipmentInventory[item.id]&&hero.equipment[item.slot]!==item.id)){

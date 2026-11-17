@@ -3,16 +3,12 @@
 import {TILE,WIDTH,HEIGHT,MAP,SHORE_Y,SCENERY,START} from './scene.mjs';
 
 export const SHELL_SAVE_KEY='kikokuno-hanamusubi-preview-shoreline-shells-v2';
-export const BATTLES_PER_SHELL_BATCH=5;
-export const SHELL_BATCH_MIN=1;
-export const SHELL_BATCH_MAX=3;
-export const SHELL_CAP=12;
-export const PICKUP_DISTANCE=36;
-export const SHELL_KINDS=Object.freeze({
-  sakura:Object.freeze({id:'sakura',name:'桜貝',value:12,weight:0.17}),
-  spiral:Object.freeze({id:'spiral',name:'巻貝',value:7,weight:0.30}),
-  white:Object.freeze({id:'white',name:'白貝',value:3,weight:0.53})
-});
+import {
+ SHELL_KINDS,BATTLES_PER_SHELL_BATCH,SHELL_BATCH_MIN,SHELL_BATCH_MAX,
+ SHELL_CAP,SHELL_PICKUP_DISTANCE,shellCycleRandom,shellBatchCount,shellKindFromRoll
+} from '../../../src/game/items/shells.mjs';
+export {SHELL_KINDS,BATTLES_PER_SHELL_BATCH,SHELL_BATCH_MIN,SHELL_BATCH_MAX,SHELL_CAP};
+export const PICKUP_DISTANCE=SHELL_PICKUP_DISTANCE;
 // Fixed, carefully spaced sandy pickup points. ONLY the COUNT (1–3) and
 // variety are random per five battles; positions do not reroll.
 const SITE_COLUMNS=Object.freeze([
@@ -35,7 +31,6 @@ const rng=seed=>{
     return ((t^(t>>>14))>>>0)/4294967296;
   };
 };
-const kindFor=number=>number<.17?'sakura':number<.47?'spiral':'white';
 const shellRecord=(value)=>{
   if(!value||typeof value!=='object'||typeof value.id!=='string'||
     !/^shell-[1-9]\d*-[0-2]$/.test(value.id)||
@@ -78,10 +73,7 @@ export function normalizeShellState(value,currentBattles=0){
     Math.min(value.gold,999999):0;
   return {version:2,lastBattles,processedCycles,onBeach:unique,picked:collected,sold,bag,gold};
 }
-export function batchCount(cycle){
-  const random=rng((cycle*0x9e3779b1)^0xBEEFA416);
-  return SHELL_BATCH_MIN+Math.floor(random()*(SHELL_BATCH_MAX-SHELL_BATCH_MIN+1));
-}
+export const batchCount=shellBatchCount;
 export function syncBattleShells(value,battles){
   battles=validBattles(battles);
   const original=normalizeShellState(value,battles);
@@ -93,9 +85,9 @@ export function syncBattleShells(value,battles){
   const target=Math.floor(battles/BATTLES_PER_SHELL_BATCH);
   const first=original.processedCycles+1;
   for(let cycle=first;cycle<=target&&onBeach.length<SHELL_CAP;cycle++){
-    const random=rng((cycle*0x9e3779b1)^0xBEEFA416);
-    const count=SHELL_BATCH_MIN+
-      Math.floor(random()*(SHELL_BATCH_MAX-SHELL_BATCH_MIN+1));
+    const random=shellCycleRandom(cycle);
+    const count=shellBatchCount(cycle);
+    random(); // advance past the shared batch-count roll
     for(let i=0;i<count&&onBeach.length<SHELL_CAP;i++){
       // Deterministic rotation through fixed points; never randomly placed.
       const used=new Set(onBeach.map(shell=>shell.site));
@@ -103,7 +95,7 @@ export function syncBattleShells(value,battles){
         (cycle*3+j)%SHELL_SITES.length);
       const site=candidateOrder.find(index=>!used.has(index));
       if(site===undefined)break;
-      const kind=kindFor(random());
+      const kind=shellKindFromRoll(random());
       onBeach.push(Object.freeze({
         id:'shell-'+cycle+'-'+i,kind,site,
         x:SHELL_SITES[site].x,y:SHELL_SITES[site].y

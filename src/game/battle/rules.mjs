@@ -1,6 +1,7 @@
 // First-game one-hero B-formula v2 rules. Pure game logic: no DOM, timers, or assets.
 // Approved base/growth/T0–T6 values must match data/characters/hizuki-status.json.
 import {VILLAGE_FINDS} from '../../../data/maps/hozuki-village/finds.mjs';
+import {normalizeCoveShells} from '../../../data/maps/sea-cove/shells.mjs';
 
 export const PLAYER_KEY='kikokuno-hanamusubi-battle-player';
 export const BATTLE_REQUEST_KEY='kikokuno-hanamusubi-battle-request';
@@ -129,9 +130,11 @@ export function normalizePlayer(input={}){
     potions:nonNegative(input?.potions,3),
     foods:Object.fromEntries(Object.keys(FOOD_ITEMS).map(id=>[id,clamp(nonNegative(input?.foods?.[id],0),0,99)])),
     wins:nonNegative(input?.wins,0),
-    // Older saves only tracked wins; retain them as the minimum number
-    // of completed encounters rather than erasing past battle progress.
-    completedBattles:nonNegative(input?.completedBattles,nonNegative(input?.wins,0))
+    // The same authoritative counter handles both all combat outcomes and
+    // replenishing shells at five-fight milestones.
+    completedBattles:nonNegative(input?.completedBattles,nonNegative(input?.wins,0)),
+    shells:normalizeCoveShells(input?.shells,
+      nonNegative(input?.completedBattles,nonNegative(input?.wins,0)))
   };
 }
 export function readPlayer(storage=globalThis.localStorage){

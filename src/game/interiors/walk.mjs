@@ -4,6 +4,7 @@ import {drawCharacter, RESIDENT_RADIUS, residentInFront} from '../village/reside
 import {bindDialogue} from '../village/dialogue.mjs?v=field-menu-1';
 import {rooms, resolveInterior, prepareInterior} from './rooms.mjs?v=interior-wall-anchor-1';
 import {paintRoom, paintPartition, paintContactShadow} from './room-art.mjs?v=interior-wall-anchor-1';
+import {drawFurnitureLife} from './life-effects.mjs?v=indoor-life-1';
 import {FOOD_ITEMS,ARMORY_STOCK,purchaseFood,purchaseArmory,collectFind,readPlayer,savePlayer} from '../battle/rules.mjs?v=equipment-4slots-2';
 import {consumeRestorePosition} from '../save/save-game.mjs?v=save-slots-1';
 import {VILLAGE_FINDS} from '../../../data/maps/hozuki-village/finds.mjs';
@@ -44,6 +45,7 @@ function clearInput() {
 
 async function start() {
   const assets = new Set(Object.values(rooms).map(room=>room.resident.asset));
+  const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');
   const [furniture, hizuki, portraits] = await Promise.all([
     loadImage('../../../assets/village/interiors/furniture.png?v=interior-wall-anchor-1'),
     loadImage('../../../assets/characters/hizuki/walk-4dir-80x112.png?v=fb40c1b'),
@@ -113,6 +115,7 @@ async function start() {
   const overlayContext = overlay.getContext('2d');
   let room, plan, walk, x, y, viewport, face, distance, roomFind;
   let lastFrame=0;
+  let sceneTime=0;
 
   function setRoom(nextRoom, selected) {
     clearInput();
@@ -192,6 +195,7 @@ async function start() {
       } else if (object.sprite) {
         const [, , w, h] = object.sprite;
         context.drawImage(furniture,...object.sprite,object.x,object.y,w,h);
+        drawFurnitureLife(context,object,sceneTime,reducedMotion.matches);
       } else {
         paintPartition(context,object.x,object.y,object.w);
       }
@@ -209,6 +213,7 @@ async function start() {
   function frame(now) {
     const elapsed = lastFrame ? Math.min(now-lastFrame,40) : 0;
     lastFrame = now;
+    sceneTime += elapsed;
     const direction = [...input.values()].at(-1);
     let moving = false;
     if (direction && !dialogue.active && !shopActive) {

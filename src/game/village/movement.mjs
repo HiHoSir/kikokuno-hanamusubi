@@ -4,6 +4,12 @@ export const HIZUKI_WALK_SPEED = 288;
 // Interiors retain their previously approved pace; this request adjusts the village only.
 export const HIZUKI_INTERIOR_WALK_SPEED = 176;
 
+// When exiting a building, the hero should face the camera (south, row 0).
+// Other arrivals, including saved-game restores, keep their previous facing.
+export function villageArrivalFacing(focus,entrances,restoreFace=1){
+  return entrances.some(marker=>marker.id===focus) ? 0 : restoreFace;
+}
+
 export function touchedEntrance(markers,x,y,nx,ny,radius) {
   if(ny>=y || x!==nx) return;
   return markers.find(({entrance:[left,top,width,height]})=>

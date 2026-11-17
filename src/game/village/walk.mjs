@@ -1,4 +1,4 @@
-import { HIZUKI_WALK_SPEED, makeWalk, touchedEntrance, crossesSouthExit } from './movement.mjs?v=village-speed-288';
+import { HIZUKI_WALK_SPEED, makeWalk, touchedEntrance, crossesSouthExit, villageArrivalFacing } from './movement.mjs?v=village-speed-288-exit-facing-1';
 import { villageRooms } from '../interiors/rooms.mjs';
 import { pixelViewport, DEFAULT_CAMERA_ZOOM, canopyOpacity, riverRipples, paintRiverRipples } from './render.mjs';
 import { advanceResident, drawCharacter, makeResident, residentInFront, RESIDENT_RADIUS } from './residents.mjs';
@@ -175,15 +175,16 @@ async function start() {
   const focusedResident = residents.find(npc=>npc.id===focus);
   let [x,y] = focusedResident ? [focusedResident.x,focusedResident.y+52]
     : data.markers.find(marker=>marker.id===focus)?.point ?? data.spawn;
-  let face = 1, distance = 0, time = 0, lastFrame = 0;
+  const returningFromBuilding=entrances.some(marker=>marker.id===focus);
+  let face = villageArrivalFacing(focus,entrances), distance = 0, time = 0, lastFrame = 0;
   let viewportWidth,viewportHeight,pixelStep;
   let renderedX,renderedY;
   const contactRadius = data.radius+RESIDENT_RADIUS;
   const occupied = (px,py)=>residents.some(npc=>Math.hypot(px-npc.x,py-npc.y)<contactRadius);
   const heroOccupied = (px,py)=>Math.hypot(px-x,py-y)<contactRadius;
   const resumed=consumeRestorePosition('village');
-  if(resumed&&walk.canStand(resumed.x,resumed.y)&&!occupied(resumed.x,resumed.y)){
-    x=resumed.x;y=resumed.y;face=resumed.face??1;
+  if(!returningFromBuilding && resumed && walk.canStand(resumed.x,resumed.y)&&!occupied(resumed.x,resumed.y)){
+    x=resumed.x;y=resumed.y;face=villageArrivalFacing(focus,entrances,resumed.face??1);
   }
 
   function resize() {

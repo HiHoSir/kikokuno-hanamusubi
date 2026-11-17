@@ -27,12 +27,13 @@ try{
  const page=await browser.newPage({viewport:{width:874,height:402},deviceScaleFactor:2,
    isMobile:true,hasTouch:true});
  const errors=[];
- // Stable randomized layout for browser checks, without forcing production
- // state. Session flag prevents init script from resetting collected data on reload.
+ // Browser-only fixture uses the actual Player save key; NO fake random reset.
+ // Simulate being one finished battle away from a real replenishment.
  await page.addInitScript(()=>{
    if(sessionStorage.getItem('shoreShellQaSeeded'))return;
-   localStorage.setItem('kikokuno-hanamusubi-preview-shoreline-shells-v1',
-     JSON.stringify({seed:49721,picked:[],sold:[],gold:0}));
+   localStorage.removeItem('kikokuno-hanamusubi-preview-shoreline-shells-v2');
+   localStorage.setItem('kikokuno-hanamusubi-battle-player',
+     JSON.stringify({lv:1,completedBattles:4,wins:3}));
    sessionStorage.setItem('shoreShellQaSeeded','1');
  });
  page.on('pageerror',e=>errors.push('JS '+e.message));
@@ -54,16 +55,15 @@ try{
  assert.ok(first.tileSheet[0]%32===0&&first.tileSheet[1]%32===0,
    '8-frame atlas dimensions align to native 32px source rectangles');
  assert.equal(first.characterSheet,'village-80x112','use the town-scale 80x112 Hizuki');
- assert.equal(first.shells.spawned,14,'sparse beach must not resemble a pebble field');
- assert.equal(first.shells.visible,14);
+ assert.equal(first.shells.battles,4,'four fights is not five');
+ assert.equal(first.shells.untilNextBatch,1);
+ assert.equal(first.shells.visible,0,'the beach must start empty before 5 battles');
  assert.equal(first.shells.picked,0);
  assert.equal(first.shells.gold,0);
  assert.deepEqual(first.shells.atlas,[60,20],'three unscaled 20px sprites');
  assert.equal(first.shells.render,'native-20px-pixel-atlas');
  assert.equal(first.shells.savedSeparately,true);
- assert.equal(first.shells.seed,49721);
- assert.equal(first.shells.positions.length,14);
- assert.ok(new Set(first.shells.positions.map(p=>p.kind)).size>=2);
+ assert.equal(first.shells.positions.length,0);
  assert.equal(first.sceneryCount,3,'only approved rocks, not a grass border');
  assert.equal(first.sceneryRender,'unscaled-native-sprites-sorted-by-foot');
  assert.equal(first.scenery.filter(o=>o.solid).length,3);
@@ -137,12 +137,25 @@ try{
  assert.ok(beforeRock.x>rock.x&&beforeRock.x<rock.x+35,
    'walk stops at the 13px rock foot collision, not at a sprite-size box');
  await page.screenshot({path:'artifacts/shoreline-study-rock-collision.png'});
- // Pick up one of the actual rendered shells by moving with player controls.
- // The test starts from spawn so no hidden teleport or direct inventory edit.
+ // An actual completed battle increments the same field that the battle
+ // engine saves. At 5 encounters a batch of 1-3 shells appears once.
+ await page.evaluate(()=>{
+   const k='kikokuno-hanamusubi-battle-player';
+   const player=JSON.parse(localStorage.getItem(k));player.completedBattles=5;
+   localStorage.setItem(k,JSON.stringify(player));
+ });
+ await page.waitForFunction(()=>window.__SHORE_QA?.shells?.battles===5&&
+   window.__SHORE_QA.shells.visible>0,null,{timeout:3000});
+ const deposited=await page.evaluate(()=>({...window.__SHORE_QA.shells}));
+ assert.ok(deposited.visible>=1&&deposited.visible<=3);
+ assert.equal(deposited.processedCycles,1);
+ assert.equal(deposited.untilNextBatch,5);
+ await page.screenshot({path:'artifacts/shoreline-study-shell-deposited.png'});
+ // Pick up a real displayed shell with the exact existing movement controls.
  await page.locator('#reset').click();
  await page.waitForFunction(()=>window.__SHORE_QA?.hero?.x===336,null,{timeout:1500});
- const candidates=first.shells.positions.filter(p=>p.x>195&&p.x<520);
- assert.ok(candidates.length>0,'at least one collectible on central beach');
+ const candidates=deposited.positions.filter(p=>p.x>195&&p.x<520);
+ assert.ok(candidates.length>0,'batch contains an accessible fixed coastal pickup point');
  const target=candidates.sort((a,b)=>
    Math.hypot(a.x-336,a.y-432)-Math.hypot(b.x-336,b.y-432))[0];
  const moveAxis=async(axis,want,margin)=>{
@@ -173,7 +186,8 @@ try{
  await page.reload({waitUntil:'domcontentloaded'});
  await page.waitForFunction(()=>window.__SHORE_QA?.ready===true,null,{timeout:45000});
  const reloaded=await page.evaluate(()=>({...window.__SHORE_QA.shells}));
- assert.equal(reloaded.seed,beforePick.seed);
+ assert.equal(reloaded.battles,beforePick.battles);
+ assert.equal(reloaded.processedCycles,1);
  assert.equal(reloaded.picked,afterPick.picked);
  assert.equal(reloaded.visible,afterPick.visible);
  assert.equal(reloaded.worth,afterPick.worth);
@@ -185,12 +199,29 @@ try{
  assert.equal(afterSale.visible,reloaded.visible,'sold shells stay removed');
  assert.equal(await page.locator('#sell-shells').isDisabled(),true,'no double-sell');
  await page.screenshot({path:'artifacts/shoreline-study-shell-sold.png'});
- await page.locator('#reroll-shells').click();
- await page.waitForFunction(seed=>window.__SHORE_QA?.shells?.seed!==seed,
-   afterSale.seed,{timeout:2500});
+ // Fights 6-9 never replenish; neither reload nor selling is a trigger.
+ await page.evaluate(()=>{
+   const k='kikokuno-hanamusubi-battle-player';
+   const player=JSON.parse(localStorage.getItem(k));player.completedBattles=9;
+   localStorage.setItem(k,JSON.stringify(player));
+ });
+ await page.waitForFunction(()=>window.__SHORE_QA?.shells?.battles===9,null,{timeout:3000});
+ const ninth=await page.evaluate(()=>({...window.__SHORE_QA.shells}));
+ assert.equal(ninth.visible,afterSale.visible);
+ assert.equal(ninth.processedCycles,1);
+ assert.equal(ninth.untilNextBatch,1);
+ assert.equal(await page.locator('#reroll-shells').count(),0,'no manual reroll escape hatch');
+ await page.evaluate(()=>{
+   const k='kikokuno-hanamusubi-battle-player';
+   const player=JSON.parse(localStorage.getItem(k));player.completedBattles=10;
+   localStorage.setItem(k,JSON.stringify(player));
+ });
+ await page.waitForFunction(()=>window.__SHORE_QA?.shells?.processedCycles===2,
+   null,{timeout:3000});
  const refreshed=await page.evaluate(()=>({...window.__SHORE_QA.shells}));
- assert.equal(refreshed.visible,14,'new tide places a fresh batch');
- assert.equal(refreshed.picked,0);
+ assert.ok(refreshed.visible>ninth.visible);
+ assert.ok(refreshed.visible-ninth.visible>=1&&refreshed.visible-ninth.visible<=3);
+ assert.equal(refreshed.battles,10);
  assert.equal(refreshed.gold,afterSale.gold,'earned gold is preserved');
  await page.screenshot({path:'artifacts/shoreline-study-shell-refreshed.png'});
  assert.deepEqual(errors,[],'no broken assets or runtime exceptions');
@@ -201,9 +232,11 @@ try{
    highTide:{reach:high.tideReach,washed:high.washedPixels},
    retreat:{reach:retreat.tideReach,wet:retreat.wetPixels},
    villageHero:true,shells:{
-     initial:first.shells.visible,afterPickup:afterPick.visible,
+     battlesBefore:first.shells.battles,battlesAtDeposit:deposited.battles,
+     batch:deposited.visible,afterPickup:afterPick.visible,
      value:afterPick.worth,reload:reloaded.picked,
-     soldGold:afterSale.gold,newTide:refreshed.visible
+     soldGold:afterSale.gold,ninthBattle:ninth.visible,
+     tenthBattle:refreshed.visible
    },
    sceneryCount:first.sceneryCount,sceneryNativeSizes:first.sceneryNativeSizes,
    rockCollision:{rockX:rock.x,heroX:beforeRock.x,heroY:beforeRock.y},
@@ -216,6 +249,7 @@ try{
    'artifacts/shoreline-study-low-tide.png','artifacts/shoreline-study-high-tide.png',
    'artifacts/shoreline-study-retreat.png',
    'artifacts/shoreline-study-rock-collision.png',
+   'artifacts/shoreline-study-shell-deposited.png',
    'artifacts/shoreline-study-shell-picked.png',
    'artifacts/shoreline-study-shell-sold.png',
    'artifacts/shoreline-study-shell-refreshed.png']};

@@ -5,6 +5,7 @@ import {bindDialogue} from '../village/dialogue.mjs?v=field-menu-1';
 import {rooms, resolveInterior, prepareInterior} from './rooms.mjs?v=village-finds-1';
 import {paintRoom, paintPartition, paintContactShadow} from './room-art.mjs';
 import {FOOD_ITEMS,ARMORY_STOCK,purchaseFood,purchaseArmory,collectFind,readPlayer,savePlayer} from '../battle/rules.mjs?v=equipment-4slots-2';
+import {consumeRestorePosition} from '../save/save-game.mjs?v=save-slots-1';
 import {VILLAGE_FINDS} from '../../../data/maps/hozuki-village/finds.mjs';
 
 const scene = document.querySelector('#scene');
@@ -291,9 +292,17 @@ async function start() {
     if (document.hidden) clearInput();
   });
   setRoom(initial.room,initial.selected);
+  const resumed=consumeRestorePosition('interiors');
+  if(resumed&&walk.canStand(resumed.x,resumed.y)){
+    x=resumed.x;y=resumed.y;face=resumed.face??1;
+  }
   resize();
   new ResizeObserver(resize).observe(scene.parentElement);
   load.hidden = true;
+  window.KIKOKU_SAVE_SNAPSHOT=()=>({
+    scene:'interiors',building:initial.returnFocus,position:{x,y,face}
+  });
+  window.parent?.KIKOKU_GAME?.autosave?.(window);
   requestAnimationFrame(frame);
 }
 

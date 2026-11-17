@@ -1,5 +1,5 @@
 import {contact, createFieldRenderer, fieldStep, loadFieldArt, villageArrival, placeArrival, world} from './runtime.mjs?v=authored-waterfall-1';
-import {BATTLE_REQUEST_KEY,FIELD_RETURN_KEY,chooseFieldEncounter} from '../game/battle/rules.mjs?v=field-balance-1';
+import {BATTLE_REQUEST_KEY,FIELD_RETURN_KEY,chooseFieldEncounter} from '../game/battle/rules.mjs?v=equipment-4slots-2';
 
 const scene = document.querySelector('#scene');
 const load = document.querySelector('#load');

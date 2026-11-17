@@ -114,3 +114,57 @@ test('world menu sends pause/resume signals to field without touching the BGM en
  assert.match(field,/portraitMedia\.addEventListener\?\.\('change',updateSuspension\)/);
  assert.match(field,/else lastWaterFrame=-1/);
 });
+
+
+test('equipment build version reaches every scene HTML without losing route parameters',()=>{
+  const base='https://example.test/kikokuno-hanamusubi/';
+  const version='equipment-4slots-2';
+  const frame={title:'',src:'',contentWindow:{location:{href:''}},
+    addEventListener(event,fn){this['on'+event]=fn;}};
+  const curtain={hidden:false};
+  const audio={trackName:'village',switchTrack(name){this.trackName=name;}};
+  const document={querySelector(selector){
+    return {'#game-scene':frame,'#scene-transition':curtain,'#sound-toggle':{}}[selector];
+  }};
+  const window={};
+  const location={href:new URL('src/game/?build='+version,base).href};
+  const source=shellSource.replace(/import \{makeAudioEngine\} from '[^']+';\s*/,'')
+    .replaceAll('import.meta.url',JSON.stringify(new URL('src/game/navigation/game-shell.mjs',base).href));
+  runInNewContext(source,{document,window,globalThis:window,location,URL,makeAudioEngine:()=>audio});
+  assert.equal(new URL(frame.src).searchParams.get('build'),version);
+  const host=window.KIKOKU_GAME;
+  frame.contentWindow.location.href=frame.src;
+  assert.ok(host.acceptsChild(frame.src,frame.contentWindow));
+  host.navigate(new URL('src/game/interiors/?building=house-southeast-tile',base),frame.contentWindow);
+  assert.equal(new URL(frame.src).searchParams.get('building'),'house-southeast-tile');
+  assert.equal(new URL(frame.src).searchParams.get('build'),version);
+  assert.ok(host.acceptsChild(frame.src,frame.contentWindow));
+  host.navigate(new URL('src/field/?from=village',base),frame.contentWindow);
+  assert.equal(new URL(frame.src).searchParams.get('from'),'village');
+  assert.equal(new URL(frame.src).searchParams.get('build'),version);
+});
+
+test('equipment release invalidates every nested shop and inventory module URL',()=>{
+  const sources={
+    title:readFileSync('index.html','utf8'),
+    opening:readFileSync('src/opening/index.html','utf8'),
+    openingJs:readFileSync('src/opening/opening.js','utf8'),
+    shell:readFileSync('src/game/index.html','utf8'),
+    village:readFileSync('src/game/village/index.html','utf8'),
+    villageJs:readFileSync('src/game/village/walk.mjs','utf8'),
+    interior:readFileSync('src/game/interiors/index.html','utf8'),
+    interiorJs:readFileSync('src/game/interiors/walk.mjs','utf8'),
+    field:readFileSync('src/field/index.html','utf8'),
+    fieldJs:readFileSync('src/field/walk.mjs','utf8'),
+    battle:readFileSync('src/game/battle/index.html','utf8'),
+    battleJs:readFileSync('src/game/battle/walk.mjs','utf8'),
+    menuJs:readFileSync('src/game/ui/field-menu.mjs','utf8')
+  };
+  for(const [key,source] of Object.entries(sources))
+    assert.ok(source.includes('equipment-4slots-2'),key+' is missing the equipment cache key');
+  assert.match(sources.title,/src\/opening\/\?build=equipment-4slots-2/);
+  assert.match(sources.openingJs,/gameUrl\.searchParams\.set\('build'/);
+  assert.match(readFileSync('src/game/navigation/game-shell.mjs','utf8'),/target\.searchParams\.set\('build',build\)/);
+  for(const key of ['villageJs','interiorJs','fieldJs','battleJs','menuJs'])
+    assert.match(sources[key],/rules\.mjs\?v=equipment-4slots-2/,key);
+});

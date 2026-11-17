@@ -53,8 +53,8 @@ export const COVE_MAP=Object.freeze({
  objects:Object.freeze([
   {kind:'basket',x:20,y:18},{kind:'barrel',x:18,y:19},
   {kind:'rocks',x:17,y:9},{kind:'rocks',x:13,y:25},
-  {kind:'flowers',x:17,y:13},{kind:'flowers',x:22,y:25},
-  {kind:'flowers',x:28,y:26}
+  {kind:'flowers',x:17,y:13,chip:1},{kind:'flowers',x:22,y:25,chip:5},
+  {kind:'flowers',x:28,y:26,chip:11}
  ])
 });
 export function tileAt(x,y,map=COVE_MAP){

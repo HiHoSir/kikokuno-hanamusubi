@@ -1,4 +1,4 @@
-import {isBridgeDeck} from './terrain-chips.mjs?v=field-height-1';
+import {isBridgeDeck} from './terrain-chips.mjs?v=authored-waterfall-1';
 
 const cell=32;
 // Relief uses map pixels, in the same coordinates as actor and object feet.

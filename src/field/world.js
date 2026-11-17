@@ -22,12 +22,15 @@ window.YK_WORLD=(()=>{
  mapData.heightTransitions=[];mapData.projectedHeights=true;mapData.shoreRelief=true;
  mapData.fieldObjectCollisionDeferred=false;mapData.referencePlacedObjects=true;
  mapData.bridgeWaterCells=new Set(geography.bridgeWaterCells.map(c=>c.join(',')));
- // Authored 32px waterfall map chips replace the free-standing art object.
- mapData.waterfallChipLayer={...geography.waterfallChipLayer,
-  origin:geography.waterfallChipLayer.origin.slice(),frameSize:geography.waterfallChipLayer.frameSize.slice(),
-  tiles:geography.waterfallChipLayer.tiles.map(t=>({...t,cell:t.cell.slice(),source:t.source.slice()}))};
+ // Authored waterfall uses 32px tile cells; its entrance remains independent
+ // of visual tiles so save positions and collision retain their old contract.
+ mapData.waterfallChipLayer=geography.waterfallChipLayer&&{
+  ...geography.waterfallChipLayer,origin:geography.waterfallChipLayer.origin.slice(),
+  frameSize:geography.waterfallChipLayer.frameSize.slice(),
+  tiles:geography.waterfallChipLayer.tiles.map(t=>({...t,cell:t.cell.slice(),atlas:t.atlas.slice()}))
+ };
  mapData.landmarkContactTiles=Object.fromEntries(Object.entries(geography.landmarkContactTiles||{})
-  .map(([id,cells])=>[id,cells.map(c=>c.slice())]));
+  .map(([name,cells])=>[name,cells.map(c=>c.slice())]));
  mapData.decorations=geography.decorations.map(o=>{
   const contactTiles=o.contactTiles.map(c=>c.slice());
   // Entrance footprints are walkable: transition happens only after the hero overlaps them.

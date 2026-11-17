@@ -161,6 +161,7 @@ export function createCoveRenderer(ctx,art,map=COVE_MAP){
  const shellTypes=Object.fromEntries(shellArt.ids.map((kind,index)=>[kind,index]));
  const {width,height}=map;
  const sprites=map.objects.map(object=>({
+   kind:object.kind,chip:object.chip??0,
    x:object.x*TILE+TILE/2,y:(object.y+1)*TILE,
    image:art[object.kind]
  })).filter(s=>s.image);
@@ -203,15 +204,23 @@ export function createCoveRenderer(ctx,art,map=COVE_MAP){
        cell.x*TILE,cell.y*TILE,TILE,TILE);
    }
    const actors=[
-     ...sprites.map(s=>({type:'sprite',y:s.y,x:s.x,image:s.image})),
+     ...sprites.map(s=>({type:'sprite',...s})),
      ...shells.map(shell=>({type:'shell',...shell})),
      {type:'npc',y:fisher.y,x:fisher.x,bitmap:art.fisher,face:fisher.face,distance:0,moving:false},
      {type:'hero',y:player.y,x:player.x,bitmap:art.hero,face:player.face,distance:player.distance,moving:player.moving}
    ].sort((a,b)=>a.y-b.y);
    for(const actor of actors){
      if(actor.type==='sprite'){
-       ctx.drawImage(actor.image,Math.round(actor.x-actor.image.naturalWidth/2),
-         Math.round(actor.y-actor.image.naturalHeight));
+       if(actor.kind==='flowers'){
+         // wildflowers.png is a 4x4 *mapchip sheet*, not a single giant
+         // object. One flower placement = one unscaled 32x32 source chip.
+         const sx=(actor.chip%4)*TILE,sy=Math.floor(actor.chip/4)*TILE;
+         ctx.drawImage(actor.image,sx,sy,TILE,TILE,
+           Math.round(actor.x-TILE/2),Math.round(actor.y-TILE),TILE,TILE);
+       }else{
+         ctx.drawImage(actor.image,Math.round(actor.x-actor.image.naturalWidth/2),
+           Math.round(actor.y-actor.image.naturalHeight));
+       }
        continue;
      }
      if(actor.type==='shell'){

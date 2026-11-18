@@ -1,0 +1,42 @@
+name: Build corrected cove fishing gear (temporary)
+on:
+  push:
+    branches: [fix/cove-gear-native-proportions]
+    paths:
+      - 'tools/generate-cove-fishing-gear.py'
+      - '.github/workflows/build-cove-gear-size.yml'
+permissions:
+  contents: write
+jobs:
+  assets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate native RGBA pixel art
+        run: python3 tools/generate-cove-fishing-gear.py
+      - name: Validate generated RGBA dimensions
+        run: |
+          python3 - <<'PY'
+          import struct
+          from pathlib import Path
+          expected={'net-drying-rack-232x176.png':(232,176),'net-bundle-146x88.png':(146,88),'rope-coil-88x62.png':(88,62)}
+          for name,dim in expected.items():
+              buf=(Path('assets/sea-cove/objects')/name).read_bytes()
+              assert buf.startswith(b'\x89PNG\r\n\x1a\n')
+              assert struct.unpack_from('>II',buf,16)==dim
+              assert buf[24]==8 and buf[25]==6
+              print(name,dim,len(buf))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fishing-gear-redrawn
+          path: assets/sea-cove/objects/*-*x*.png
+      - name: Commit new sprites on feature branch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/sea-cove/objects/net-drying-rack-232x176.png assets/sea-cove/objects/net-bundle-146x88.png assets/sea-cove/objects/rope-coil-88x62.png
+          if ! git diff --cached --quiet; then
+            git commit -m 'Add village-scale fishing gear sprites'
+            git push origin HEAD:fix/cove-gear-native-proportions
+          fi

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {readFileSync} from 'node:fs';
+import {readFileSync,existsSync} from 'node:fs';
 import {SHORE_Y,SCENERY} from '../data/maps/shoreline-study/scene.mjs';
 import {
  COVE_MAP,COVE_WIDTH,COVE_HEIGHT,COVE_SHORE,COVE_SAND_DEPTH,COVE_TILE_SIZE,
@@ -118,6 +118,17 @@ test('fisher homestead uses new southern sand; native assets; no blocked field r
  assert.deepEqual([net.x,net.y],[1050,1050]);
  assert.ok(house.collision.top>22*32,'the house must not overlap any old terrain rows');
  assert.ok(net.collision.top>22*32,'net stays in new area');
+ assert.deepEqual(net.collision,{
+   left:net.x-232/2,right:net.x+232/2,top:net.y-176,bottom:net.y
+ },'collision must track the entire redrawn original-size drying net');
+ assert.equal(bundle.radius,49,'net-bundle collision must follow its enlarged footprint');
+ assert.equal(rope.radius,29,'rope collision must follow its enlarged footprint');
+ for(const old of ['net-drying-rack-192x150.png','net-bundle-112x66.png',
+   'rope-coil-68x50.png']){
+   assert.equal(existsSync('assets/sea-cove/objects/'+old),false,
+     'outdated object should not remain alongside redrawn version: '+old);
+ }
+
  assert.ok(house.collision.right<net.collision.left-40,
    'retain at least one clear walking corridor between home and drying rack');
  assert.ok(COVE_MAP.objects.some(o=>o.kind==='crate'));

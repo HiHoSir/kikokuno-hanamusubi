@@ -37,22 +37,22 @@ export const COVE_MAP=Object.freeze({
   // Reused original village art, native size. A house is not enterable yet.
   Object.freeze({
    id:'fisher-house',kind:'fisherHouse',footPosition:true,
-   x:280,y:1140,solid:true,
-   collision:Object.freeze({left:85,right:475,top:783,bottom:1140})
+   x:660,y:1063,solid:true,
+   collision:Object.freeze({left:465,right:855,top:706,bottom:1063})
   }),
   // Drying net, ropes and folded nets are distinct native RGBA sprites.
   Object.freeze({
    id:'net-rack',kind:'netRack',footPosition:true,
-   x:1010,y:1050,solid:true,
-   collision:Object.freeze({left:920,right:1100,top:900,bottom:1050})
+   x:1050,y:1050,solid:true,
+   collision:Object.freeze({left:960,right:1140,top:900,bottom:1050})
   }),
   Object.freeze({id:'net-bundle',kind:'netBundle',
    footPosition:true,x:770,y:1175,solid:true,radius:39}),
   Object.freeze({id:'rope-coil',kind:'ropeCoil',
    footPosition:true,x:1130,y:1250,solid:true,radius:23}),
   // Reuse village-original props; no rescaling or palette substitution.
-  Object.freeze({id:'fish-crate-east',kind:'crate',x:19,y:29,solid:true,radius:22}),
-  Object.freeze({id:'gear-barrel',kind:'barrel',x:28,y:34,solid:true,radius:22}),
+  Object.freeze({id:'fish-crate-east',kind:'crate',x:28,y:33,solid:true,radius:22}),
+  Object.freeze({id:'gear-barrel',kind:'barrel',x:32,y:36,solid:true,radius:22}),
   Object.freeze({id:'spare-basket',kind:'basket',x:21,y:38,solid:true,radius:22})
  ])
 });

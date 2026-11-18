@@ -8,7 +8,7 @@ import {COVE_MAP} from '../data/maps/sea-cove/scene.mjs';
 import {DEFAULT_CAMERA_ZOOM,pixelViewport} from '../src/game/village/render.mjs';
 
 const source=p=>readFileSync(p,'utf8');
-test('all walking scenes except the field share ONE CSS/world pixel scale',()=>{
+test('village, rooms and cove use stable world scale without district zoom',()=>{
  assert.equal(WORLD_SCENE_ZOOM,0.5);
  assert.equal(DEFAULT_CAMERA_ZOOM,WORLD_SCENE_ZOOM);
  assert.deepEqual(WORLD_HERO_FRAME,[80,112]);
@@ -26,15 +26,14 @@ test('all walking scenes except the field share ONE CSS/world pixel scale',()=>{
  assert.match(village,/DEFAULT_CAMERA_ZOOM/);
  assert.match(rooms,/pixelViewport\(parent.clientWidth,parent.clientHeight,devicePixelRatio,DEFAULT_CAMERA_ZOOM\)/);
  assert.match(cove,/pixelViewport\(parent.clientWidth,parent.clientHeight,devicePixelRatio,DEFAULT_CAMERA_ZOOM\)/);
- assert.match(tenyo,/import \{WORLD_SCENE_ZOOM\} from '\.\.\/ui\/world-scale\.mjs'/);
- assert.match(tenyo,/VIEWPORT_EDGE\*WORLD_SCENE_ZOOM/);
- assert.match(tenyo,/viewWidth=width\*worldPixelsPerPixel/);
- assert.match(tenyo,/viewHeight=height\*worldPixelsPerPixel/);
+ // Tenyo is provisionally restored to its pre-PR37, previously reviewed
+ // independent camera. Do not reapply a unified zoom without a full visual QA.
+ assert.match(tenyo,/ZOOM=1\.4/);
+ assert.match(tenyo,/heroDisplayScale:map\.game\.heroDisplayScale\?\?1/);
  assert.doesNotMatch(cove,/hamletCameraZoom|basePixelStep|1\.18|0\.65/);
- assert.doesNotMatch(tenyo,/ZOOM=1\.4|heroDisplayScale:0\.52/);
  const scene=JSON.parse(source('data/maps/tenyo-sanctuary/scene.json'));
- assert.equal(Object.hasOwn(scene.game,'heroDisplayScale'),false,
-   'sanctuary hero-only scale setting is forbidden');
+ assert.equal(scene.game.heroDisplayScale,0.52,
+   'retain reviewed Tenyo player-to-shrine proportions until visual signoff');
 });
 test('non-field camera cannot change with location or rescale only one prop',()=>{
  const cove=source('src/game/cove/walk.mjs');
@@ -94,10 +93,11 @@ test('all connected playable NPC assets use the native hero sheet frame and shar
    assert.deepEqual(calls.at(-1).slice(1,5),[160,0,80,112],
      role+' must preserve native 80px walking frames');
  }
- assert.doesNotMatch(source('src/game/tenyo/walk.mjs'),/heroDisplayScale/,
-   'Tenyo must not pass protagonist-only scale');
- assert.doesNotMatch(source('src/game/tenyo/rendering/render.js'),/o\.heroDisplayScale/,
-   'Tenyo must render all actors with one world factor');
+ // The sanctuary sprite atlas is still 80×112, but its previously reviewed
+ // *draw size* is distinct. Preserve that approved behavior while assessing
+ // changes visually rather than assuming all-world numerical scale implies QA.
+ assert.match(source('src/game/tenyo/walk.mjs'),/heroDisplayScale:map\.game\.heroDisplayScale\?\?1/);
+ assert.match(source('src/game/tenyo/rendering/render.js'),/o\.heroDisplayScale\?\?1/);
 });
 
 test('buildings, furniture, and fishing props use the same world pixels as characters',()=>{

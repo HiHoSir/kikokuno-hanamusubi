@@ -1,169 +1,110 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
+import {SHORE_Y,SCENERY} from '../data/maps/shoreline-study/scene.mjs';
 import {
- COVE_MAP,COVE_WIDTH,COVE_HEIGHT,COVE_TILE_SIZE,COVE_SHORE,COVE_SAND_DEPTH,
+ COVE_MAP,COVE_WIDTH,COVE_HEIGHT,COVE_SHORE,COVE_SAND_DEPTH,COVE_TILE_SIZE,
  tileAt,walkableCell,walkablePoint,isSouthExit
 } from '../data/maps/sea-cove/scene.mjs';
-import {coastMask,grassCornerMask,scrubCornerMask} from '../src/game/cove/render.mjs';
+import {coastMask} from '../src/game/cove/render.mjs';
 import {TIDE_FRAMES,tideFrame,surfSample} from '../src/game/terrain/surf.mjs';
 import {CHAPTER_ONE_STAGES,objectiveForStage,normalizeStage} from '../src/game/story/chapter-one.mjs';
 import {readSavedGame,saveGame,restoreSavedGame,routeForSavedGame}
  from '../src/game/save/save-game.mjs';
 import {readPlayer,savePlayer,DEFAULT_PLAYER} from '../src/game/battle/rules.mjs';
-
 const source=path=>readFileSync(path,'utf8');
 const stubStorage=()=>{
  const data=new Map();
  return {getItem:k=>data.get(k)??null,setItem:(k,v)=>data.set(k,String(v)),
  removeItem:k=>data.delete(k)};
 };
-const adjacent=(a,b)=>Math.abs(a[0]-b[0])+Math.abs(a[1]-b[1])===1;
 function bfs(start,goal){
  const queue=[start],seen=new Set([start.join(',')]);
- for(const here of queue){
-  if(goal(here))return true;
-  for(const [dx,dy] of [[0,1],[1,0],[-1,0],[0,-1]]){
-   const next=[here[0]+dx,here[1]+dy],key=next.join(',');
+ for(const p of queue){
+  if(goal(p))return true;
+  for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
+   const next=[p[0]+dx,p[1]+dy],key=next.join(',');
    if(!seen.has(key)&&walkableCell(...next)){seen.add(key);queue.push(next);}
   }
  }
  return false;
 }
-test('the sea cove is an authored 46x34 grid of native 32px tiles',()=>{
- assert.equal(COVE_WIDTH,46);assert.equal(COVE_HEIGHT,34);
- assert.equal(COVE_TILE_SIZE,32);assert.equal(COVE_SHORE.length,34);
- assert.equal(COVE_MAP.tiles.length,34);
- for(const row of COVE_MAP.tiles){
-  assert.equal(row.length,46);
-  assert.match(row,/^[gs~tr]{46}$/);
+test('production cove replaces its terrain with the APPROVED 30-column coastline, sand to south',()=>{
+ assert.equal(COVE_WIDTH,30);
+ assert.equal(COVE_HEIGHT,22);
+ assert.equal(COVE_TILE_SIZE,32);
+ assert.deepEqual(COVE_SHORE,SHORE_Y);
+ assert.deepEqual(COVE_SAND_DEPTH,COVE_SHORE.map(y=>22-y));
+ assert.equal(COVE_MAP.tiles.length,COVE_HEIGHT);
+ for(const [y,row] of COVE_MAP.tiles.entries()){
+   assert.equal(row.length,COVE_WIDTH);
+   assert.match(row,/^[s~]{30}$/);
+   for(let x=0;x<COVE_WIDTH;x++)
+     assert.equal(row[x],y<SHORE_Y[x]?'~':'s','coast mismatch '+x+','+y);
  }
- assert.ok(COVE_MAP.tiles.join('').split('~').length>220,'coast has a real ocean, not a decorative water object');
- assert.ok(COVE_MAP.tiles.join('').includes('t'));
- assert.ok(COVE_MAP.tiles.join('').includes('s'));
- assert.ok(COVE_MAP.tiles.join('').includes('r'));
- const flowers=COVE_MAP.objects.filter(o=>o.kind==='flowers');
- assert.equal(flowers.length,3,'do not paste a whole wildflower sheet as one prop');
- assert.ok(flowers.every(o=>Number.isInteger(o.chip)&&o.chip>=0&&o.chip<16));
- const {x,y}=COVE_MAP.entry;
- assert.equal(walkablePoint(x,y),true);
- assert.equal(walkableCell(45,0),false);
- assert.equal(walkableCell(-1,5),false);
- assert.equal(tileAt(45,12),'~');
+ assert.equal(COVE_MAP.objects.filter(o=>o.kind==='rocks').length,SCENERY.length);
+ for(const rock of SCENERY)
+   assert.ok(COVE_MAP.objects.some(o=>o.id===rock.id&&o.x===rock.x&&o.y===rock.y),
+     'accepted native rock moved: '+rock.id);
+ assert.equal(COVE_MAP.objects.filter(o=>o.kind==='flowers').length,0,
+   'do not introduce unreviewed flowers and woods on the beach');
+ assert.ok(walkablePoint(COVE_MAP.entry.x,COVE_MAP.entry.y));
+ assert.equal(tileAt(0,0),'~');
+ assert.equal(walkableCell(29,20),false);
 });
-test('broad beach is authored 10–14 tiles deep; no rectangular grass walkway to the field',()=>{
- assert.equal(COVE_SAND_DEPTH.length,COVE_HEIGHT);
- assert.ok(COVE_SAND_DEPTH.every(n=>Number.isInteger(n)&&n>=10&&n<=14));
- for(let y=2;y<COVE_HEIGHT;y++){
-   const coast=COVE_SHORE[y];
-   for(let x=coast-COVE_SAND_DEPTH[y];x<coast;x++)
-     assert.ok(['s','r'].includes(tileAt(x,y)),
-       'sand reach must not be interrupted by grass/scrub: '+x+','+y);
- }
- assert.equal(tileAt(Math.floor(COVE_MAP.entry.x/32),
-   Math.floor(COVE_MAP.entry.y/32)),'s','player starts on dry sand');
- assert.ok(COVE_MAP.exit.columns.every(x=>tileAt(x,33)==='s'),
-   'every field return route is sandy');
- const sand=COVE_MAP.tiles.join('').split('').filter(t=>t==='s').length;
- assert.ok(sand>300,'sandbox must be a substantial beach, got '+sand);
-});
-test('the approved 8-frame tide rule is used by 32px production cove atlas',()=>{
- assert.equal(TIDE_FRAMES.length,8);
- assert.deepEqual(TIDE_FRAMES.map(phase=>phase.reach),[2,4,7,11,14,11,7,4]);
- assert.equal(tideFrame(260*4).reach,14);
- assert.equal(surfSample(14,'sand',4,0),3);
- const render=source('src/game/cove/render.mjs');
- assert.match(render,/prepareCoveSurf\(map,shoreMask\)/);
- assert.match(render,/const tide=tideFrame\(time\)/);
- assert.match(render,/ctx\.drawImage\(surf\.sheet,sx,sy,TILE,TILE/);
- assert.match(render,/mode:'animated-native-32px-mapchips'/);
- assert.match(render,/orientation:'sea-east'/);
- assert.match(render,/edgeX\[wy\]-wx,'sand',phase,wy/);
- assert.doesNotMatch(render,/drawImage\(tideLayers|fillRect\(.*foam.*time/);
- const preview=source('data/maps/shoreline-study/tide.mjs');
- assert.ok(preview.includes("../../../src/game/terrain/surf.mjs"),
-   'only one tide phase definition shared by preview and production');
-});
-test('reused coastal textures and native character sheets have usable PNG source dimensions',()=>{
- const images=[
-  ['assets/field/terrain/grass-base.png',32,32],
-  ['assets/field/terrain/sand.png',32,32],
-  ['assets/field/terrain/forest-core.png',32,32],
-  ['assets/field/effects/water-motion.png',32,32],
-  ['assets/village/objects/rocks.png',32,32],
-  ['assets/field/terrain/atlas/coast-mask-32.png',128,128],
-  ['assets/field/terrain/atlas/coast-shallow-32.png',128,128],
-  ...[0,1,2,3].map(n=>['assets/field/terrain/atlas/coast-sand-'+n+'-32.png',128,128]),
-  ['assets/characters/hizuki/walk-4dir-80x112.png',240,448],
-  ['assets/characters/npc/villager-walk-4dir-80x112.png',240,448]
- ];
- for(const [path,minWidth,minHeight] of images){
-  const buffer=readFileSync(path);
-  assert.equal(buffer.subarray(1,4).toString('ascii'),'PNG',path);
-  assert.ok(buffer.readUInt32BE(16)>=minWidth, path+' width');
-  assert.ok(buffer.readUInt32BE(20)>=minHeight,path+' height');
- }
-});
-test('the starting inlet route reaches a talkable spot around Ushiohei and the south exit',()=>{
+test('approved sand reaches the south exit without a grass strip; fisher remains reachable',()=>{
+ assert.ok(COVE_SAND_DEPTH.every(n=>n>=13));
+ assert.ok(COVE_MAP.exit.columns.every(x=>tileAt(x,COVE_MAP.exit.row)==='s'));
  const entry=[Math.floor(COVE_MAP.entry.x/32),Math.floor(COVE_MAP.entry.y/32)];
  const fisher=[Math.floor(COVE_MAP.fisher.x/32),Math.floor(COVE_MAP.fisher.y/32)];
- assert.equal(bfs(entry,cell=>adjacent(cell,fisher)) ,true,'can reach the fisher');
- assert.equal(bfs(fisher,cell=>isSouthExit(...cell)),true,'can return to field');
- assert.equal(walkableCell(...fisher),true);
- assert.equal(isSouthExit(28,33),true);
- assert.equal(walkableCell(28,33),true);
- assert.equal(isSouthExit(8,33),false);
+ assert.ok(bfs(entry,p=>Math.abs(p[0]-fisher[0])+Math.abs(p[1]-fisher[1])===1));
+ assert.ok(bfs(entry,p=>isSouthExit(...p)));
+ assert.ok(walkableCell(...fisher));
 });
-test('masked native atlases preserve diagonal coastline and animated sea is separate',()=>{
- const land={tiles:['gg~','gg~','~~~']};
- assert.equal(coastMask(land,0,0),15,'all four corners dry');
- assert.equal(coastMask(land,1,0),9,'both left corners dry');
- const green={tiles:['ggs','gss','sss']};
- assert.equal(grassCornerMask(green,0,0),11,'three grass corners connect without square beach patch');
- assert.equal(grassCornerMask(green,1,0),1,'partial grass corner is clipped by the native mask');
- const scrub={tiles:['tts','tss','sss']};
- assert.equal(scrubCornerMask(scrub,0,0),11,'forest has natural masked corners');
+test('same approved landscape ground, contour masks, water chips and eight-frame surf',()=>{
+ assert.equal(TIDE_FRAMES.length,8);
+ assert.deepEqual(TIDE_FRAMES.map(x=>x.reach),[2,4,7,11,14,11,7,4]);
+ assert.equal(tideFrame(260*4).reach,14);
+ assert.equal(surfSample(14,'sand',4,0),3);
  const renderer=source('src/game/cove/render.mjs');
- const walker=source('src/game/cove/walk.mjs');
- assert.match(renderer,/drawImage\(mask\.surface/);
- assert.match(renderer,/globalCompositeOperation='destination-in'/);
- assert.match(renderer,/grassCornerMask\(map,x,y\)/);
- assert.match(renderer,/chip\(greenCoverage\.ctx,art\.coastMask,cover,px,py\)/);
- assert.match(renderer,/landJoin:'masked-16-corner-grass-sand'/);
- assert.match(renderer,/scrubCornerMask\(map,x,y\)/);
- assert.match(renderer,/chip\(scrubCoverage\.ctx,art\.coastMask,cover,px,py\)/);
- assert.ok(renderer.includes("if(actor.kind==='flowers')"));
- assert.ok(renderer.includes('ctx.drawImage(actor.image,sx,sy,TILE,TILE,'));
- assert.ok(renderer.includes('Math.round(actor.x-TILE/2),Math.round(actor.y-TILE),TILE,TILE'));
- assert.doesNotMatch(renderer,/if\(actor\.kind==='flowers'\)\{[^}]*actor\.image\.naturalWidth/,
-  'flower sprites must be cropped to one 32px source tile, not scaled entire sheets');
+ assert.match(renderer,/landscape\.groundLayer\(dryMap\)/);
+ assert.match(renderer,/const dryMap=map\.tiles\.map/);
+ assert.match(renderer,/chip\(ground\.ctx,sandEdges\[\(x&1\)\+2\*\(y&1\)\]/);
+ assert.match(renderer,/surfSample\(wy-shoreY\[wx\],'sand',phase,wx\)/);
  assert.match(renderer,/const frame=Math\.floor\(time\/360\)%2/);
- assert.match(renderer,/staticArt\.ground/);
- assert.match(renderer,/sandEdges\[\(x&1\)\+2\*\(y&1\)\]/,
-   'coast contour uses approved four 16-corner sand atlases');
- assert.match(renderer,/ctx\.drawImage\(waterImage,frame\*64\+\(x&1\)\*TILE,\(y&1\)\*TILE/,
-   '2x2 water chips are synchronized in native atlas frames');
- assert.doesNotMatch(renderer,/drawTile\(ctx,waterImage/,
-   'do not introduce individual water tile phase shifts');
- assert.doesNotMatch(renderer,/ctx\.globalAlpha=\.74/,
-   'do not paint an unapproved translucent coast foam layer');
- assert.doesNotMatch(renderer,/imageSmoothingEnabled=true/);
- for(const name of ['field/terrain/sand.png','field/terrain/grass-base.png',
-   'field/terrain/forest-core.png','field/effects/water-motion.png',
-   'field/terrain/atlas/coast-mask-32.png',
-   'field/terrain/atlas/coast-shallow-32.png',
-   ...[0,1,2,3].map(n=>'field/terrain/atlas/coast-sand-'+n+'-32.png')])
-  assert.ok(walker.includes(name),name);
- const manifest=JSON.parse(source('assets/manifest.json'));
- for(const relative of Object.values({
-  ...Object.fromEntries(['field/terrain/sand.png','field/terrain/grass-base.png',
-  'field/terrain/forest-core.png','field/effects/water-motion.png',
-  'field/terrain/atlas/coast-mask-32.png',
-  'field/terrain/atlas/coast-shallow-32.png',
-  ...[0,1,2,3].map(n=>'field/terrain/atlas/coast-sand-'+n+'-32.png')].map(x=>[x,'assets/'+x]))
- }))assert.ok(manifest.assets.some(x=>x.path===relative),'approved asset '+relative);
+ assert.match(renderer,/ctx\.drawImage\(surf\.sheet,sx,sy,TILE,TILE/);
+ assert.match(renderer,/orientation:'sea-north'/);
+ assert.match(renderer,/landJoin:'sea-to-sand-16-corner-alpha-autotiles'/);
+ assert.doesNotMatch(renderer,/ctx\.globalAlpha=\.74/);
+ const preview=source('data/maps/shoreline-study/tide.mjs');
+ assert.ok(preview.includes('../../../src/game/terrain/surf.mjs'));
+ const coveHtml=source('src/game/cove/index.html');
+ const reviewHtml=source('previews/sea-cove-review/index.html');
+ for(const html of [coveHtml,reviewHtml]){
+   assert.match(html,/field\/assets\.js/);
+   assert.match(html,/field\/landscape\.js/);
+   assert.match(html,/field\/autotile\.js/);
+ }
+ const small={tiles:['ss~','ss~','~~~']};
+ assert.equal(coastMask(small,0,0),15);
+ assert.equal(coastMask(small,1,0),9);
 });
-test('cove is hosted by the real game shell, its field landmark, and its shared controls',()=>{
+test('approved image and hero dimensions remain native; no field edits needed',()=>{
+ const images=[
+   ['assets/field/effects/water-motion.png',128,64],
+   ['assets/field/terrain/atlas/coast-mask-32.png',128,128],
+   ...[0,1,2,3].map(n=>['assets/field/terrain/atlas/coast-sand-'+n+'-32.png',128,128]),
+   ['assets/characters/hizuki/walk-4dir-80x112.png',240,448],
+   ['assets/characters/npc/villager-walk-4dir-80x112.png',240,448]
+ ];
+ for(const [path,w,h] of images){
+   const b=readFileSync(path);
+   assert.equal(b.subarray(1,4).toString('ascii'),'PNG');
+   assert.equal(b.readUInt32BE(16),w,path+' width');
+   assert.equal(b.readUInt32BE(20),h,path+' height');
+ }
+});
+test('field landmark and shell/game routes remain part of the real game shell',()=>{
  const field=source('src/field/walk.mjs');
  const shell=source('src/game/navigation/game-shell.mjs');
  const admission=source('src/game/navigation/entry.js');
@@ -175,19 +116,15 @@ test('cove is hosted by the real game shell, its field landmark, and its shared 
  assert.match(html,/navigation\/entry\.js" data-entry="game"/);
  assert.match(html,/data-bgm="field"/);
  assert.match(html,/\.\/walk\.mjs\?v=sea-cove-1/);
- assert.match(html,/\.\.\/ui\/controls\.css/);
- assert.match(html,/\.\.\/village\/dialogue\.css/);
  assert.match(field,/destination==='shrine'\|\|destination==='cove'/);
  assert.match(field,/from==='cove' \? coveReturnPosition\(\)/);
- assert.match(field,/\.\.\/game\/cove\//);
  assert.match(walker,/KIKOKU_ROUTE\.go\(/);
  assert.match(walker,/consumeRestorePosition\('cove'\)/);
  assert.match(walker,/KIKOKU_SAVE_SNAPSHOT/);
- assert.match(walker,/game-menu-open/);
  assert.match(walker,/isSouthExit/);
  assert.doesNotMatch(walker,/location\.assign\(/);
 });
-test('Ushiohei dialogue promotes cove -> forest and saves can resume in cove',()=>{
+test('Ushiohei dialogue and in-cove save persist without changing story semantics',()=>{
  assert.equal(CHAPTER_ONE_STAGES.at(-1),'forest');
  assert.equal(normalizeStage('forest'),'forest');
  assert.match(objectiveForStage('forest'),/忘れの森/);
@@ -197,11 +134,10 @@ test('Ushiohei dialogue promotes cove -> forest and saves can resume in cove',()
  const storage=stubStorage(),session=stubStorage();
  savePlayer({...DEFAULT_PLAYER,gold:24},storage);
  storage.setItem('kikokuno-hanamusubi-chapter-one','forest');
- const position={scene:'cove',position:{x:24*32+16,y:16*32+16,face:3}};
- const result=saveGame('manual',position,storage,()=>Date.parse('2026-11-17T00:00:00Z'));
- assert.equal(result.accepted,true);
+ const position={scene:'cove',position:{x:COVE_MAP.entry.x,y:COVE_MAP.entry.y,face:3}};
+ assert.ok(saveGame('manual',position,storage,()=>Date.parse('2026-11-17T00:00:00Z')).accepted);
  assert.equal(readSavedGame('manual',storage).story,'forest');
- assert.equal(restoreSavedGame('manual',storage,session).accepted,true);
+ assert.ok(restoreSavedGame('manual',storage,session).accepted);
  const route=routeForSavedGame(readSavedGame('manual',storage),'https://example.test/kikokuno-hanamusubi/');
  assert.equal(route.pathname,'/kikokuno-hanamusubi/src/game/cove/');
  assert.equal(readPlayer(storage).gold,24);

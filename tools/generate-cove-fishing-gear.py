@@ -2,7 +2,7 @@
 """Create native RGBA pixel-art fishing gear for the sea cove.
 
 Only author-designed geometry is used. Palette/scale follow approved village
-sprites (roof thatch, 32px barrels, 80x112 NPCs), with late-SFC-era sparse
+sprites (390x357 thatch, 80x112 NPCs and native village props), with late-SFC-era sparse
 clusters, dark outlines, warm rope highlights and muted blue-green net twine.
 No external imagery, packages or services are involved.
 """
@@ -83,101 +83,110 @@ class Art:
 
 
 def drying_rack():
-    a=Art(192,150)
-    # Non-blocking translucent cast shadow at the sand contact points.
-    a.oval(94,141,87,6,SHADOW)
-    # Sagging hanging net: lattice first, then structural poles in foreground.
-    def top(x):return 40+int(8*math.sin(math.pi*(x-28)/136))
-    def bottom(x):return 109+int(12*math.sin(math.pi*(x-28)/136))
-    for x in range(29,165):
-        t,b=top(x),bottom(x)
-        for y in range(t,b):
-            if (x+y)%17<2 or (x-y)%17<2:
-                color=NET_LIT if (x+y)//17%4==0 else NET
-                a.dot(x,y,color)
-            elif (x*3+y*7)%39==0:
+    """Human-height working net: timber 12px wide and a deliberately coarse mesh.
+
+    Village 390x357 thatched cottage and 80x112 people are the physical
+    reference. The mesh uses 20px knots with 3px yarn, not single pixels.
+    """
+    a=Art(232,176)
+    a.oval(116,163,107,7,SHADOW)
+    def top(x):return 50+int(8*math.sin(math.pi*(x-35)/162))
+    def bottom(x):return 125+int(9*math.sin(math.pi*(x-35)/162))
+    # Subdued cloth shadows, not thousands of noisy standalone dots.
+    for x in range(35,198):
+        for y in range(top(x),bottom(x)):
+            lattice=(x+y)%20<3 or (x-y)%20<3
+            if lattice:
+                c=NET_LIT if ((x//20+y//20)%5)==0 else NET_DARK
+                a.dot(x,y,c)
+            elif (x//14+y//13)%13==0 and x%3<2 and y%3<2:
                 a.dot(x,y,NET_SHADE)
-    # Rope selvage across the top and bottom edge of the net.
-    for x in range(28,164):
-        a.dot(x,top(x),ROPE_LIGHT if x%7<3 else ROPE)
-        a.dot(x,bottom(x),NET_DARK if x%9<4 else ROPE_DARK)
-        if x%19==0:
-            a.rect(x-1,top(x)-1,x+2,top(x)+3,ROPE)
-            a.rect(x-1,bottom(x)-1,x+2,bottom(x)+3,ROPE_DARK)
-    # Drooping bunches/weights, staggered to break any tile-like regularity.
-    for x in (42,70,102,136,157):
+    # Coarse rope-bound perimeter, with visible weights and knots.
+    for x in range(34,199):
+        for j in range(3):
+            a.dot(x,top(x)+j,ROPE if x%23<12 else ROPE_DARK)
+            a.dot(x,bottom(x)+j,NET_DARK)
+        if (x-36)%20==0:
+            a.rect(x-3,top(x)-2,x+5,top(x)+5,ROPE_DARK)
+            a.rect(x-1,top(x)-1,x+3,top(x)+2,ROPE_LIGHT)
+            a.rect(x-2,bottom(x)-2,x+4,bottom(x)+4,ROPE_DARK)
+    for x in (51,83,116,151,186):
         y=bottom(x)
-        a.line(x-1,y,x+1,y+6,ROPE_DARK,2)
-        a.rect(x-4,y+6,x+5,y+10,WOOD_DARK)
-        a.rect(x-3,y+6,x+3,y+8,WOOD_GOLD)
-    # Long pole braces and substantial dark contour.
-    a.line(24,28,17,133,WOOD_DARK,10)
-    a.line(24,26,19,131,WOOD,6)
-    a.line(22,28,22,115,WOOD_LIT,2)
-    a.line(168,25,175,134,WOOD_DARK,10)
-    a.line(168,27,172,132,WOOD,6)
-    a.line(169,30,172,111,WOOD_LIT,2)
-    a.line(18,34,174,30,WOOD_DARK,11)
-    a.line(18,30,174,26,WOOD,7)
-    a.line(24,28,169,25,WOOD_GOLD,2)
-    for x in (29,73,119,158):
-        y=round(27+(x-29)*(25-27)/(169-29))
-        a.rect(x-2,y,x+4,y+5,ROPE_DARK)
-        a.rect(x-1,y+1,x+3,y+3,ROPE_LIGHT)
-    # Floats tied to the top cord, irregular and expressive rather than circles.
-    for x,y in ((46,36),(91,38),(139,36)):
-        a.oval(x,y+3,7,6,WOOD_DARK)
-        a.oval(x,y+2,5,5,FLOAT)
-        a.rect(x-2,y-2,x+1,y+1,FLOAT_LIT)
-        a.line(x,y-4,x,y-8,ROPE,2)
+        a.line(x,y+2,x+2,y+10,ROPE_DARK,3)
+        a.rect(x-5,y+8,x+7,y+14,WOOD_DARK)
+        a.rect(x-3,y+8,x+4,y+11,WOOD_GOLD)
+    # Strong angular timbers, same visual weight as village posts.
+    a.line(28,31,23,158,WOOD_DARK,14)
+    a.line(28,31,23,156,WOOD,10)
+    a.line(26,35,25,145,WOOD_LIT,3)
+    a.line(203,29,211,159,WOOD_DARK,14)
+    a.line(202,30,209,157,WOOD,10)
+    a.line(204,35,209,145,WOOD_LIT,3)
+    a.line(20,39,213,35,WOOD_DARK,14)
+    a.line(20,34,213,30,WOOD,9)
+    a.line(26,31,206,28,WOOD_GOLD,3)
+    for x in (42,90,145,195):
+        y=31-(x-42)//65
+        a.rect(x-4,y-2,x+6,y+7,ROPE_DARK)
+        a.rect(x-1,y,x+4,y+3,ROPE_LIGHT)
+    # Cork floats, large enough to read as fishing gear at PSP resolution.
+    for x,y in ((58,46),(113,47),(174,46)):
+        a.line(x,y-4,x,y-14,ROPE_DARK,3)
+        a.oval(x,y+4,10,8,WOOD_DARK)
+        a.oval(x,y+2,8,6,FLOAT)
+        a.rect(x-4,y-2,x+2,y+2,FLOAT_LIT)
     return a
 
 
 def rolled_net():
-    a=Art(112,66)
-    a.oval(56,57,51,7,SHADOW)
-    # Irregular rolled net, with dark folded lower lip.
-    a.oval(57,43,46,17,WOOD_DARK)
-    a.oval(55,39,47,17,NET_DARK)
-    a.oval(54,34,43,15,NET)
-    a.oval(56,31,41,12,NET_LIT)
-    for y in range(20,54):
-        for x in range(11,101):
-            if ((x-56)/47)**2+((y-36)/19)**2>1:continue
-            if (x+y)%10<2 or (x-y)%10<2:
-                a.dot(x,y,ROPE if (x*5+y)%6<3 else NET_DARK)
-            if (x*7+y*11)%47==1:
-                a.rect(x,y,x+2,y+1,ROPE_LIGHT)
-    for x in (22,43,69,89):
-        a.line(x,21+abs(55-x)//8,x+4,53-abs(55-x)//8,ROPE_DARK,3)
-        a.line(x+2,24+abs(55-x)//8,x+4,48-abs(55-x)//8,ROPE_LIGHT,1)
-    a.line(17,43,29,55,ROPE_DARK,3)
-    a.line(83,18,96,29,ROPE,3)
+    """Large folded net in compact layers, with cords legible beside a 16px barrel."""
+    a=Art(146,88)
+    a.oval(72,76,64,8,SHADOW)
+    # Solid, readable volume, not a noisy 1px scribble.
+    a.oval(73,54,61,24,WOOD_DARK)
+    a.oval(73,50,59,24,NET_DARK)
+    a.oval(69,45,56,22,NET)
+    a.oval(67,41,51,19,NET_LIT)
+    for y in range(25,77):
+        for x in range(15,132):
+            if ((x-72)/61)**2+((y-49)/26)**2>1:continue
+            if (x+y)%15<3 or (x-y)%15<3:
+                a.rect(x,y,x+2,y+2,NET_DARK if (x//15+y//15)%4 else ROPE)
+    # Three broad turns hold the net together; the cord is not pixel-thin.
+    for x in (32,72,114):
+        offset=abs(73-x)//10
+        a.line(x-5,29+offset,x+9,72-offset,ROPE_DARK,6)
+        a.line(x-3,29+offset,x+9,67-offset,ROPE_LIGHT,3)
+    a.line(18,53,31,71,ROPE_DARK,4)
+    a.line(113,29,135,39,ROPE,5)
+    a.line(118,29,132,35,ROPE_LIGHT,2)
     return a
 
 
 def rope_coil():
-    a=Art(68,50)
-    a.oval(35,44,31,5,SHADOW)
-    # Loops made of segmented pixel ropes with a dark shade under each run.
+    """Thicker rope loops at a physical size coherent with the original barrel."""
+    a=Art(88,62)
+    a.oval(44,54,39,6,SHADOW)
     for ring in range(3):
-        cy=28-ring*3
-        rx=23-ring*5
-        ry=11-ring*2
-        for theta in range(0,360,3):
-            x=34+int(rx*math.cos(math.radians(theta)))
+        cx,cy=44,36-ring*5
+        rx=30-ring*7
+        ry=13-ring*3
+        for theta in range(0,360,5):
+            x=cx+int(rx*math.cos(math.radians(theta)))
             y=cy+int(ry*math.sin(math.radians(theta)))
-            a.rect(x-2,y-1,x+2,y+3,WOOD_DARK)
-            a.rect(x-1,y-2,x+2,y+1,ROPE if theta%19>6 else ROPE_LIGHT)
-    a.line(49,25,61,30,ROPE_DARK,4)
-    a.line(49,23,60,28,ROPE_LIGHT,2)
-    a.rect(18,35,23,39,ROPE_DARK)
+            a.rect(x-3,y-1,x+3,y+4,ROPE_DARK)
+            a.rect(x-2,y-2,x+2,y+2,ROPE_LIGHT if (theta//30)%3==0 else ROPE)
+    a.line(62,27,80,39,ROPE_DARK,7)
+    a.line(61,25,79,36,ROPE_LIGHT,4)
+    a.rect(19,42,28,48,ROPE_DARK)
+    a.rect(21,43,26,45,HIGHLIGHT)
     return a
 
 
+
 for name,art in (
-    ('net-drying-rack-192x150.png',drying_rack()),
-    ('net-bundle-112x66.png',rolled_net()),
-    ('rope-coil-68x50.png',rope_coil())
+    ('net-drying-rack-232x176.png',drying_rack()),
+    ('net-bundle-146x88.png',rolled_net()),
+    ('rope-coil-88x62.png',rope_coil())
 ):
     art.png(DEST/name)

@@ -1,0 +1,39 @@
+name: Build Ushiohei fisherman spritesheet
+on:
+  push:
+    branches: [feature/ushiohei-fisher-sprite]
+    paths:
+      - tools/generate-ushiohei-sprite.py
+      - .github/workflows/build-ushiohei-sprite.yml
+permissions:
+  contents: write
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate native sprite from approved male NPC
+        run: |
+          python3 tools/generate-ushiohei-sprite.py
+          python3 - <<'PY'
+          from pathlib import Path
+          import struct
+          p=Path('assets/characters/npc/ushiohei-walk-4dir-80x112.png')
+          d=p.read_bytes()
+          assert d[:8]==b'\x89PNG\r\n\x1a\n' and struct.unpack_from('>II',d,16)==(240,448)
+          print('Validated:',p,p.stat().st_size,'bytes')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ushiohei-sprite-preview
+          path: assets/characters/npc/ushiohei-walk-4dir-80x112.png
+          if-no-files-found: error
+      - name: Save candidate sprite into this working branch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/characters/npc/ushiohei-walk-4dir-80x112.png
+          if ! git diff --cached --quiet; then
+            git commit -m "Generate Ushiohei 4-direction fisherman candidate image"
+            git push origin HEAD:feature/ushiohei-fisher-sprite
+          fi

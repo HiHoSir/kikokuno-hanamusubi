@@ -103,7 +103,10 @@ try{
    'the exact 30-column approved shoreline was copied');
  assert.equal(initial.surf.sceneryNativeCount,3,
    'approved three native-sized rocks are preserved');
- assert.ok(initial.surf.tileCount>=25,'entire authored cove coast is covered by surf chips');
+ assert.equal(initial.surf.tileCount,58,
+   'the approved shoreline study animates exactly 58 edge and beach chips');
+ assert.equal(initial.position.position.y,432,
+   'the original accepted player position (and camera composition) must not shift');
  assert.equal(initial.surf.atlas[0]%32,0);
  assert.equal(initial.surf.atlas[1]%32,0);
  assert.ok(initial.surf.coverage[4].washedPixels>
@@ -202,7 +205,8 @@ try{
  });
  assert.ok(cssFit.every(d=>d<2),'mobile preview canvas must not overflow/crop');
 
- assert.ok(surf.tileCount>=25);
+ assert.equal(surf.tileCount,58,'Pages view must animate ALL approved shoreline chips');
+ assert.equal(reviewInitial.y,432,'Pages camera must match accepted shoreline composition');
  const before=await review.screenshot({path:'artifacts/sea-cove-pages-review-start.png'});
  await review.waitForTimeout(600);
  const reviewAfter=await review.screenshot({path:'artifacts/sea-cove-pages-review-wave.png'});

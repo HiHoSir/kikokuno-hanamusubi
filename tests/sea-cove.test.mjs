@@ -49,6 +49,8 @@ test('production cove replaces its terrain with the APPROVED 30-column coastline
  assert.equal(COVE_MAP.objects.filter(o=>o.kind==='flowers').length,0,
    'do not introduce unreviewed flowers and woods on the beach');
  assert.ok(walkablePoint(COVE_MAP.entry.x,COVE_MAP.entry.y));
+ assert.deepEqual([COVE_MAP.entry.x,COVE_MAP.entry.y],[336,432],
+   'do not shift the approved starting view one tile upward');
  assert.equal(tileAt(0,0),'~');
  assert.equal(walkableCell(29,20),false);
 });

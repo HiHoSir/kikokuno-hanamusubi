@@ -21,7 +21,7 @@ const nativeRocks=SCENERY.map(rock=>Object.freeze({
 export const COVE_MAP=Object.freeze({
  id:'sea-cove',name:'海の入り江',tileSize:COVE_TILE_SIZE,
  width:COVE_WIDTH,height:COVE_HEIGHT,tiles,
- entry:Object.freeze({x:10*32+16,y:12*32+16,face:1}),
+ entry:Object.freeze({x:10*32+16,y:13*32+16,face:1}),
  exit:Object.freeze({row:COVE_HEIGHT-1,columns:Object.freeze([9,10,11])}),
  fisher:Object.freeze({id:'ushiohei',name:'潮平',x:16*32+16,y:12*32+16,face:3}),
  // Keep NPC life on the sand, but never paint unrelated forests over the

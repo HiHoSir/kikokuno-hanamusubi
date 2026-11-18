@@ -1,7 +1,7 @@
 name: Village storefront signage browser QA
 on:
   push:
-    branches: [main]
+    branches: [main, fix/village-shop-qa-after-world-scale]
     paths:
       - 'data/maps/hozuki-village/scene.json'
       - 'assets/village/scene/sign-*.png'

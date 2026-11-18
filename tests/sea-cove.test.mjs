@@ -80,10 +80,12 @@ test('fisher homestead uses new southern sand; native assets; no blocked field r
  assert.equal(net.kind,'netRack');
  assert.equal(bundle.kind,'netBundle');
  assert.equal(rope.kind,'ropeCoil');
- assert.deepEqual([house.x,house.y],[280,1140]);
- assert.deepEqual([net.x,net.y],[1010,1050]);
+ assert.deepEqual([house.x,house.y],[660,1063]);
+ assert.deepEqual([net.x,net.y],[1050,1050]);
  assert.ok(house.collision.top>22*32,'the house must not overlap any old terrain rows');
  assert.ok(net.collision.top>22*32,'net stays in new area');
+ assert.ok(house.collision.right<net.collision.left-40,
+   'retain at least one clear walking corridor between home and drying rack');
  assert.ok(COVE_MAP.objects.some(o=>o.kind==='crate'));
  assert.ok(COVE_MAP.objects.filter(o=>o.kind==='barrel').length>=2);
  const walker=source('src/game/cove/walk.mjs');

@@ -68,6 +68,20 @@ try{
  assert.equal(initial.position.scene,'cove');
  assert.equal(initial.waterVisible,true,'first view includes the moving sea, not only grass');
  assert.ok(initial.canvas[0]>0&&initial.canvas[1]>0);
+ // A drawing buffer can be 2x the CSS viewport on Retina devices, but the
+ // canvas ELEMENT itself must never be 2x the display area (hero cut-off).
+ const realCanvasFit=await page.evaluate(()=>{
+   const doc=document.querySelector('#game-scene').contentDocument;
+   const c=doc.querySelector('#scene').getBoundingClientRect();
+   const v=doc.querySelector('.viewport').getBoundingClientRect();
+   return {widthDifference:Math.abs(c.width-v.width),
+     heightDifference:Math.abs(c.height-v.height),
+     leftDifference:Math.abs(c.left-v.left),
+     topDifference:Math.abs(c.top-v.top)};
+ });
+ assert.ok(Object.values(realCanvasFit).every(n=>n<2),
+   'canvas CSS bounds must match viewport; Retina backing pixels are not CSS pixels');
+
  assert.equal(initial.menuVisible,true);
  assert.equal(initial.shells.completedBattles,5);
  assert.ok(initial.shells.available>=1&&initial.shells.available<=3,
@@ -171,6 +185,14 @@ try{
  const reviewInitial=await review.evaluate(()=>window.KIKOKU_SAVE_SNAPSHOT().position);
  const surf=await review.evaluate(()=>window.__COVE_SURF_QA());
  assert.equal(surf.frames,8);
+ const cssFit=await review.evaluate(()=>{
+   const c=document.querySelector('#scene').getBoundingClientRect();
+   const v=document.querySelector('.viewport').getBoundingClientRect();
+   return [Math.abs(c.width-v.width),Math.abs(c.height-v.height),
+     Math.abs(c.left-v.left),Math.abs(c.top-v.top)];
+ });
+ assert.ok(cssFit.every(d=>d<2),'mobile preview canvas must not overflow/crop');
+
  assert.ok(surf.tileCount>=25);
  const before=await review.screenshot({path:'artifacts/sea-cove-pages-review-start.png'});
  await review.waitForTimeout(600);

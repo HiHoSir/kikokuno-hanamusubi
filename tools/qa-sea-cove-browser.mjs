@@ -220,12 +220,13 @@ try{
  assert.deepEqual(hamlet.assets.netRack,{width:192,height:150});
  assert.deepEqual(hamlet.assets.netBundle,{width:112,height:66});
  assert.deepEqual(hamlet.assets.ropeCoil,{width:68,height:50});
- assert.equal(hamlet.blockedByProp(280,1000),true,
-   'house roof and facade have collision');
- assert.equal(hamlet.blockedByProp(1010,1000),true,
-   'hanging net has collision');
- assert.equal(hamlet.blockedByProp(336,432),false,
-   'approved player spawn is free');
+ const blocks=await review.evaluate(()=>[
+   window.__COVE_HAMLET_QA.blockedByProp(280,1000),
+   window.__COVE_HAMLET_QA.blockedByProp(1010,1000),
+   window.__COVE_HAMLET_QA.blockedByProp(336,432)
+ ]);
+ assert.deepEqual(blocks,[true,true,false],
+   'roof/net should block walking but approved spawn must remain free');
  assert.equal(reviewInitial.y,432,'Pages camera must match accepted shoreline composition');
  // Pixel-level visual regression: compare an untouched 300x65 dry-sand
  // rectangle in the production-cove canvas with the APPROVED study canvas.

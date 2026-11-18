@@ -58,8 +58,8 @@ try{
    const frame=document.querySelector('#game-scene'),child=frame.contentWindow;
    const position=child.KIKOKU_SAVE_SNAPSHOT();
    const canvas=child.document.querySelector('#scene');
-   const height=child.document.querySelector('.viewport').clientHeight/1.18;
-   const cameraY=Math.max(0,Math.min(22*32-height,position.position.y-height/2-106));
+   const height=child.document.querySelector('.viewport').clientHeight/0.5;
+   const cameraY=Math.max(0,Math.min(44*32-height,position.position.y-height/2-106));
    return {label:frame.title,position,canvas:[canvas.width,canvas.height],
      topWorldY:cameraY,waterVisible:cameraY<9*32,
      menuVisible:!document.querySelector('#field-menu-toggle').hidden,
@@ -120,7 +120,7 @@ try{
  assert.equal(initial.surf.tileCount,78,
    'the extended 42-column beach uses 78 connected animated shore chips');
  assert.equal(initial.position.position.y,432,
-   'the original accepted player position (and camera composition) must not shift');
+   'approved world spawn stays unchanged even at the shared non-field zoom');
  assert.equal(initial.surf.atlas[0]%32,0);
  assert.equal(initial.surf.atlas[1]%32,0);
  assert.ok(initial.surf.coverage[4].washedPixels>
@@ -224,10 +224,10 @@ try{
  assert.equal(surf.expandedCoastline,42);
  const hamlet=await review.evaluate(()=>window.__COVE_HAMLET_QA);
  assert.deepEqual(hamlet.bounds,[42,44]);
- assert.equal(await review.evaluate(()=>window.__COVE_HAMLET_QA.cameraZoomAt(432)),1.18,
-   'original approved camera zoom must not change');
- assert.ok(await review.evaluate(()=>window.__COVE_HAMLET_QA.cameraZoomAt(1050))<=0.66,
-   'fishing worksite camera must reveal whole house and net without rescaling art');
+ for(const y of [432,600,704,850,1050,1250]){
+   assert.equal(await review.evaluate(y=>window.__COVE_HAMLET_QA.cameraZoomAt(y),y),0.5,
+     'non-field camera scale must stay identical throughout cove, y='+y);
+ }
  assert.deepEqual(hamlet.assets.fisherHouse,{width:390,height:357});
  assert.deepEqual(hamlet.assets.netRack,{width:192,height:150});
  assert.deepEqual(hamlet.assets.netBundle,{width:112,height:66});
@@ -239,27 +239,38 @@ try{
  ]);
  assert.deepEqual(blocks,[true,true,false],
    'roof/net should block walking but approved spawn must remain free');
- assert.equal(reviewInitial.y,432,'Pages camera must match accepted shoreline composition');
- // Pixel-level visual regression: compare an untouched 300x65 dry-sand
- // rectangle in the production-cove canvas with the APPROVED study canvas.
- // Both use the same 874x402 CSS viewport, DPR=2, camera and start position.
- // This is stronger than "the sea animates": it catches shifts, scaling
- // and accidental texture substitutions even when all gameplay tests pass.
- const sampleApprovedSand=async page=>page.evaluate(()=>{
-   const pixels=document.querySelector('#scene').getContext('2d')
-     .getImageData(400,360,300,65).data;
-   return Array.from(pixels);
+ assert.equal(reviewInitial.y,432,'approved shoreline world spawn must not shift');
+ // Check the approved SAND TEXTURE IN WORLD COORDINATES, rather than
+ // assuming the old standalone study and the game share screen zoom.
+ // The study remains untouched; only the screen scale is standardized.
+ const nativeSandParity=await review.evaluate(async()=>{
+   const [{COVE_MAP},{prepareCoveArt}]=await Promise.all([
+     import('../../data/maps/sea-cove/scene.mjs?v=hamlet-1'),
+     import('../../src/game/cove/render.mjs?v=hamlet-1')
+   ]);
+   const root=new URL('../../assets/field/terrain/atlas/',location.href);
+   const ids={coastMask:'coast-mask-32.png',
+     coastSand0:'coast-sand-0-32.png',coastSand1:'coast-sand-1-32.png',
+     coastSand2:'coast-sand-2-32.png',coastSand3:'coast-sand-3-32.png'};
+   const art=Object.fromEntries(await Promise.all(Object.entries(ids)
+     .map(async([id,file])=>{
+       const bitmap=new Image();bitmap.src=new URL(file,root).href;
+       await bitmap.decode();return [id,bitmap];
+     })));
+   const painted=prepareCoveArt(COVE_MAP,art).ground;
+   const original=COVE_MAP.tiles.map(row=>Array.from(row,()=> 'sand'));
+   original.paths=[];original.decorations=[];original.projectedHeights=false;
+   original.referencePlacedObjects=true;original.bridgeWaterCells=new Set();
+   original.textureOrigin={x:0,y:0};
+   const approvedTexture=window.YK_LANDSCAPE.groundLayer(original);
+   const pixels=surface=>surface.getContext('2d')
+     .getImageData(320,530,64,64).data;
+   const result=pixels(painted),expected=pixels(approvedTexture);
+   return {same:result.every((v,i)=>v===expected[i]),count:result.length/4};
  });
- const productionSand=await sampleApprovedSand(review);
- const baseline=await browser.newPage({viewport:{width:874,height:402},
-   deviceScaleFactor:2,isMobile:true,hasTouch:true});
- await baseline.goto('http://127.0.0.1:'+server.address().port+
-   '/previews/shoreline-study/',{waitUntil:'domcontentloaded'});
- await baseline.waitForFunction(()=>window.__SHORE_QA?.ready===true,null,{timeout:40000});
- const approvedSand=await sampleApprovedSand(baseline);
- assert.deepEqual(productionSand,approvedSand,
-   'visible cove sand pixels must match the user-approved shoreline preview');
- await baseline.close();
+ assert.equal(nativeSandParity.count,4096);
+ assert.equal(nativeSandParity.same,true,
+   'approved native sand tiles must match in world pixels regardless of viewport zoom');
  const before=await review.screenshot({path:'artifacts/sea-cove-pages-review-start.png'});
  await review.waitForTimeout(600);
  const reviewAfter=await review.screenshot({path:'artifacts/sea-cove-pages-review-wave.png'});

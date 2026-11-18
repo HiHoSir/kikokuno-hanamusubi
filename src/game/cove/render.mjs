@@ -86,7 +86,10 @@ export function prepareCoveSurf(map,shoreMask){
    const edge=shoreY[x];if(edge<0)continue;
    for(let y=edge;y<Math.min(pixelHeight,edge+18);y++){
      const tx=Math.floor(x/TILE),ty=Math.floor(y/TILE);
-     if(tileAt(tx,ty,map)!=='s')continue;
+     // Do not reject shoreline-edge cells by their coarse terrain label.
+     // The 16-corner alpha mask already clips surf to real dry pixels.
+     // The accepted shoreline study includes these partial sea-labelled
+     // cells; dropping them removed 13 animated chips at the waterline.
      const key=tx+','+ty;
      if(!slots.has(key))slots.set(key,{x:tx,y:ty});
    }

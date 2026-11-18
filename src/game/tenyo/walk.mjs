@@ -2,6 +2,7 @@
 // sprites, and collision are shared; only game input/story wiring is local.
 import {bindDialogue} from '../village/dialogue.mjs';
 import {residentInFront} from '../village/residents.mjs';
+import {pixelViewport,NON_FIELD_CAMERA_ZOOM} from '../village/render.mjs';
 import {readStoryStage,advanceStoryStage,objectiveForStage} from '../story/chapter-one.mjs';
 import {consumeRestorePosition} from '../save/save-game.mjs?v=save-slots-1';
 
@@ -16,7 +17,7 @@ const directions={down:[0,1,0,'d'],up:[0,-1,1,'u'],right:[1,0,2,'r'],left:[-1,0,
 const keys={ArrowDown:'down',ArrowUp:'up',ArrowRight:'right',ArrowLeft:'left',s:'down',w:'up',d:'right',a:'left'};
 const facing=['d','u','r','l'];
 const input=new Map();
-const SPEED_MS=156,ZOOM=1.4,VIEWPORT_EDGE=768;
+const SPEED_MS=156;
 let pendingInput=null;
 
 function setInput(id,direction){
@@ -168,11 +169,14 @@ async function start(){
       dir:state.dir,frame:[1,0,1,2][Math.min(3,Math.floor(t*4))],
     };
   }
+  // Use the SAME world-to-screen scale as village, interiors and cove.
+  // Unlike the older fixed-768px backing buffer, this is DPR-independent.
+  let cameraStep=1;
   function resize(){
     const {clientWidth,clientHeight}=scene.parentElement;
-    const scale=VIEWPORT_EDGE/Math.max(clientWidth,clientHeight,1);
-    const width=Math.max(1,Math.round(clientWidth*scale));
-    const height=Math.max(1,Math.round(clientHeight*scale));
+    const {step,width,height}=pixelViewport(clientWidth,clientHeight,
+      globalThis.devicePixelRatio??1,NON_FIELD_CAMERA_ZOOM);
+    cameraStep=step;
     if(scene.width===width&&scene.height===height)return;
     scene.width=width;
     scene.height=height;
@@ -186,10 +190,13 @@ async function start(){
       lighting:true,reflections:true,atmosphere:true,depthOfField:true,
     });
     const width=scene.width,height=scene.height;
-    const worldPixelsPerPixel=VIEWPORT_EDGE/(Math.max(width,height)*ZOOM);
-    const viewWidth=width*worldPixelsPerPixel,viewHeight=height*worldPixelsPerPixel;
-    const cameraX=clamp((player.x+.5)*32-viewWidth/2,0,world.width-viewWidth);
-    const cameraY=clamp((player.y+.5)*32-viewHeight/2,0,world.height-viewHeight);
+    const viewWidth=width/cameraStep,viewHeight=height/cameraStep;
+    // Center maps smaller than the screen; never increase magnification
+    // to fill empty space, as that would change the character's size.
+    const cameraX=viewWidth>=world.width?(world.width-viewWidth)/2:
+      clamp((player.x+.5)*32-viewWidth/2,0,world.width-viewWidth);
+    const cameraY=viewHeight>=world.height?(world.height-viewHeight)/2:
+      clamp((player.y+.5)*32-viewHeight/2,0,world.height-viewHeight);
     ctx.setTransform(1,0,0,1,0,0);
     ctx.imageSmoothingEnabled=false;
     ctx.fillStyle='#13354e';ctx.fillRect(0,0,width,height);
@@ -260,6 +267,10 @@ async function start(){
   new ResizeObserver(resize).observe(scene.parentElement);
   render(performance.now());
   load.hidden=true;
+  window.__TENYO_CAMERA_QA=()=>({zoom:NON_FIELD_CAMERA_ZOOM,
+    step:cameraStep,
+    heroDisplayScale:map.game.heroDisplayScale??1,
+    frameSize:[80,112]});
   window.KIKOKU_SAVE_SNAPSHOT=()=>({scene:'tenyo',position:{x:state.x,y:state.y,face:state.face}});
   window.parent?.KIKOKU_GAME?.autosave?.(window);
   requestAnimationFrame(frame);

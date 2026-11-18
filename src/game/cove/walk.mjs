@@ -28,16 +28,11 @@ const inputs=new Map();
 const scenery={
  hero:'assets/characters/hizuki/walk-4dir-80x112.png',
  fisher:'assets/characters/npc/villager-walk-4dir-80x112.png',
- grass:'assets/field/terrain/grass-base.png',
- sand:'assets/field/terrain/sand.png',
- forest:'assets/field/terrain/forest-core.png',
  rocks:'assets/village/objects/rocks.png',
  basket:'assets/village/objects/basket.png',
  barrel:'assets/village/objects/barrel.png',
- flowers:'assets/field/objects/wildflowers.png',
  water:'assets/field/effects/water-motion.png',
  coastMask:'assets/field/terrain/atlas/coast-mask-32.png',
- coastShallow:'assets/field/terrain/atlas/coast-shallow-32.png',
  // Exact accepted shoreline-study atlas set: one connected coast chip from
  // the four existing 16-corner sand atlases, no newly drawn substitute.
  coastSand0:'assets/field/terrain/atlas/coast-sand-0-32.png',
@@ -88,18 +83,32 @@ async function start(){
  // Normalize and persist new five-fight batches in the canonical player save.
  let heroInventory=previewMode?readPlayer():savePlayer(readPlayer());
  let shells=coveVisibleShells(heroInventory);
- const images=Object.fromEntries(await Promise.all(
-  Object.entries(scenery).map(async([id,path])=>[id,await image(path)])));
- for(const id of ['grass','sand','forest','rocks','water']){
+ // The study's approved sand texture is painted by the existing field
+ // landscape engine. Load those same assets without changing field code.
+ const landscapeReady=new Promise((resolve,reject)=>{
+   const LAND=window.YK_LANDSCAPE,AUTO=window.YK_AUTOTILE;
+   if(!LAND?.load||!AUTO?.load){reject(Error('承認済み砂浜の描画基盤がありません'));return;}
+   const timeout=setTimeout(()=>reject(Error('承認済み砂浜の画像読込がタイムアウトしました')),25000);
+   const check=()=>{
+     const problems={...LAND.errors,...AUTO.errors};
+     if(Object.keys(problems).length){clearTimeout(timeout);reject(Error(JSON.stringify(problems)));return;}
+     if(LAND.ready()&&AUTO.ready()){clearTimeout(timeout);resolve();}
+   };
+   LAND.load(check);AUTO.load(check);check();
+ });
+ const [images]=await Promise.all([
+  Promise.all(Object.entries(scenery).map(async([id,path])=>[id,await image(path)]))
+    .then(entries=>Object.fromEntries(entries)),
+  landscapeReady
+ ]);
+ for(const id of ['rocks','water']){
   if(images[id].naturalWidth<32||images[id].naturalHeight<32)
    throw Error('32pxマップチップの寸法が不足しています: '+id);
  }
- for(const id of ['coastMask','coastShallow','coastSand0','coastSand1','coastSand2','coastSand3']){
+ for(const id of ['coastMask','coastSand0','coastSand1','coastSand2','coastSand3']){
   if(images[id].naturalWidth!==128||images[id].naturalHeight!==128)
    throw Error('海岸線の16チップアトラスが不正です: '+id);
  }
- if(images.flowers.naturalWidth<128||images.flowers.naturalHeight<128)
-   throw Error('野花の4×4マップチップ集を読み込めません');
  const {width,height,tileSize,fisher:site,entry}=COVE_MAP;
  const blocked=Uint8Array.from({length:width*height},(_,i)=>
    walkableCell(i%width,Math.floor(i/width))?0:1);
@@ -111,11 +120,14 @@ async function start(){
  // Native-sized objects remain separate from sand/grass tiles.
  const fishermen={...site,bitmap:images.fisher,distance:0,moving:false,
    lines:linesForFisher(readStoryStage())};
- const collisionObjects=COVE_MAP.objects.filter(o=>['basket','barrel'].includes(o.kind))
-  .map(o=>[o.x*tileSize+16,(o.y+1)*tileSize-10]);
+ const collisionObjects=COVE_MAP.objects
+   .filter(o=>['basket','barrel','rocks'].includes(o.kind))
+   .map(o=>({x:o.footPosition?o.x:o.x*tileSize+16,
+     y:o.footPosition?o.y:(o.y+1)*tileSize-10,
+     radius:o.kind==='rocks'?22:22}));
  const occupied=(px,py)=>
    Math.hypot(px-fishermen.x,py-fishermen.y)<24||
-   collisionObjects.some(([ox,oy])=>Math.hypot(px-ox,py-oy)<22);
+   collisionObjects.some(o=>Math.hypot(px-o.x,py-o.y)<o.radius);
  const restored=previewMode?null:consumeRestorePosition('cove');
  const usable=restored&&walk.canStand(restored.x,restored.y)&&!occupied(restored.x,restored.y);
  let x=usable?restored.x:entry.x,y=usable?restored.y:entry.y;
@@ -145,7 +157,7 @@ async function start(){
  const viewport={step:1,bufferWidth:1,bufferHeight:1};
  const resize=()=>{
    const parent=scene.parentElement;
-   const dims=pixelViewport(parent.clientWidth,parent.clientHeight,devicePixelRatio,.78);
+   const dims=pixelViewport(parent.clientWidth,parent.clientHeight,devicePixelRatio,1.18);
    scene.width=dims.width;scene.height=dims.height;
    viewport.step=dims.step;viewport.bufferWidth=dims.width;viewport.bufferHeight=dims.height;
  };
@@ -162,7 +174,7 @@ async function start(){
    if(!menuPaused&&!dialogue.active&&direction){
      const [dx,dy,row]=directions[direction];
      face=row;
-     const step=212*dt/1000;
+     const step=150*dt/1000;
      const [nx,ny]=walk.move(x,y,dx*step,dy*step,occupied);
      moving=Math.hypot(nx-x,ny-y)>.01;
      distance+=Math.hypot(nx-x,ny-y);

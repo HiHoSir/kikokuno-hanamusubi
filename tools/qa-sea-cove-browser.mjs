@@ -216,13 +216,17 @@ try{
  assert.equal(surf.expandedCoastline,42);
  const hamlet=await review.evaluate(()=>window.__COVE_HAMLET_QA);
  assert.deepEqual(hamlet.bounds,[42,44]);
+ assert.equal(await review.evaluate(()=>window.__COVE_HAMLET_QA.cameraZoomAt(432)),1.18,
+   'original approved camera zoom must not change');
+ assert.ok(await review.evaluate(()=>window.__COVE_HAMLET_QA.cameraZoomAt(1050))<=0.66,
+   'fishing worksite camera must reveal whole house and net without rescaling art');
  assert.deepEqual(hamlet.assets.fisherHouse,{width:390,height:357});
  assert.deepEqual(hamlet.assets.netRack,{width:192,height:150});
  assert.deepEqual(hamlet.assets.netBundle,{width:112,height:66});
  assert.deepEqual(hamlet.assets.ropeCoil,{width:68,height:50});
  const blocks=await review.evaluate(()=>[
-   window.__COVE_HAMLET_QA.blockedByProp(280,1000),
-   window.__COVE_HAMLET_QA.blockedByProp(1010,1000),
+   window.__COVE_HAMLET_QA.blockedByProp(660,1000),
+   window.__COVE_HAMLET_QA.blockedByProp(1050,1000),
    window.__COVE_HAMLET_QA.blockedByProp(336,432)
  ]);
  assert.deepEqual(blocks,[true,true,false],
@@ -268,11 +272,17 @@ try{
    await review.evaluate(k=>window.dispatchEvent(new KeyboardEvent('keyup',
      {key:k,bubbles:true,cancelable:true})),key);
  };
- await held('ArrowRight',3450);
+ await held('ArrowRight',3700);
  await held('ArrowDown',4050);
  const hamletView=await review.evaluate(()=>window.KIKOKU_SAVE_SNAPSHOT().position);
  assert.ok(hamletView.x>700&&hamletView.y>700,
    'real on-screen movement reaches expanded fishing worksite');
+ const worksiteStep=await review.evaluate(()=>
+   document.querySelector('#scene').width/
+   (document.querySelector('#scene').clientWidth*
+    window.devicePixelRatio)); // returns 1 for correctly sized backing store
+ assert.ok(Number.isFinite(worksiteStep));
+ assert.ok(hamletView.x<950,'worksite route should use the central house/net corridor');
  await review.screenshot({path:'artifacts/sea-cove-hamlet-worksite.png'});
  const persisted=await review.evaluate(()=>({
    initial:window.__STORAGE_AT_LOAD,

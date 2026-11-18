@@ -7,6 +7,10 @@ import {
  tileAt,walkableCell,walkablePoint,isSouthExit
 } from '../data/maps/sea-cove/scene.mjs';
 import {coastMask} from '../src/game/cove/render.mjs';
+import {WORLD_SCENE_ZOOM} from '../src/game/ui/world-scale.mjs';
+import {PSP_DISPLAY,PSP_ASPECT,minPSPScrollingMapCells,pspScrollingMapCoverage}
+ from '../src/game/ui/psp-display.mjs';
+import {pixelViewport} from '../src/game/village/render.mjs';
 import {TIDE_FRAMES,tideFrame,surfSample} from '../src/game/terrain/surf.mjs';
 import {CHAPTER_ONE_STAGES,objectiveForStage,normalizeStage} from '../src/game/story/chapter-one.mjs';
 import {readSavedGame,saveGame,restoreSavedGame,routeForSavedGame}
@@ -29,6 +33,36 @@ function bfs(start,goal){
  }
  return false;
 }
+test('PSP 480x272 is the scrolling-world minimum; no iPhone-only terrain expansion',()=>{
+ assert.deepEqual(PSP_DISPLAY,{width:480,height:272});
+ assert.equal(PSP_ASPECT,480/272);
+ assert.equal(WORLD_SCENE_ZOOM,0.5);
+ assert.deepEqual(minPSPScrollingMapCells(32,WORLD_SCENE_ZOOM),
+   {columns:30,rows:17});
+ assert.throws(()=>minPSPScrollingMapCells(32,0),RangeError);
+ const coverage=pspScrollingMapCoverage(COVE_MAP,WORLD_SCENE_ZOOM);
+ assert.equal(coverage.coversScreen,true,
+   'at PSP native output, the scrolling cove should have no outside-map region');
+ assert.deepEqual(coverage.displayPixels,{width:672,height:704});
+ assert.deepEqual(coverage.cameraRange,{x:384,y:864});
+ for(const dpr of [1,2,3]){
+   const vp=pixelViewport(PSP_DISPLAY.width,PSP_DISPLAY.height,dpr);
+   const visibleWorldWidth=vp.width/vp.step;
+   const visibleWorldHeight=vp.height/vp.step;
+   assert.equal(visibleWorldWidth,960);
+   assert.equal(visibleWorldHeight,544);
+   // Even when the hero approaches any map corner, the camera's clamped
+   // rect must remain inside the authored map; there is no right/bottom void.
+   for(const [px,py] of [[0,0],[COVE_WIDTH*32,0],[0,COVE_HEIGHT*32],
+      [COVE_WIDTH*32,COVE_HEIGHT*32],[COVE_MAP.entry.x,COVE_MAP.entry.y]]){
+     const cameraX=Math.max(0,Math.min(COVE_WIDTH*32-visibleWorldWidth,px-visibleWorldWidth/2));
+     const cameraY=Math.max(0,Math.min(COVE_HEIGHT*32-visibleWorldHeight,py-visibleWorldHeight/2-106));
+     assert.ok(cameraX>=0 && cameraX+visibleWorldWidth<=COVE_WIDTH*32);
+     assert.ok(cameraY>=0 && cameraY+visibleWorldHeight<=COVE_HEIGHT*32);
+   }
+ }
+});
+
 test('approved 30-column coast is preserved exactly while its connected wave chips extend east',()=>{
  assert.equal(COVE_WIDTH,42);
  assert.equal(COVE_HEIGHT,44);

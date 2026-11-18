@@ -280,6 +280,47 @@ try{
    'real on-screen movement reaches expanded fishing worksite');
  assert.ok(hamletView.x<950,'worksite route should use the central house/net corridor');
  await review.screenshot({path:'artifacts/sea-cove-hamlet-worksite.png'});
+ // PSP is the target DISPLAY, not the iPhone's extra-wide browser view.
+ // Size the actual content box to 480x272, accounting for whatever border
+ // rules the game CSS cascade applies. Do not change runtime camera/terrain.
+ await review.evaluate(()=>{
+   const view=document.querySelector('.viewport'),css=getComputedStyle(view);
+   const bordersX=parseFloat(css.borderLeftWidth)+parseFloat(css.borderRightWidth);
+   const bordersY=parseFloat(css.borderTopWidth)+parseFloat(css.borderBottomWidth);
+   const borderBox=css.boxSizing==='border-box';
+   const width=480+(borderBox?bordersX:0);
+   const height=272+(borderBox?bordersY:0);
+   view.style.width=width+'px';view.style.height=height+'px';
+   view.style.minWidth=width+'px';view.style.minHeight=height+'px';
+ });
+ await review.waitForTimeout(650); // allow ResizeObserver and animation frames
+ const pspGeometry=await review.evaluate(()=>{
+   const c=document.querySelector('#scene'),v=document.querySelector('.viewport');
+   return {client:[v.clientWidth,v.clientHeight],outer:[v.offsetWidth,v.offsetHeight],
+     canvasClient:[c.clientWidth,c.clientHeight],backing:[c.width,c.height],
+     devicePixelRatio:devicePixelRatio};
+ });
+ console.log('PSP viewport QA geometry:',JSON.stringify(pspGeometry));
+ assert.deepEqual(pspGeometry.client,[480,272],
+   'PSP viewport must have 480x272 CSS content pixels');
+ assert.deepEqual(pspGeometry.backing,[960,544],
+   'DPR2 canvas resolution must be 960x544 when viewport is PSP 480x272');
+ const pspScreen=await review.evaluate(()=>{
+   const c=document.querySelector('#scene'),ctx=c.getContext('2d');
+   const samples=[[c.width-4,c.height-4],[c.width-4,c.height-64],
+     [c.width/2,c.height-4],[4,c.height-4]];
+   return {css:[c.clientWidth,c.clientHeight],backing:[c.width,c.height],
+     corners:samples.map(([x,y])=>Array.from(ctx.getImageData(x,y,1,1).data))};
+ });
+ assert.deepEqual(pspScreen.css,[480,272],
+   'PSP logical screen must measure 480x272, excluding browser chrome');
+ assert.deepEqual(pspScreen.backing,[960,544],
+   'Retina DPR2 changes resolution, not the PSP world viewport');
+ for(const pixel of pspScreen.corners)
+   assert.notDeepEqual(pixel.slice(0,3),[40,103,142],
+     'at PSP size no corner should expose the renderer fallback outside the map');
+ await review.locator('.viewport').screenshot({path:'artifacts/sea-cove-psp-screen.png'});
+
  const persisted=await review.evaluate(()=>({
    initial:window.__STORAGE_AT_LOAD,
    current:JSON.stringify(Object.entries(localStorage).sort())

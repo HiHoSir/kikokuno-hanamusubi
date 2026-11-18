@@ -58,7 +58,7 @@ async function start(){
   if(!SMModel||!SMRender)throw new Error('天妖の社の描画エンジンが読み込めません');
   const mapUrl=new URL('../../../data/maps/tenyo-sanctuary/scene.json',import.meta.url);
   // A fresh scene JSON is essential after the accepted NPC assets change.
-  mapUrl.searchParams.set('v','tenyo-proportions-052');
+  mapUrl.searchParams.set('v','tenyo-world-scale-1');
   const response=await fetch(mapUrl);
   if(!response.ok)throw new Error('天妖の社のマップデータを読めません');
   const map=SMModel.parse(await response.text());

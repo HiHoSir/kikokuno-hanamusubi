@@ -64,7 +64,7 @@ try{
      topWorldY:cameraY,waterVisible:cameraY<9*32,
      menuVisible:!document.querySelector('#field-menu-toggle').hidden,
      shells:child.__COVE_SHELL_QA?.(),surf:child.__COVE_SURF_QA?.(),
-     fisher:child.__COVE_FISHER_QA?.()};
+     fisher:child.__COVE_FISHER_QA};
  });
  assert.equal(initial.position.scene,'cove');
  assert.equal(initial.fisher.character,'ushiohei');

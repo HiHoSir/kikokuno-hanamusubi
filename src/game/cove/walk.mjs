@@ -1,11 +1,11 @@
-import {COVE_MAP,tileAt,walkableCell,isSouthExit} from '../../../data/maps/sea-cove/scene.mjs';
+import {COVE_MAP,tileAt,walkableCell,isSouthExit} from '../../../data/maps/sea-cove/scene.mjs?v=hamlet-1';
 import {makeWalk} from '../village/movement.mjs';
 import {residentInFront} from '../village/residents.mjs';
 import {bindDialogue} from '../village/dialogue.mjs';
 import {pixelViewport} from '../village/render.mjs';
 import {readStoryStage,advanceStoryStage,objectiveForStage} from '../story/chapter-one.mjs';
 import {consumeRestorePosition} from '../save/save-game.mjs?v=save-slots-1';
-import {createCoveRenderer} from './render.mjs';
+import {createCoveRenderer} from './render.mjs?v=hamlet-1';
 import {readPlayer,savePlayer} from '../battle/rules.mjs';
 import {SHELL_KINDS,shellBagCount} from '../items/shells.mjs';
 import {

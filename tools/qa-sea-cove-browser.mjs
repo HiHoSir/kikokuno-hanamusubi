@@ -288,13 +288,18 @@ try{
    view.style.width='482px';view.style.height='274px';
    view.style.minWidth='482px';view.style.minHeight='274px';
  });
- await review.waitForFunction(()=>{
-   const c=document.querySelector('#scene');
-   const v=document.querySelector('.viewport');
-   return v.clientWidth===480&&v.clientHeight===272&&
-     c.width===960&&c.height===544;
- },null,{timeout:10000});
- await review.waitForTimeout(420); // let the real animated frame paint
+ await review.waitForTimeout(650); // allow ResizeObserver and animation frames
+ const pspGeometry=await review.evaluate(()=>{
+   const c=document.querySelector('#scene'),v=document.querySelector('.viewport');
+   return {client:[v.clientWidth,v.clientHeight],outer:[v.offsetWidth,v.offsetHeight],
+     canvasClient:[c.clientWidth,c.clientHeight],backing:[c.width,c.height],
+     devicePixelRatio:devicePixelRatio};
+ });
+ console.log('PSP viewport QA geometry:',JSON.stringify(pspGeometry));
+ assert.deepEqual(pspGeometry.client,[480,272],
+   'PSP viewport must have 480x272 CSS content pixels');
+ assert.deepEqual(pspGeometry.backing,[960,544],
+   'DPR2 canvas resolution must be 960x544 when viewport is PSP 480x272');
  const pspScreen=await review.evaluate(()=>{
    const c=document.querySelector('#scene'),ctx=c.getContext('2d');
    const samples=[[c.width-4,c.height-4],[c.width-4,c.height-64],

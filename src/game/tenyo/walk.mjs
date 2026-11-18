@@ -4,6 +4,7 @@ import {bindDialogue} from '../village/dialogue.mjs';
 import {residentInFront} from '../village/residents.mjs';
 import {readStoryStage,advanceStoryStage,objectiveForStage} from '../story/chapter-one.mjs';
 import {consumeRestorePosition} from '../save/save-game.mjs?v=save-slots-1';
+import {WORLD_SCENE_ZOOM} from '../ui/world-scale.mjs';
 
 const {SMModel,SMRender}=globalThis;
 const scene=document.querySelector('#scene');
@@ -16,7 +17,7 @@ const directions={down:[0,1,0,'d'],up:[0,-1,1,'u'],right:[1,0,2,'r'],left:[-1,0,
 const keys={ArrowDown:'down',ArrowUp:'up',ArrowRight:'right',ArrowLeft:'left',s:'down',w:'up',d:'right',a:'left'};
 const facing=['d','u','r','l'];
 const input=new Map();
-const SPEED_MS=156,ZOOM=1.4,VIEWPORT_EDGE=768;
+const SPEED_MS=156,VIEWPORT_EDGE=768;
 let pendingInput=null;
 
 function setInput(id,direction){
@@ -186,10 +187,17 @@ async function start(){
       lighting:true,reflections:true,atmosphere:true,depthOfField:true,
     });
     const width=scene.width,height=scene.height;
-    const worldPixelsPerPixel=VIEWPORT_EDGE/(Math.max(width,height)*ZOOM);
-    const viewWidth=width*worldPixelsPerPixel,viewHeight=height*worldPixelsPerPixel;
-    const cameraX=clamp((player.x+.5)*32-viewWidth/2,0,world.width-viewWidth);
-    const cameraY=clamp((player.y+.5)*32-viewHeight/2,0,world.height-viewHeight);
+    // Sprite and tile world pixels must occupy the SAME CSS pixel span as
+    // village, indoors and cove. The display buffer is an independent
+    // 768px max-edge raster: its resolution must not affect world scale.
+    const viewWidth=scene.parentElement.clientWidth/WORLD_SCENE_ZOOM;
+    const viewHeight=scene.parentElement.clientHeight/WORLD_SCENE_ZOOM;
+    const cameraX=viewWidth>=world.width
+      ?(world.width-viewWidth)/2
+      :clamp((player.x+.5)*32-viewWidth/2,0,world.width-viewWidth);
+    const cameraY=viewHeight>=world.height
+      ?(world.height-viewHeight)/2
+      :clamp((player.y+.5)*32-viewHeight/2,0,world.height-viewHeight);
     ctx.setTransform(1,0,0,1,0,0);
     ctx.imageSmoothingEnabled=false;
     ctx.fillStyle='#13354e';ctx.fillRect(0,0,width,height);

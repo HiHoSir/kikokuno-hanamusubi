@@ -95,7 +95,8 @@ test('approved image and hero dimensions remain native; no field edits needed',(
    ['assets/field/terrain/atlas/coast-mask-32.png',128,128],
    ...[0,1,2,3].map(n=>['assets/field/terrain/atlas/coast-sand-'+n+'-32.png',128,128]),
    ['assets/characters/hizuki/walk-4dir-80x112.png',240,448],
-   ['assets/characters/npc/villager-walk-4dir-80x112.png',240,448]
+   ['assets/characters/npc/villager-walk-4dir-80x112.png',240,448],
+   ['assets/characters/npc/ushiohei-walk-4dir-80x112.png',240,448]
  ];
  for(const [path,w,h] of images){
    const b=readFileSync(path);
@@ -118,6 +119,8 @@ test('field landmark and shell/game routes remain part of the real game shell',(
  assert.match(html,/\.\/walk\.mjs\?v=sea-cove-1/);
  assert.match(field,/destination==='shrine'\|\|destination==='cove'/);
  assert.match(field,/from==='cove' \? coveReturnPosition\(\)/);
+ assert.match(walker,/fisher:'assets\/characters\/npc\/ushiohei-walk-4dir-80x112\.png'/);
+ assert.doesNotMatch(walker,/fisher:'assets\/characters\/npc\/villager-walk/);
  assert.match(walker,/KIKOKU_ROUTE\.go\(/);
  assert.match(walker,/consumeRestorePosition\('cove'\)/);
  assert.match(walker,/KIKOKU_SAVE_SNAPSHOT/);

@@ -2,7 +2,7 @@ import {COVE_MAP,tileAt,walkableCell,isSouthExit} from '../../../data/maps/sea-c
 import {makeWalk} from '../village/movement.mjs';
 import {residentInFront} from '../village/residents.mjs';
 import {bindDialogue} from '../village/dialogue.mjs';
-import {pixelViewport,DEFAULT_CAMERA_ZOOM} from '../village/render.mjs';
+import {pixelViewport,DEFAULT_CAMERA_ZOOM} from '../village/render.mjs?v=nonfield-world-scale-1';
 import {readStoryStage,advanceStoryStage,objectiveForStage} from '../story/chapter-one.mjs';
 import {consumeRestorePosition} from '../save/save-game.mjs?v=save-slots-1';
 import {createCoveRenderer} from './render.mjs?v=hamlet-1';

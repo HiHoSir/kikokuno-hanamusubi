@@ -125,9 +125,9 @@ test('fisher homestead uses new southern sand; native assets; no blocked field r
  const walker=source('src/game/cove/walk.mjs');
  for(const [name,file,w,h] of [
   ['fisherHouse','assets/village/scene/house-thatch.png',390,357],
-  ['netRack','assets/sea-cove/objects/net-drying-rack-192x150.png',192,150],
-  ['netBundle','assets/sea-cove/objects/net-bundle-112x66.png',112,66],
-  ['ropeCoil','assets/sea-cove/objects/rope-coil-68x50.png',68,50],
+  ['netRack','assets/sea-cove/objects/net-drying-rack-232x176.png',232,176],
+  ['netBundle','assets/sea-cove/objects/net-bundle-146x88.png',146,88],
+  ['ropeCoil','assets/sea-cove/objects/rope-coil-88x62.png',88,62],
  ]){
    assert.ok(walker.includes(name+':\''+file+'\''),name+' asset');
    const bin=readFileSync(file);

@@ -1,11 +1,12 @@
 // 海の入り江: the approved shoreline-study is the TERRAIN/SCENERY source.
-// This scene expands its dry sand to the southern field return, rather than
-// recreating a second unapproved grass/forest shoreline.
+// The first 22 rows are unchanged; expansion is SOUTH of the approved view.
+// The coastline, wave art, rocks, spawn and first-screen composition remain
+// pixel-identical. Southern rows hold the fisherman's homestead.
 import {SHORE_Y,SCENERY} from '../shoreline-study/scene.mjs';
 
 export const COVE_TILE_SIZE=32;
 export const COVE_WIDTH=SHORE_Y.length; // identical 30-column approved coastline
-export const COVE_HEIGHT=22; // extra 4 rows of sand for the field exit
+export const COVE_HEIGHT=34; // 12 added SOUTHERN rows for a fisherman's homestead
 // One coastline datum per COLUMN (sea north), not a different eastern beach.
 export const COVE_SHORE=Object.freeze([...SHORE_Y]);
 export const COVE_SAND_DEPTH=Object.freeze(COVE_SHORE.map(y=>COVE_HEIGHT-y));
@@ -29,7 +30,27 @@ export const COVE_MAP=Object.freeze({
  objects:Object.freeze([
   ...nativeRocks,
   Object.freeze({kind:'basket',x:20,y:16}),
-  Object.freeze({kind:'barrel',x:18,y:17})
+  Object.freeze({kind:'barrel',x:18,y:17}),
+  // Reused original village art, native size. A house is not enterable yet.
+  Object.freeze({
+   id:'fisher-house',kind:'fisherHouse',footPosition:true,
+   x:272,y:976,solid:true,
+   collision:Object.freeze({left:89,right:455,top:621,bottom:977})
+  }),
+  // Drying net, ropes and folded nets are distinct native RGBA sprites.
+  Object.freeze({
+   id:'net-rack',kind:'netRack',footPosition:true,
+   x:720,y:872,solid:true,
+   collision:Object.freeze({left:635,right:802,top:749,bottom:872})
+  }),
+  Object.freeze({id:'net-bundle',kind:'netBundle',
+   footPosition:true,x:568,y:961,solid:true,radius:32}),
+  Object.freeze({id:'rope-coil',kind:'ropeCoil',
+   footPosition:true,x:795,y:1026,solid:true,radius:17}),
+  // Reuse village-original props; no rescaling or palette substitution.
+  Object.freeze({id:'fish-crate-east',kind:'crate',x:18,y:24,solid:true,radius:22}),
+  Object.freeze({id:'gear-barrel',kind:'barrel',x:24,y:29,solid:true,radius:22}),
+  Object.freeze({id:'spare-basket',kind:'basket',x:20,y:31,solid:true,radius:22})
  ])
 });
 export function tileAt(x,y,map=COVE_MAP){

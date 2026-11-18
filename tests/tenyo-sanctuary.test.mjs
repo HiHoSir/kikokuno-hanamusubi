@@ -225,10 +225,10 @@ test('original sanctuary renderer draws 80x112 atlas frames at the SAME foot anc
   }
 });
 
-test('sanctuary screenshot regression: player is not giant compared with Shirotae and the shrine',()=>{
+test('sanctuary uses native hero and NPC proportions under the shared non-field camera',()=>{
   const scale=map.game.heroDisplayScale;
   assert.equal(map.game.hero,'assets/characters/hizuki/walk-4dir-80x112.png');
-  assert.equal(scale,0.52,'scene-specific display scale, NOT an asset downsize');
+  assert.equal(scale,1,'native 80x112 sprite scale matches every other non-field area');
   const renderer=sandbox.SMRender,im={width:240,height:448};
   const bounds=renderer.actorBounds(im,()=>{throw Error('village atlas should not use the 32px sampling canvas');});
   const calls=[];

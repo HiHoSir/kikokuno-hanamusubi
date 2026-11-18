@@ -19,7 +19,10 @@ const chip=(ctx,atlas,mask,px,py)=>{
    TILE,TILE,px,py,TILE,TILE);
 };
 export const coastMask=(map,x,y)=>{
- const dry=(cx,cy)=>tileAt(cx,cy,map)!=='~';
+ // The *south* edge is continuous dry land, not a new coastline.
+ // The north remains the approved sea; this does not touch its 16-mask.
+ const dry=(cx,cy)=>cy>=map.height&&cx>=0&&cx<map.width
+   ?true:tileAt(cx,cy,map)!=='~';
  return (dry(x,y)?1:0)|(dry(x+1,y)?2:0)|
    (dry(x+1,y+1)?4:0)|(dry(x,y+1)?8:0);
 };

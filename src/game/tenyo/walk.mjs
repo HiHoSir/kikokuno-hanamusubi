@@ -190,8 +190,14 @@ async function start(){
     // Sprite and tile world pixels must occupy the SAME CSS pixel span as
     // village, indoors and cove. The display buffer is an independent
     // 768px max-edge raster: its resolution must not affect world scale.
-    const viewWidth=scene.parentElement.clientWidth/WORLD_SCENE_ZOOM;
-    const viewHeight=scene.parentElement.clientHeight/WORLD_SCENE_ZOOM;
+    // The 768px offscreen buffer is rounded for each dimension.
+    // Derive a SINGLE world-to-buffer ratio so x/y never stretch differently
+    // on portrait or landscape; the CSS-world target remains 0.5.
+    const worldPixelsPerPixel=
+      Math.max(scene.parentElement.clientWidth,scene.parentElement.clientHeight)/
+      (VIEWPORT_EDGE*WORLD_SCENE_ZOOM);
+    const viewWidth=width*worldPixelsPerPixel;
+    const viewHeight=height*worldPixelsPerPixel;
     const cameraX=viewWidth>=world.width
       ?(world.width-viewWidth)/2
       :clamp((player.x+.5)*32-viewWidth/2,0,world.width-viewWidth);

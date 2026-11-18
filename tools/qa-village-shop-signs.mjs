@@ -215,6 +215,16 @@ try{
             const d=document.querySelector('iframe').contentDocument;
             const w=d.defaultView;
             w.dispatchEvent(new KeyboardEvent('keyup',{key:'ArrowUp'}));
+            if(!d.getElementById('action-a')||!d.getElementById('next')){
+              throw new Error('armory controls missing: '+JSON.stringify({
+                url:document.querySelector('iframe')?.src,
+                ready:d.readyState,
+                room:d.querySelector('#scene')?.dataset.room,
+                position:[d.querySelector('#scene')?.dataset.x,d.querySelector('#scene')?.dataset.y],
+                actionExists:!!d.getElementById('action-a'),
+                nextExists:!!d.getElementById('next')
+              }));
+            }
             d.getElementById('action-a').click();
             d.getElementById('next').click();
             d.getElementById('next').click();

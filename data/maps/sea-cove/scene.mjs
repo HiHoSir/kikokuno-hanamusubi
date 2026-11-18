@@ -44,12 +44,12 @@ export const COVE_MAP=Object.freeze({
   Object.freeze({
    id:'net-rack',kind:'netRack',footPosition:true,
    x:1050,y:1050,solid:true,
-   collision:Object.freeze({left:960,right:1140,top:900,bottom:1050})
+   collision:Object.freeze({left:934,right:1166,top:874,bottom:1050})
   }),
   Object.freeze({id:'net-bundle',kind:'netBundle',
-   footPosition:true,x:770,y:1175,solid:true,radius:39}),
+   footPosition:true,x:770,y:1175,solid:true,radius:49}),
   Object.freeze({id:'rope-coil',kind:'ropeCoil',
-   footPosition:true,x:1130,y:1250,solid:true,radius:23}),
+   footPosition:true,x:1130,y:1250,solid:true,radius:29}),
   // Reuse village-original props; no rescaling or palette substitution.
   Object.freeze({id:'fish-crate-east',kind:'crate',x:28,y:33,solid:true,radius:22}),
   Object.freeze({id:'gear-barrel',kind:'barrel',x:32,y:36,solid:true,radius:22}),

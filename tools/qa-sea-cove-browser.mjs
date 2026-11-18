@@ -111,8 +111,14 @@ try{
    'extended high tide must cover at least the original approved shoreline');
  assert.equal(initial.surf.approvedCoastline,30);
  assert.equal(initial.surf.expandedCoastline,42);
- assert.equal(initial.surf.approvedWaveTiles,58,
-   'the original 30-column wave band must still contain all 58 accepted tiles');
+ // The legacy finite map had 2 shore chips at its artificial EAST
+ // boundary; extending real land beyond that boundary removes those
+ // fake edge-only tiles. The 56 real western chips must remain intact,
+ // and the whole connected coast must gain the 22 genuinely new chips.
+ assert.equal(initial.surf.formerMapColumnsWaveTiles,56,
+   'preserve the 56 real western shoreline chips without fake cutoff surf');
+ assert.equal(initial.surf.tileCount,78,
+   'the extended 42-column beach uses 78 connected animated shore chips');
  assert.equal(initial.position.position.y,432,
    'the original accepted player position (and camera composition) must not shift');
  assert.equal(initial.surf.atlas[0]%32,0);

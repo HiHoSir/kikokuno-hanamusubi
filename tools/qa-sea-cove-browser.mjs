@@ -105,6 +105,10 @@ try{
    'approved three native-sized rocks are preserved');
  assert.equal(initial.surf.tileCount,58,
    'the approved shoreline study animates exactly 58 edge and beach chips');
+ assert.equal(initial.surf.coverage[0].washedPixels,393,
+   'low tide must reproduce the approved study exactly');
+ assert.equal(initial.surf.coverage[4].washedPixels,11477,
+   'high tide must reproduce the approved study exactly');
  assert.equal(initial.position.position.y,432,
    'the original accepted player position (and camera composition) must not shift');
  assert.equal(initial.surf.atlas[0]%32,0);
@@ -207,6 +211,26 @@ try{
 
  assert.equal(surf.tileCount,58,'Pages view must animate ALL approved shoreline chips');
  assert.equal(reviewInitial.y,432,'Pages camera must match accepted shoreline composition');
+ // Pixel-level visual regression: compare an untouched 300x65 dry-sand
+ // rectangle in the production-cove canvas with the APPROVED study canvas.
+ // Both use the same 874x402 CSS viewport, DPR=2, camera and start position.
+ // This is stronger than "the sea animates": it catches shifts, scaling
+ // and accidental texture substitutions even when all gameplay tests pass.
+ const sampleApprovedSand=async page=>page.evaluate(()=>{
+   const pixels=document.querySelector('#scene').getContext('2d')
+     .getImageData(400,360,300,65).data;
+   return Array.from(pixels);
+ });
+ const productionSand=await sampleApprovedSand(review);
+ const baseline=await browser.newPage({viewport:{width:874,height:402},
+   deviceScaleFactor:2,isMobile:true,hasTouch:true});
+ await baseline.goto('http://127.0.0.1:'+server.address().port+
+   '/previews/shoreline-study/',{waitUntil:'domcontentloaded'});
+ await baseline.waitForFunction(()=>window.__SHORE_QA?.ready===true,null,{timeout:40000});
+ const approvedSand=await sampleApprovedSand(baseline);
+ assert.deepEqual(productionSand,approvedSand,
+   'visible cove sand pixels must match the user-approved shoreline preview');
+ await baseline.close();
  const before=await review.screenshot({path:'artifacts/sea-cove-pages-review-start.png'});
  await review.waitForTimeout(600);
  const reviewAfter=await review.screenshot({path:'artifacts/sea-cove-pages-review-wave.png'});

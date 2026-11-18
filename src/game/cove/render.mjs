@@ -21,8 +21,17 @@ const chip=(ctx,atlas,mask,px,py)=>{
 export const coastMask=(map,x,y)=>{
  // The *south* edge is continuous dry land, not a new coastline.
  // The north remains the approved sea; this does not touch its 16-mask.
- const dry=(cx,cy)=>cy>=map.height&&cx>=0&&cx<map.width
-   ?true:tileAt(cx,cy,map)!=='~';
+ const dry=(cx,cy)=>{
+   // A map boundary is NOT a coastline. Continue the coastal height field
+   // at east/west boundaries; let the sand continue beyond the south edge.
+   // Real sea/sand transitions are taken from the existing mapchip grid.
+   if(Number.isInteger(map.width)&&Number.isInteger(map.height)){
+     if(cy>=map.height)return true;
+     if(cx<0)return cy>=COVE_SHORE[0];
+     if(cx>=map.width)return cy>=COVE_SHORE[map.width-1];
+   }
+   return tileAt(cx,cy,map)!=='~';
+ };
  return (dry(x,y)?1:0)|(dry(x+1,y)?2:0)|
    (dry(x+1,y+1)?4:0)|(dry(x,y+1)?8:0);
 };

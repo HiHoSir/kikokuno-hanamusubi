@@ -63,9 +63,15 @@ try{
    return {label:frame.title,position,canvas:[canvas.width,canvas.height],
      topWorldY:cameraY,waterVisible:cameraY<9*32,
      menuVisible:!document.querySelector('#field-menu-toggle').hidden,
-     shells:child.__COVE_SHELL_QA?.(),surf:child.__COVE_SURF_QA?.()};
+     shells:child.__COVE_SHELL_QA?.(),surf:child.__COVE_SURF_QA?.(),
+     fisher:child.__COVE_FISHER_QA};
  });
  assert.equal(initial.position.scene,'cove');
+ assert.equal(initial.fisher.character,'ushiohei');
+ assert.equal(initial.fisher.sprite,'assets/characters/npc/ushiohei-walk-4dir-80x112.png');
+ assert.deepEqual(initial.fisher.size,[240,448]);
+ assert.deepEqual(initial.fisher.frame,[80,112]);
+ assert.deepEqual(initial.fisher.feet,[40,106]);
  assert.equal(initial.waterVisible,true,'first view includes the moving sea, not only grass');
  assert.ok(initial.canvas[0]>0&&initial.canvas[1]>0);
  // A drawing buffer can be 2x the CSS viewport on Retina devices, but the
@@ -184,6 +190,9 @@ try{
    document.querySelector('#load')?.hidden===true,null,{timeout:40000});
  const reviewInitial=await review.evaluate(()=>window.KIKOKU_SAVE_SNAPSHOT().position);
  const surf=await review.evaluate(()=>window.__COVE_SURF_QA());
+ const previewFisher=await review.evaluate(()=>window.__COVE_FISHER_QA);
+ assert.equal(previewFisher.character,'ushiohei');
+ assert.deepEqual(previewFisher.size,[240,448]);
  assert.equal(surf.frames,8);
  const cssFit=await review.evaluate(()=>{
    const c=document.querySelector('#scene').getBoundingClientRect();

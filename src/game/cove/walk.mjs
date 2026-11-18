@@ -27,7 +27,7 @@ const keys={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',
 const inputs=new Map();
 const scenery={
  hero:'assets/characters/hizuki/walk-4dir-80x112.png',
- fisher:'assets/characters/npc/villager-walk-4dir-80x112.png',
+ fisher:'assets/characters/npc/ushiohei-walk-4dir-80x112.png',
  rocks:'assets/village/objects/rocks.png',
  basket:'assets/village/objects/basket.png',
  barrel:'assets/village/objects/barrel.png',
@@ -250,6 +250,15 @@ async function start(){
  refreshShellHint();
  load.hidden=true;
  window.__COVE_PREVIEW_MODE=previewMode;
+ window.__COVE_FISHER_QA={
+   character:'ushiohei',
+   sprite:scenery.fisher,
+   size:[images.fisher.naturalWidth,images.fisher.naturalHeight],
+   frame:[80,112],directions:4,framesPerDirection:3,
+   feet:[40,106],
+   stage:readStoryStage()
+ };
+
  window.KIKOKU_SAVE_SNAPSHOT=()=>({scene:'cove',position:{x,y,face}});
  window.__COVE_SURF_QA=()=>({...renderer.surfInfo,
    phase:Math.floor(performance.now()/260)%renderer.surfInfo.frames});

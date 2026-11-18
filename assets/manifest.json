@@ -2321,6 +2321,36 @@
       },
       "gitBlobSha": "fa77275647a701055a6998418ecc73b4b52ea076",
       "approvalNote": "2026-11-14: user authorized repurposing one low-story-role house as armory; same exterior dimensions, original tile house art, existing entrance and collision, with separate 96x120px sign sprite."
+    },
+    {
+      "id": "ushiohei-walk-4dir-80x112",
+      "type": "character",
+      "path": "assets/characters/npc/ushiohei-walk-4dir-80x112.png",
+      "status": "approved",
+      "usage": "sea-cove-ushiohei-npc",
+      "frame": [
+        80,
+        112
+      ],
+      "directions": [
+        "down",
+        "up",
+        "right",
+        "left"
+      ],
+      "framesPerDirection": 3,
+      "footAnchor": [
+        40,
+        106
+      ],
+      "origin": {
+        "repo": "HiHoSir/kikokuno-hanamusubi",
+        "path": "assets/characters/npc/farm-worker-walk-4dir-80x112.png",
+        "gitBlobSha": "022fa6057a19a69aa38603e44a44b2e497bd876d"
+      },
+      "sourceDescription": "Our approved male farm-worker art recolored/edited into Ushiohei's indigo-clad coastal fisherman; Tengai Makyou ZERO consulted for NPC proportions and walk grammar only; no game pixels copied",
+      "generator": "tools/generate-ushiohei-sprite.py",
+      "gitBlobSha": "48b25416891959ad86701b05c275e49bf40d9df0"
     }
   ],
   "designReferences": [

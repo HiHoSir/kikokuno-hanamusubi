@@ -31,10 +31,10 @@ function bfs(start,goal){
 }
 test('production cove replaces its terrain with the APPROVED 30-column coastline, sand to south',()=>{
  assert.equal(COVE_WIDTH,30);
- assert.equal(COVE_HEIGHT,22);
+ assert.equal(COVE_HEIGHT,34);
  assert.equal(COVE_TILE_SIZE,32);
  assert.deepEqual(COVE_SHORE,SHORE_Y);
- assert.deepEqual(COVE_SAND_DEPTH,COVE_SHORE.map(y=>22-y));
+ assert.deepEqual(COVE_SAND_DEPTH,COVE_SHORE.map(y=>34-y));
  assert.equal(COVE_MAP.tiles.length,COVE_HEIGHT);
  for(const [y,row] of COVE_MAP.tiles.entries()){
    assert.equal(row.length,COVE_WIDTH);
@@ -53,9 +53,13 @@ test('production cove replaces its terrain with the APPROVED 30-column coastline
    'do not shift the approved starting view one tile upward');
  assert.equal(tileAt(0,0),'~');
  assert.equal(walkableCell(29,20),false);
+ assert.deepEqual(COVE_MAP.tiles.slice(0,22),
+  Array.from({length:22},(_,y)=>
+    Array.from({length:30},(_,x)=>y<SHORE_Y[x]?'~':'s').join('')),
+  'the entire pre-extension map must stay pixel-compatible');
 });
 test('approved sand reaches the south exit without a grass strip; fisher remains reachable',()=>{
- assert.ok(COVE_SAND_DEPTH.every(n=>n>=13));
+ assert.ok(COVE_SAND_DEPTH.every(n=>n>=25));
  assert.ok(COVE_MAP.exit.columns.every(x=>tileAt(x,COVE_MAP.exit.row)==='s'));
  const entry=[Math.floor(COVE_MAP.entry.x/32),Math.floor(COVE_MAP.entry.y/32)];
  const fisher=[Math.floor(COVE_MAP.fisher.x/32),Math.floor(COVE_MAP.fisher.y/32)];
@@ -63,6 +67,66 @@ test('approved sand reaches the south exit without a grass strip; fisher remains
  assert.ok(bfs(entry,p=>isSouthExit(...p)));
  assert.ok(walkableCell(...fisher));
 });
+test('a fisher homestead extends ONLY south, with native-size assets and real play paths',()=>{
+ const house=COVE_MAP.objects.find(o=>o.id==='fisher-house');
+ const net=COVE_MAP.objects.find(o=>o.id==='net-rack');
+ const bundle=COVE_MAP.objects.find(o=>o.id==='net-bundle');
+ const rope=COVE_MAP.objects.find(o=>o.id==='rope-coil');
+ assert.equal(house.kind,'fisherHouse');
+ assert.equal(net.kind,'netRack');
+ assert.equal(bundle.kind,'netBundle');
+ assert.equal(rope.kind,'ropeCoil');
+ assert.deepEqual([house.x,house.y],[272,976]);
+ assert.deepEqual([net.x,net.y],[720,872]);
+ assert.ok(house.collision.top>19*32,'the house must not intrude on first view');
+ assert.ok(net.collision.top>22*32,'net stays in new area');
+ assert.ok(COVE_MAP.objects.some(o=>o.kind==='crate'));
+ assert.ok(COVE_MAP.objects.filter(o=>o.kind==='barrel').length>=2);
+ const walker=source('src/game/cove/walk.mjs');
+ for(const [name,file,w,h] of [
+  ['fisherHouse','assets/village/scene/house-thatch.png',390,357],
+  ['netRack','assets/sea-cove/objects/net-drying-rack-192x150.png',192,150],
+  ['netBundle','assets/sea-cove/objects/net-bundle-112x66.png',112,66],
+  ['ropeCoil','assets/sea-cove/objects/rope-coil-68x50.png',68,50],
+ ]){
+   assert.ok(walker.includes(name+':\''+file+'\''),name+' asset');
+   const bin=readFileSync(file);
+   assert.equal(bin.readUInt32BE(16),w,name+' native width');
+   assert.equal(bin.readUInt32BE(20),h,name+' native height');
+   assert.equal(bin[25],6,name+' RGBA alpha');
+ }
+ const collision=(x,y)=>COVE_MAP.objects.some(o=>{
+   if(o.collision){
+     const a=o.collision;
+     return x>=a.left-6&&x<=a.right+6&&y>=a.top-6&&y<=a.bottom+6;
+   }
+   const px=o.footPosition?o.x:o.x*32+16;
+   const py=o.footPosition?o.y:(o.y+1)*32-10;
+   return Math.hypot(x-px,y-py)<(o.radius??22)+3;
+ })||Math.hypot(x-COVE_MAP.fisher.x,y-COVE_MAP.fisher.y)<24;
+ const start=[Math.floor(COVE_MAP.entry.x/32),Math.floor(COVE_MAP.entry.y/32)];
+ const queue=[start],seen=new Set([start.join(',')]);
+ let exitReached=false,frontReached=false,rackReached=false;
+ for(const here of queue){
+   const [tx,ty]=here;
+   if(isSouthExit(tx,ty))exitReached=true;
+   if(Math.hypot(tx*32+16-house.x,ty*32+16-(house.y+45))<60)frontReached=true;
+   if(Math.hypot(tx*32+16-net.x,ty*32+16-(net.y+60))<110)rackReached=true;
+   for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
+     const nx=tx+dx,ny=ty+dy,key=nx+','+ny;
+     if(!seen.has(key)&&walkableCell(nx,ny)&&!collision(nx*32+16,ny*32+16)){
+       seen.add(key);queue.push([nx,ny]);
+     }
+   }
+ }
+ assert.equal(exitReached,true,'must reach original south field return around house');
+ assert.equal(frontReached,true,'house entrance frontage must remain accessible');
+ assert.equal(rackReached,true,'net work area must be reachable');
+ assert.equal(collision(house.x,house.y-70),true,'house must block roof invisibility');
+ assert.equal(collision(net.x,net.y-40),true,'cannot walk through net mesh');
+ assert.equal(collision(COVE_MAP.entry.x,COVE_MAP.entry.y),false);
+});
+
 test('same approved landscape ground, contour masks, water chips and eight-frame surf',()=>{
  assert.equal(TIDE_FRAMES.length,8);
  assert.deepEqual(TIDE_FRAMES.map(x=>x.reach),[2,4,7,11,14,11,7,4]);

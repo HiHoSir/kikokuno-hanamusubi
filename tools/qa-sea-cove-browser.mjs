@@ -280,6 +280,37 @@ try{
    'real on-screen movement reaches expanded fishing worksite');
  assert.ok(hamletView.x<950,'worksite route should use the central house/net corridor');
  await review.screenshot({path:'artifacts/sea-cove-hamlet-worksite.png'});
+ // PSP is the target DISPLAY, not the iPhone's extra-wide browser view.
+ // The border is 1px on each side, so 482x274 yields exactly 480x272
+ // content pixels. Do not change runtime camera rules or terrain to fit iPhone.
+ await review.evaluate(()=>{
+   const view=document.querySelector('.viewport');
+   view.style.width='482px';view.style.height='274px';
+   view.style.minWidth='482px';view.style.minHeight='274px';
+ });
+ await review.waitForFunction(()=>{
+   const c=document.querySelector('#scene');
+   const v=document.querySelector('.viewport');
+   return v.clientWidth===480&&v.clientHeight===272&&
+     c.width===960&&c.height===544;
+ },null,{timeout:10000});
+ await review.waitForTimeout(420); // let the real animated frame paint
+ const pspScreen=await review.evaluate(()=>{
+   const c=document.querySelector('#scene'),ctx=c.getContext('2d');
+   const samples=[[c.width-4,c.height-4],[c.width-4,c.height-64],
+     [c.width/2,c.height-4],[4,c.height-4]];
+   return {css:[c.clientWidth,c.clientHeight],backing:[c.width,c.height],
+     corners:samples.map(([x,y])=>Array.from(ctx.getImageData(x,y,1,1).data))};
+ });
+ assert.deepEqual(pspScreen.css,[480,272],
+   'PSP logical screen must measure 480x272, excluding browser chrome');
+ assert.deepEqual(pspScreen.backing,[960,544],
+   'Retina DPR2 changes resolution, not the PSP world viewport');
+ for(const pixel of pspScreen.corners)
+   assert.notDeepEqual(pixel.slice(0,3),[40,103,142],
+     'at PSP size no corner should expose the renderer fallback outside the map');
+ await review.locator('.viewport').screenshot({path:'artifacts/sea-cove-psp-screen.png'});
+
  const persisted=await review.evaluate(()=>({
    initial:window.__STORAGE_AT_LOAD,
    current:JSON.stringify(Object.entries(localStorage).sort())

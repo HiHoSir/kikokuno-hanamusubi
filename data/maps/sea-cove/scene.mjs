@@ -23,7 +23,7 @@ export const COVE_MAP=Object.freeze({
  width:COVE_WIDTH,height:COVE_HEIGHT,tiles,
  entry:Object.freeze({x:10*32+16,y:12*32+16,face:1}),
  exit:Object.freeze({row:COVE_HEIGHT-1,columns:Object.freeze([9,10,11])}),
- fisher:Object.freeze({id:'ushiohei',name:'潮平',x:22*32+16,y:13*32+16,face:3}),
+ fisher:Object.freeze({id:'ushiohei',name:'潮平',x:16*32+16,y:12*32+16,face:3}),
  // Keep NPC life on the sand, but never paint unrelated forests over the
  // approved beach. Only approved native rocks + a few game props remain.
  objects:Object.freeze([

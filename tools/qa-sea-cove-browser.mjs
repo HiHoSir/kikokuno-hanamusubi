@@ -281,12 +281,17 @@ try{
  assert.ok(hamletView.x<950,'worksite route should use the central house/net corridor');
  await review.screenshot({path:'artifacts/sea-cove-hamlet-worksite.png'});
  // PSP is the target DISPLAY, not the iPhone's extra-wide browser view.
- // The border is 1px on each side, so 482x274 yields exactly 480x272
- // content pixels. Do not change runtime camera rules or terrain to fit iPhone.
+ // Size the actual content box to 480x272, accounting for whatever border
+ // rules the game CSS cascade applies. Do not change runtime camera/terrain.
  await review.evaluate(()=>{
-   const view=document.querySelector('.viewport');
-   view.style.width='482px';view.style.height='274px';
-   view.style.minWidth='482px';view.style.minHeight='274px';
+   const view=document.querySelector('.viewport'),css=getComputedStyle(view);
+   const bordersX=parseFloat(css.borderLeftWidth)+parseFloat(css.borderRightWidth);
+   const bordersY=parseFloat(css.borderTopWidth)+parseFloat(css.borderBottomWidth);
+   const borderBox=css.boxSizing==='border-box';
+   const width=480+(borderBox?bordersX:0);
+   const height=272+(borderBox?bordersY:0);
+   view.style.width=width+'px';view.style.height=height+'px';
+   view.style.minWidth=width+'px';view.style.minHeight=height+'px';
  });
  await review.waitForTimeout(650); // allow ResizeObserver and animation frames
  const pspGeometry=await review.evaluate(()=>{

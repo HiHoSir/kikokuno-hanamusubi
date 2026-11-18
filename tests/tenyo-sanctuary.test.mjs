@@ -165,6 +165,10 @@ test('production sanctuary paints its entrance within landscape and portrait vie
       assert.ok(Math.abs(dw/dh-viewport.clientWidth/viewport.clientHeight)<0.005,
         'canvas buffer matches the visible aspect ratio');
       assert.ok(Math.abs(dw/width-dh/height)<0.0001,'same world scale on both axes');
+      assert.ok(Math.abs(viewport.clientWidth/width-0.5)<0.005,
+        'sanctuary CSS world pixels must match village 0.5');
+      assert.ok(Math.abs(viewport.clientHeight/height-0.5)<0.005,
+        'sanctuary must not stretch hero in portrait');
       const foot=(actor.y+.5)*32;
       assert.ok(top<=foot-46&&foot<top+height,'entrance sprite is entirely inside the view');
       assert.ok(left<=0.5*32+actor.x*32&&left+width>0.5*32+actor.x*32);
@@ -225,10 +229,10 @@ test('original sanctuary renderer draws 80x112 atlas frames at the SAME foot anc
   }
 });
 
-test('sanctuary screenshot regression: player is not giant compared with Shirotae and the shrine',()=>{
+test('sanctuary hero is native-size and shares world scale with village and NPCs',()=>{
   const scale=map.game.heroDisplayScale;
   assert.equal(map.game.hero,'assets/characters/hizuki/walk-4dir-80x112.png');
-  assert.equal(scale,0.52,'scene-specific display scale, NOT an asset downsize');
+  assert.equal(scale,1,'Tenyo hero uses full 80x112 world pixels, just like village NPCs');
   const renderer=sandbox.SMRender,im={width:240,height:448};
   const bounds=renderer.actorBounds(im,()=>{throw Error('village atlas should not use the 32px sampling canvas');});
   const calls=[];
@@ -238,7 +242,7 @@ test('sanctuary screenshot regression: player is not giant compared with Shirota
   const [,sx,sy,sw,sh,dx,dy,dw,dh]=calls[0];
   assert.deepEqual([sx,sy,sw,sh],[80,112,80,112],'keep full village-scale source atlas');
   const near=(actual,expected)=>assert.ok(Math.abs(actual-expected)<0.0001,`expected ${expected}, got ${actual}`);
-  near(dw,80*scale);near(dh,112*scale);
+  near(dw,80);near(dh,112);
   near(dx,(a.x+.5)*32-40*scale);
   near(dy,(a.y+.5)*32-106*scale);
   near(dx+40*scale,(a.x+.5)*32);
@@ -247,7 +251,7 @@ test('sanctuary screenshot regression: player is not giant compared with Shirota
   const walk=readFileSync('src/game/tenyo/walk.mjs','utf8');
   assert.ok(walk.includes('heroDisplayScale:map.game.heroDisplayScale??1'),'renderer receives authored visual scale');
   assert.ok(!walk.includes('map.game.heroDisplayScale*32'),'logical 32px cell movement must not scale with sprite');
-  // White and the two guards retain their approved relative size.
+  // Shirotae and guards also use unscaled native 80x112 sprites.
   assert.equal(map.game.residents.filter(n=>n.id.startsWith('guardian')).length,2);
   assert.ok(!map.game.residents.some(n=>n.displayScale!==undefined),'NPC scale untouched');
 });

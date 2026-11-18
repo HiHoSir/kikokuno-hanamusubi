@@ -1,5 +1,5 @@
 import {HIZUKI_INTERIOR_WALK_SPEED, makeWalk} from '../village/movement.mjs?v=village-speed-288';
-import {DEFAULT_CAMERA_ZOOM, pixelViewport} from '../village/render.mjs';
+import {DEFAULT_CAMERA_ZOOM, pixelViewport} from '../village/render.mjs?v=nonfield-world-scale-1';
 import {drawCharacter, RESIDENT_RADIUS, residentInFront} from '../village/residents.mjs';
 import {bindDialogue} from '../village/dialogue.mjs?v=field-menu-1';
 import {rooms, resolveInterior, prepareInterior} from './rooms.mjs?v=interior-wall-anchor-1';

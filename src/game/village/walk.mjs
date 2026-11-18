@@ -1,6 +1,6 @@
 import { HIZUKI_WALK_SPEED, makeWalk, touchedEntrance, crossesSouthExit, villageArrivalFacing } from './movement.mjs?v=village-speed-288-exit-facing-1';
 import { villageRooms } from '../interiors/rooms.mjs';
-import { pixelViewport, DEFAULT_CAMERA_ZOOM, canopyOpacity, riverRipples, paintRiverRipples } from './render.mjs';
+import { pixelViewport, DEFAULT_CAMERA_ZOOM, canopyOpacity, riverRipples, paintRiverRipples } from './render.mjs?v=nonfield-world-scale-1';
 import { advanceResident, drawCharacter, makeResident, residentInFront, RESIDENT_RADIUS } from './residents.mjs';
 import { bindDialogue } from './dialogue.mjs?v=field-menu-1';
 import {collectFind,readPlayer,savePlayer} from '../battle/rules.mjs?v=equipment-4slots-2';

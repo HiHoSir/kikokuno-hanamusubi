@@ -24,8 +24,9 @@ test('all walking scenes except the field share ONE CSS/world pixel scale',()=>{
  assert.match(rooms,/pixelViewport\(parent.clientWidth,parent.clientHeight,devicePixelRatio,DEFAULT_CAMERA_ZOOM\)/);
  assert.match(cove,/pixelViewport\(parent.clientWidth,parent.clientHeight,devicePixelRatio,DEFAULT_CAMERA_ZOOM\)/);
  assert.match(tenyo,/import \{WORLD_SCENE_ZOOM\} from '\.\.\/ui\/world-scale\.mjs'/);
- assert.match(tenyo,/viewWidth=scene.parentElement.clientWidth\/WORLD_SCENE_ZOOM/);
- assert.match(tenyo,/viewHeight=scene.parentElement.clientHeight\/WORLD_SCENE_ZOOM/);
+ assert.match(tenyo,/VIEWPORT_EDGE\*WORLD_SCENE_ZOOM/);
+ assert.match(tenyo,/viewWidth=width\*worldPixelsPerPixel/);
+ assert.match(tenyo,/viewHeight=height\*worldPixelsPerPixel/);
  assert.doesNotMatch(cove,/hamletCameraZoom|basePixelStep|1\.18|0\.65/);
  assert.doesNotMatch(tenyo,/ZOOM=1\.4|heroDisplayScale:0\.52/);
  const scene=JSON.parse(source('data/maps/tenyo-sanctuary/scene.json'));

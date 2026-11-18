@@ -212,7 +212,9 @@ export function createCoveRenderer(ctx,art,map=COVE_MAP){
    atlas:[surf.sheet.width,surf.sheet.height],coverage:surf.coverage,
    mode:'animated-native-32px-mapchips',orientation:'sea-north',
    landJoin:'sea-to-sand-16-corner-alpha-autotiles',
-   approvedCoastline:30,expandedCoastline:map.width,sceneryNativeCount:sprites.filter(s=>s.kind==='rocks').length
+   approvedCoastline:30,expandedCoastline:map.width,
+   approvedWaveTiles:surf.entries.filter(e=>e.x<30).length,
+   sceneryNativeCount:sprites.filter(s=>s.kind==='rocks').length
  };
  return render;
 }

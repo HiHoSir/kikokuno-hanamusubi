@@ -29,18 +29,21 @@ function bfs(start,goal){
  }
  return false;
 }
-test('production cove replaces its terrain with the APPROVED 30-column coastline, sand to south',()=>{
- assert.equal(COVE_WIDTH,30);
- assert.equal(COVE_HEIGHT,34);
+test('approved 30-column coast is preserved exactly while its connected wave chips extend east',()=>{
+ assert.equal(COVE_WIDTH,42);
+ assert.equal(COVE_HEIGHT,44);
  assert.equal(COVE_TILE_SIZE,32);
- assert.deepEqual(COVE_SHORE,SHORE_Y);
- assert.deepEqual(COVE_SAND_DEPTH,COVE_SHORE.map(y=>34-y));
+ assert.deepEqual(COVE_SHORE.slice(0,SHORE_Y.length),SHORE_Y);
+ assert.equal(COVE_SHORE.length,42);
+ for(let x=1;x<COVE_WIDTH;x++)assert.ok(Math.abs(COVE_SHORE[x]-COVE_SHORE[x-1])<=1,
+   'extended shoreline must not skip chip corners at x='+x);
+ assert.deepEqual(COVE_SAND_DEPTH,COVE_SHORE.map(y=>44-y));
  assert.equal(COVE_MAP.tiles.length,COVE_HEIGHT);
  for(const [y,row] of COVE_MAP.tiles.entries()){
    assert.equal(row.length,COVE_WIDTH);
-   assert.match(row,/^[s~]{30}$/);
+   assert.match(row,/^[s~]{42}$/);
    for(let x=0;x<COVE_WIDTH;x++)
-     assert.equal(row[x],y<SHORE_Y[x]?'~':'s','coast mismatch '+x+','+y);
+     assert.equal(row[x],y<COVE_SHORE[x]?'~':'s','coast mismatch '+x+','+y);
  }
  assert.equal(COVE_MAP.objects.filter(o=>o.kind==='rocks').length,SCENERY.length);
  for(const rock of SCENERY)
@@ -52,14 +55,15 @@ test('production cove replaces its terrain with the APPROVED 30-column coastline
  assert.deepEqual([COVE_MAP.entry.x,COVE_MAP.entry.y],[336,432],
    'do not shift the approved starting view one tile upward');
  assert.equal(tileAt(0,0),'~');
- assert.equal(walkableCell(29,20),false);
- assert.deepEqual(COVE_MAP.tiles.slice(0,22),
+ assert.equal(walkableCell(41,20),false);
+ assert.equal(walkableCell(29,20),true);
+ assert.deepEqual(COVE_MAP.tiles.slice(0,22).map(row=>row.slice(0,30)),
   Array.from({length:22},(_,y)=>
     Array.from({length:30},(_,x)=>y<SHORE_Y[x]?'~':'s').join('')),
   'the entire pre-extension map must stay pixel-compatible');
 });
 test('approved sand reaches the south exit without a grass strip; fisher remains reachable',()=>{
- assert.ok(COVE_SAND_DEPTH.every(n=>n>=25));
+ assert.ok(COVE_SAND_DEPTH.every(n=>n>=35));
  assert.ok(COVE_MAP.exit.columns.every(x=>tileAt(x,COVE_MAP.exit.row)==='s'));
  const entry=[Math.floor(COVE_MAP.entry.x/32),Math.floor(COVE_MAP.entry.y/32)];
  const fisher=[Math.floor(COVE_MAP.fisher.x/32),Math.floor(COVE_MAP.fisher.y/32)];
@@ -67,7 +71,7 @@ test('approved sand reaches the south exit without a grass strip; fisher remains
  assert.ok(bfs(entry,p=>isSouthExit(...p)));
  assert.ok(walkableCell(...fisher));
 });
-test('a fisher homestead extends ONLY south, with native-size assets and real play paths',()=>{
+test('fisher homestead uses new southern sand; native assets; no blocked field return',()=>{
  const house=COVE_MAP.objects.find(o=>o.id==='fisher-house');
  const net=COVE_MAP.objects.find(o=>o.id==='net-rack');
  const bundle=COVE_MAP.objects.find(o=>o.id==='net-bundle');
@@ -76,9 +80,9 @@ test('a fisher homestead extends ONLY south, with native-size assets and real pl
  assert.equal(net.kind,'netRack');
  assert.equal(bundle.kind,'netBundle');
  assert.equal(rope.kind,'ropeCoil');
- assert.deepEqual([house.x,house.y],[272,976]);
- assert.deepEqual([net.x,net.y],[720,872]);
- assert.ok(house.collision.top>19*32,'the house must not intrude on first view');
+ assert.deepEqual([house.x,house.y],[280,1140]);
+ assert.deepEqual([net.x,net.y],[1010,1050]);
+ assert.ok(house.collision.top>22*32,'the house must not overlap any old terrain rows');
  assert.ok(net.collision.top>22*32,'net stays in new area');
  assert.ok(COVE_MAP.objects.some(o=>o.kind==='crate'));
  assert.ok(COVE_MAP.objects.filter(o=>o.kind==='barrel').length>=2);

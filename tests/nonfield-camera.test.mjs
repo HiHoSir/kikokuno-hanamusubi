@@ -29,7 +29,7 @@ test('one scale controls all walkable non-field scenes, excluding the world fiel
  assert.match(cove,/pixelViewport\(parent\.clientWidth,parent\.clientHeight,devicePixelRatio,\s*NON_FIELD_CAMERA_ZOOM\)/);
  assert.match(cove,/cameraZoomAt:\(\)=>NON_FIELD_CAMERA_ZOOM/);
  assert.doesNotMatch(cove,/hamletCameraZoom|basePixelStep|viewport\.step\s*=\s*[^;]+\by\b/);
- assert.match(sanctuary,/pixelViewport\(clientWidth,clientHeight,\s*devicePixelRatio,NON_FIELD_CAMERA_ZOOM\)/);
+ assert.match(sanctuary,/pixelViewport\(clientWidth,clientHeight,\s*globalThis\.devicePixelRatio\?\?1,NON_FIELD_CAMERA_ZOOM\)/);
  assert.match(sanctuary,/const viewWidth=width\/cameraStep,viewHeight=height\/cameraStep/);
  assert.doesNotMatch(sanctuary,/VIEWPORT_EDGE|ZOOM\s*=\s*1\.4/);
  const map=JSON.parse(source('data/maps/tenyo-sanctuary/scene.json'));

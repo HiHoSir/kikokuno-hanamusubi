@@ -175,7 +175,7 @@ async function start(){
   function resize(){
     const {clientWidth,clientHeight}=scene.parentElement;
     const {step,width,height}=pixelViewport(clientWidth,clientHeight,
-      devicePixelRatio,NON_FIELD_CAMERA_ZOOM);
+      globalThis.devicePixelRatio??1,NON_FIELD_CAMERA_ZOOM);
     cameraStep=step;
     if(scene.width===width&&scene.height===height)return;
     scene.width=width;

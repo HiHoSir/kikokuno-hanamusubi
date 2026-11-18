@@ -111,6 +111,8 @@ try{
    'extended high tide must cover at least the original approved shoreline');
  assert.equal(initial.surf.approvedCoastline,30);
  assert.equal(initial.surf.expandedCoastline,42);
+ assert.equal(initial.surf.approvedWaveTiles,58,
+   'the original 30-column wave band must still contain all 58 accepted tiles');
  assert.equal(initial.position.position.y,432,
    'the original accepted player position (and camera composition) must not shift');
  assert.equal(initial.surf.atlas[0]%32,0);

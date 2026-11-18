@@ -34,9 +34,9 @@ const scenery={
  crate:'assets/village/objects/crate.png',
  // Adopted village house at full native 390x357; no character-scale fudge.
  fisherHouse:'assets/village/scene/house-thatch.png',
- netRack:'assets/sea-cove/objects/net-drying-rack-192x150.png',
- netBundle:'assets/sea-cove/objects/net-bundle-112x66.png',
- ropeCoil:'assets/sea-cove/objects/rope-coil-68x50.png',
+ netRack:'assets/sea-cove/objects/net-drying-rack-232x176.png',
+ netBundle:'assets/sea-cove/objects/net-bundle-146x88.png',
+ ropeCoil:'assets/sea-cove/objects/rope-coil-88x62.png',
  water:'assets/field/effects/water-motion.png',
  coastMask:'assets/field/terrain/atlas/coast-mask-32.png',
  // Exact accepted shoreline-study atlas set: one connected coast chip from

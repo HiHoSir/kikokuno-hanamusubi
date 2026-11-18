@@ -4,7 +4,6 @@ import {bindDialogue} from '../village/dialogue.mjs';
 import {residentInFront} from '../village/residents.mjs';
 import {readStoryStage,advanceStoryStage,objectiveForStage} from '../story/chapter-one.mjs';
 import {consumeRestorePosition} from '../save/save-game.mjs?v=save-slots-1';
-import {WORLD_SCENE_ZOOM} from '../ui/world-scale.mjs';
 
 const {SMModel,SMRender}=globalThis;
 const scene=document.querySelector('#scene');
@@ -17,7 +16,7 @@ const directions={down:[0,1,0,'d'],up:[0,-1,1,'u'],right:[1,0,2,'r'],left:[-1,0,
 const keys={ArrowDown:'down',ArrowUp:'up',ArrowRight:'right',ArrowLeft:'left',s:'down',w:'up',d:'right',a:'left'};
 const facing=['d','u','r','l'];
 const input=new Map();
-const SPEED_MS=156,VIEWPORT_EDGE=768;
+const SPEED_MS=156,ZOOM=1.4,VIEWPORT_EDGE=768;
 let pendingInput=null;
 
 function setInput(id,direction){
@@ -58,7 +57,7 @@ async function start(){
   if(!SMModel||!SMRender)throw new Error('天妖の社の描画エンジンが読み込めません');
   const mapUrl=new URL('../../../data/maps/tenyo-sanctuary/scene.json',import.meta.url);
   // A fresh scene JSON is essential after the accepted NPC assets change.
-  mapUrl.searchParams.set('v','tenyo-world-scale-1');
+  mapUrl.searchParams.set('v','tenyo-proportions-052');
   const response=await fetch(mapUrl);
   if(!response.ok)throw new Error('天妖の社のマップデータを読めません');
   const map=SMModel.parse(await response.text());
@@ -183,27 +182,14 @@ async function start(){
     for(let i=0;i<residents.length;i++)
       residentObjects[i].dir=facing[residents[i].face??0]??'d';
     SMRender.draw(wc,paintedMap,{
-      images,hero,bounds,actor:player,animationTime:now,shadows:true,
+      images,hero,bounds,actor:player,heroDisplayScale:map.game.heroDisplayScale??1,animationTime:now,shadows:true,
       lighting:true,reflections:true,atmosphere:true,depthOfField:true,
     });
     const width=scene.width,height=scene.height;
-    // Sprite and tile world pixels must occupy the SAME CSS pixel span as
-    // village, indoors and cove. The display buffer is an independent
-    // 768px max-edge raster: its resolution must not affect world scale.
-    // The 768px offscreen buffer is rounded for each dimension.
-    // Derive a SINGLE world-to-buffer ratio so x/y never stretch differently
-    // on portrait or landscape; the CSS-world target remains 0.5.
-    const worldPixelsPerPixel=
-      Math.max(scene.parentElement.clientWidth,scene.parentElement.clientHeight)/
-      (VIEWPORT_EDGE*WORLD_SCENE_ZOOM);
-    const viewWidth=width*worldPixelsPerPixel;
-    const viewHeight=height*worldPixelsPerPixel;
-    const cameraX=viewWidth>=world.width
-      ?(world.width-viewWidth)/2
-      :clamp((player.x+.5)*32-viewWidth/2,0,world.width-viewWidth);
-    const cameraY=viewHeight>=world.height
-      ?(world.height-viewHeight)/2
-      :clamp((player.y+.5)*32-viewHeight/2,0,world.height-viewHeight);
+    const worldPixelsPerPixel=VIEWPORT_EDGE/(Math.max(width,height)*ZOOM);
+    const viewWidth=width*worldPixelsPerPixel,viewHeight=height*worldPixelsPerPixel;
+    const cameraX=clamp((player.x+.5)*32-viewWidth/2,0,world.width-viewWidth);
+    const cameraY=clamp((player.y+.5)*32-viewHeight/2,0,world.height-viewHeight);
     ctx.setTransform(1,0,0,1,0,0);
     ctx.imageSmoothingEnabled=false;
     ctx.fillStyle='#13354e';ctx.fillRect(0,0,width,height);

@@ -1,4 +1,8 @@
-export const DEFAULT_CAMERA_ZOOM = 0.5;
+// Canonical world-to-screen scale for ALL walkable non-field scenes.
+// The field has a separate projection/camera and is deliberately excluded.
+// Never animate or change this value based on player position or scene name.
+export const NON_FIELD_CAMERA_ZOOM = 0.5;
+export const DEFAULT_CAMERA_ZOOM = NON_FIELD_CAMERA_ZOOM;
 const RIVER_DOT = 4;
 const RIPPLE_MARGIN = 32;
 const RIPPLE_COLORS = ['#2168b7', '#2c85cf', '#3490d4', '#409ada'];

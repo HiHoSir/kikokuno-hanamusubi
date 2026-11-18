@@ -1,4 +1,4 @@
-import {COVE_MAP,tileAt,walkableCell,isSouthExit} from '../../../data/maps/sea-cove/scene.mjs?v=hamlet-1';
+import {COVE_MAP,tileAt,walkableCell,isSouthExit} from '../../../data/maps/sea-cove/scene.mjs?v=gear-proportion-2';
 import {makeWalk} from '../village/movement.mjs';
 import {residentInFront} from '../village/residents.mjs';
 import {bindDialogue} from '../village/dialogue.mjs';

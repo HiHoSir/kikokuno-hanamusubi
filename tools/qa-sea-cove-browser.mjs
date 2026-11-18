@@ -58,16 +58,30 @@ try{
    const frame=document.querySelector('#game-scene'),child=frame.contentWindow;
    const position=child.KIKOKU_SAVE_SNAPSHOT();
    const canvas=child.document.querySelector('#scene');
-   const width=child.document.querySelector('.viewport').clientWidth/.78;
-   const cameraX=Math.max(0,Math.min(46*32-width,position.position.x-width/2));
+   const height=child.document.querySelector('.viewport').clientHeight/1.18;
+   const cameraY=Math.max(0,Math.min(22*32-height,position.position.y-height/2-106));
    return {label:frame.title,position,canvas:[canvas.width,canvas.height],
-     rightmostWorldX:cameraX+width,waterVisible:cameraX+width>39*32,
+     topWorldY:cameraY,waterVisible:cameraY<9*32,
      menuVisible:!document.querySelector('#field-menu-toggle').hidden,
      shells:child.__COVE_SHELL_QA?.(),surf:child.__COVE_SURF_QA?.()};
  });
  assert.equal(initial.position.scene,'cove');
  assert.equal(initial.waterVisible,true,'first view includes the moving sea, not only grass');
  assert.ok(initial.canvas[0]>0&&initial.canvas[1]>0);
+ // A drawing buffer can be 2x the CSS viewport on Retina devices, but the
+ // canvas ELEMENT itself must never be 2x the display area (hero cut-off).
+ const realCanvasFit=await page.evaluate(()=>{
+   const doc=document.querySelector('#game-scene').contentDocument;
+   const c=doc.querySelector('#scene').getBoundingClientRect();
+   const v=doc.querySelector('.viewport').getBoundingClientRect();
+   return {widthDifference:Math.abs(c.width-v.width),
+     heightDifference:Math.abs(c.height-v.height),
+     leftDifference:Math.abs(c.left-v.left),
+     topDifference:Math.abs(c.top-v.top)};
+ });
+ assert.ok(Object.values(realCanvasFit).every(n=>n<2),
+   'canvas CSS bounds must match viewport; Retina backing pixels are not CSS pixels');
+
  assert.equal(initial.menuVisible,true);
  assert.equal(initial.shells.completedBattles,5);
  assert.ok(initial.shells.available>=1&&initial.shells.available<=3,
@@ -76,13 +90,13 @@ try{
  assert.equal(initial.surf.frames,8,'production shore uses approved 8-frame tide');
  assert.equal(initial.surf.chipSize,32,'surf must be native 32px animated mapchips');
  assert.equal(initial.surf.mode,'animated-native-32px-mapchips');
- assert.equal(initial.surf.orientation,'sea-east');
- assert.equal(initial.surf.landJoin,'masked-16-corner-grass-sand',
-   'sand/grass boundary uses auto-connected native chips');
- assert.ok(initial.surf.grassCornerChips>12,
-   'visible irregular grass border has several connected corner chips');
- assert.ok(initial.surf.scrubCornerChips>=8,
-   'dense inland scrub also uses irregular masked mapchip edges');
+ assert.equal(initial.surf.orientation,'sea-north');
+ assert.equal(initial.surf.landJoin,'sea-to-sand-16-corner-alpha-autotiles',
+   'approved shoreline, not a grass/forest map');
+ assert.equal(initial.surf.approvedCoastline,30,
+   'the exact 30-column approved shoreline was copied');
+ assert.equal(initial.surf.sceneryNativeCount,3,
+   'approved three native-sized rocks are preserved');
  assert.ok(initial.surf.tileCount>=25,'entire authored cove coast is covered by surf chips');
  assert.equal(initial.surf.atlas[0]%32,0);
  assert.equal(initial.surf.atlas[1]%32,0);
@@ -117,17 +131,16 @@ try{
    document.querySelector('#game-scene').contentWindow.KIKOKU_SAVE_SNAPSHOT().position.y));
  console.log(JSON.stringify({movement:{yBefore,yAfter}}));
  assert.ok(yAfter<yBefore,'hero must walk across the authored shore');
- // Move across the walkable southern grass and beach towards an actual native
- // shell sprite. The existing cove controls, not hidden test-only teleport,
- // must bring the hero into the 36px collection range.
+ // Move on the approved wide sand towards an actual native shell.
+ // The original controls (not a test teleport) bring the hero within pickup range.
  await page.evaluate(()=>{
    const child=document.querySelector('#game-scene').contentWindow;
-   child.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowRight',bubbles:true,cancelable:true}));
+   child.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowLeft',bubbles:true,cancelable:true}));
  });
- await page.waitForTimeout(1190);
+ await page.waitForTimeout(300);
  await page.evaluate(()=>{
    const child=document.querySelector('#game-scene').contentWindow;
-   child.dispatchEvent(new KeyboardEvent('keyup',{key:'ArrowRight',bubbles:true,cancelable:true}));
+   child.dispatchEvent(new KeyboardEvent('keyup',{key:'ArrowLeft',bubbles:true,cancelable:true}));
  });
  await page.waitForTimeout(100);
  await page.waitForFunction(()=>Boolean(document.querySelector('#game-scene')
@@ -172,6 +185,14 @@ try{
  const reviewInitial=await review.evaluate(()=>window.KIKOKU_SAVE_SNAPSHOT().position);
  const surf=await review.evaluate(()=>window.__COVE_SURF_QA());
  assert.equal(surf.frames,8);
+ const cssFit=await review.evaluate(()=>{
+   const c=document.querySelector('#scene').getBoundingClientRect();
+   const v=document.querySelector('.viewport').getBoundingClientRect();
+   return [Math.abs(c.width-v.width),Math.abs(c.height-v.height),
+     Math.abs(c.left-v.left),Math.abs(c.top-v.top)];
+ });
+ assert.ok(cssFit.every(d=>d<2),'mobile preview canvas must not overflow/crop');
+
  assert.ok(surf.tileCount>=25);
  const before=await review.screenshot({path:'artifacts/sea-cove-pages-review-start.png'});
  await review.waitForTimeout(600);

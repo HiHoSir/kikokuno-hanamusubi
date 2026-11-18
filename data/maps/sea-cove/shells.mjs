@@ -1,6 +1,7 @@
 // Production sea-cove shell sites and persistent player satchel.
-// Terrain and the previously accepted wave preview are not changed here.
-import {COVE_MAP,COVE_SHORE,tileAt} from './scene.mjs';
+// Sites follow the accepted shoreline-study on the sea-north cove.
+import {COVE_MAP,tileAt} from './scene.mjs';
+import {SHELL_SITES} from '../shoreline-study/shells.mjs';
 import {
  SHELL_KINDS,BATTLES_PER_SHELL_BATCH,SHELL_CAP,SHELL_PICKUP_DISTANCE,
  emptyShellBag,shellBagCount,shellBagValue,
@@ -8,13 +9,13 @@ import {
 } from '../../../src/game/items/shells.mjs';
 
 const TILE=COVE_MAP.tileSize;
-const siteRows=Object.freeze([24,22,20,28,27,26,25,23,21,19,17,15,13,11,9,7]);
-export const COVE_SHELL_SITES=Object.freeze(siteRows.map((row,index)=>{
- const desired=COVE_SHORE[row]-2;
- const xCell=tileAt(desired,row)==='s'?desired:desired+1;
- return Object.freeze({id:'cove-shell-site-'+index,cell:[xCell,row],
-   x:xCell*TILE+16,y:row*TILE+16});
-}));
+// Preserve the approved study's fixed collection sites, not a second
+// layout located along the wrong (eastern) edge of the cove.
+export const COVE_SHELL_SITES=Object.freeze(SHELL_SITES.map((site,index)=>
+ Object.freeze({id:'cove-shell-site-'+index,
+   cell:[Math.floor(site.x/TILE),Math.floor(site.y/TILE)],
+   x:site.x,y:site.y})
+));
 const number=n=>Number.isSafeInteger(n)&&n>=0?Math.min(n,1000000):0;
 const nearby=(a,b,x,y)=>Math.hypot(a-x,b-y);
 const storedShell=shell=>{

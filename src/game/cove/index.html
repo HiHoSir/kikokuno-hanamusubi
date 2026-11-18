@@ -18,7 +18,7 @@ body{margin:0;overscroll-behavior:none}
 main{width:min(100%,880px);height:100vh;height:100dvh;margin:auto;padding:max(8px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));display:grid;grid-template-rows:minmax(0,1fr) auto;gap:8px}
 h1{font-size:17px;line-height:1.25;margin:0}
 .viewport{position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;border:1px solid #73785c;border-radius:8px;background:#284d4b}
-canvas{display:block;image-rendering:pixelated;touch-action:none}
+canvas{position:absolute;inset:0;width:100%;height:100%;display:block;image-rendering:pixelated;touch-action:none}
 .controls{display:flex;align-items:center;justify-content:center;gap:8px}
 .dpad{display:grid;grid-template-columns:repeat(3,47px);grid-template-rows:repeat(2,42px);gap:3px}
 button{border:1px solid #777d62;border-radius:8px;background:#314337;color:inherit;font:inherit;min-height:40px;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;cursor:pointer}
@@ -46,6 +46,9 @@ button:active,button.held,button[aria-pressed=true]{background:#e8cc8b;color:#27
 <script type="module" src="../ui/selection-guard.mjs"></script>
 <link rel="stylesheet" href="../audio/audio.css">
 <script type="module" src="../audio/boot.mjs"></script>
+<script src="../../field/assets.js"></script>
+<script src="../../field/landscape.js"></script>
+<script src="../../field/autotile.js"></script>
 </head>
 <body>
 <main data-bgm="field">
@@ -74,6 +77,6 @@ button:active,button.held,button[aria-pressed=true]{background:#e8cc8b;color:#27
 </section>
 <button id="sound-toggle" type="button" aria-label="サウンドを再生" aria-pressed="false">♪ 再生</button>
 </main>
-<script type="module" src="./walk.mjs?v=sea-cove-1-shell-1-shoreline-2"></script>
+<script type="module" src="./walk.mjs?v=sea-cove-1-shell-1-shoreline-3"></script>
 </body>
 </html>

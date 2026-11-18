@@ -227,9 +227,9 @@ try{
  assert.equal(hamlet.cameraZoom,0.5,
    'beach and fisher worksite must share village/interior CSS world zoom');
  assert.deepEqual(hamlet.assets.fisherHouse,{width:390,height:357});
- assert.deepEqual(hamlet.assets.netRack,{width:192,height:150});
- assert.deepEqual(hamlet.assets.netBundle,{width:112,height:66});
- assert.deepEqual(hamlet.assets.ropeCoil,{width:68,height:50});
+ assert.deepEqual(hamlet.assets.netRack,{width:232,height:176});
+ assert.deepEqual(hamlet.assets.netBundle,{width:146,height:88});
+ assert.deepEqual(hamlet.assets.ropeCoil,{width:88,height:62});
  const blocks=await review.evaluate(()=>[
    window.__COVE_HAMLET_QA.blockedByProp(660,1000),
    window.__COVE_HAMLET_QA.blockedByProp(1050,1000),

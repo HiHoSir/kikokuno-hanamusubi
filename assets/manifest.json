@@ -2353,70 +2353,70 @@
       "gitBlobSha": "48b25416891959ad86701b05c275e49bf40d9df0"
     },
     {
-      "id": "cove-net-drying-rack-192x150",
+      "id": "cove-net-drying-rack-232x176",
       "type": "object",
-      "path": "assets/sea-cove/objects/net-drying-rack-192x150.png",
+      "path": "assets/sea-cove/objects/net-drying-rack-232x176.png",
       "status": "approved",
       "usage": "sea-cove-fishing-worksite",
       "dimensions": {
-        "width": 192,
-        "height": 150
+        "width": 232,
+        "height": 176
       },
       "footAnchor": [
-        96,
-        150
+        116,
+        176
       ],
       "origin": {
         "kind": "original-pixel-art",
         "generator": "tools/generate-cove-fishing-gear.py",
         "source": "procedural original pixel geometry with approved village art palette"
       },
-      "description": "drying net with rope knots and wooden poles; foot at lower center",
-      "approvalNote": "2026-11-18: user requested expansion and placement on unfinished cove; iPhone Safari visual review pending"
+      "description": "standing timber drying rack; 20px coarse mesh with 3px twine and village-scale posts",
+      "approvalNote": "2026-11-19: proportion/dot-density correction against village sprites; awaiting iPhone visual approval"
     },
     {
-      "id": "cove-net-bundle-112x66",
+      "id": "cove-net-bundle-146x88",
       "type": "object",
-      "path": "assets/sea-cove/objects/net-bundle-112x66.png",
+      "path": "assets/sea-cove/objects/net-bundle-146x88.png",
       "status": "approved",
       "usage": "sea-cove-fishing-worksite",
       "dimensions": {
-        "width": 112,
-        "height": 66
+        "width": 146,
+        "height": 88
       },
       "footAnchor": [
-        56,
-        66
+        73,
+        88
       ],
       "origin": {
         "kind": "original-pixel-art",
         "generator": "tools/generate-cove-fishing-gear.py",
         "source": "procedural original pixel geometry with approved village art palette"
       },
-      "description": "folded fishing net; 112px native-wide object",
-      "approvalNote": "2026-11-18: user requested expansion and placement on unfinished cove; iPhone Safari visual review pending"
+      "description": "folded net; larger, layered, coarse twine and binding cords",
+      "approvalNote": "2026-11-19: proportion/dot-density correction against village sprites; awaiting iPhone visual approval"
     },
     {
-      "id": "cove-rope-coil-68x50",
+      "id": "cove-rope-coil-88x62",
       "type": "object",
-      "path": "assets/sea-cove/objects/rope-coil-68x50.png",
+      "path": "assets/sea-cove/objects/rope-coil-88x62.png",
       "status": "approved",
       "usage": "sea-cove-fishing-worksite",
       "dimensions": {
-        "width": 68,
-        "height": 50
+        "width": 88,
+        "height": 62
       },
       "footAnchor": [
-        34,
-        50
+        44,
+        62
       ],
       "origin": {
         "kind": "original-pixel-art",
         "generator": "tools/generate-cove-fishing-gear.py",
         "source": "procedural original pixel geometry with approved village art palette"
       },
-      "description": "rope coil for the fisher's working beach",
-      "approvalNote": "2026-11-18: user requested expansion and placement on unfinished cove; iPhone Safari visual review pending"
+      "description": "thick rope coil with large legible loops in village object style",
+      "approvalNote": "2026-11-19: proportion/dot-density correction against village sprites; awaiting iPhone visual approval"
     }
   ],
   "designReferences": [

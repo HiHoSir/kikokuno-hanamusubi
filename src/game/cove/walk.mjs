@@ -1,11 +1,11 @@
-import {COVE_MAP,tileAt,walkableCell,isSouthExit} from '../../../data/maps/sea-cove/scene.mjs';
+import {COVE_MAP,tileAt,walkableCell,isSouthExit} from '../../../data/maps/sea-cove/scene.mjs?v=hamlet-1';
 import {makeWalk} from '../village/movement.mjs';
 import {residentInFront} from '../village/residents.mjs';
 import {bindDialogue} from '../village/dialogue.mjs';
 import {pixelViewport} from '../village/render.mjs';
 import {readStoryStage,advanceStoryStage,objectiveForStage} from '../story/chapter-one.mjs';
 import {consumeRestorePosition} from '../save/save-game.mjs?v=save-slots-1';
-import {createCoveRenderer} from './render.mjs';
+import {createCoveRenderer} from './render.mjs?v=hamlet-1';
 import {readPlayer,savePlayer} from '../battle/rules.mjs';
 import {SHELL_KINDS,shellBagCount} from '../items/shells.mjs';
 import {
@@ -31,6 +31,12 @@ const scenery={
  rocks:'assets/village/objects/rocks.png',
  basket:'assets/village/objects/basket.png',
  barrel:'assets/village/objects/barrel.png',
+ crate:'assets/village/objects/crate.png',
+ // Adopted village house at full native 390x357; no character-scale fudge.
+ fisherHouse:'assets/village/scene/house-thatch.png',
+ netRack:'assets/sea-cove/objects/net-drying-rack-192x150.png',
+ netBundle:'assets/sea-cove/objects/net-bundle-112x66.png',
+ ropeCoil:'assets/sea-cove/objects/rope-coil-68x50.png',
  water:'assets/field/effects/water-motion.png',
  coastMask:'assets/field/terrain/atlas/coast-mask-32.png',
  // Exact accepted shoreline-study atlas set: one connected coast chip from
@@ -120,14 +126,23 @@ async function start(){
  // Native-sized objects remain separate from sand/grass tiles.
  const fishermen={...site,bitmap:images.fisher,distance:0,moving:false,
    lines:linesForFisher(readStoryStage())};
+ // Collider positions are authored independently of roof alpha and net mesh.
+ // The house blocks full roof overlap, so the character never disappears
+ // behind its art. Coastal rocks and pickup sites remain unchanged.
  const collisionObjects=COVE_MAP.objects
-   .filter(o=>['basket','barrel','rocks'].includes(o.kind))
-   .map(o=>({x:o.footPosition?o.x:o.x*tileSize+16,
-     y:o.footPosition?o.y:(o.y+1)*tileSize-10,
-     radius:o.kind==='rocks'?22:22}));
+   .filter(o=>o.solid||['basket','barrel','rocks'].includes(o.kind))
+   .map(o=>o.collision
+     ?{shape:'box',...o.collision,id:o.id}
+     :{shape:'circle',id:o.id,x:o.footPosition?o.x:o.x*tileSize+16,
+       y:o.footPosition?o.y:(o.y+1)*tileSize-10,
+       radius:o.radius??22});
+ const blockedByProp=(px,py)=>collisionObjects.some(o=>
+   o.shape==='box'
+     ?px>=o.left-6&&px<=o.right+6&&py>=o.top-6&&py<=o.bottom+6
+     :Math.hypot(px-o.x,py-o.y)<o.radius+3);
  const occupied=(px,py)=>
    Math.hypot(px-fishermen.x,py-fishermen.y)<24||
-   collisionObjects.some(o=>Math.hypot(px-o.x,py-o.y)<o.radius);
+   blockedByProp(px,py);
  const restored=previewMode?null:consumeRestorePosition('cove');
  const usable=restored&&walk.canStand(restored.x,restored.y)&&!occupied(restored.x,restored.y);
  let x=usable?restored.x:entry.x,y=usable?restored.y:entry.y;
@@ -154,11 +169,22 @@ async function start(){
    if(shellHint.textContent!==next)shellHint.textContent=next;
  }
  refreshObjective();
+ // The approved first screen has zoom 1.18. The newly built inland
+ // worksite gradually widens its camera ONLY after y=704 (the original
+ // 22-row map boundary), so the original beach remains pixel-identical.
+ // Every object and NPC still renders at its native size in world units.
+ const hamletCameraZoom=footY=>{
+   const t=Math.max(0,Math.min(1,(footY-704)/300));
+   const easing=t*t*(3-2*t);
+   return 1.18-(1.18-0.65)*easing;
+ };
  const viewport={step:1,bufferWidth:1,bufferHeight:1};
+ let basePixelStep=1;
  const resize=()=>{
    const parent=scene.parentElement;
    const dims=pixelViewport(parent.clientWidth,parent.clientHeight,devicePixelRatio,1.18);
    scene.width=dims.width;scene.height=dims.height;
+   basePixelStep=dims.step;
    viewport.step=dims.step;viewport.bufferWidth=dims.width;viewport.bufferHeight=dims.height;
  };
  const leave=()=>{
@@ -188,6 +214,7 @@ async function start(){
    refreshShellHint();
    const tick=Math.floor(now/180);
    if(!menuPaused&&(moving||tick!==lastRenderedFrame)){
+     viewport.step=basePixelStep*hamletCameraZoom(y)/1.18;
      renderer({x,y,face,distance,moving},fishermen,now,viewport,shells);
      lastRenderedFrame=tick;
    }
@@ -250,6 +277,17 @@ async function start(){
  refreshShellHint();
  load.hidden=true;
  window.__COVE_PREVIEW_MODE=previewMode;
+ window.__COVE_HAMLET_QA={
+   bounds:[COVE_MAP.width,COVE_MAP.height],
+   spawn:{...entry},
+   objects:COVE_MAP.objects.map(o=>({id:o.id??o.kind,kind:o.kind,
+     x:o.x,y:o.y,solid:o.solid??true,collision:o.collision??null,
+     footPosition:o.footPosition??false})),
+   assets:Object.fromEntries(['fisherHouse','netRack','netBundle','ropeCoil','crate']
+     .map(kind=>[kind,{width:images[kind].naturalWidth,height:images[kind].naturalHeight}])),
+   blockedByProp:(x,y)=>blockedByProp(x,y),
+   cameraZoomAt:y=>hamletCameraZoom(y)
+ };
  window.__COVE_FISHER_QA={
    character:'ushiohei',
    sprite:scenery.fisher,

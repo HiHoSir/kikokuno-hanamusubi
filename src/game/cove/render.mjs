@@ -1,4 +1,4 @@
-import {COVE_MAP,COVE_SHORE,tileAt} from '../../../data/maps/sea-cove/scene.mjs';
+import {COVE_MAP,COVE_SHORE,tileAt} from '../../../data/maps/sea-cove/scene.mjs?v=hamlet-1';
 import {drawCharacter} from '../village/residents.mjs';
 import {createShellAtlas,SHELL_ART_SIZE} from '../items/shell-art.mjs';
 import {TIDE_FRAMES,tideFrame,surfSample} from '../terrain/surf.mjs';
@@ -19,7 +19,19 @@ const chip=(ctx,atlas,mask,px,py)=>{
    TILE,TILE,px,py,TILE,TILE);
 };
 export const coastMask=(map,x,y)=>{
- const dry=(cx,cy)=>tileAt(cx,cy,map)!=='~';
+ // The *south* edge is continuous dry land, not a new coastline.
+ // The north remains the approved sea; this does not touch its 16-mask.
+ const dry=(cx,cy)=>{
+   // A map boundary is NOT a coastline. Continue the coastal height field
+   // at east/west boundaries; let the sand continue beyond the south edge.
+   // Real sea/sand transitions are taken from the existing mapchip grid.
+   if(Number.isInteger(map.width)&&Number.isInteger(map.height)){
+     if(cy>=map.height)return true;
+     if(cx<0)return cy>=COVE_SHORE[0];
+     if(cx>=map.width)return cy>=COVE_SHORE[map.width-1];
+   }
+   return tileAt(cx,cy,map)!=='~';
+ };
  return (dry(x,y)?1:0)|(dry(x+1,y)?2:0)|
    (dry(x+1,y+1)?4:0)|(dry(x,y+1)?8:0);
 };
@@ -200,7 +212,9 @@ export function createCoveRenderer(ctx,art,map=COVE_MAP){
    atlas:[surf.sheet.width,surf.sheet.height],coverage:surf.coverage,
    mode:'animated-native-32px-mapchips',orientation:'sea-north',
    landJoin:'sea-to-sand-16-corner-alpha-autotiles',
-   approvedCoastline:map.width,sceneryNativeCount:sprites.filter(s=>s.kind==='rocks').length
+   approvedCoastline:30,expandedCoastline:map.width,
+   formerMapColumnsWaveTiles:surf.entries.filter(e=>e.x<30).length,
+   sceneryNativeCount:sprites.filter(s=>s.kind==='rocks').length
  };
  return render;
 }

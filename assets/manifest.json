@@ -2351,6 +2351,72 @@
       "sourceDescription": "Our approved male farm-worker art recolored/edited into Ushiohei's indigo-clad coastal fisherman; Tengai Makyou ZERO consulted for NPC proportions and walk grammar only; no game pixels copied",
       "generator": "tools/generate-ushiohei-sprite.py",
       "gitBlobSha": "48b25416891959ad86701b05c275e49bf40d9df0"
+    },
+    {
+      "id": "cove-net-drying-rack-192x150",
+      "type": "object",
+      "path": "assets/sea-cove/objects/net-drying-rack-192x150.png",
+      "status": "approved",
+      "usage": "sea-cove-fishing-worksite",
+      "dimensions": {
+        "width": 192,
+        "height": 150
+      },
+      "footAnchor": [
+        96,
+        150
+      ],
+      "origin": {
+        "kind": "original-pixel-art",
+        "generator": "tools/generate-cove-fishing-gear.py",
+        "source": "procedural original pixel geometry with approved village art palette"
+      },
+      "description": "drying net with rope knots and wooden poles; foot at lower center",
+      "approvalNote": "2026-11-18: user requested expansion and placement on unfinished cove; iPhone Safari visual review pending"
+    },
+    {
+      "id": "cove-net-bundle-112x66",
+      "type": "object",
+      "path": "assets/sea-cove/objects/net-bundle-112x66.png",
+      "status": "approved",
+      "usage": "sea-cove-fishing-worksite",
+      "dimensions": {
+        "width": 112,
+        "height": 66
+      },
+      "footAnchor": [
+        56,
+        66
+      ],
+      "origin": {
+        "kind": "original-pixel-art",
+        "generator": "tools/generate-cove-fishing-gear.py",
+        "source": "procedural original pixel geometry with approved village art palette"
+      },
+      "description": "folded fishing net; 112px native-wide object",
+      "approvalNote": "2026-11-18: user requested expansion and placement on unfinished cove; iPhone Safari visual review pending"
+    },
+    {
+      "id": "cove-rope-coil-68x50",
+      "type": "object",
+      "path": "assets/sea-cove/objects/rope-coil-68x50.png",
+      "status": "approved",
+      "usage": "sea-cove-fishing-worksite",
+      "dimensions": {
+        "width": 68,
+        "height": 50
+      },
+      "footAnchor": [
+        34,
+        50
+      ],
+      "origin": {
+        "kind": "original-pixel-art",
+        "generator": "tools/generate-cove-fishing-gear.py",
+        "source": "procedural original pixel geometry with approved village art palette"
+      },
+      "description": "rope coil for the fisher's working beach",
+      "approvalNote": "2026-11-18: user requested expansion and placement on unfinished cove; iPhone Safari visual review pending"
     }
   ],
   "designReferences": [

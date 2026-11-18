@@ -103,12 +103,22 @@ try{
    'the exact 30-column approved shoreline was copied');
  assert.equal(initial.surf.sceneryNativeCount,3,
    'approved three native-sized rocks are preserved');
- assert.equal(initial.surf.tileCount,58,
-   'the approved shoreline study animates exactly 58 edge and beach chips');
- assert.equal(initial.surf.coverage[0].washedPixels,393,
-   'low tide must reproduce the approved study exactly');
- assert.equal(initial.surf.coverage[4].washedPixels,11477,
-   'high tide must reproduce the approved study exactly');
+ assert.ok(initial.surf.tileCount>58,
+   'extended eastern coast must ADD new animated shoreline tiles, not stay frozen at 58');
+ assert.ok(initial.surf.coverage[0].washedPixels>=393,
+   'extended low tide must cover at least the original approved shoreline');
+ assert.ok(initial.surf.coverage[4].washedPixels>=11477,
+   'extended high tide must cover at least the original approved shoreline');
+ assert.equal(initial.surf.approvedCoastline,30);
+ assert.equal(initial.surf.expandedCoastline,42);
+ // The legacy finite map had 2 shore chips at its artificial EAST
+ // boundary; extending real land beyond that boundary removes those
+ // fake edge-only tiles. The 56 real western chips must remain intact,
+ // and the whole connected coast must gain the 22 genuinely new chips.
+ assert.equal(initial.surf.formerMapColumnsWaveTiles,56,
+   'preserve the 56 real western shoreline chips without fake cutoff surf');
+ assert.equal(initial.surf.tileCount,78,
+   'the extended 42-column beach uses 78 connected animated shore chips');
  assert.equal(initial.position.position.y,432,
    'the original accepted player position (and camera composition) must not shift');
  assert.equal(initial.surf.atlas[0]%32,0);
@@ -209,7 +219,26 @@ try{
  });
  assert.ok(cssFit.every(d=>d<2),'mobile preview canvas must not overflow/crop');
 
- assert.equal(surf.tileCount,58,'Pages view must animate ALL approved shoreline chips');
+ assert.ok(surf.tileCount>58,'Pages view must animate added coastline too');
+ assert.equal(surf.approvedCoastline,30);
+ assert.equal(surf.expandedCoastline,42);
+ const hamlet=await review.evaluate(()=>window.__COVE_HAMLET_QA);
+ assert.deepEqual(hamlet.bounds,[42,44]);
+ assert.equal(await review.evaluate(()=>window.__COVE_HAMLET_QA.cameraZoomAt(432)),1.18,
+   'original approved camera zoom must not change');
+ assert.ok(await review.evaluate(()=>window.__COVE_HAMLET_QA.cameraZoomAt(1050))<=0.66,
+   'fishing worksite camera must reveal whole house and net without rescaling art');
+ assert.deepEqual(hamlet.assets.fisherHouse,{width:390,height:357});
+ assert.deepEqual(hamlet.assets.netRack,{width:192,height:150});
+ assert.deepEqual(hamlet.assets.netBundle,{width:112,height:66});
+ assert.deepEqual(hamlet.assets.ropeCoil,{width:68,height:50});
+ const blocks=await review.evaluate(()=>[
+   window.__COVE_HAMLET_QA.blockedByProp(660,1000),
+   window.__COVE_HAMLET_QA.blockedByProp(1050,1000),
+   window.__COVE_HAMLET_QA.blockedByProp(336,432)
+ ]);
+ assert.deepEqual(blocks,[true,true,false],
+   'roof/net should block walking but approved spawn must remain free');
  assert.equal(reviewInitial.y,432,'Pages camera must match accepted shoreline composition');
  // Pixel-level visual regression: compare an untouched 300x65 dry-sand
  // rectangle in the production-cove canvas with the APPROVED study canvas.
@@ -242,6 +271,22 @@ try{
    {key:'ArrowUp',bubbles:true,cancelable:true})));
  const reviewMoved=await review.evaluate(()=>window.KIKOKU_SAVE_SNAPSHOT().position);
  assert.ok(reviewMoved.y<reviewInitial.y,'Pages preview allows real walking');
+ // Move in the actual public review, not a fabricated screenshot:
+ // east across the extended coast then south to the working beach.
+ const held=async(key,ms)=>{
+   await review.evaluate(k=>window.dispatchEvent(new KeyboardEvent('keydown',
+     {key:k,bubbles:true,cancelable:true})),key);
+   await review.waitForTimeout(ms);
+   await review.evaluate(k=>window.dispatchEvent(new KeyboardEvent('keyup',
+     {key:k,bubbles:true,cancelable:true})),key);
+ };
+ await held('ArrowRight',3700);
+ await held('ArrowDown',4050);
+ const hamletView=await review.evaluate(()=>window.KIKOKU_SAVE_SNAPSHOT().position);
+ assert.ok(hamletView.x>700&&hamletView.y>700,
+   'real on-screen movement reaches expanded fishing worksite');
+ assert.ok(hamletView.x<950,'worksite route should use the central house/net corridor');
+ await review.screenshot({path:'artifacts/sea-cove-hamlet-worksite.png'});
  const persisted=await review.evaluate(()=>({
    initial:window.__STORAGE_AT_LOAD,
    current:JSON.stringify(Object.entries(localStorage).sort())

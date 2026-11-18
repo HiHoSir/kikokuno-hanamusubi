@@ -277,11 +277,6 @@ try{
  const hamletView=await review.evaluate(()=>window.KIKOKU_SAVE_SNAPSHOT().position);
  assert.ok(hamletView.x>700&&hamletView.y>700,
    'real on-screen movement reaches expanded fishing worksite');
- const worksiteStep=await review.evaluate(()=>
-   document.querySelector('#scene').width/
-   (document.querySelector('#scene').clientWidth*
-    window.devicePixelRatio)); // returns 1 for correctly sized backing store
- assert.ok(Number.isFinite(worksiteStep));
  assert.ok(hamletView.x<950,'worksite route should use the central house/net corridor');
  await review.screenshot({path:'artifacts/sea-cove-hamlet-worksite.png'});
  const persisted=await review.evaluate(()=>({

@@ -232,25 +232,26 @@ test('original sanctuary renderer draws 80x112 atlas frames at the SAME foot anc
 test('sanctuary hero is native-size and shares world scale with village and NPCs',()=>{
   const scale=map.game.heroDisplayScale;
   assert.equal(map.game.hero,'assets/characters/hizuki/walk-4dir-80x112.png');
-  assert.equal(scale,1,'Tenyo hero uses full 80x112 world pixels, just like village NPCs');
+  assert.equal(scale,undefined,'no sanctuary-only hero scale exists');
   const renderer=sandbox.SMRender,im={width:240,height:448};
   const bounds=renderer.actorBounds(im,()=>{throw Error('village atlas should not use the 32px sampling canvas');});
   const calls=[];
   const ctx={drawImage(...args){calls.push(args);}};
   const a={x:3,y:5,dir:'u',frame:1};
-  renderer.actor(ctx,a,im,bounds,32,null,scale);
+  renderer.actor(ctx,a,im,bounds,32);
   const [,sx,sy,sw,sh,dx,dy,dw,dh]=calls[0];
   assert.deepEqual([sx,sy,sw,sh],[80,112,80,112],'keep full village-scale source atlas');
   const near=(actual,expected)=>assert.ok(Math.abs(actual-expected)<0.0001,`expected ${expected}, got ${actual}`);
   near(dw,80);near(dh,112);
-  near(dx,(a.x+.5)*32-40*scale);
-  near(dy,(a.y+.5)*32-106*scale);
-  near(dx+40*scale,(a.x+.5)*32);
-  near(dy+106*scale,(a.y+.5)*32);
+  near(dx,(a.x+.5)*32-40);
+  near(dy,(a.y+.5)*32-106);
+  near(dx+40,(a.x+.5)*32);
+  near(dy+106,(a.y+.5)*32);
   assert.equal(renderer.actorDepth(a,bounds,32),(a.y+.5)*32,'feet, shadows and occlusion retain the same location');
   const walk=readFileSync('src/game/tenyo/walk.mjs','utf8');
-  assert.ok(walk.includes('heroDisplayScale:map.game.heroDisplayScale??1'),'renderer receives authored visual scale');
-  assert.ok(!walk.includes('map.game.heroDisplayScale*32'),'logical 32px cell movement must not scale with sprite');
+  assert.ok(!walk.includes('heroDisplayScale'),'renderer must not pass a hero-only scale option');
+  const rendererCode=readFileSync('src/game/tenyo/rendering/render.js','utf8');
+  assert.doesNotMatch(rendererCode,/o\.heroDisplayScale/,'sanctuary render path must not change only the hero size');
   // Shirotae and guards also use unscaled native 80x112 sprites.
   assert.equal(map.game.residents.filter(n=>n.id.startsWith('guardian')).length,2);
   assert.ok(!map.game.residents.some(n=>n.displayScale!==undefined),'NPC scale untouched');

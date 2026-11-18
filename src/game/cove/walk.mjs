@@ -2,7 +2,7 @@ import {COVE_MAP,tileAt,walkableCell,isSouthExit} from '../../../data/maps/sea-c
 import {makeWalk} from '../village/movement.mjs';
 import {residentInFront} from '../village/residents.mjs';
 import {bindDialogue} from '../village/dialogue.mjs';
-import {pixelViewport} from '../village/render.mjs';
+import {pixelViewport,DEFAULT_CAMERA_ZOOM} from '../village/render.mjs';
 import {readStoryStage,advanceStoryStage,objectiveForStage} from '../story/chapter-one.mjs';
 import {consumeRestorePosition} from '../save/save-game.mjs?v=save-slots-1';
 import {createCoveRenderer} from './render.mjs?v=hamlet-1';
@@ -169,22 +169,14 @@ async function start(){
    if(shellHint.textContent!==next)shellHint.textContent=next;
  }
  refreshObjective();
- // The approved first screen has zoom 1.18. The newly built inland
- // worksite gradually widens its camera ONLY after y=704 (the original
- // 22-row map boundary), so the original beach remains pixel-identical.
- // Every object and NPC still renders at its native size in world units.
- const hamletCameraZoom=footY=>{
-   const t=Math.max(0,Math.min(1,(footY-704)/300));
-   const easing=t*t*(3-2*t);
-   return 1.18-(1.18-0.65)*easing;
- };
+ // Non-field world scenes have ONE scale: village, rooms, sanctuary and cove.
+ // Camera movement follows the player but never changes the CSS pixel/world
+ // pixel ratio. Houses, net racks and heroes stay proportionally identical.
  const viewport={step:1,bufferWidth:1,bufferHeight:1};
- let basePixelStep=1;
  const resize=()=>{
    const parent=scene.parentElement;
-   const dims=pixelViewport(parent.clientWidth,parent.clientHeight,devicePixelRatio,1.18);
+   const dims=pixelViewport(parent.clientWidth,parent.clientHeight,devicePixelRatio,DEFAULT_CAMERA_ZOOM);
    scene.width=dims.width;scene.height=dims.height;
-   basePixelStep=dims.step;
    viewport.step=dims.step;viewport.bufferWidth=dims.width;viewport.bufferHeight=dims.height;
  };
  const leave=()=>{
@@ -214,7 +206,6 @@ async function start(){
    refreshShellHint();
    const tick=Math.floor(now/180);
    if(!menuPaused&&(moving||tick!==lastRenderedFrame)){
-     viewport.step=basePixelStep*hamletCameraZoom(y)/1.18;
      renderer({x,y,face,distance,moving},fishermen,now,viewport,shells);
      lastRenderedFrame=tick;
    }
@@ -286,7 +277,7 @@ async function start(){
    assets:Object.fromEntries(['fisherHouse','netRack','netBundle','ropeCoil','crate']
      .map(kind=>[kind,{width:images[kind].naturalWidth,height:images[kind].naturalHeight}])),
    blockedByProp:(x,y)=>blockedByProp(x,y),
-   cameraZoomAt:y=>hamletCameraZoom(y)
+   cameraZoom:DEFAULT_CAMERA_ZOOM
  };
  window.__COVE_FISHER_QA={
    character:'ushiohei',

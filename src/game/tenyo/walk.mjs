@@ -183,7 +183,7 @@ async function start(){
     for(let i=0;i<residents.length;i++)
       residentObjects[i].dir=facing[residents[i].face??0]??'d';
     SMRender.draw(wc,paintedMap,{
-      images,hero,bounds,actor:player,heroDisplayScale:map.game.heroDisplayScale??1,animationTime:now,shadows:true,
+      images,hero,bounds,actor:player,animationTime:now,shadows:true,
       lighting:true,reflections:true,atmosphere:true,depthOfField:true,
     });
     const width=scene.width,height=scene.height;

@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Create native RGBA pixel-art fishing gear for the sea cove.
+"""Generate ONLY the existing wooden drying rack used in the sea cove.
+
+The basket, folded net and rope coil are no longer procedural and MUST NOT
+be overwritten by this generator. Reprocess their source paintings with
+`tools/process-cove-gear-source.py` instead.
 
 Only author-designed geometry is used. Palette/scale follow approved village
 sprites (390x357 thatch, 80x112 NPCs and native village props), with late-SFC-era sparse
@@ -138,55 +142,7 @@ def drying_rack():
     return a
 
 
-def rolled_net():
-    """Large folded net in compact layers, with cords legible beside a 16px barrel."""
-    a=Art(146,88)
-    a.oval(72,76,64,8,SHADOW)
-    # Solid, readable volume, not a noisy 1px scribble.
-    a.oval(73,54,61,24,WOOD_DARK)
-    a.oval(73,50,59,24,NET_DARK)
-    a.oval(69,45,56,22,NET)
-    a.oval(67,41,51,19,NET_LIT)
-    for y in range(25,77):
-        for x in range(15,132):
-            if ((x-72)/61)**2+((y-49)/26)**2>1:continue
-            if (x+y)%15<3 or (x-y)%15<3:
-                a.rect(x,y,x+2,y+2,NET_DARK if (x//15+y//15)%4 else ROPE)
-    # Three broad turns hold the net together; the cord is not pixel-thin.
-    for x in (32,72,114):
-        offset=abs(73-x)//10
-        a.line(x-5,29+offset,x+9,72-offset,ROPE_DARK,6)
-        a.line(x-3,29+offset,x+9,67-offset,ROPE_LIGHT,3)
-    a.line(18,53,31,71,ROPE_DARK,4)
-    a.line(113,29,135,39,ROPE,5)
-    a.line(118,29,132,35,ROPE_LIGHT,2)
-    return a
-
-
-def rope_coil():
-    """Thicker rope loops at a physical size coherent with the original barrel."""
-    a=Art(88,62)
-    a.oval(44,54,39,6,SHADOW)
-    for ring in range(3):
-        cx,cy=44,36-ring*5
-        rx=30-ring*7
-        ry=13-ring*3
-        for theta in range(0,360,5):
-            x=cx+int(rx*math.cos(math.radians(theta)))
-            y=cy+int(ry*math.sin(math.radians(theta)))
-            a.rect(x-3,y-1,x+3,y+4,ROPE_DARK)
-            a.rect(x-2,y-2,x+2,y+2,ROPE_LIGHT if (theta//30)%3==0 else ROPE)
-    a.line(62,27,80,39,ROPE_DARK,7)
-    a.line(61,25,79,36,ROPE_LIGHT,4)
-    a.rect(19,42,28,48,ROPE_DARK)
-    a.rect(21,43,26,45,HIGHLIGHT)
-    return a
-
-
-
-for name,art in (
-    ('net-drying-rack-232x176.png',drying_rack()),
-    ('net-bundle-146x88.png',rolled_net()),
-    ('rope-coil-88x62.png',rope_coil())
-):
-    art.png(DEST/name)
+# Never re-generate basket / net bundle / rope coil from the old code.
+# They now have independent source paintings and a dedicated image processor.
+if __name__=='__main__':
+    drying_rack().png(DEST/'net-drying-rack-232x176.png')

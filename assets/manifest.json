@@ -2389,12 +2389,14 @@
         88
       ],
       "origin": {
-        "kind": "original-pixel-art",
-        "generator": "tools/generate-cove-fishing-gear.py",
-        "source": "procedural original pixel geometry with approved village art palette"
+        "kind": "user-reviewed-generated-artwork",
+        "processor": "tools/process-cove-gear-source.py",
+        "sourceImage": "折り畳まれた漁網の束.png",
+        "sourceSha256": "f65aca71b159130596697ab2f910e2ae3c4ef54e779b7c567648737c6ded46ea",
+        "format": "native RGBA, cropped and reduced to 48 source colors"
       },
-      "description": "folded net; larger, layered, coarse twine and binding cords",
-      "approvalNote": "2026-11-19: proportion/dot-density correction against village sprites; awaiting iPhone visual approval"
+      "description": "Folded fishing net with bold diamond mesh and thick binding ropes, 146×88 world pixels",
+      "approvalNote": "2026-11-19: source illustrations received positive style review; in-game iPhone Safari visual approval still pending. Technical manifest status only."
     },
     {
       "id": "cove-rope-coil-88x62",
@@ -2411,12 +2413,14 @@
         62
       ],
       "origin": {
-        "kind": "original-pixel-art",
-        "generator": "tools/generate-cove-fishing-gear.py",
-        "source": "procedural original pixel geometry with approved village art palette"
+        "kind": "user-reviewed-generated-artwork",
+        "processor": "tools/process-cove-gear-source.py",
+        "sourceImage": "レトロ風のロープコイル.png",
+        "sourceSha256": "b064896218e8677b9722bb4560c0c54f44efad871fa8e5132a4707c413d6097f",
+        "format": "native RGBA, cropped and reduced to 48 source colors"
       },
-      "description": "thick rope coil with large legible loops in village object style",
-      "approvalNote": "2026-11-19: proportion/dot-density correction against village sprites; awaiting iPhone visual approval"
+      "description": "Layered readable rope coil, reauthored from pixel painting, 88×62 world pixels",
+      "approvalNote": "2026-11-19: source illustrations received positive style review; in-game iPhone Safari visual approval still pending. Technical manifest status only."
     },
     {
       "id": "cove-fish-basket-80x74",
@@ -2433,11 +2437,14 @@
         74
       ],
       "origin": {
-        "kind": "original-generated-pixel-art",
-        "source": "transparent image generation; individual sprite crops and palette limited to 64 colors"
+        "kind": "user-reviewed-generated-artwork",
+        "processor": "tools/process-cove-gear-source.py",
+        "sourceImage": "ドット絵の魚籠バスケット.png",
+        "sourceSha256": "6b2a20db00b09a80d2fd259498db81bb10466d526d3c902978a33e092abc130e",
+        "format": "native RGBA, cropped and reduced to 48 source colors"
       },
-      "description": "native-size basket dedicated to the sea cove; replaces undersized shared 32x32 village art without modifying village itself",
-      "approvalNote": "Technical manifest adoption on draft branch only; external appearance remains unapproved pending iPhone Safari review"
+      "description": "Woven fishing basket with a reinforced opening; generated pixel painting refined to village-matched shading, 80×74 world pixels",
+      "approvalNote": "2026-11-19: source illustrations received positive style review; in-game iPhone Safari visual approval still pending. Technical manifest status only."
     },
     {
       "id": "cove-fish-barrel-64x86",

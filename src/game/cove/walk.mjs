@@ -56,9 +56,14 @@ const scenery={
  coastSand2:'assets/field/terrain/atlas/coast-sand-2-32.png',
  coastSand3:'assets/field/terrain/atlas/coast-sand-3-32.png'
 };
+// Keep asset filenames stable to avoid duplicates in the manifest, but make
+// Safari refetch ONLY the three replaced images after the art revision.
+const redrawnGear=new Set([scenery.basket,scenery.ropeCoil,scenery.netBundle]);
 const image=async path=>{
  const resource=new Image();
- resource.src=new URL('../../../'+path,import.meta.url).href;
+ const url=new URL('../../../'+path,import.meta.url);
+ if(redrawnGear.has(path))url.searchParams.set('v','cove-gear-style-20261119');
+ resource.src=url.href;
  await resource.decode();
  if(!resource.naturalWidth||!resource.naturalHeight)throw Error('入り江の画像を読み込めません: '+path);
  return resource;

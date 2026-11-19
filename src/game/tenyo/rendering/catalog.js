@@ -57,7 +57,7 @@ packAsset('jizo','地蔵',[1,1],true,false,{src:'assets/settlement-editor/chips/
 // center two cells reserved for event-gated future passage.
 packAsset('tenyo_water_gate','天妖の社・水上門',[6,4],false,false,{
  src:'assets/settlement-editor/tenyo-gate-v1/tenyo_gate_6x4_v3.png',
- sourceRect:[0,0,192,128],pack:'tenyo-gate-v1',
+ sourceRect:[0,0,192,128],foregroundOcclusion:true,pack:'tenyo-gate-v1',
  occupiedTiles:[[0,0],[1,0],[4,0],[5,0]],
  entranceLocal:[2,0],approachLocal:[2,1]
 });
@@ -96,7 +96,7 @@ packAsset('sanctuary_forest_frame_v2','聖域の森と岩場（28マス）',[28,
 packAsset('sanctuary_fall_art_v1','聖域の滝・新規原画',[3,4],false,false,{src:'assets/settlement-editor/sanctuary-frame-v1/waterfall.png',sourceRect:[0,0,96,128],occupiedTiles:[],submergedHeight:0,pack:'sanctuary-frame-v1'});
 packAsset('sanctuary_forest_frame_v3','聖域の森と岩場・遠景',[28,25],false,false,{src:'assets/settlement-editor/sanctuary-frame-v1/forest-frame.png',sourceRect:[0,0,864,800],renderCells:[28,25],occupiedTiles:[],submergedHeight:0,fadeHorizon:true,pack:'sanctuary-frame-v1'});
 packAsset('sanctuary_horizon_v1','聖域の空と遠景',[10,4],false,false,{src:'assets/settlement-editor/sanctuary-horizon-v1/horizon.png',sourceRect:[0,0,320,128],occupiedTiles:[],submergedHeight:0,pack:'sanctuary-horizon-v1'});
-packAsset('sanctuary_fall_v2','聖域の滝・岩付き',[4,5],false,false,{src:'assets/settlement-editor/sanctuary-horizon-v1/waterfall.png',sourceRect:[0,0,128,160],occupiedTiles:[],submergedHeight:0,animation:{frames:4,frameMs:150},flowRegion:[48,48,30,72],pack:'sanctuary-horizon-v1'});
+packAsset('sanctuary_fall_v2','聖域の滝・岩付き',[4,5],false,false,{src:'assets/settlement-editor/sanctuary-horizon-v1/waterfall.png',sourceRect:[0,0,128,160],occupiedTiles:[],submergedHeight:0,foregroundOcclusion:true,animation:{frames:4,frameMs:150},flowRegion:[48,48,30,72],pack:'sanctuary-horizon-v1'});
 packAsset('sanctuary_npc_shirotae','白妙（聖域NPC）',[1,1],true,false,{src:'assets/characters/npc/shirotae-walk-4dir-80x112.png',sourceRect:[0,0,80,112],character:true,pack:'sanctuary-npc'});
 packAsset('sanctuary_npc_guard','社守（聖域NPC）',[1,1],true,false,{src:'assets/characters/npc/shrine-guardian-walk-4dir-80x112.png',sourceRect:[0,0,80,112],character:true,pack:'sanctuary-npc'});
 for(const id of ['sanctuary_forest_frame_v1','sanctuary_forest_frame_v2','sanctuary_forest_frame_v3','sanctuary_horizon_v1'])byId[id].selectThrough=true;

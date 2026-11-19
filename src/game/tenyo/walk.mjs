@@ -252,6 +252,7 @@ async function start(){
       images,hero:previewMode&&reviewCharacters==='largeNpc'?hero:halfHero,
       bounds,actor:player,animationTime:now,shadows:true,
       lighting:true,reflections:true,atmosphere:true,depthOfField:true,
+      previewOcclusion:previewMode,
     });
     const width=scene.width,height=scene.height;
     const {clientWidth,clientHeight}=scene.parentElement;
@@ -341,6 +342,7 @@ async function start(){
     scene.dataset.x=String(state.x.toFixed(2));
     scene.dataset.y=String(state.y.toFixed(2));
     scene.dataset.movementUnit='world-pixels';
+    scene.dataset.previewOcclusion=String(previewMode);
     scene.dataset.collisionProfile=collider.profile;
     scene.dataset.sequelSealed=String(collider.locks.length===1&&
       collider.locks[0].id==='guardian-sequel-passage');

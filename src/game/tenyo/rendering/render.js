@@ -4,7 +4,39 @@ function actorBounds(image,createCanvas){if(image.width===240&&image.height===44
 function actor(c,s,image,bounds,tile=32,drawSprite=null){const b=bounds[s.dir];if(b.village){const scale=tile/32;(drawSprite||((ctx,...args)=>ctx.drawImage(...args)))(c,image,(s.frame||0)*80,rows[s.dir]*112,80,112,(s.x+.5)*tile-40*scale,(s.y+.5)*tile-106*scale,80*scale,112*scale);return;}const scale=Math.min(28/b.width,28/b.height)*tile/32;(drawSprite||((ctx,...args)=>ctx.drawImage(...args)))(c,image,(s.frame||0)*32,rows[s.dir]*32,32,32,(s.x+.5)*tile-(b.left+b.width/2)*scale,(s.y+.5)*tile-(b.top+b.height/2)*scale,32*scale,32*scale);}
 function actorDepth(s,bounds,tile){const b=bounds[s.dir];if(b.village)return (s.y+.5)*tile;const scale=Math.min(28/b.width,28/b.height)*tile/32;return (s.y+.5)*tile+b.height*scale/2;}
 function actorShadow(c,s,bounds,tile,strength=.28){c.save();c.globalAlpha=strength;c.fillStyle='#101820';c.beginPath();c.ellipse((s.x+.5)*tile,actorDepth(s,bounds,tile),11.2*tile/32,3.36*tile/32,0,0,Math.PI*2);c.fill();c.restore();}
-function depthQueue(m,actorState,bounds){const q=m.objects.filter(v=>C.byId[v.templateId].layer==='object').map(v=>({object:v,depth:(v.y+(C.byId[v.templateId].character?.5:C.byId[v.templateId].wallSign?2:1))*m.tileSize}));if(actorState&&bounds)q.push({actor:actorState,depth:actorDepth(actorState,bounds,m.tileSize)});return q.sort((a,b)=>a.depth-b.depth||Number(!!C.byId[a.object?.templateId]?.wallSign)-Number(!!C.byId[b.object?.templateId]?.wallSign)||Number(!!C.byId[b.object?.templateId]?.supportSurface)-Number(!!C.byId[a.object?.templateId]?.supportSurface));}
+// The waterfall/cliff face and the gate rails have opaque foreground pixels.
+// When a character walks BESIDE their lip, the authored PNG must occlude
+// the character. Never turn this draw-order rule into a collision wall.
+function depthQueue(m,actorState,bounds,previewOcclusion=false){
+ const tile=m.tileSize;
+ const people=m.objects.filter(v=>C.byId[v.templateId].character)
+  .map(v=>({x:(v.x+.5)*tile,y:(v.y+.5)*tile}));
+ if(actorState&&bounds)people.push({
+  x:(actorState.x+.5)*tile,y:actorDepth(actorState,bounds,tile)
+ });
+ const q=m.objects.filter(v=>C.byId[v.templateId].layer==='object').map(v=>{
+  const t=C.byId[v.templateId];
+  let depth=(v.y+(t.character?.5:t.wallSign?2:1))*tile;
+  if(previewOcclusion&&t.foregroundOcclusion){
+   const r=M.visualRect(m,v),foot=r.y+r.height;
+   for(const person of people){
+    const nearX=person.x>=r.x-16&&person.x<=r.x+r.width+16;
+    // Once the feet pass the foreground lip, normal depth order resumes.
+    const nearLip=person.y>=foot-tile*.5&&person.y<=foot+tile;
+    if(nearX&&nearLip)depth=Math.max(depth,person.y+.25);
+   }
+  }
+  return {object:v,depth};
+ });
+ if(actorState&&bounds)q.push({
+  actor:actorState,depth:actorDepth(actorState,bounds,tile)
+ });
+ return q.sort((a,b)=>a.depth-b.depth||
+  Number(!!C.byId[a.object?.templateId]?.wallSign)-
+   Number(!!C.byId[b.object?.templateId]?.wallSign)||
+  Number(!!C.byId[b.object?.templateId]?.supportSurface)-
+   Number(!!C.byId[a.object?.templateId]?.supportSurface));
+}
 function phase(o,t){return o.forExport?0:Number.isInteger(o.animationFrame)?((o.animationFrame%2)+2)%2:Math.floor((o.animationTime||0)/(t.animation?.frameMs||360))%(t.animation?.frames||2)}
 function drawWater(c,m,o={}){const frames=M.autotileLayout(m);for(const v of m.objects.filter(v=>C.byId[v.templateId].water||C.byId[v.templateId].bridgePassages).sort((a,b)=>Number(!!C.byId[a.templateId].bridgePassages)-Number(!!C.byId[b.templateId].bridgePassages))){const t=C.byId[v.templateId],im=o.images?.[v.templateId];if(!im)continue;const index=frames.get(v.id),r=M.visualRect(m,v),source=t.autotile?[index%8*32,Math.floor(index/8)*32+(t.animation?phase(o,t)*t.animation.frameHeight:0),32,32]:t.sourceRect;c.drawImage(im,...source,r.x,r.y,r.width,r.height)}}
 const clearCache=new WeakMap(),horizonFadeCache=new WeakMap(),reflectionCache=new WeakMap(),characterBoundsCache=new WeakMap(),atmosphereCache=new Map(),focusBuffers=new Map();
@@ -109,7 +141,7 @@ function reflect(im,src,r,foot){const top=2*foot-r.y-r.height;if(top>=m.height*t
 for(const v of objects){const t=C.byId[v.templateId],im=images[v.templateId];if(!im||t.layer!=='object'||t.autotile||t.id==='sanctuary_horizon_v1'||t.id.startsWith('sanctuary_forest_frame_'))continue;if(t.character){const state={x:v.x,y:v.y,dir:v.dir||'d',frame:v.frame||0},bounds=characterBounds(im);actor(c,state,im,bounds,tile,(ctx,img,sx,sy,sw,sh,x,y,width,height)=>reflect(img,[sx,sy,sw,sh],{x,y,width,height},actorDepth(state,bounds,tile)));continue;}const r=M.visualRect(m,v);reflect(im,t.sourceRect,r,Math.max(r.y+r.height,(v.y+1)*tile));}
 if(!o.forExport&&o.hero&&o.actor&&o.bounds)actor(c,o.actor,o.hero,o.bounds,tile,(ctx,im,sx,sy,sw,sh,x,y,width,height)=>reflect(im,[sx,sy,sw,sh],{x,y,width,height},actorDepth(o.actor,o.bounds,tile)));
 c.restore();}
-if(!o.groundOnly)for(const item of depthQueue(m,!o.forExport&&o.hero?o.actor:null,o.bounds)){if(item.object)object(item.object);else{if(o.shadows)actorShadow(c,item.actor,o.bounds,tile,sun ? .38 : .28);actor(c,item.actor,o.hero,o.bounds,tile,(ctx,im,sx,sy,sw,sh,x,y,width,height)=>sprite(im,[sx,sy,sw,sh],{x,y,width,height},actorDepth(item.actor,o.bounds,tile),7*tile/32,true));}}
+if(!o.groundOnly)for(const item of depthQueue(m,!o.forExport&&o.hero?o.actor:null,o.bounds,o.previewOcclusion===true)){if(item.object)object(item.object);else{if(o.shadows)actorShadow(c,item.actor,o.bounds,tile,sun ? .38 : .28);actor(c,item.actor,o.hero,o.bounds,tile,(ctx,im,sx,sy,sw,sh,x,y,width,height)=>sprite(im,[sx,sy,sw,sh],{x,y,width,height},actorDepth(item.actor,o.bounds,tile),7*tile/32,true));}}
 if(!o.forExport&&images.tenyo_ripple_fx){const legacy=m.objects.filter(v=>v.templateId==='tenyo_shallows'),shallow=s=>waterCells.get(Math.round(s.x)+','+Math.round(s.y))?.depth==='shallow'||legacy.some(v=>v.x===Math.round(s.x)&&v.y===Math.round(s.y)),frame=(offset)=>Math.floor(((o.animationTime||0)+offset)/180)%4;c.save();c.beginPath();for(const v of m.waterSurface||[])if((v.opacity??.65)>0)c.rect(v.x*tile,v.y*tile,tile,tile);for(const v of legacy)c.rect(v.x*tile,v.y*tile,tile,tile);c.clip();
 if(sun)for(const [i,p]of [[.29,.29],[.70,.34],[.30,.56],[.70,.63],[.41,.78]].entries()){const x=Math.floor(m.width*p[0]),y=Math.floor(m.height*p[1]);if(!waterCells.has(x+','+y))continue;c.globalAlpha=.45;c.drawImage(images.tenyo_ripple_fx,0,frame(i*120)*32,32,32,x*tile,y*tile,tile,tile);}
 for(const [i,v]of m.objects.filter(v=>v.templateId==='sanctuary_fall_v2').entries()){const r=M.visualRect(m,v);c.globalAlpha=.6;c.drawImage(images.tenyo_ripple_fx,0,frame(i*180)*32,32,32,r.x+r.width/2-tile/2,r.y+r.height-tile*.7,tile,tile);}

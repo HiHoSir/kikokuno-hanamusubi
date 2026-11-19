@@ -98,7 +98,7 @@ async function start(){
   if(!SMModel||!SMRender)throw new Error('天妖の社の描画エンジンが読み込めません');
   const mapUrl=new URL('../../../data/maps/tenyo-sanctuary/scene.json',import.meta.url);
   // A fresh scene JSON is essential after the accepted NPC assets change.
-  mapUrl.searchParams.set('v','tenyo-native-camera-1');
+  mapUrl.searchParams.set('v','tenyo-protected-gate-shallows-1');
   const response=await fetch(mapUrl);
   if(!response.ok)throw new Error('天妖の社のマップデータを読めません');
   const map=SMModel.parse(await response.text());
@@ -285,8 +285,8 @@ async function start(){
           (rect.top-cameraY)/worldPixelsPerPixel,
           (rect.right-rect.left)/worldPixelsPerPixel,
           (rect.bottom-rect.top)/worldPixelsPerPixel);
-      // The new shapes match visible base/feet instead of fully blocking
-      // transparent parts of old 32px object occupancy rectangles.
+      // Individual physical shapes follow the actual gate posts, fences,
+      // lanterns and rock bases rather than old whole-tile occupancy.
       ctx.strokeStyle='rgba(253,197,65,.98)';ctx.lineWidth=2;
       for(const shape of collider.shapes){
         ctx.beginPath();
@@ -300,6 +300,18 @@ async function start(){
           shape.rx/worldPixelsPerPixel,shape.ry/worldPixelsPerPixel,
           0,0,Math.PI*2);
         ctx.stroke();
+      }
+      // Sequel-only story boundaries are NEVER controlled by the user
+      // collision-mode toggle. Distinct violet boundaries explain why a
+      // visually shallow region beyond the guarded gate is sealed.
+      ctx.fillStyle='rgba(138,63,191,.36)';
+      ctx.strokeStyle='rgba(255,111,228,.96)';ctx.lineWidth=1.5;
+      for(const lock of collider.locks){
+        const x=(lock.left-cameraX)/worldPixelsPerPixel;
+        const y=(lock.top-cameraY)/worldPixelsPerPixel;
+        const w=(lock.right-lock.left)/worldPixelsPerPixel;
+        const h=(lock.bottom-lock.top)/worldPixelsPerPixel;
+        ctx.fillRect(x,y,w,h);ctx.strokeRect(x,y,w,h);
       }
       ctx.strokeStyle='rgba(255,216,88,.94)';ctx.lineWidth=2;
       for(const npc of collider.npcs){
@@ -330,6 +342,7 @@ async function start(){
     scene.dataset.y=String(state.y.toFixed(2));
     scene.dataset.movementUnit='world-pixels';
     scene.dataset.collisionProfile=collider.profile;
+    scene.dataset.sequelSealed=String(collider.locks.length===2);
     scene.dataset.contactRadius=String(collider.playerRadius);
   }
   let lastPaint=0,lastMotionTime=0;

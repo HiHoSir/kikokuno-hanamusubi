@@ -4,7 +4,8 @@ import {bindDialogue} from '../village/dialogue.mjs';
 import {residentInFront} from '../village/residents.mjs';
 import {readStoryStage,advanceStoryStage,objectiveForStage} from '../story/chapter-one.mjs';
 import {consumeRestorePosition} from '../save/save-game.mjs?v=save-slots-1';
-import {WORLD_SCENE_ZOOM,WORLD_ACTOR_FRAME} from '../ui/world-scale.mjs';
+import {WORLD_ACTOR_FRAME} from '../ui/world-scale.mjs';
+import {TENYO_STEP,shrineCanStand,shrineExitReached} from './movement.mjs';
 
 const {SMModel,SMRender}=globalThis;
 const scene=document.querySelector('#scene');
@@ -18,13 +19,18 @@ const keys={ArrowDown:'down',ArrowUp:'up',ArrowRight:'right',ArrowLeft:'left',s:
 const facing=['d','u','r','l'];
 const input=new Map();
 const SPEED_MS=156,VIEWPORT_EDGE=768;
+const TENYO_APPROVED_CAMERA=1;
+// On the selected wide-angle + legacy-person proportions, recompose the
+// hero's visual painting around its unchanged foot. This is NOT camera zoom.
+const TENYO_HERO_ART_FACTOR=0.52;
 // This is the very same source module in the real game and Pages review.
 // A direct review must never consume game-save restore data or edit story flags.
 const previewMode=typeof location!=='undefined' &&
  location.pathname.includes('/previews/tenyo-scale-review/') &&
  new URL(import.meta.url).searchParams.get('tenyo-review')==='1';
 // Only the standalone review can select a non-production camera.
-let reviewCamera=1.4;
+let reviewCamera=TENYO_APPROVED_CAMERA;
+let showCollision=false;
 let reviewCharacters='legacy';
 // Reproduce the former relative figure sizes as an explicit optional
 // PREVIEW, without adding a runtime per-actor scale or touching hero PNG.
@@ -86,14 +92,6 @@ function sourceIdToAsset(id){
   return 'assets/tenyo/'+id.replaceAll('_','-').toLowerCase()+'.png?v=tenyo-water-art';
 }
 function storyLines(npc){return npc.dialogue?.[readStoryStage()]??npc.lines??[];}
-function passable(map,occupied,x,y,blocked){
-  return Number.isInteger(x)&&Number.isInteger(y)&&SMModel.inside(map,[x,y])&&
-    !blocked.has(x+','+y)&&!occupied.has(x+','+y);
-}
-function exitReached(map,x,y){
-  const exit=map.game.southExit;
-  return y===exit.row&&exit.columns.includes(x);
-}
 
 async function start(){
   if(!SMModel||!SMRender)throw new Error('天妖の社の描画エンジンが読み込めません');
@@ -110,8 +108,9 @@ async function start(){
   const residents=map.game.residents.map(def=>({
     ...def,...center(def.tile),lines:storyLines(def),
   }));
-  const occupied=new Set(residents.map(npc=>npc.tile.join(',')));
-  const canEnter=(x,y)=>passable(map,occupied,x,y,blocked);
+  // Ground collision uses each cell's actual rectangular bounds, rather than
+  // rejecting an entire 32px square around a tiny character or guardian.
+  const canEnter=(x,y)=>shrineCanStand(map,blocked,residents,x,y);
 
   const ids=new Set([
     ...map.objects.map(item=>item.templateId),
@@ -131,7 +130,7 @@ async function start(){
   const npcExpanded=previewMode
     ?new Map(allNpcPaths.map((path,i)=>[path,reviewNpcFullSize(loaded[allIds.length+i])]))
     :npcOriginal;
-  const halfHero=previewMode?previewRecompose(hero,.52):hero;
+  const halfHero=previewRecompose(hero,TENYO_HERO_ART_FACTOR);
   const whiteAsset=residents.find(n=>n.id==='shirotae').asset;
   const guardAsset=residents.find(n=>n.id!=='shirotae').asset;
   function useReviewFigures(){
@@ -210,9 +209,10 @@ async function start(){
   function startMove(direction,now){
     const [dx,dy,face,dir]=directions[direction];
     state.face=face;state.dir=dir;
-    const nx=state.x+dx,ny=state.y+dy;
+    const nx=state.x+dx*TENYO_STEP,ny=state.y+dy*TENYO_STEP;
     if(!canEnter(nx,ny))return false;
-    state.motion={fromX:state.x,fromY:state.y,toX:nx,toY:ny,at:now,duration:SPEED_MS};
+    state.motion={fromX:state.x,fromY:state.y,toX:nx,toY:ny,
+      at:now,duration:SPEED_MS*TENYO_STEP};
     ++state.steps;
     return true;
   }
@@ -240,7 +240,7 @@ async function start(){
     for(let i=0;i<residents.length;i++)
       residentObjects[i].dir=facing[residents[i].face??0]??'d';
     SMRender.draw(wc,paintedMap,{
-      images,hero:previewMode&&reviewCharacters==='legacy'?halfHero:hero,
+      images,hero:previewMode&&reviewCharacters==='largeNpc'?hero:halfHero,
       bounds,actor:player,animationTime:now,shadows:true,
       lighting:true,reflections:true,atmosphere:true,depthOfField:true,
     });
@@ -248,7 +248,7 @@ async function start(){
     const {clientWidth,clientHeight}=scene.parentElement;
     // The 768px buffer is only a raster resolution. It must NOT set the
     // apparent camera scale; match village/interiors/cove in CSS world pixels.
-    const zoom=previewMode?reviewCamera:WORLD_SCENE_ZOOM;
+    const zoom=previewMode?reviewCamera:TENYO_APPROVED_CAMERA;
     // Reproduce the earlier sanctuary camera framing precisely:
     // historic camera factor 1.4 used the fixed 768px buffer, not CSS pixels.
     // The preview-only 1.0 option uses a true CSS pixel/world ratio.
@@ -267,8 +267,31 @@ async function start(){
     // become symmetric sea-background margins rather than clipping/stretching.
     ctx.drawImage(world,-cameraX/worldPixelsPerPixel,-cameraY/worldPixelsPerPixel,
       world.width/worldPixelsPerPixel,world.height/worldPixelsPerPixel);
+    // Optional real collision overlay in the mobile review, never gameplay.
+    if(previewMode&&showCollision){
+      ctx.save();ctx.fillStyle='rgba(225,64,58,.26)';
+      for(const key of blocked){
+        const [cx,cy]=key.split(',').map(Number);
+        ctx.fillRect((cx*32-cameraX)/worldPixelsPerPixel,
+          (cy*32-cameraY)/worldPixelsPerPixel,
+          32/worldPixelsPerPixel,32/worldPixelsPerPixel);
+      }
+      ctx.strokeStyle='rgba(255,216,88,.94)';ctx.lineWidth=2;
+      for(const npc of residents){
+        const px=(npc.tile[0]+.5)*32,py=(npc.tile[1]+.5)*32;
+        ctx.beginPath();ctx.arc((px-cameraX)/worldPixelsPerPixel,
+          (py-cameraY)/worldPixelsPerPixel,18/worldPixelsPerPixel,0,Math.PI*2);
+        ctx.stroke();
+      }
+      ctx.strokeStyle='rgba(55,242,237,.95)';
+      ctx.beginPath();ctx.arc(((player.x+.5)*32-cameraX)/worldPixelsPerPixel,
+        ((player.y+.5)*32-cameraY)/worldPixelsPerPixel,8/worldPixelsPerPixel,0,Math.PI*2);
+      ctx.stroke();ctx.restore();
+    }
     scene.dataset.zoom=String(zoom);
     scene.dataset.actorFrame=WORLD_ACTOR_FRAME.join('x');
+    scene.dataset.heroArtFactor=String(previewMode&&reviewCharacters==='largeNpc'
+      ?1:TENYO_HERO_ART_FACTOR);
     scene.dataset.reviewNpcArt=previewMode&&reviewCharacters==='largeNpc'
       ?'native-recomposed-2x':'original';
     scene.dataset.reviewCharacters=previewMode?reviewCharacters:'production';
@@ -284,7 +307,7 @@ async function start(){
   function frame(now){
     if(state.motion&&now-state.motion.at>=state.motion.duration){
       state.x=state.motion.toX;state.y=state.motion.toY;state.motion=null;
-      if(exitReached(map,state.x,state.y)){leave();return;}
+      if(shrineExitReached(map,state.x,state.y)){leave();return;}
     }
     if(!state.motion&&!dialogue.active){
       const direction=pendingInput??[...input.values()].at(-1);
@@ -300,6 +323,10 @@ async function start(){
   }
 
   if(previewMode){
+    document.querySelector('[data-tenyo-collision]')?.addEventListener('click',event=>{
+      showCollision=!showCollision;
+      event.currentTarget.setAttribute('aria-pressed',String(showCollision));
+    });
     for(const button of document.querySelectorAll('[data-tenyo-camera]')){
       button.addEventListener('click',()=>{
         const requested=Number(button.dataset.tenyoCamera);

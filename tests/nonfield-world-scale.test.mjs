@@ -28,8 +28,9 @@ test('village, rooms and cove use stable world scale without district zoom',()=>
  assert.match(cove,/pixelViewport\(parent.clientWidth,parent.clientHeight,devicePixelRatio,DEFAULT_CAMERA_ZOOM\)/);
  // Tenyo uses the SAME CSS/world ratio as village, rooms and sea cove.
  // Its 768px intermediate buffer is not a camera magnification setting.
- assert.match(tenyo,/WORLD_SCENE_ZOOM/);
- assert.match(tenyo,/const zoom=previewMode\?reviewCamera:WORLD_SCENE_ZOOM/);
+ assert.match(tenyo,/TENYO_APPROVED_CAMERA=1/);
+ assert.match(tenyo,/TENYO_HERO_ART_FACTOR=0\.52/);
+ assert.match(tenyo,/const zoom=previewMode\?reviewCamera:TENYO_APPROVED_CAMERA/);
  assert.match(tenyo,/Math\.max\(width,height\)\*zoom/);
  assert.doesNotMatch(tenyo,/ZOOM=1\.4|heroDisplayScale/);
  assert.doesNotMatch(cove,/hamletCameraZoom|basePixelStep|1\.18|0\.65/);
@@ -98,6 +99,7 @@ test('all connected playable NPC assets use the native hero sheet frame and shar
  // All walkable non-field locations now have the SAME 80x112 world sprites.
  assert.doesNotMatch(source('src/game/tenyo/walk.mjs'),/heroDisplayScale|ZOOM=1\.4/);
  assert.doesNotMatch(source('src/game/tenyo/rendering/render.js'),/heroDisplayScale|displayScale/);
+ assert.match(source('src/game/tenyo/movement.mjs'),/shrineCanStand/);
 });
 
 test('buildings, furniture, and fishing props use the same world pixels as characters',()=>{

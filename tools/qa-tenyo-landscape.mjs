@@ -156,9 +156,9 @@ try{
  const nearFall=await review.evaluate(()=>{
   const c=document.querySelector('#scene');return {x:Number(c.dataset.x),y:Number(c.dataset.y)};
  });
- if(!(nearFall.x>592&&nearFall.x<620&&Math.abs(nearFall.y-176)<1))
-   issues.push('waterfall physical contact not aligned with visible foam '+JSON.stringify(nearFall));
- await review.screenshot({path:'artifacts/tenyo-waterfall-stopped-before-pool.png'});
+ if(!(nearFall.x>620&&nearFall.x<650&&Math.abs(nearFall.y-176)<1))
+   issues.push('the intentional path at the right waterfall must remain walkable '+JSON.stringify(nearFall));
+ await review.screenshot({path:'artifacts/tenyo-waterfall-walking-occlusion.png'});
  await review.close();
  await page.setViewportSize({width:900,height:390});
  await page.waitForFunction(()=>getComputedStyle(document.querySelector('#landscape-required')).display==='none');

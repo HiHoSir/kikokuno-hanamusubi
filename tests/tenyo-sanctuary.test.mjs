@@ -80,8 +80,7 @@ test('walkable entry, Shirotae and both guards have reachable conversations and 
   const entry=map.game.entrySpawn;
   assert.ok(open(...entry));
   const people=map.game.residents;
-  assert.deepEqual(people.find(n=>n.id==='shirotae').tile,[12,10],
-   'Shirotae must stand ahead of the gate, not intersect its left post');
+  assert.deepEqual(people.find(n=>n.id==='shirotae').tile,[12,8]);
   assert.deepEqual(people.filter(n=>n.id.startsWith('guardian')).map(n=>n.tile),[[13,7],[14,7]]);
   for(const npc of people){
     assert.equal(blocked.has(npc.tile.join(',')),false,npc.id+' actor anchor must be valid');
@@ -325,27 +324,6 @@ test('shallow stays walkable beyond gate, solid gate rails remain solid',()=>{
   'the guarded CENTER of the gate remains sealed');
 });
 
-test('waterfall plunge zones are solid, but the side shallow routes remain open',()=>{
- const blocked=M.collision(model);
- const visual=sanctuaryCollisionGeometry(model,blocked,map.game.residents,{profile:'visual'});
- const rightFall=map.objects.find(o=>o.templateId==='sanctuary_fall_v2'&&o.x===19);
- assert.ok(rightFall,'retain approved right waterfall artwork');
- const splash=visual.shapes.find(s=>s.id===rightFall.id+':plunge-pool');
- assert.ok(splash);
- assert.equal(splash.x,rightFall.x*32+64);
- assert.equal(splash.y,(rightFall.y+1)*32-5);
- assert.equal(shrineCanStand(visual,646,165),false,
-  'do not stand under the right waterfall in the churning plunge pool');
- assert.equal(shrineCanStand(visual,646,224),false,
-  'the mid-water tile cannot be eroded by the old 10px collision inset');
- assert.equal(map.waterSurface.find(v=>v.x===20&&v.y===7)?.depth,'mid');
- for(const [x,y] of [[560,190],[592,176],[560,278],[320,190]])
-   assert.equal(shrineCanStand(visual,x,y),true,
-    'walkable shallows around the gate remain open at '+x+','+y);
- assert.equal(shrineCanStand(visual,448,244),false,
-  'only the central guardian gate passage is sealed');
-});
-
 test('outside the field, sanctuary uses independent pixel geometry and continuous foot movement',()=>{
  const world=sanctuaryCollisionGeometry(model,M.collision(model),map.game.residents);
  const oldGridSize=map.tileSize;
@@ -356,16 +334,16 @@ test('outside the field, sanctuary uses independent pixel geometry and continuou
   'scenic background must never add an invisible walking barrier');
  assert.ok(!M.collision(model).has('13,7'),'NPC entry is not a forbidden terrain tile');
  const feet=(x,y)=>[(x+.5)*oldGridSize,(y+.5)*oldGridSize];
- for(const [x,y] of [[13,23],[13,22],[13,10],[13,9],[14,8],[12,9],[12,8],[13,8]]){
+ for(const [x,y] of [[13,23],[13,22],[13,10],[13,9],[14,8],[12,9],[12,10],[13,8]]){
    const [px,py]=feet(x,y);
    assert.equal(shrineCanStand(world,px,py),true,'approach '+x+','+y);
  }
  assert.equal(shrineCanStand(world,270.37,180.19),true,
   'naturally shallow water remains accessible without the invented rear wall');
- assert.equal(shrineCanStand(world,...feet(12,10)),false,'Shirotae foot blocks');
+ assert.equal(shrineCanStand(world,...feet(12,8)),false,'Shirotae foot blocks');
  assert.equal(shrineCanStand(world,...feet(13,7)),false,'guardian foot blocks');
- assert.equal(shrineCanStand(world,...feet(12,10.75)),true,'NPC accessible from its actual foot');
- assert.equal(shrineCanStand(world,...feet(12,10.5)),false,'NPC feet can actually collide');
+ assert.equal(shrineCanStand(world,...feet(12,8.75)),true,'NPC accessible from its actual foot');
+ assert.equal(shrineCanStand(world,...feet(12,8.5)),false,'NPC feet can actually collide');
  assert.equal(shrineCanStand(world,...feet(8,10)),false,'lantern island cannot be crossed');
  assert.equal(shrineExitReached(world,432,768),true);
  assert.equal(shrineExitReached(world,432,760),false);

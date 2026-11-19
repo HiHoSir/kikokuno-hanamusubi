@@ -9,7 +9,7 @@ import {
  COVE_MAP,COVE_WIDTH,COVE_HEIGHT,COVE_SHORE,COVE_SAND_DEPTH,COVE_TILE_SIZE,
  tileAt,walkableCell,walkablePoint,isSouthExit
 } from '../data/maps/sea-cove/scene.mjs';
-import {coastMask} from '../src/game/cove/render.mjs';
+import {coastMask,coveCameraStart} from '../src/game/cove/render.mjs';
 import {WORLD_SCENE_ZOOM} from '../src/game/ui/world-scale.mjs';
 import {PSP_DISPLAY,PSP_ASPECT,minPSPScrollingMapCells,pspScrollingMapCoverage}
  from '../src/game/ui/psp-display.mjs';
@@ -64,6 +64,32 @@ test('PSP 480x272 is the scrolling-world minimum; no iPhone-only terrain expansi
      assert.ok(cameraY>=0 && cameraY+visibleWorldHeight<=COVE_HEIGHT*32);
    }
  }
+});
+
+test('wider-than-world iPhone screen gets equal rails; PSP continues to scroll with unchanged scale',()=>{
+ const worldWidth=COVE_WIDTH*COVE_TILE_SIZE;
+ const worldHeight=COVE_HEIGHT*COVE_TILE_SIZE;
+ assert.equal(worldWidth,1344);
+ assert.equal(WORLD_SCENE_ZOOM,0.5);
+ const mobileCssW=874,mobileWorldW=mobileCssW/WORLD_SCENE_ZOOM;
+ const leftWorld=-coveCameraStart(worldWidth,mobileWorldW,0);
+ const rightWorld=mobileWorldW-worldWidth-leftWorld;
+ assert.equal(leftWorld,rightWorld,'left and right blue margins must be identical');
+ assert.equal(leftWorld*WORLD_SCENE_ZOOM,101);
+ assert.equal(coveCameraStart(worldWidth,mobileWorldW,-150),-202,
+   'when the map is smaller, its horizontal offset must ignore the player');
+ assert.equal(coveCameraStart(worldWidth,960,-500),0,
+   'PSP view retains the western camera limit');
+ assert.equal(coveCameraStart(worldWidth,960,500),384,
+   'PSP view retains its eastern camera limit');
+ assert.equal(coveCameraStart(worldWidth,960,100),100,
+   'scrolling still follows the player');
+ assert.equal(coveCameraStart(worldHeight,804,100),100,
+   'normal vertical scrolling is unchanged');
+ assert.equal(coveCameraStart(worldWidth,worldWidth,0),0);
+ const rendering=source('src/game/cove/render.mjs');
+ assert.match(rendering,/ctx\.setTransform\(step,0,0,step,shiftX,shiftY\)/);
+ assert.match(rendering,/ctx\.fillStyle='#28678e'/);
 });
 
 test('approved 30-column coast is preserved exactly while its connected wave chips extend east',()=>{

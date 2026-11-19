@@ -145,6 +145,12 @@ export function prepareCoveSurf(map,shoreMask){
  }
  return {sheet,entries,columns,rows,frames:TIDE_FRAMES.length,coverage};
 }
+// When a device is wider than the authored coast, center the map with
+// equal blue sidebars. Do not scale art, expand terrain, or zoom the camera.
+export function coveCameraStart(worldSpan,viewSpan,desiredStart){
+ if(worldSpan<=viewSpan)return (worldSpan-viewSpan)/2;
+ return Math.max(0,Math.min(worldSpan-viewSpan,desiredStart));
+}
 export function createCoveRenderer(ctx,art,map=COVE_MAP){
  const staticArt=prepareCoveArt(map,art);
  const surf=prepareCoveSurf(map,staticArt.shoreMask);
@@ -160,12 +166,16 @@ export function createCoveRenderer(ctx,art,map=COVE_MAP){
  const render=function draw(player,fisher,time,viewport,shells=[]){
    const {step,bufferWidth,bufferHeight}=viewport;
    const viewW=bufferWidth/step,viewH=bufferHeight/step;
-   const cameraX=Math.max(0,Math.min(width*TILE-viewW,player.x-viewW/2));
-   const cameraY=Math.max(0,Math.min(height*TILE-viewH,player.y-viewH/2-106));
+   const cameraX=coveCameraStart(width*TILE,viewW,player.x-viewW/2);
+   const cameraY=coveCameraStart(height*TILE,viewH,player.y-viewH/2-106);
    ctx.setTransform(1,0,0,1,0,0);
    ctx.imageSmoothingEnabled=false;
    ctx.fillStyle='#28678e';ctx.fillRect(0,0,bufferWidth,bufferHeight);
-   ctx.setTransform(step,0,0,step,-Math.floor(cameraX)*step,-Math.floor(cameraY)*step);
+   // Normal scrolling keeps the prior integer-pixel camera alignment.
+   // For a world shorter than the viewport, center it symmetrically.
+   const shiftX=(cameraX<0?-cameraX:-Math.floor(cameraX))*step;
+   const shiftY=(cameraY<0?-cameraY:-Math.floor(cameraY))*step;
+   ctx.setTransform(step,0,0,step,shiftX,shiftY);
    // Same two-frame sea atlas and 2x2 world-coordinate chip alignment.
    const frame=Math.floor(time/360)%2;
    for(let y=0;y<height;y++)for(let x=0;x<width;x++){

@@ -211,6 +211,36 @@ try{
    window.KIKOKU_SAVE_SNAPSHOT?.().scene==='cove'&&
    document.querySelector('#load')?.hidden===true,null,{timeout:40000});
  const reviewInitial=await review.evaluate(()=>window.KIKOKU_SAVE_SNAPSHOT().position);
+ // The authored coast is 672 CSS px wide at 0.5 world zoom. On an
+ // 874 CSS px iPhone landscape view it must have 101px of BLUE on each
+ // side. Inspect the ACTUAL canvas pixels, not a fabricated mockup.
+ await review.waitForTimeout(180);
+ const centered=await review.evaluate(()=>{
+   const canvas=document.querySelector('#scene');
+   const viewport=document.querySelector('.viewport');
+   const ctx=canvas.getContext('2d');
+   const midY=Math.floor(canvas.height/2);
+   const backdrop=[40,103,142]; // canvas fallback #28678e
+   const isBackdrop=x=>{
+     const rgba=ctx.getImageData(x,midY,1,1).data;
+     return backdrop.every((v,i)=>rgba[i]===v);
+   };
+   let left=0,right=0;
+   while(left<canvas.width/2&&isBackdrop(left))left++;
+   while(right<canvas.width/2&&isBackdrop(canvas.width-1-right))right++;
+   return {left,right,centerIsBackdrop:isBackdrop(Math.floor(canvas.width/2)),
+     screenWidth:canvas.width,cssWidth:viewport.clientWidth,dpr:devicePixelRatio};
+ });
+ console.log('Cove horizontal centering on real canvas:',JSON.stringify(centered));
+ assert.equal(centered.cssWidth,874,'test the actual wide mobile canvas');
+ assert.ok(centered.left>0&&centered.right>0,'both blue side rails must exist');
+ assert.ok(Math.abs(centered.left-centered.right)<=2,
+   'left and right blue margins must match rather than right-only space');
+ assert.equal(centered.centerIsBackdrop,false,'the real sand should occupy the center');
+ assert.ok(Math.abs(centered.left-((centered.cssWidth-672)*centered.dpr/2))<=2,
+   'preserve the native world scale rather than stretching the map');
+ await review.locator('.viewport').screenshot({path:'artifacts/sea-cove-centered-wide-mobile.png'});
+
  const surf=await review.evaluate(()=>window.__COVE_SURF_QA());
  const previewFisher=await review.evaluate(()=>window.__COVE_FISHER_QA);
  assert.equal(previewFisher.character,'ushiohei');

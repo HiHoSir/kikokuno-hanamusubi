@@ -5,7 +5,7 @@ import {residentInFront} from '../village/residents.mjs';
 import {readStoryStage,advanceStoryStage,objectiveForStage} from '../story/chapter-one.mjs';
 import {consumeRestorePosition} from '../save/save-game.mjs?v=save-slots-1';
 import {WORLD_ACTOR_FRAME} from '../ui/world-scale.mjs';
-import {sanctuaryCollisionGeometry,shrineCanStand,shrineAdvance,shrineExitReached,TENYO_PLAYER_FOOT_RADIUS} from './movement.mjs';
+import {sanctuaryCollisionGeometry,shrineCanStand,shrineAdvance,shrineExitReached} from './movement.mjs';
 
 const {SMModel,SMRender}=globalThis;
 const scene=document.querySelector('#scene');
@@ -111,7 +111,10 @@ async function start(){
   }));
   // Ground collision uses each cell's actual rectangular bounds, rather than
   // rejecting an entire 32px square around a tiny character or guardian.
-  const collider=sanctuaryCollisionGeometry(map,blocked,residents);
+  // The published game keeps the previously deployed collision until actual
+  // iPhone visual approval. The preview starts with visible-foot contacts.
+  let collider=sanctuaryCollisionGeometry(map,blocked,residents,
+    {profile:previewMode?'visual':'legacy'});
   // Convert source-map coordinates only when loading the old scene/save.
   // The live player moves in continuous world PIXELS, not grid fractions.
   const worldPoint=(x,y)=>({x:(x+.5)*map.tileSize,y:(y+.5)*map.tileSize});
@@ -282,17 +285,33 @@ async function start(){
           (rect.top-cameraY)/worldPixelsPerPixel,
           (rect.right-rect.left)/worldPixelsPerPixel,
           (rect.bottom-rect.top)/worldPixelsPerPixel);
+      // The new shapes match visible base/feet instead of fully blocking
+      // transparent parts of old 32px object occupancy rectangles.
+      ctx.strokeStyle='rgba(253,197,65,.98)';ctx.lineWidth=2;
+      for(const shape of collider.shapes){
+        ctx.beginPath();
+        if(shape.type==='box')ctx.rect(
+          (shape.left-cameraX)/worldPixelsPerPixel,
+          (shape.top-cameraY)/worldPixelsPerPixel,
+          (shape.right-shape.left)/worldPixelsPerPixel,
+          (shape.bottom-shape.top)/worldPixelsPerPixel);
+        else ctx.ellipse((shape.x-cameraX)/worldPixelsPerPixel,
+          (shape.y-cameraY)/worldPixelsPerPixel,
+          shape.rx/worldPixelsPerPixel,shape.ry/worldPixelsPerPixel,
+          0,0,Math.PI*2);
+        ctx.stroke();
+      }
       ctx.strokeStyle='rgba(255,216,88,.94)';ctx.lineWidth=2;
       for(const npc of collider.npcs){
         ctx.beginPath();ctx.arc((npc.x-cameraX)/worldPixelsPerPixel,
           (npc.y-cameraY)/worldPixelsPerPixel,
-          (npc.radius+TENYO_PLAYER_FOOT_RADIUS)/worldPixelsPerPixel,0,Math.PI*2);
+          (npc.radius+collider.playerRadius)/worldPixelsPerPixel,0,Math.PI*2);
         ctx.stroke();
       }
       ctx.strokeStyle='rgba(55,242,237,.95)';
       ctx.beginPath();ctx.arc((state.x-cameraX)/worldPixelsPerPixel,
         (state.y-cameraY)/worldPixelsPerPixel,
-        TENYO_PLAYER_FOOT_RADIUS/worldPixelsPerPixel,0,Math.PI*2);
+        collider.playerRadius/worldPixelsPerPixel,0,Math.PI*2);
       ctx.stroke();ctx.restore();
     }
     scene.dataset.zoom=String(zoom);
@@ -310,6 +329,8 @@ async function start(){
     scene.dataset.x=String(state.x.toFixed(2));
     scene.dataset.y=String(state.y.toFixed(2));
     scene.dataset.movementUnit='world-pixels';
+    scene.dataset.collisionProfile=collider.profile;
+    scene.dataset.contactRadius=String(collider.playerRadius);
   }
   let lastPaint=0,lastMotionTime=0;
   function frame(now){
@@ -330,6 +351,19 @@ async function start(){
   }
 
   if(previewMode){
+    for(const button of document.querySelectorAll('[data-tenyo-contact]')){
+      button.addEventListener('click',()=>{
+        const profile=button.dataset.tenyoContact;
+        if(profile!=='visual'&&profile!=='legacy')return;
+        const candidate=sanctuaryCollisionGeometry(map,blocked,residents,{profile});
+        // Profile changes must never teleport or invalidate the avatar.
+        // If standing inside the new footprint, keep the current profile.
+        if(!shrineCanStand(candidate,state.x,state.y))return;
+        collider=candidate;
+        for(const item of document.querySelectorAll('[data-tenyo-contact]'))
+          item.setAttribute('aria-pressed',String(item===button));
+      });
+    }
     document.querySelector('[data-tenyo-collision]')?.addEventListener('click',event=>{
       showCollision=!showCollision;
       event.currentTarget.setAttribute('aria-pressed',String(showCollision));

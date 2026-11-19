@@ -62,10 +62,12 @@ button{border:1px solid #777d62;border-radius:8px;background:#314337;color:inher
       <button type="button" data-tenyo-figures="largeNpc" aria-pressed="false">人物を大きく統一</button>
     </div>
     <div class="review-control-row">
+      <button type="button" data-tenyo-contact="visual" aria-pressed="true">足元に合わせた判定</button>
+      <button type="button" data-tenyo-contact="legacy" aria-pressed="false">以前の判定</button>
       <button type="button" data-tenyo-collision aria-pressed="false">判定を表示</button>
     </div>
   </nav>
-  <div class="review-note">広めの画角・従来の人物比｜足元判定を修正</div>
+  <div class="review-note">人物・カメラ不変｜足元接触の見比べ（本編は未変更）</div>
   <p id="load">天妖の社を読み込んでいます</p>
   <button id="talk" type="button" hidden>話す</button>
   <section id="dialogue" aria-labelledby="speaker" hidden>
@@ -92,6 +94,6 @@ button{border:1px solid #777d62;border-radius:8px;background:#314337;color:inher
 <script src="../../src/game/tenyo/rendering/autotile.js"></script>
 <script src="../../src/game/tenyo/rendering/model.js"></script>
 <script src="../../src/game/tenyo/rendering/render.js?v=tenyo-unified-character-foot-1"></script>
-<script type="module" src="../../src/game/tenyo/walk.mjs?tenyo-review=1&amp;v=tenyo-fluid-foot-1"></script>
+<script type="module" src="../../src/game/tenyo/walk.mjs?tenyo-review=1&amp;v=tenyo-tighter-foot-review-1"></script>
 </body>
 </html>

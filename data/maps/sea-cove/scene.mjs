@@ -16,12 +16,18 @@ export const COVE_SAND_DEPTH=Object.freeze(COVE_SHORE.map(y=>COVE_HEIGHT-y));
 
 const tiles=Object.freeze(Array.from({length:COVE_HEIGHT},(_,y)=>
  Array.from({length:COVE_WIDTH},(_,x)=>y<COVE_SHORE[x]?'~':'s').join('')));
-// Reuse the three approved native rock positions; their source foot coordinates
-// are not rounded to new arbitrary object centers.
-const nativeRocks=SCENERY.map(rock=>Object.freeze({
- kind:'rocks',id:rock.id,
- x:rock.x,y:rock.y,footPosition:true,solid:true,radius:rock.radius
-}));
+// Study positions are not an approval of the old 32px rock images.
+const rockStyles=Object.freeze({
+ 'rock-west':Object.freeze({sprite:'rockWest',radius:23}),
+ 'rock-east':Object.freeze({sprite:'rockEast',radius:39}),
+ 'rock-headland':Object.freeze({sprite:'rockHeadland',radius:43})
+});
+const nativeRocks=SCENERY.map(rock=>{
+ const style=rockStyles[rock.id];
+ if(!style)throw Error('Missing native rock style: '+rock.id);
+ return Object.freeze({kind:'rocks',id:rock.id,sprite:style.sprite,
+  x:rock.x,y:rock.y,footPosition:true,solid:true,radius:style.radius});
+});
 export const COVE_MAP=Object.freeze({
  id:'sea-cove',name:'海の入り江',tileSize:COVE_TILE_SIZE,
  width:COVE_WIDTH,height:COVE_HEIGHT,tiles,
@@ -29,11 +35,15 @@ export const COVE_MAP=Object.freeze({
  exit:Object.freeze({row:COVE_HEIGHT-1,columns:Object.freeze([9,10,11])}),
  fisher:Object.freeze({id:'ushiohei',name:'潮平',x:16*32+16,y:12*32+16,face:3}),
  // Keep NPC life on the sand, but never paint unrelated forests over the
- // approved beach. Only approved native rocks + a few game props remain.
+ // approved beach. The three rocks await separate visual approval.
  objects:Object.freeze([
   ...nativeRocks,
-  Object.freeze({kind:'basket',x:20,y:16}),
-  Object.freeze({kind:'barrel',x:18,y:17}),
+  // Cove fishing props are authored in WORLD PIXELS, not forced into 32px
+  // non-field placement cells; their feet align with the ground plane.
+  Object.freeze({id:'shore-shell-basket',kind:'basket',footPosition:true,
+   x:688,y:544,solid:true,radius:37}),
+  Object.freeze({id:'shore-fish-pail',kind:'barrel',footPosition:true,
+   x:592,y:576,solid:true,radius:29}),
   // Reused original village art, native size. A house is not enterable yet.
   Object.freeze({
    id:'fisher-house',kind:'fisherHouse',footPosition:true,
@@ -50,10 +60,13 @@ export const COVE_MAP=Object.freeze({
    footPosition:true,x:770,y:1175,solid:true,radius:49}),
   Object.freeze({id:'rope-coil',kind:'ropeCoil',
    footPosition:true,x:1130,y:1250,solid:true,radius:29}),
-  // Reuse village-original props; no rescaling or palette substitution.
-  Object.freeze({id:'fish-crate-east',kind:'crate',x:28,y:33,solid:true,radius:22}),
-  Object.freeze({id:'gear-barrel',kind:'barrel',x:32,y:36,solid:true,radius:22}),
-  Object.freeze({id:'spare-basket',kind:'basket',x:21,y:38,solid:true,radius:22})
+  // Larger authored 3/4-view originals: no per-object scaling at render time.
+  Object.freeze({id:'fish-crate-east',kind:'crate',footPosition:true,
+   x:912,y:1088,solid:true,radius:40}),
+  Object.freeze({id:'gear-barrel',kind:'barrel',footPosition:true,
+   x:1040,y:1184,solid:true,radius:29}),
+  Object.freeze({id:'spare-basket',kind:'basket',footPosition:true,
+   x:688,y:1248,solid:true,radius:37})
  ])
 });
 export function tileAt(x,y,map=COVE_MAP){

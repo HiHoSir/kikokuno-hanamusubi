@@ -106,9 +106,19 @@ export function validateCoveShellSites(){
   if(tileAt(...site.cell)!=='s')issues.push('not sand: '+i);
   const fisher=COVE_MAP.fisher;
   if(nearby(site.x,site.y,fisher.x,fisher.y)<40)issues.push('near fisher: '+i);
-  for(const other of COVE_MAP.objects.filter(o=>['basket','barrel'].includes(o.kind))){
-   if(nearby(site.x,site.y,other.x*TILE+16,(other.y+1)*TILE-10)<32)
-    issues.push('near blocking prop: '+i);
+  for(const other of COVE_MAP.objects.filter(o=>o.solid)){
+   // Most props store world-pixel feet, not map-cell indices.
+   if(other.collision){
+    const b=other.collision;
+    if(site.x>=b.left-12&&site.x<=b.right+12&&
+       site.y>=b.top-12&&site.y<=b.bottom+12)
+     issues.push('buried by '+other.id+': '+i);
+   }else{
+    const ox=other.footPosition?other.x:other.x*TILE+16;
+    const oy=other.footPosition?other.y:(other.y+1)*TILE-10;
+    if(nearby(site.x,site.y,ox,oy)<(other.radius??22)+12)
+     issues.push('buried by '+other.id+': '+i);
+   }
   }
   for(let j=i+1;j<COVE_SHELL_SITES.length;j++){
    const a=COVE_SHELL_SITES[j];

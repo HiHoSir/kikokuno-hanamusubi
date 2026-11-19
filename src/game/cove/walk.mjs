@@ -1,11 +1,11 @@
-import {COVE_MAP,tileAt,walkableCell,isSouthExit} from '../../../data/maps/sea-cove/scene.mjs?v=gear-proportion-2';
+import {COVE_MAP,tileAt,walkableCell,isSouthExit} from '../../../data/maps/sea-cove/scene.mjs?v=cove-rock-variants-1';
 import {makeWalk} from '../village/movement.mjs';
 import {residentInFront} from '../village/residents.mjs';
 import {bindDialogue} from '../village/dialogue.mjs';
 import {pixelViewport,DEFAULT_CAMERA_ZOOM} from '../village/render.mjs?v=nonfield-world-scale-1';
 import {readStoryStage,advanceStoryStage,objectiveForStage} from '../story/chapter-one.mjs';
 import {consumeRestorePosition} from '../save/save-game.mjs?v=save-slots-1';
-import {createCoveRenderer} from './render.mjs?v=hamlet-1';
+import {createCoveRenderer} from './render.mjs?v=cove-rock-variants-1';
 import {readPlayer,savePlayer} from '../battle/rules.mjs';
 import {SHELL_KINDS,shellBagCount} from '../items/shells.mjs';
 import {
@@ -16,6 +16,13 @@ import {
 // change the player's story, bag, scene checkpoint or persistent game state.
 const previewMode=location.pathname.endsWith('/previews/sea-cove-review/')&&
   new URL(import.meta.url).searchParams.get('cove-review')==='1';
+// Shortcuts only move the local review avatar. They must never write the
+// player's save, alter the real game entry, or change camera/world scaling.
+const previewSpots=Object.freeze({
+ shore:Object.freeze({x:336,y:432,face:1}),
+ rocks:Object.freeze({x:710,y:460,face:3}),
+ worksite:Object.freeze({x:884,y:805,face:0})
+});
 const scene=document.querySelector('#scene');
 const load=document.querySelector('#load');
 const objective=document.querySelector('#objective');
@@ -28,10 +35,13 @@ const inputs=new Map();
 const scenery={
  hero:'assets/characters/hizuki/walk-4dir-80x112.png',
  fisher:'assets/characters/npc/ushiohei-walk-4dir-80x112.png',
- rocks:'assets/village/objects/rocks.png',
- basket:'assets/village/objects/basket.png',
- barrel:'assets/village/objects/barrel.png',
- crate:'assets/village/objects/crate.png',
+ rockWest:'assets/sea-cove/objects/shore-rock-west-60x40.png',
+ rockEast:'assets/sea-cove/objects/shore-rock-east-104x64.png',
+ rockHeadland:'assets/sea-cove/objects/shore-rock-headland-108x72.png',
+ basket:'assets/sea-cove/objects/fish-basket-80x74.png',
+ barrel:'assets/sea-cove/objects/fish-barrel-64x86.png',
+ crate:'assets/sea-cove/objects/fish-crate-92x70.png',
+ // Cove basket, barrel and crate use purpose-built native pixel art, not scaled 32px village chips.
  // Adopted village house at full native 390x357; no character-scale fudge.
  fisherHouse:'assets/village/scene/house-thatch.png',
  netRack:'assets/sea-cove/objects/net-drying-rack-232x176.png',
@@ -107,9 +117,13 @@ async function start(){
     .then(entries=>Object.fromEntries(entries)),
   landscapeReady
  ]);
- for(const id of ['rocks','water']){
-  if(images[id].naturalWidth<32||images[id].naturalHeight<32)
-   throw Error('32pxマップチップの寸法が不足しています: '+id);
+ if(images.water.naturalWidth<32||images.water.naturalHeight<32)
+  throw Error('水面の地形画像が不足しています');
+ for(const [id,w,h] of [
+  ['rockWest',60,40],['rockEast',104,64],['rockHeadland',108,72]
+ ]){
+  if(images[id].naturalWidth!==w||images[id].naturalHeight!==h)
+   throw Error('原寸岩の画像寸法が不正です: '+id);
  }
  for(const id of ['coastMask','coastSand0','coastSand1','coastSand2','coastSand3']){
   if(images[id].naturalWidth!==128||images[id].naturalHeight!==128)
@@ -128,7 +142,7 @@ async function start(){
    lines:linesForFisher(readStoryStage())};
  // Collider positions are authored independently of roof alpha and net mesh.
  // The house blocks full roof overlap, so the character never disappears
- // behind its art. Coastal rocks and pickup sites remain unchanged.
+ // behind its art. The cove rocks have their own native foot radii.
  const collisionObjects=COVE_MAP.objects
    .filter(o=>o.solid||['basket','barrel','rocks'].includes(o.kind))
    .map(o=>o.collision
@@ -147,6 +161,13 @@ async function start(){
  const usable=restored&&walk.canStand(restored.x,restored.y)&&!occupied(restored.x,restored.y);
  let x=usable?restored.x:entry.x,y=usable?restored.y:entry.y;
  let face=usable?(restored.face??entry.face):entry.face;
+ if(previewMode){
+  const requested=new URLSearchParams(location.search).get('spot');
+  const spot=previewSpots[requested];
+  if(spot&&walk.canStand(spot.x,spot.y)&&!occupied(spot.x,spot.y)){
+   x=spot.x;y=spot.y;face=spot.face;
+  }
+ }
  let elapsedMs=0,lastFrame=0,distance=0,menuPaused=false,lastRenderedFrame=-1;
  const renderer=createCoveRenderer(scene.getContext('2d',{alpha:false}),images);
  const dialogue=bindDialogue(clearInputs,ended=>{
@@ -234,6 +255,19 @@ async function start(){
    }
    dialogue.open();
  };
+ if(previewMode){
+  for(const button of document.querySelectorAll('[data-review-spot]')){
+   button.addEventListener('click',()=>{
+    const spot=previewSpots[button.dataset.reviewSpot];
+    if(!spot||!walk.canStand(spot.x,spot.y)||occupied(spot.x,spot.y))return;
+    clearInputs();
+    x=spot.x;y=spot.y;face=spot.face;
+    distance=0;lastRenderedFrame=-1;
+    for(const other of document.querySelectorAll('[data-review-spot]'))
+     other.setAttribute('aria-pressed',String(other===button));
+   });
+  }
+ }
  document.querySelector('#action-a')?.addEventListener('click',interact);
  document.querySelector('#action-b')?.addEventListener('click',()=>dialogue.advance());
  for(const button of buttons){
@@ -273,8 +307,8 @@ async function start(){
    spawn:{...entry},
    objects:COVE_MAP.objects.map(o=>({id:o.id??o.kind,kind:o.kind,
      x:o.x,y:o.y,solid:o.solid??true,collision:o.collision??null,
-     footPosition:o.footPosition??false})),
-   assets:Object.fromEntries(['fisherHouse','netRack','netBundle','ropeCoil','crate']
+     footPosition:o.footPosition??false,sprite:o.sprite??null})),
+   assets:Object.fromEntries(['fisherHouse','netRack','netBundle','ropeCoil','crate','rockWest','rockEast','rockHeadland']
      .map(kind=>[kind,{width:images[kind].naturalWidth,height:images[kind].naturalHeight}])),
    blockedByProp:(x,y)=>blockedByProp(x,y),
    cameraZoom:DEFAULT_CAMERA_ZOOM

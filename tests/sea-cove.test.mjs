@@ -2,6 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync,existsSync} from 'node:fs';
 import {SHORE_Y,SCENERY} from '../data/maps/shoreline-study/scene.mjs';
+import {COVE_SHELL_SITES,validateCoveShellSites} from '../data/maps/sea-cove/shells.mjs';
+import {SHELL_ART_SIZE} from '../src/game/items/shell-art.mjs';
 import {
  COVE_MAP,COVE_WIDTH,COVE_HEIGHT,COVE_SHORE,COVE_SAND_DEPTH,COVE_TILE_SIZE,
  tileAt,walkableCell,walkablePoint,isSouthExit
@@ -82,7 +84,7 @@ test('approved 30-column coast is preserved exactly while its connected wave chi
  assert.equal(COVE_MAP.objects.filter(o=>o.kind==='rocks').length,SCENERY.length);
  for(const rock of SCENERY)
    assert.ok(COVE_MAP.objects.some(o=>o.id===rock.id&&o.x===rock.x&&o.y===rock.y),
-     'accepted native rock moved: '+rock.id);
+     'original rock position moved: '+rock.id);
  assert.equal(COVE_MAP.objects.filter(o=>o.kind==='flowers').length,0,
    'do not introduce unreviewed flowers and woods on the beach');
  assert.ok(walkablePoint(COVE_MAP.entry.x,COVE_MAP.entry.y));
@@ -176,6 +178,69 @@ test('fisher homestead uses new southern sand; native assets; no blocked field r
  assert.equal(collision(house.x,house.y-70),true,'house must block roof invisibility');
  assert.equal(collision(net.x,net.y-40),true,'cannot walk through net mesh');
  assert.equal(collision(COVE_MAP.entry.x,COVE_MAP.entry.y),false);
+});
+
+test('cove supply sprites have actual native dimensions, never fake-size 32px village props',()=>{
+ const walker=source('src/game/cove/walk.mjs');
+ const renderer=source('src/game/cove/render.mjs');
+ assert.match(renderer,/actor\.image\.naturalWidth\/2/);
+ assert.match(renderer,/actor\.image\.naturalHeight/);
+ for(const [kind,path,w,h,radius,requiredCount] of [
+  ['basket','assets/sea-cove/objects/fish-basket-80x74.png',80,74,37,2],
+  ['barrel','assets/sea-cove/objects/fish-barrel-64x86.png',64,86,29,2],
+  ['crate','assets/sea-cove/objects/fish-crate-92x70.png',92,70,40,1],
+ ]){
+  assert.ok(walker.includes(kind+':\''+path+'\''),kind+' uses its own real-size art');
+  const png=readFileSync(path);
+  assert.equal(png.subarray(1,4).toString('ascii'),'PNG');
+  assert.equal(png.readUInt32BE(16),w,kind+' actual art width');
+  assert.equal(png.readUInt32BE(20),h,kind+' actual art height');
+  assert.equal(png[25],6,kind+' RGBA image');
+  const instances=COVE_MAP.objects.filter(o=>o.kind===kind);
+  assert.equal(instances.length,requiredCount);
+  for(const o of instances){
+   assert.equal(o.footPosition,true,'pixel-art foot anchors are world coordinates');
+   assert.equal(o.radius,radius,'collision matches the intended visible footprint');
+   assert.ok(o.radius*2<=w&&o.radius*2>=w-16,'not a tiny sprite with an oversized collision');
+  }
+ }
+ assert.doesNotMatch(walker,/basket:'assets\/village\/objects\/basket\.png'/);
+ assert.doesNotMatch(walker,/barrel:'assets\/village\/objects\/barrel\.png'/);
+ assert.doesNotMatch(walker,/crate:'assets\/village\/objects\/crate\.png'/);
+});
+test('native rock sprites are actual sizes and do not visually bury shell pickups',()=>{
+ const walker=source('src/game/cove/walk.mjs');
+ const renderer=source('src/game/cove/render.mjs');
+ assert.match(renderer,/art\[object\.sprite\?\?object\.kind\]/);
+ const rocks=COVE_MAP.objects.filter(o=>o.kind==='rocks');
+ assert.equal(rocks.length,3);
+ for(const [id,key,path,w,h,radius] of [
+  ['rock-west','rockWest','assets/sea-cove/objects/shore-rock-west-60x40.png',60,40,23],
+  ['rock-east','rockEast','assets/sea-cove/objects/shore-rock-east-104x64.png',104,64,39],
+  ['rock-headland','rockHeadland','assets/sea-cove/objects/shore-rock-headland-108x72.png',108,72,43]
+ ]){
+  const rock=rocks.find(o=>o.id===id);
+  assert.ok(rock);
+  assert.equal(rock.sprite,key);
+  assert.equal(rock.radius,radius);
+  assert.equal(rock.footPosition,true);
+  assert.ok(walker.includes(key+':\''+path+'\''));
+  assert.ok(radius*2<=w);
+  const png=readFileSync(path);
+  assert.equal(png.subarray(1,4).toString('ascii'),'PNG');
+  assert.equal(png.readUInt32BE(16),w);
+  assert.equal(png.readUInt32BE(20),h);
+  assert.equal(png[25],6);
+  const area={l:rock.x-w/2,r:rock.x+w/2,t:rock.y-h,b:rock.y};
+  for(const shell of COVE_SHELL_SITES){
+   const pickup={l:shell.x-SHELL_ART_SIZE/2,r:shell.x+SHELL_ART_SIZE/2,
+     t:shell.y-SHELL_ART_SIZE+4,b:shell.y+4};
+   assert.equal(area.l<pickup.r&&area.r>pickup.l&&
+     area.t<pickup.b&&area.b>pickup.t,false,rock.id+' hides '+shell.id);
+  }
+ }
+ assert.deepEqual(validateCoveShellSites(),[]);
+ assert.doesNotMatch(walker,/rocks:'assets\/village\/objects\/rocks\.png'/);
 });
 
 test('same approved landscape ground, contour masks, water chips and eight-frame surf',()=>{

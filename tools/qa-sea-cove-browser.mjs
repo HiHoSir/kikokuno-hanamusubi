@@ -64,7 +64,7 @@ try{
      topWorldY:cameraY,waterVisible:cameraY<9*32,
      menuVisible:!document.querySelector('#field-menu-toggle').hidden,
      shells:child.__COVE_SHELL_QA?.(),surf:child.__COVE_SURF_QA?.(),
-     fisher:child.__COVE_FISHER_QA};
+     fisher:child.__COVE_FISHER_QA,rockAssets:child.__COVE_HAMLET_QA?.assets};
  });
  assert.equal(initial.position.scene,'cove');
  assert.equal(initial.fisher.character,'ushiohei');
@@ -72,6 +72,11 @@ try{
  assert.deepEqual(initial.fisher.size,[240,448]);
  assert.deepEqual(initial.fisher.frame,[80,112]);
  assert.deepEqual(initial.fisher.feet,[40,106]);
+ for(const [key,dimensions] of [
+  ['rockWest',{width:60,height:40}],
+  ['rockEast',{width:104,height:64}],
+  ['rockHeadland',{width:108,height:72}]
+ ])assert.deepEqual(initial.rockAssets?.[key],dimensions,'native rock '+key);
  assert.equal(initial.waterVisible,true,'first view includes the moving sea, not only grass');
  assert.ok(initial.canvas[0]>0&&initial.canvas[1]>0);
  // A drawing buffer can be 2x the CSS viewport on Retina devices, but the
@@ -102,7 +107,7 @@ try{
  assert.equal(initial.surf.approvedCoastline,30,
    'the exact 30-column approved shoreline was copied');
  assert.equal(initial.surf.sceneryNativeCount,3,
-   'approved three native-sized rocks are preserved');
+   'three preexisting rock marker positions remain');
  assert.ok(initial.surf.tileCount>58,
    'extended eastern coast must ADD new animated shoreline tiles, not stay frozen at 58');
  assert.ok(initial.surf.coverage[0].washedPixels>=393,
@@ -273,13 +278,30 @@ try{
    await review.evaluate(k=>window.dispatchEvent(new KeyboardEvent('keyup',
      {key:k,bubbles:true,cancelable:true})),key);
  };
- await held('ArrowRight',3700);
- await held('ArrowDown',4050);
+ // Walk south of the newly sized headland rock, then east above the
+ // house roof, then south through the real house/net worksite corridor.
+ // This uses player input only: it is not a teleport or a fake camera QA.
+ await held('ArrowRight',3000);
+ await held('ArrowDown',1400);
+ await held('ArrowRight',900);
+ await held('ArrowDown',2000);
  const hamletView=await review.evaluate(()=>window.KIKOKU_SAVE_SNAPSHOT().position);
  assert.ok(hamletView.x>700&&hamletView.y>700,
    'real on-screen movement reaches expanded fishing worksite');
  assert.ok(hamletView.x<950,'worksite route should use the central house/net corridor');
  await review.screenshot({path:'artifacts/sea-cove-hamlet-worksite.png'});
+ // On a real iPhone the art cannot be judged from a test log. Ensure the
+ // public review has touch-friendly rock/worksite shortcuts and real movement.
+ await review.locator('[data-review-spot="rocks"]').click();
+ const rockShortcut=await review.evaluate(()=>window.KIKOKU_SAVE_SNAPSHOT().position);
+ assert.deepEqual([rockShortcut.x,rockShortcut.y],[710,460],
+   'rock visual review shortcut must place the avatar beside the actual rocks');
+ await review.locator('.viewport').screenshot({path:'artifacts/sea-cove-rocks-near-hero.png'});
+ await review.locator('[data-review-spot="worksite"]').click();
+ const worksiteShortcut=await review.evaluate(()=>window.KIKOKU_SAVE_SNAPSHOT().position);
+ assert.deepEqual([worksiteShortcut.x,worksiteShortcut.y],[884,805],
+   'worksite visual review shortcut must place the avatar between house and net');
+ await review.locator('.viewport').screenshot({path:'artifacts/sea-cove-worksite-near-hero.png'});
  // PSP is the target DISPLAY, not the iPhone's extra-wide browser view.
  // Size the actual content box to 480x272, accounting for whatever border
  // rules the game CSS cascade applies. Do not change runtime camera/terrain.

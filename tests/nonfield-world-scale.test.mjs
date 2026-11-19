@@ -26,14 +26,15 @@ test('village, rooms and cove use stable world scale without district zoom',()=>
  assert.match(village,/DEFAULT_CAMERA_ZOOM/);
  assert.match(rooms,/pixelViewport\(parent.clientWidth,parent.clientHeight,devicePixelRatio,DEFAULT_CAMERA_ZOOM\)/);
  assert.match(cove,/pixelViewport\(parent.clientWidth,parent.clientHeight,devicePixelRatio,DEFAULT_CAMERA_ZOOM\)/);
- // Tenyo is provisionally restored to its pre-PR37, previously reviewed
- // independent camera. Do not reapply a unified zoom without a full visual QA.
- assert.match(tenyo,/ZOOM=1\.4/);
- assert.match(tenyo,/heroDisplayScale:map\.game\.heroDisplayScale\?\?1/);
+ // Tenyo uses the SAME CSS/world ratio as village, rooms and sea cove.
+ // Its 768px intermediate buffer is not a camera magnification setting.
+ assert.match(tenyo,/WORLD_SCENE_ZOOM/);
+ assert.match(tenyo,/Math\.max\(width,height\)\*WORLD_SCENE_ZOOM/);
+ assert.doesNotMatch(tenyo,/ZOOM=1\.4|heroDisplayScale/);
  assert.doesNotMatch(cove,/hamletCameraZoom|basePixelStep|1\.18|0\.65/);
  const scene=JSON.parse(source('data/maps/tenyo-sanctuary/scene.json'));
- assert.equal(scene.game.heroDisplayScale,0.52,
-   'retain reviewed Tenyo player-to-shrine proportions until visual signoff');
+ assert.equal(Object.hasOwn(scene.game,'heroDisplayScale'),false,
+   'Hizuki must not be independently shrunk at the sanctuary');
 });
 test('non-field camera cannot change with location or rescale only one prop',()=>{
  const cove=source('src/game/cove/walk.mjs');
@@ -93,11 +94,9 @@ test('all connected playable NPC assets use the native hero sheet frame and shar
    assert.deepEqual(calls.at(-1).slice(1,5),[160,0,80,112],
      role+' must preserve native 80px walking frames');
  }
- // The sanctuary sprite atlas is still 80×112, but its previously reviewed
- // *draw size* is distinct. Preserve that approved behavior while assessing
- // changes visually rather than assuming all-world numerical scale implies QA.
- assert.match(source('src/game/tenyo/walk.mjs'),/heroDisplayScale:map\.game\.heroDisplayScale\?\?1/);
- assert.match(source('src/game/tenyo/rendering/render.js'),/o\.heroDisplayScale\?\?1/);
+ // All walkable non-field locations now have the SAME 80x112 world sprites.
+ assert.doesNotMatch(source('src/game/tenyo/walk.mjs'),/heroDisplayScale|ZOOM=1\.4/);
+ assert.doesNotMatch(source('src/game/tenyo/rendering/render.js'),/heroDisplayScale|displayScale/);
 });
 
 test('buildings, furniture, and fishing props use the same world pixels as characters',()=>{

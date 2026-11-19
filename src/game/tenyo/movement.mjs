@@ -100,11 +100,8 @@ export function sanctuaryCollisionGeometry(map,legacyBlocked,residents,{profile=
     !Number.isFinite(region.y)||!Number.isFinite(region.width)||
     !Number.isFinite(region.height)||region.width<=0||region.height<=0)
    throw Error('Invalid sanctuary pixel-space contact region');
-  // The original rectangular "scenic water" mask covers actual shallow
-  // water with a giant invisible wall. In the visual profile, actual
-  // depth handles water; explicit narrow narrative locks seal the sequel
-  // boundary instead. Legacy profile remains as a rollback reference.
-  if(profile==='visual'&&region.id==='rear-scenic-water')continue;
+  // Pixel-accurate non-water structural zones only; shallow water is
+  // traversable on both sides of the gate unless a real obstacle blocks it.
   rects.push({left:region.x,top:region.y,
    right:region.x+region.width,bottom:region.y+region.height,
    source:region.id});
@@ -120,9 +117,8 @@ export function sanctuaryCollisionGeometry(map,legacyBlocked,residents,{profile=
   return {id:zone.id,left:zone.x,top:zone.y,
    right:zone.x+zone.width,bottom:zone.y+zone.height};
  });
- if(!locks.some(z=>z.id==='guardian-sequel-passage')||
-    !locks.some(z=>z.id==='sacred-rear-perimeter'))
-  throw Error('Sanctuary sequel passage must remain sealed');
+ if(locks.length!==1||locks[0].id!=='guardian-sequel-passage')
+  throw Error('Only the guarded gate aperture is the first-game sequel lock');
  const npcRadius=profile==='visual'
   ?TENYO_VISUAL_NPC_FOOT_RADIUS:TENYO_NPC_FOOT_RADIUS;
  const npcs=residents.map(npc=>({
@@ -155,8 +151,9 @@ export function shrineCanStand(world,x,y){
  const r=world.playerRadius??TENYO_PLAYER_FOOT_RADIUS;
  if(x<r||y<r||x>world.width-r||y>world.height-r)return false;
  for(const box of world.rects)if(rectTouch(box,x,y,r))return false;
- // Story seal is checked independently of sprites, walkable water,
- // and visual/legacy collision mode. No position or zoom can bypass it.
+ // Only the opening between the gate guardians is sealed. Shallows
+ // around either side of the gate remain reachable and walkable.
+ // Neither NPC size nor the visual/legacy selection may open this slit.
  for(const zone of world.locks||[])if(rectTouch(zone,x,y,r))return false;
  for(const shape of world.shapes||[]){
   if(shape.type==='box'&&rectTouch(shape,x,y,r))return false;

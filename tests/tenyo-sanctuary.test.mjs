@@ -252,68 +252,76 @@ test('selected wide-angle camera and previous actual figure-size ratio are indep
  const movement=readFileSync('src/game/tenyo/movement.mjs','utf8');
  assert.doesNotMatch(movement,/TENYO_HERO_ART_FACTOR|heroDisplayScale|WORLD_SCENE_ZOOM/);
 });
-test('sequel doorway between both guardians is a permanent story lock in every profile',()=>{
- const oldBlocked=M.collision(model);
- const seals=map.game.passageLocks;
- assert.equal(seals.length,2);
- assert.deepEqual(seals.map(s=>s.id).sort(),
-  ['guardian-sequel-passage','sacred-rear-perimeter']);
- assert.ok(seals.every(s=>s.unlockIn==='sequel'));
+test('ONLY the opening between the two guardians remains sealed; both shallow side routes are accessible',()=>{
+ const blocked=M.collision(model);
+ assert.deepEqual(map.game.passageLocks.map(z=>z.id),['guardian-sequel-passage']);
+ assert.equal(map.game.passageLocks[0].unlockIn,'sequel');
+ assert.equal(map.game.footCollisionZones,undefined,
+   'the formerly invisible full-width back wall must be absent');
  for(const profile of ['legacy','visual']){
-  const world=sanctuaryCollisionGeometry(model,oldBlocked,map.game.residents,{profile});
-  assert.equal(world.locks.length,2);
-  const emptyGuards=sanctuaryCollisionGeometry(model,oldBlocked,[],{profile});
+  const world=sanctuaryCollisionGeometry(model,blocked,map.game.residents,{profile});
+  const noGuards=sanctuaryCollisionGeometry(model,blocked,[],{profile});
+  assert.equal(world.locks.length,1);
   for(const x of [408,432,448,464,494]){
    assert.equal(shrineCanStand(world,x,244),false,
-     'never open guardian passage at '+x+' in '+profile);
-   assert.equal(shrineCanStand(emptyGuards,x,244),false,
-     'sequel lock must not depend on guardian NPC sprites '+profile);
+    'never enter between gate posts/guards at '+x+' with '+profile);
+   assert.equal(shrineCanStand(noGuards,x,244),false,
+    'story seal must not depend on NPC presence: '+profile);
   }
-  const forward=shrineAdvance(world,448,280,0,-1,32);
-  assert.ok(forward.y>259,'stop before story-only gate even during a long press: '+profile);
-  let cursor={x:448,y:280};
+  let center={x:448,y:280};
   for(let i=0;i<10;i++){
-   const next=shrineAdvance(world,cursor.x,cursor.y,0,-1,32);
-   cursor={x:next.x,y:next.y};
+   const p=shrineAdvance(world,center.x,center.y,0,-1,32);
+   center={x:p.x,y:p.y};
   }
-  assert.ok(cursor.y>259,'cannot repeatedly push through the future sequel opening: '+profile);
+  assert.ok(center.y>259,'holding up cannot pass the guarded opening: '+profile);
   assert.equal(shrineCanStand(world,448,272),true,
-   'can approach and speak with the guards from the south: '+profile);
-  assert.equal(shrineCanStand(world,448,218),false,
-   'perimeter seal prevents a detour behind the guarded gate: '+profile);
-  assert.ok(world.locks.every(l=>l.bottom>l.top&&l.right>l.left));
+   'can approach and speak from in front of the guardians: '+profile);
+  assert.equal(shrineCanStand(world,448,218),true,
+   'if arrived from a side route the shallow water behind the gate is walkable: '+profile);
+  for(const sideX of [320,560]){
+   // This is the exact unblocked side channel around the gate:
+   // coordinates are world-pixel feet and movement is continuous.
+   assert.equal(shrineCanStand(world,sideX,278),true,
+    'approach shallow side route '+sideX+': '+profile);
+   assert.equal(shrineCanStand(world,sideX,190),true,
+    'the same shallow water past the gate remains walkable '+sideX+': '+profile);
+   let pos={x:sideX,y:278};
+   for(let step=0;step<4;step++){
+    const next=shrineAdvance(world,pos.x,pos.y,0,-1,32);
+    pos={x:next.x,y:next.y};
+   }
+   assert.ok(pos.y<230,'walk around side of gate into northern shallows: '+sideX+' '+profile);
+  }
  }
 });
 
-test('shallow is inherently passable; gates block posts AND rails without blocking all water',()=>{
- const b=M.collision(model);
- const visual=sanctuaryCollisionGeometry(model,b,map.game.residents,{profile:'visual'});
- const legacy=sanctuaryCollisionGeometry(model,b,map.game.residents,{profile:'legacy'});
- // Deep water is unsafe. Shallow water, even in the rear background, is
- // physically shallow: only the separate story barrier prevents travel north.
+test('shallow stays walkable beyond gate, solid gate rails remain solid',()=>{
+ const blocked=M.collision(model);
+ const visual=sanctuaryCollisionGeometry(model,blocked,map.game.residents,{profile:'visual'});
+ const legacy=sanctuaryCollisionGeometry(model,blocked,map.game.residents,{profile:'legacy'});
  const cell=(x,y)=>map.waterSurface.find(v=>v.x===x&&v.y===y)?.depth;
- assert.equal(cell(9,6),'shallow');
- assert.equal(cell(9,8),'shallow');
- assert.equal(cell(17,8),'shallow');
- assert.equal(shrineCanStand(visual,304,208),true,
-  'a shallow source cell must not inherit the huge decorative rear-water wall');
- assert.equal(shrineCanStand(legacy,304,208),false,
-  'old scenic wall remains available strictly for comparison');
+ for(const xy of [[9,6],[9,8],[17,8],[14,6]])
+  assert.equal(cell(...xy),'shallow');
+ for(const world of [visual,legacy]){
+  assert.equal(shrineCanStand(world,304,208),true,
+   'a shallow cell behind the gate is not blocked by a scenic invisible wall');
+  assert.equal(shrineCanStand(world,448,218),true,
+   'sequel story lock does not close the entire north bank');
+ }
  for(const [x,y] of [[304,272],[560,272],[336,272],[304,235]]){
   assert.equal(shrineCanStand(visual,x,y),true,
    'unobstructed shallow water should be walkable at '+x+','+y);
  }
- assert.equal(shrineCanStand(visual,240,208),false,
-  'mid/deep water stays non-walkable even with narrower shoreline contact');
+ assert.equal(shrineCanStand(visual,240,208),false,'deep/mid water stays impassable');
  const gate=visual.shapes.filter(s=>s.id?.startsWith(
   map.objects.find(o=>o.templateId==='tenyo_water_gate').id));
- assert.equal(gate.length,4,'both posts and both fence rails need actual contact geometry');
+ assert.equal(gate.length,4,'both posts and both rails still have collision');
  for(const [x,y] of [[370,240],[522,240],[355,238],[539,238]]){
   assert.equal(shrineCanStand(visual,x,y),false,
-   'standing THROUGH visible water-gate post or fence is forbidden');
+   'no walking through a gate post or wooden fence');
  }
  assert.equal(shrineCanStand(visual,448,244),false,
-  'even the open-looking center remains a sealed sequel entrance');
+  'the guarded CENTER of the gate remains sealed');
 });
 
 test('outside the field, sanctuary uses independent pixel geometry and continuous foot movement',()=>{
@@ -322,7 +330,8 @@ test('outside the field, sanctuary uses independent pixel geometry and continuou
  assert.equal(world.width,28*oldGridSize);
  assert.equal(world.height,25*oldGridSize);
  assert.equal(TENYO_PLAYER_FOOT_RADIUS,8);
- assert.ok(world.rects.some(r=>r.source==='rear-scenic-water'));
+ assert.ok(!world.rects.some(r=>r.source==='rear-scenic-water'),
+  'scenic background must never add an invisible walking barrier');
  assert.ok(!M.collision(model).has('13,7'),'NPC entry is not a forbidden terrain tile');
  const feet=(x,y)=>[(x+.5)*oldGridSize,(y+.5)*oldGridSize];
  for(const [x,y] of [[13,23],[13,22],[13,10],[13,9],[14,8],[12,9],[12,10],[13,8]]){

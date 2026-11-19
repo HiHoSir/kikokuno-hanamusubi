@@ -342,7 +342,8 @@ async function start(){
     scene.dataset.y=String(state.y.toFixed(2));
     scene.dataset.movementUnit='world-pixels';
     scene.dataset.collisionProfile=collider.profile;
-    scene.dataset.sequelSealed=String(collider.locks.length===2);
+    scene.dataset.sequelSealed=String(collider.locks.length===1&&
+      collider.locks[0].id==='guardian-sequel-passage');
     scene.dataset.contactRadius=String(collider.playerRadius);
   }
   let lastPaint=0,lastMotionTime=0;

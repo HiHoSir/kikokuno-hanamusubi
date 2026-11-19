@@ -1,51 +1,151 @@
-// Sanctuary is NOT subject to the field's 32px movement grid.
-// Import the old map's cell collision as world-pixel rectangles once, then
-// move freely in continuous world-pixel coordinates with foot-circle tests.
-// The legacy map cell size determines only its imported geometry, never
-// a movement increment, art size, zoom, or independent character scale.
-export const TENYO_PLAYER_FOOT_RADIUS=8;
+// This sanctuary is not constrained to the field's 32px movement grid.
+// Authoritative movement uses continuous world pixels and a small foot circle.
+//
+// The original settlement-editor water map still has legacy occupied cells.
+// The 'legacy' profile retains its collision exactly for the published game.
+// The 'visual' profile is a review-only correction that converts old data to
+// shapes matching the rendered feet of gates, lanterns and stone islands.
+export const TENYO_PLAYER_FOOT_RADIUS=8; // published legacy collision
 export const TENYO_NPC_FOOT_RADIUS=10;
+export const TENYO_VISUAL_PLAYER_FOOT_RADIUS=4;
+export const TENYO_VISUAL_NPC_FOOT_RADIUS=5;
 const MAX_SWEEP_SLICE_PX=2;
+const VISUAL_OBJECTS=new Set([
+ 'tenyo_water_gate','torii_gate_v2',
+ 'rock_island_lantern_base','rock_island_lantern_base_mirror',
+ 'tenyo_stone_lantern'
+]);
 
-export function sanctuaryCollisionGeometry(map,legacyBlocked,residents){
+function footShapes(map){
+ const unit=map.tileSize,shapes=[];
+ for(const o of map.objects){
+  if(!VISUAL_OBJECTS.has(o.templateId))continue;
+  const left=o.x*unit,groundY=(o.y+1)*unit;
+  if(o.templateId==='tenyo_water_gate'){
+   // The approved 192x128 art touches the ground at two narrow wooden
+   // posts; the decorative rail and roof are not four solid 32px blocks.
+   shapes.push({type:'box',left:left+30,right:left+51,
+     top:groundY-15,bottom:groundY,id:o.id+':left-foot'});
+   shapes.push({type:'box',left:left+140,right:left+160,
+     top:groundY-15,bottom:groundY,id:o.id+':right-foot'});
+  }else if(o.templateId==='torii_gate_v2'){
+   shapes.push({type:'box',left:left+15,right:left+35,
+     top:groundY-15,bottom:groundY,id:o.id+':left-foot'});
+   shapes.push({type:'box',left:left+94,right:left+114,
+     top:groundY-15,bottom:groundY,id:o.id+':right-foot'});
+  }else if(o.templateId==='tenyo_stone_lantern'){
+   // The lamp artwork is supported above the island by 26 world px.
+   // Its base occupies only a small contact patch, not a whole 32px cell.
+   shapes.push({type:'ellipse',x:left+unit/2,y:groundY-29,
+     rx:7,ry:6,id:o.id+':base'});
+  }else{
+   // 96x64 stone-island art: only the visible low rock band is solid;
+   // most of the nominal two-row sprite is transparent atmosphere.
+   shapes.push({type:'ellipse',x:left+unit*1.5,y:groundY-14,
+     rx:42,ry:13,id:o.id+':rock-foot'});
+  }
+ }
+ return shapes;
+}
+
+function blockedCellRects(map,legacyBlocked,profile){
  const unit=map.tileSize;
- const rects=[...legacyBlocked].map(key=>{
+ if(profile==='legacy')
+  return [...legacyBlocked].map(key=>{
+   const [cx,cy]=key.split(',').map(Number);
+   return {left:cx*unit,top:cy*unit,right:(cx+1)*unit,
+    bottom:(cy+1)*unit,source:'legacy-map'};
+  });
+ const water=new Set((map.waterSurface||[]).filter(o=>o.depth!=='shallow')
+  .map(o=>o.x+','+o.y));
+ const hard=new Set((map.terrainBlocks||[]).map(p=>p.join(',')));
+ const custom=new Set();
+ const other=new Set();
+ for(const obj of map.objects){
+  for(const p of obj.occupiedTiles||[])
+   (VISUAL_OBJECTS.has(obj.templateId)?custom:other).add(p.join(','));
+ }
+ const remainder=new Set(legacyBlocked);
+ for(const key of custom)
+  if(!water.has(key)&&!hard.has(key)&&!other.has(key))
+   remainder.delete(key);
+ // Shallow water fades over a smooth shoreline transition; the original
+ // nearest-cell collision used the entire deep-water tile and stopped the
+ // player visibly before reaching the painted waterline. Recess ONLY the
+ // exposed deep-water edge, never the interior wall of a blocked region.
+ const inset=Math.min(10,unit/3);
+ const has=(x,y)=>remainder.has(x+','+y);
+ return [...remainder].map(key=>{
   const [cx,cy]=key.split(',').map(Number);
-  return {left:cx*unit,top:cy*unit,right:(cx+1)*unit,bottom:(cy+1)*unit,source:'legacy-map'};
+  const soft=water.has(key)&&!hard.has(key)&&!other.has(key);
+  const left=cx*unit+(soft&&!has(cx-1,cy)?inset:0);
+  const right=(cx+1)*unit-(soft&&!has(cx+1,cy)?inset:0);
+  const top=cy*unit+(soft&&!has(cx,cy-1)?inset:0);
+  const bottom=(cy+1)*unit-(soft&&!has(cx,cy+1)?inset:0);
+  return {left,top,right,bottom,source:soft?'waterline':'legacy-map'};
  });
+}
+
+export function sanctuaryCollisionGeometry(map,legacyBlocked,residents,{profile='legacy'}={}){
+ if(profile!=='legacy'&&profile!=='visual')throw Error('Unknown sanctuary collision profile');
+ const unit=map.tileSize;
+ const rects=blockedCellRects(map,legacyBlocked,profile);
  for(const region of map.game?.footCollisionZones||[]){
   if(region.type!=='rectangle'||!Number.isFinite(region.x)||
     !Number.isFinite(region.y)||!Number.isFinite(region.width)||
     !Number.isFinite(region.height)||region.width<=0||region.height<=0)
    throw Error('Invalid sanctuary pixel-space contact region');
+  // The large scene-backdrop rectangle previously ended almost at the
+  // guardians' feet. Its final 16 pixels are visual foreground, not a wall.
+  const correction=profile==='visual'&&region.id==='rear-scenic-water'?16:0;
   rects.push({left:region.x,top:region.y,
-   right:region.x+region.width,bottom:region.y+region.height,
+   right:region.x+region.width,bottom:region.y+region.height-correction,
    source:region.id});
  }
+ const npcRadius=profile==='visual'
+  ?TENYO_VISUAL_NPC_FOOT_RADIUS:TENYO_NPC_FOOT_RADIUS;
  const npcs=residents.map(npc=>({
   id:npc.id,x:(npc.tile[0]+.5)*unit,y:(npc.tile[1]+.5)*unit,
-  radius:TENYO_NPC_FOOT_RADIUS
+  radius:npcRadius
  }));
- return {rects,npcs,width:map.width*unit,height:map.height*unit,
+ return {
+  rects,
+  shapes:profile==='visual'?footShapes(map):[],
+  npcs,
+  profile,
+  playerRadius:profile==='visual'
+   ?TENYO_VISUAL_PLAYER_FOOT_RADIUS:TENYO_PLAYER_FOOT_RADIUS,
+  width:map.width*unit,height:map.height*unit,
   exit:{row:map.game.southExit.row,columns:[...map.game.southExit.columns]},
-  legacyUnit:unit};
+  legacyUnit:unit
+ };
 }
+
+function rectTouch(box,x,y,r){
+ if(x+r<box.left||x-r>box.right||y+r<box.top||y-r>box.bottom)return false;
+ const px=Math.max(box.left,Math.min(x,box.right));
+ const py=Math.max(box.top,Math.min(y,box.bottom));
+ return (x-px)**2+(y-py)**2<r*r;
+}
+
 export function shrineCanStand(world,x,y){
  if(!Number.isFinite(x)||!Number.isFinite(y))return false;
- const r=TENYO_PLAYER_FOOT_RADIUS;
+ const r=world.playerRadius??TENYO_PLAYER_FOOT_RADIUS;
  if(x<r||y<r||x>world.width-r||y>world.height-r)return false;
- for(const box of world.rects){
-  if(x+r<box.left||x-r>box.right||y+r<box.top||y-r>box.bottom)continue;
-  const px=Math.max(box.left,Math.min(x,box.right));
-  const py=Math.max(box.top,Math.min(y,box.bottom));
-  if((x-px)**2+(y-py)**2<r*r)return false;
+ for(const box of world.rects)if(rectTouch(box,x,y,r))return false;
+ for(const shape of world.shapes||[]){
+  if(shape.type==='box'&&rectTouch(shape,x,y,r))return false;
+  if(shape.type==='ellipse'&&
+   ((x-shape.x)/(shape.rx+r))**2+((y-shape.y)/(shape.ry+r))**2<1)
+   return false;
  }
  for(const npc of world.npcs)
   if((x-npc.x)**2+(y-npc.y)**2<(r+npc.radius)**2)return false;
  return true;
 }
-// The small sweep segments prevent tunnelling at low FPS. They are NOT
-// discrete movement destinations: coordinates remain arbitrary floats.
+
+// Short sweep slices prevent skipping thin obstacles. Coordinates are NOT
+// snapped or quantized to sweep slices; the final movement is continuous.
 export function shrineAdvance(world,x,y,dx,dy,distancePx){
  const norm=Math.hypot(dx,dy);
  if(!Number.isFinite(distancePx)||distancePx<=0||!norm)return {x,y,traveled:0};
@@ -59,6 +159,7 @@ export function shrineAdvance(world,x,y,dx,dy,distancePx){
  }
  return {x:nx,y:ny,traveled:Math.hypot(nx-x,ny-y)};
 }
+
 export function shrineExitReached(world,x,y){
  const unit=world.legacyUnit;
  if(y<world.exit.row*unit)return false;

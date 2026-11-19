@@ -64,7 +64,7 @@ try{
      topWorldY:cameraY,waterVisible:cameraY<9*32,
      menuVisible:!document.querySelector('#field-menu-toggle').hidden,
      shells:child.__COVE_SHELL_QA?.(),surf:child.__COVE_SURF_QA?.(),
-     fisher:child.__COVE_FISHER_QA};
+     fisher:child.__COVE_FISHER_QA,rockAssets:child.__COVE_HAMLET_QA?.assets};
  });
  assert.equal(initial.position.scene,'cove');
  assert.equal(initial.fisher.character,'ushiohei');
@@ -72,6 +72,11 @@ try{
  assert.deepEqual(initial.fisher.size,[240,448]);
  assert.deepEqual(initial.fisher.frame,[80,112]);
  assert.deepEqual(initial.fisher.feet,[40,106]);
+ for(const [key,dimensions] of [
+  ['rockWest',{width:60,height:40}],
+  ['rockEast',{width:104,height:64}],
+  ['rockHeadland',{width:108,height:72}]
+ ])assert.deepEqual(initial.rockAssets?.[key],dimensions,'native rock '+key);
  assert.equal(initial.waterVisible,true,'first view includes the moving sea, not only grass');
  assert.ok(initial.canvas[0]>0&&initial.canvas[1]>0);
  // A drawing buffer can be 2x the CSS viewport on Retina devices, but the
@@ -102,7 +107,7 @@ try{
  assert.equal(initial.surf.approvedCoastline,30,
    'the exact 30-column approved shoreline was copied');
  assert.equal(initial.surf.sceneryNativeCount,3,
-   'approved three native-sized rocks are preserved');
+   'three preexisting rock marker positions remain');
  assert.ok(initial.surf.tileCount>58,
    'extended eastern coast must ADD new animated shoreline tiles, not stay frozen at 58');
  assert.ok(initial.surf.coverage[0].washedPixels>=393,

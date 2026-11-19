@@ -1,4 +1,4 @@
-import {COVE_MAP,COVE_SHORE,tileAt} from '../../../data/maps/sea-cove/scene.mjs?v=cove-native-objects-1';
+import {COVE_MAP,COVE_SHORE,tileAt} from '../../../data/maps/sea-cove/scene.mjs?v=cove-rock-variants-1';
 import {drawCharacter} from '../village/residents.mjs';
 import {createShellAtlas,SHELL_ART_SIZE} from '../items/shell-art.mjs';
 import {TIDE_FRAMES,tideFrame,surfSample} from '../terrain/surf.mjs';
@@ -155,7 +155,7 @@ export function createCoveRenderer(ctx,art,map=COVE_MAP){
    ...object,
    x:object.footPosition?object.x:object.x*TILE+TILE/2,
    y:object.footPosition?object.y:(object.y+1)*TILE,
-   image:art[object.kind]
+   image:art[object.sprite??object.kind]
  })).filter(o=>o.image);
  const render=function draw(player,fisher,time,viewport,shells=[]){
    const {step,bufferWidth,bufferHeight}=viewport;

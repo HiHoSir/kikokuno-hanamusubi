@@ -1,11 +1,11 @@
-import {COVE_MAP,tileAt,walkableCell,isSouthExit} from '../../../data/maps/sea-cove/scene.mjs?v=cove-native-objects-1';
+import {COVE_MAP,tileAt,walkableCell,isSouthExit} from '../../../data/maps/sea-cove/scene.mjs?v=cove-rock-variants-1';
 import {makeWalk} from '../village/movement.mjs';
 import {residentInFront} from '../village/residents.mjs';
 import {bindDialogue} from '../village/dialogue.mjs';
 import {pixelViewport,DEFAULT_CAMERA_ZOOM} from '../village/render.mjs?v=nonfield-world-scale-1';
 import {readStoryStage,advanceStoryStage,objectiveForStage} from '../story/chapter-one.mjs';
 import {consumeRestorePosition} from '../save/save-game.mjs?v=save-slots-1';
-import {createCoveRenderer} from './render.mjs?v=hamlet-1';
+import {createCoveRenderer} from './render.mjs?v=cove-rock-variants-1';
 import {readPlayer,savePlayer} from '../battle/rules.mjs';
 import {SHELL_KINDS,shellBagCount} from '../items/shells.mjs';
 import {
@@ -28,7 +28,9 @@ const inputs=new Map();
 const scenery={
  hero:'assets/characters/hizuki/walk-4dir-80x112.png',
  fisher:'assets/characters/npc/ushiohei-walk-4dir-80x112.png',
- rocks:'assets/village/objects/rocks.png',
+ rockWest:'assets/sea-cove/objects/shore-rock-west-60x40.png',
+ rockEast:'assets/sea-cove/objects/shore-rock-east-104x64.png',
+ rockHeadland:'assets/sea-cove/objects/shore-rock-headland-108x72.png',
  basket:'assets/sea-cove/objects/fish-basket-80x74.png',
  barrel:'assets/sea-cove/objects/fish-barrel-64x86.png',
  crate:'assets/sea-cove/objects/fish-crate-92x70.png',
@@ -108,9 +110,13 @@ async function start(){
     .then(entries=>Object.fromEntries(entries)),
   landscapeReady
  ]);
- for(const id of ['rocks','water']){
-  if(images[id].naturalWidth<32||images[id].naturalHeight<32)
-   throw Error('32pxマップチップの寸法が不足しています: '+id);
+ if(images.water.naturalWidth<32||images.water.naturalHeight<32)
+  throw Error('水面の地形画像が不足しています');
+ for(const [id,w,h] of [
+  ['rockWest',60,40],['rockEast',104,64],['rockHeadland',108,72]
+ ]){
+  if(images[id].naturalWidth!==w||images[id].naturalHeight!==h)
+   throw Error('原寸岩の画像寸法が不正です: '+id);
  }
  for(const id of ['coastMask','coastSand0','coastSand1','coastSand2','coastSand3']){
   if(images[id].naturalWidth!==128||images[id].naturalHeight!==128)
@@ -129,7 +135,7 @@ async function start(){
    lines:linesForFisher(readStoryStage())};
  // Collider positions are authored independently of roof alpha and net mesh.
  // The house blocks full roof overlap, so the character never disappears
- // behind its art. Coastal rocks and pickup sites remain unchanged.
+ // behind its art. The cove rocks have their own native foot radii.
  const collisionObjects=COVE_MAP.objects
    .filter(o=>o.solid||['basket','barrel','rocks'].includes(o.kind))
    .map(o=>o.collision
@@ -274,8 +280,8 @@ async function start(){
    spawn:{...entry},
    objects:COVE_MAP.objects.map(o=>({id:o.id??o.kind,kind:o.kind,
      x:o.x,y:o.y,solid:o.solid??true,collision:o.collision??null,
-     footPosition:o.footPosition??false})),
-   assets:Object.fromEntries(['fisherHouse','netRack','netBundle','ropeCoil','crate']
+     footPosition:o.footPosition??false,sprite:o.sprite??null})),
+   assets:Object.fromEntries(['fisherHouse','netRack','netBundle','ropeCoil','crate','rockWest','rockEast','rockHeadland']
      .map(kind=>[kind,{width:images[kind].naturalWidth,height:images[kind].naturalHeight}])),
    blockedByProp:(x,y)=>blockedByProp(x,y),
    cameraZoom:DEFAULT_CAMERA_ZOOM

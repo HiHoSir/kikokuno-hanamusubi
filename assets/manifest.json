@@ -2480,6 +2480,69 @@
       },
       "description": "native-size crate dedicated to the sea cove; replaces undersized shared 32x32 village art without modifying village itself",
       "approvalNote": "Technical manifest adoption on draft branch only; external appearance remains unapproved pending iPhone Safari review"
+    },
+    {
+      "id": "cove-shore-rock-west-60x40",
+      "type": "object",
+      "path": "assets/sea-cove/objects/shore-rock-west-60x40.png",
+      "status": "approved",
+      "usage": "sea-cove-rock-variants",
+      "dimensions": {
+        "width": 60,
+        "height": 40
+      },
+      "footAnchor": [
+        30,
+        40
+      ],
+      "origin": {
+        "kind": "original-generated-pixel-art",
+        "source": "three isolated rock variants, native pixel crop with 48-color reduction"
+      },
+      "description": "low rock mound in native world pixels, not enlarged 32px village art",
+      "approvalNote": "Technical manifest entry on review branch only. User's appearance review remains pending."
+    },
+    {
+      "id": "cove-shore-rock-east-104x64",
+      "type": "object",
+      "path": "assets/sea-cove/objects/shore-rock-east-104x64.png",
+      "status": "approved",
+      "usage": "sea-cove-rock-variants",
+      "dimensions": {
+        "width": 104,
+        "height": 64
+      },
+      "footAnchor": [
+        52,
+        64
+      ],
+      "origin": {
+        "kind": "original-generated-pixel-art",
+        "source": "three isolated rock variants, native pixel crop with 48-color reduction"
+      },
+      "description": "wide rock pile in native world pixels, not enlarged 32px village art",
+      "approvalNote": "Technical manifest entry on review branch only. User's appearance review remains pending."
+    },
+    {
+      "id": "cove-shore-rock-headland-108x72",
+      "type": "object",
+      "path": "assets/sea-cove/objects/shore-rock-headland-108x72.png",
+      "status": "approved",
+      "usage": "sea-cove-rock-variants",
+      "dimensions": {
+        "width": 108,
+        "height": 72
+      },
+      "footAnchor": [
+        54,
+        72
+      ],
+      "origin": {
+        "kind": "original-generated-pixel-art",
+        "source": "three isolated rock variants, native pixel crop with 48-color reduction"
+      },
+      "description": "headland rock outcrop in native world pixels, not enlarged 32px village art",
+      "approvalNote": "Technical manifest entry on review branch only. User's appearance review remains pending."
     }
   ],
   "designReferences": [

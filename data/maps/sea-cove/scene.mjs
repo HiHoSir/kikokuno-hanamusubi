@@ -16,12 +16,18 @@ export const COVE_SAND_DEPTH=Object.freeze(COVE_SHORE.map(y=>COVE_HEIGHT-y));
 
 const tiles=Object.freeze(Array.from({length:COVE_HEIGHT},(_,y)=>
  Array.from({length:COVE_WIDTH},(_,x)=>y<COVE_SHORE[x]?'~':'s').join('')));
-// Reuse the three approved native rock positions; their source foot coordinates
-// are not rounded to new arbitrary object centers.
-const nativeRocks=SCENERY.map(rock=>Object.freeze({
- kind:'rocks',id:rock.id,
- x:rock.x,y:rock.y,footPosition:true,solid:true,radius:rock.radius
-}));
+// Study positions are not an approval of the old 32px rock images.
+const rockStyles=Object.freeze({
+ 'rock-west':Object.freeze({sprite:'rockWest',radius:23}),
+ 'rock-east':Object.freeze({sprite:'rockEast',radius:39}),
+ 'rock-headland':Object.freeze({sprite:'rockHeadland',radius:43})
+});
+const nativeRocks=SCENERY.map(rock=>{
+ const style=rockStyles[rock.id];
+ if(!style)throw Error('Missing native rock style: '+rock.id);
+ return Object.freeze({kind:'rocks',id:rock.id,sprite:style.sprite,
+  x:rock.x,y:rock.y,footPosition:true,solid:true,radius:style.radius});
+});
 export const COVE_MAP=Object.freeze({
  id:'sea-cove',name:'海の入り江',tileSize:COVE_TILE_SIZE,
  width:COVE_WIDTH,height:COVE_HEIGHT,tiles,
@@ -29,7 +35,7 @@ export const COVE_MAP=Object.freeze({
  exit:Object.freeze({row:COVE_HEIGHT-1,columns:Object.freeze([9,10,11])}),
  fisher:Object.freeze({id:'ushiohei',name:'潮平',x:16*32+16,y:12*32+16,face:3}),
  // Keep NPC life on the sand, but never paint unrelated forests over the
- // approved beach. Only approved native rocks + a few game props remain.
+ // approved beach. The three rocks await separate visual approval.
  objects:Object.freeze([
   ...nativeRocks,
   // Cove fishing props are authored in WORLD PIXELS, not forced into 32px

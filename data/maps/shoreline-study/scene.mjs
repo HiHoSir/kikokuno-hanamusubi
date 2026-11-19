@@ -28,7 +28,7 @@ export function safeFoot(px,py){
     walkable(Math.floor((px+dx)/TILE),Math.floor((py+dy)/TILE)));
 }
 
-// Small, reviewed native-size rocks remain on the broad sandy shore.
+// Three 32px rock markers do not imply that their artwork was user-approved.
 // Avoid an unnatural strip of grass or grass decorations to "cap" the beach.
 const foot=(tx,ty,dx=0,dy=0)=>Object.freeze({x:tx*TILE+16+dx,y:(ty+1)*TILE+dy});
 export const SCENERY=Object.freeze([

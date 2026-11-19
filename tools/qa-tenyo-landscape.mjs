@@ -161,6 +161,12 @@ try{
  if(!(nearFall.x>620&&nearFall.x<650&&Math.abs(nearFall.y-176)<1))
    issues.push('the intentional path at the right waterfall must remain walkable '+JSON.stringify(nearFall));
  await review.screenshot({path:'artifacts/tenyo-waterfall-walking-occlusion.png'});
+ await review.locator('.review-panel summary').click();
+ await review.locator('[data-tenyo-spot="waterfallOverlap"]').click();
+ await review.waitForFunction(()=>document.querySelector('#scene')?.dataset.x==='631.30',{timeout:5000});
+ await review.locator('.review-panel summary').click();
+ await review.waitForTimeout(90);
+ await review.screenshot({path:'artifacts/tenyo-waterfall-overlay-point.png'});
  await review.close();
  await page.setViewportSize({width:900,height:390});
  await page.waitForFunction(()=>getComputedStyle(document.querySelector('#landscape-required')).display==='none');

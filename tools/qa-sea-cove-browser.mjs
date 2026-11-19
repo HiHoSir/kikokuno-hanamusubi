@@ -278,8 +278,13 @@ try{
    await review.evaluate(k=>window.dispatchEvent(new KeyboardEvent('keyup',
      {key:k,bubbles:true,cancelable:true})),key);
  };
- await held('ArrowRight',3700);
- await held('ArrowDown',4050);
+ // Walk south of the newly sized headland rock, then east above the
+ // house roof, then south through the real house/net worksite corridor.
+ // This uses player input only: it is not a teleport or a fake camera QA.
+ await held('ArrowRight',3000);
+ await held('ArrowDown',1400);
+ await held('ArrowRight',900);
+ await held('ArrowDown',2000);
  const hamletView=await review.evaluate(()=>window.KIKOKU_SAVE_SNAPSHOT().position);
  assert.ok(hamletView.x>700&&hamletView.y>700,
    'real on-screen movement reaches expanded fishing worksite');

@@ -5209,7 +5209,7 @@
         "name": "白妙",
         "tile": [
           12,
-          8
+          10
         ],
         "face": 0,
         "asset": "assets/characters/npc/shirotae-walk-4dir-80x112.png",

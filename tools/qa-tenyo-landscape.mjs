@@ -83,9 +83,22 @@ try{
     posX:c.dataset.x,posY:c.dataset.y,viewportW:c.getBoundingClientRect().width,
     canvasW:c.width,canvasH:c.height};
  });
- if(beforeReview.zoom!=='0.5'||beforeReview.frame!=='80x112')
+ if(beforeReview.zoom!=='1.4'||beforeReview.frame!=='80x112')
   issues.push('Pages preview does not load uniform full-size characters '+JSON.stringify(beforeReview));
  await review.screenshot({path:'artifacts/tenyo-native-characters-preview.png'});
+ const art=await review.evaluate(()=>document.querySelector('#scene').dataset.reviewNpcArt);
+ if(art!=='original')
+  issues.push('preview default should be the previous actual character proportions'); 
+ await review.locator('[data-tenyo-figures="largeNpc"]').click();
+ await review.waitForFunction(()=>document.querySelector('#scene')?.dataset.reviewNpcArt==='native-recomposed-2x',{timeout:5000});
+ await review.screenshot({path:'artifacts/tenyo-large-npc-contrast.png'});
+ await review.locator('[data-tenyo-figures="legacy"]').click();
+ await review.waitForFunction(()=>document.querySelector('#scene')?.dataset.reviewCharacters==='legacy',{timeout:5000});
+ await review.locator('[data-tenyo-camera="1"]').click();
+ await review.waitForFunction(()=>document.querySelector('#scene')?.dataset.zoom==='1',{timeout:5000});
+ await review.screenshot({path:'artifacts/tenyo-native-characters-zoom1.png'});
+ await review.locator('[data-tenyo-camera="1.4"]').click();
+ await review.waitForFunction(()=>document.querySelector('#scene')?.dataset.zoom==='1.4',{timeout:5000});
  const up=await review.locator('#up').boundingBox();
  await review.mouse.move(up.x+up.width/2,up.y+up.height/2);
  await review.mouse.down();

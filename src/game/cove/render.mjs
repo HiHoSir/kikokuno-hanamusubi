@@ -173,8 +173,8 @@ export function createCoveRenderer(ctx,art,map=COVE_MAP){
    ctx.fillStyle='#28678e';ctx.fillRect(0,0,bufferWidth,bufferHeight);
    // Normal scrolling keeps the prior integer-pixel camera alignment.
    // For a world shorter than the viewport, center it symmetrically.
-   const shiftX=(cameraX<0?-cameraX:-Math.floor(cameraX))*step;
-   const shiftY=(cameraY<0?-cameraY:-Math.floor(cameraY))*step;
+   const shiftX=cameraX<0?-cameraX*step:-Math.floor(cameraX)*step;
+   const shiftY=cameraY<0?-cameraY*step:-Math.floor(cameraY)*step;
    ctx.setTransform(step,0,0,step,shiftX,shiftY);
    // Same two-frame sea atlas and 2x2 world-coordinate chip alignment.
    const frame=Math.floor(time/360)%2;

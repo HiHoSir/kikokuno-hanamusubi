@@ -1,9 +1,19 @@
 name: Tenyo sanctuary landscape QA
 on:
+  pull_request:
+    paths:
+      - 'src/game/tenyo/**'
+      - 'src/game/ui/world-scale.mjs'
+      - 'data/maps/tenyo-sanctuary/**'
+      - 'previews/tenyo-scale-review/**'
+      - 'tools/qa-tenyo-landscape.mjs'
+      - '.github/workflows/tenyo-landscape-qa.yml'
   push:
     branches: [main]
     paths:
       - 'src/game/tenyo/**'
+      - 'previews/tenyo-scale-review/**'
+      - 'src/game/ui/world-scale.mjs'
       - 'src/game/index.html'
       - 'src/game/ui/controls.css'
       - 'src/game/ui/landscape-only.css'

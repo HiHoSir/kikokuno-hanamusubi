@@ -160,14 +160,26 @@ test('production sanctuary paints its entrance within landscape and portrait vie
     assert.equal(load.hidden,true,'first paint completes the loading screen');
     assert.deepEqual([actor.x,actor.y],[13,23]);
     function checkView(){
-      const [left,top,width,height,dx,dy,dw,dh]=view;
-      assert.deepEqual([dx,dy,dw,dh],[0,0,scene.width,scene.height]);
-      assert.ok(Math.abs(dw/dh-viewport.clientWidth/viewport.clientHeight)<0.005,
-        'canvas buffer matches the visible aspect ratio');
-      assert.ok(Math.abs(dw/width-dh/height)<0.0001,'same world scale on both axes');
-      const foot=(actor.y+.5)*32;
-      assert.ok(top<=foot-46&&foot<top+height,'entrance sprite is entirely inside the view');
-      assert.ok(left<=0.5*32+actor.x*32&&left+width>0.5*32+actor.x*32);
+      const [left,top,dw,dh]=view;
+      assert.ok(Math.abs(scene.width/scene.height-viewport.clientWidth/viewport.clientHeight)<0.005,
+        'canvas buffer matches visible aspect ratio');
+      const cssPerBufferX=viewport.clientWidth/scene.width;
+      const cssPerBufferY=viewport.clientHeight/scene.height;
+      const scaleX=(dw/896)*cssPerBufferX,scaleY=(dh/800)*cssPerBufferY;
+      assert.ok(Math.abs(scaleX-0.5)<0.005,'shrine objects use village world zoom');
+      assert.ok(Math.abs(scaleY-0.5)<0.005,'shrine never stretches vertically');
+      const toCssX=x=>(left+x*dw/896)*cssPerBufferX;
+      const toCssY=y=>(top+y*dh/800)*cssPerBufferY;
+      const heroX=toCssX((actor.x+.5)*32);
+      const heroFootY=toCssY((actor.y+.5)*32);
+      assert.ok(heroX>=0&&heroX<=viewport.clientWidth,
+        'Hizuki remains visible horizontally in both orientations');
+      assert.ok(heroFootY>=0&&heroFootY<=viewport.clientHeight,
+        'Hizuki remains visible vertically in both orientations');
+      if(viewport.clientWidth>=896*0.5){
+        assert.ok(Math.abs(toCssX(0)-(viewport.clientWidth-896*.5)/2)<1,
+          'shorter map has equal blue margins rather than a left anchor');
+      }
     }
     checkView();
     Object.assign(viewport,{clientWidth:402,clientHeight:874});
@@ -225,29 +237,27 @@ test('original sanctuary renderer draws 80x112 atlas frames at the SAME foot anc
   }
 });
 
-test('sanctuary screenshot regression: player is not giant compared with Shirotae and the shrine',()=>{
-  const scale=map.game.heroDisplayScale;
-  assert.equal(map.game.hero,'assets/characters/hizuki/walk-4dir-80x112.png');
-  assert.equal(scale,0.52,'scene-specific display scale, NOT an asset downsize');
-  const renderer=sandbox.SMRender,im={width:240,height:448};
-  const bounds=renderer.actorBounds(im,()=>{throw Error('village atlas should not use the 32px sampling canvas');});
-  const calls=[];
-  const ctx={drawImage(...args){calls.push(args);}};
-  const a={x:3,y:5,dir:'u',frame:1};
-  renderer.actor(ctx,a,im,bounds,32,null,scale);
-  const [,sx,sy,sw,sh,dx,dy,dw,dh]=calls[0];
-  assert.deepEqual([sx,sy,sw,sh],[80,112,80,112],'keep full village-scale source atlas');
-  const near=(actual,expected)=>assert.ok(Math.abs(actual-expected)<0.0001,`expected ${expected}, got ${actual}`);
-  near(dw,80*scale);near(dh,112*scale);
-  near(dx,(a.x+.5)*32-40*scale);
-  near(dy,(a.y+.5)*32-106*scale);
-  near(dx+40*scale,(a.x+.5)*32);
-  near(dy+106*scale,(a.y+.5)*32);
-  assert.equal(renderer.actorDepth(a,bounds,32),(a.y+.5)*32,'feet, shadows and occlusion retain the same location');
-  const walk=readFileSync('src/game/tenyo/walk.mjs','utf8');
-  assert.ok(walk.includes('heroDisplayScale:map.game.heroDisplayScale??1'),'renderer receives authored visual scale');
-  assert.ok(!walk.includes('map.game.heroDisplayScale*32'),'logical 32px cell movement must not scale with sprite');
-  // White and the two guards retain their approved relative size.
-  assert.equal(map.game.residents.filter(n=>n.id.startsWith('guardian')).length,2);
-  assert.ok(!map.game.residents.some(n=>n.displayScale!==undefined),'NPC scale untouched');
+test('Hizuki, Shirotae and shrine guards use the same full-size 80x112 world frame',()=>{
+ assert.equal(Object.hasOwn(map.game,'heroDisplayScale'),false,
+   'unreviewed hero-only shrink is prohibited');
+ const renderer=sandbox.SMRender,im={width:240,height:448};
+ const bounds=renderer.actorBounds(im,()=>{throw Error('village atlas should never be downconverted')});
+ const draw=entity=>{
+   const calls=[],ctx={drawImage(...args){calls.push(args)}};
+   renderer.actor(ctx,{x:3,y:5,dir:'u',frame:1},im,bounds,32);
+   const [,sx,sy,sw,sh,dx,dy,dw,dh]=calls[0];
+   assert.deepEqual([sx,sy,sw,sh],[80,112,80,112],entity);
+   assert.deepEqual([dx,dy,dw,dh],[72,70,80,112],entity);
+   return [dw,dh];
+ };
+ const actual=[draw('Hizuki'),draw('Shirotae'),draw('guardian')];
+ assert.deepEqual(actual,[[80,112],[80,112],[80,112]]);
+ const walk=readFileSync('src/game/tenyo/walk.mjs','utf8');
+ const painter=readFileSync('src/game/tenyo/rendering/render.js','utf8');
+ assert.match(walk,/WORLD_SCENE_ZOOM/);
+ assert.match(walk,/WORLD_ACTOR_FRAME/);
+ assert.doesNotMatch(walk,/ZOOM=1\.4|heroDisplayScale/);
+ assert.doesNotMatch(painter,/heroDisplayScale|displayScale/);
+ assert.ok(!map.game.residents.some(n=>n.displayScale!==undefined));
+ assert.equal(map.game.residents.filter(n=>n.id.startsWith('guardian')).length,2);
 });

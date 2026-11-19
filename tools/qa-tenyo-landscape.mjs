@@ -49,13 +49,15 @@ try{
      const rect=e=>{const r=e.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,right:r.right,bottom:r.bottom}};
      return {window:[innerWidth,innerHeight],canvas:[canvas.width,canvas.height],canvasRect:rect(canvas),
        fieldRect:rect(parent),pad:rect(pad),position:canvas.dataset.x+','+canvas.dataset.y,
-       gate:getComputedStyle(document.querySelector('#landscape-required')).display,loading:doc.querySelector('#load').hidden};
+       gate:getComputedStyle(document.querySelector('#landscape-required')).display,loading:doc.querySelector('#load').hidden,
+       zoom:canvas.dataset.zoom,actorFrame:canvas.dataset.actorFrame};
    });
    results.push(data);
    const actual=data.canvas[0]/data.canvas[1],expected=data.canvasRect.width/data.canvasRect.height;
    if(!data.loading||data.gate!=='none'||Math.abs(actual-expected)>.015||
       data.canvasRect.width>data.fieldRect.width+2||data.canvasRect.height>data.fieldRect.height+2||
-      data.position!==before.position||data.pad.y<0||data.pad.bottom>height+2)
+      data.position!==before.position||data.zoom!=='0.5'||data.actorFrame!=='80x112'||
+      data.pad.y<0||data.pad.bottom>height+2)
      issues.push('landscape '+width+'x'+height+' shrine viewport mismatch: '+JSON.stringify(data));
    await page.screenshot({path:'artifacts/tenyo-'+width+'x'+height+'.png',fullPage:true});
  }
@@ -68,6 +70,36 @@ try{
  }));
  if(!portrait.sameFrame||!portrait.shellBlocked)issues.push('portrait gate lost shrine state: '+JSON.stringify(portrait));
  await page.screenshot({path:'artifacts/tenyo-rotate-portrait.png'});
+ // Verify the public Pages preview uses the actual walk and rendering files
+ // with real pointer input, no mocked character or screenshot.
+ const review=await browser.newPage({viewport:{width:874,height:402},isMobile:true,hasTouch:true,deviceScaleFactor:2});
+ const reviewErrors=[];
+ review.on('pageerror',e=>reviewErrors.push(e.message));
+ await review.goto(origin+'/previews/tenyo-scale-review/',{waitUntil:'domcontentloaded'});
+ await review.waitForFunction(()=>document.querySelector('#load')?.hidden===true,{timeout:65000});
+ const beforeReview=await review.evaluate(()=>{
+   const c=document.querySelector('#scene');
+   return {zoom:c.dataset.zoom,frame:c.dataset.actorFrame,
+    posX:c.dataset.x,posY:c.dataset.y,viewportW:c.getBoundingClientRect().width,
+    canvasW:c.width,canvasH:c.height};
+ });
+ if(beforeReview.zoom!=='0.5'||beforeReview.frame!=='80x112')
+  issues.push('Pages preview does not load uniform full-size characters '+JSON.stringify(beforeReview));
+ await review.screenshot({path:'artifacts/tenyo-native-characters-preview.png'});
+ const up=await review.locator('#up').boundingBox();
+ await review.mouse.move(up.x+up.width/2,up.y+up.height/2);
+ await review.mouse.down();
+ await review.waitForTimeout(380);
+ await review.mouse.up();
+ await review.waitForTimeout(220);
+ const afterReview=await review.evaluate(()=>{
+   const c=document.querySelector('#scene');return {x:c.dataset.x,y:c.dataset.y};
+ });
+ if(beforeReview.posY===afterReview.y)
+  issues.push('Pages preview is not walkable by D-pad '+JSON.stringify({beforeReview,afterReview}));
+ if(reviewErrors.length)issues.push('Pages review JS exceptions: '+reviewErrors.join(';'));
+ await review.screenshot({path:'artifacts/tenyo-native-characters-walking.png'});
+ await review.close();
  await page.setViewportSize({width:900,height:390});
  await page.waitForFunction(()=>getComputedStyle(document.querySelector('#landscape-required')).display==='none');
  const after=await page.evaluate(()=>({

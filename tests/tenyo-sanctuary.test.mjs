@@ -118,7 +118,7 @@ test('the production game loads original water render, common controller and fie
   assert.ok(code.includes('waterfall-loop.m4a'));
   assert.ok(code.includes('bindDialogue'));
   assert.ok(code.includes("advanceStoryStage('cove')"));
-  assert.ok(code.includes('exitReached'));
+  assert.ok(code.includes('shrineExitReached'));
   assert.ok(code.includes('../../field/?from=shrine'));
   assert.ok(field.includes('../game/tenyo/'));
   assert.ok(field.includes('shrineReturnPosition'));
@@ -143,7 +143,9 @@ test('production sanctuary paints its entrance within landscape and portrait vie
     globalThis.document={
       querySelector:id=>({'#scene':scene,'#load':load}[id]??{...element}),
       querySelectorAll:()=>[],
-      createElement:()=>({getContext:()=>({})}),
+      createElement:()=>({getContext:()=>({
+        save(){},restore(){},beginPath(){},rect(){},clip(){},drawImage(){},
+      })}),
       addEventListener(){},
     };
     globalThis.SMModel={parse:JSON.parse,collision:()=>new Set()};
@@ -253,8 +255,13 @@ test('scenic water behind gate blocks, while shallow approach and actual NPC fee
  const b=M.collision(model),actors=map.game.residents;
  assert.equal(TENYO_STEP,0.25);
  assert.equal(TENYO_PLAYER_FOOT_RADIUS,8);
- for(let y=4;y<=7;y++)for(let x=8;x<=19;x++)
+ for(let y=4;y<=7;y++)for(let x=8;x<=19;x++){
+  if(y===7&&(x===13||x===14)){
+   assert.equal(b.has(x+','+y),false,'guardian's authored feet are not water obstructions');
+   continue;
+  }
   assert.ok(b.has(x+','+y),'background lake should block walking at '+x+','+y);
+ }
  for(const [x,y] of [[13,23],[13,22],[13,10],[13,9],[14,8],[12,9],[12,10],[13,8]])
   assert.ok(shrineCanStand(model,b,actors,x,y),'approach '+x+','+y);
  assert.equal(shrineCanStand(model,b,actors,10,6),false);

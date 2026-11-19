@@ -1,4 +1,4 @@
-import {COVE_MAP,COVE_SHORE,tileAt} from '../../../data/maps/sea-cove/scene.mjs?v=hamlet-1';
+import {COVE_MAP,COVE_SHORE,tileAt} from '../../../data/maps/sea-cove/scene.mjs?v=cove-native-objects-1';
 import {drawCharacter} from '../village/residents.mjs';
 import {createShellAtlas,SHELL_ART_SIZE} from '../items/shell-art.mjs';
 import {TIDE_FRAMES,tideFrame,surfSample} from '../terrain/surf.mjs';

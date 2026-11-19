@@ -178,6 +178,34 @@ test('fisher homestead uses new southern sand; native assets; no blocked field r
  assert.equal(collision(COVE_MAP.entry.x,COVE_MAP.entry.y),false);
 });
 
+test('cove supply sprites have actual native dimensions, never fake-size 32px village props',()=>{
+ const walker=source('src/game/cove/walk.mjs');
+ const renderer=source('src/game/cove/render.mjs');
+ assert.match(renderer,/actor\.image\.naturalWidth\/2/);
+ assert.match(renderer,/actor\.image\.naturalHeight/);
+ for(const [kind,path,w,h,radius,requiredCount] of [
+  ['basket','assets/sea-cove/objects/fish-basket-80x74.png',80,74,37,2],
+  ['barrel','assets/sea-cove/objects/fish-barrel-64x86.png',64,86,29,2],
+  ['crate','assets/sea-cove/objects/fish-crate-92x70.png',92,70,40,1],
+ ]){
+  assert.ok(walker.includes(kind+':\''+path+'\''),kind+' uses its own real-size art');
+  const png=readFileSync(path);
+  assert.equal(png.subarray(1,4).toString('ascii'),'PNG');
+  assert.equal(png.readUInt32BE(16),w,kind+' actual art width');
+  assert.equal(png.readUInt32BE(20),h,kind+' actual art height');
+  assert.equal(png[25],6,kind+' RGBA image');
+  const instances=COVE_MAP.objects.filter(o=>o.kind===kind);
+  assert.equal(instances.length,requiredCount);
+  for(const o of instances){
+   assert.equal(o.footPosition,true,'pixel-art foot anchors are world coordinates');
+   assert.equal(o.radius,radius,'collision matches the intended visible footprint');
+   assert.ok(o.radius*2<=w&&o.radius*2>=w-16,'not a tiny sprite with an oversized collision');
+  }
+ }
+ assert.doesNotMatch(walker,/basket:'assets\/village\/objects\/basket\.png'/);
+ assert.doesNotMatch(walker,/barrel:'assets\/village\/objects\/barrel\.png'/);
+ assert.doesNotMatch(walker,/crate:'assets\/village\/objects\/crate\.png'/);
+});
 test('same approved landscape ground, contour masks, water chips and eight-frame surf',()=>{
  assert.equal(TIDE_FRAMES.length,8);
  assert.deepEqual(TIDE_FRAMES.map(x=>x.reach),[2,4,7,11,14,11,7,4]);

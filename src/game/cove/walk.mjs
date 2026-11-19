@@ -1,4 +1,4 @@
-import {COVE_MAP,tileAt,walkableCell,isSouthExit} from '../../../data/maps/sea-cove/scene.mjs?v=gear-proportion-2';
+import {COVE_MAP,tileAt,walkableCell,isSouthExit} from '../../../data/maps/sea-cove/scene.mjs?v=cove-native-objects-1';
 import {makeWalk} from '../village/movement.mjs';
 import {residentInFront} from '../village/residents.mjs';
 import {bindDialogue} from '../village/dialogue.mjs';
@@ -29,9 +29,10 @@ const scenery={
  hero:'assets/characters/hizuki/walk-4dir-80x112.png',
  fisher:'assets/characters/npc/ushiohei-walk-4dir-80x112.png',
  rocks:'assets/village/objects/rocks.png',
- basket:'assets/village/objects/basket.png',
- barrel:'assets/village/objects/barrel.png',
- crate:'assets/village/objects/crate.png',
+ basket:'assets/sea-cove/objects/fish-basket-80x74.png',
+ barrel:'assets/sea-cove/objects/fish-barrel-64x86.png',
+ crate:'assets/sea-cove/objects/fish-crate-92x70.png',
+ // Cove basket, barrel and crate use purpose-built native pixel art, not scaled 32px village chips.
  // Adopted village house at full native 390x357; no character-scale fudge.
  fisherHouse:'assets/village/scene/house-thatch.png',
  netRack:'assets/sea-cove/objects/net-drying-rack-232x176.png',

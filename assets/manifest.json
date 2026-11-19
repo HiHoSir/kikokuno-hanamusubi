@@ -2417,6 +2417,69 @@
       },
       "description": "thick rope coil with large legible loops in village object style",
       "approvalNote": "2026-11-19: proportion/dot-density correction against village sprites; awaiting iPhone visual approval"
+    },
+    {
+      "id": "cove-fish-basket-80x74",
+      "type": "object",
+      "path": "assets/sea-cove/objects/fish-basket-80x74.png",
+      "status": "review",
+      "usage": "sea-cove-native-fishing-props",
+      "dimensions": {
+        "width": 80,
+        "height": 74
+      },
+      "footAnchor": [
+        40,
+        74
+      ],
+      "origin": {
+        "kind": "original-generated-pixel-art",
+        "source": "transparent image generation; individual sprite crops and palette limited to 64 colors"
+      },
+      "description": "native-size basket dedicated to the sea cove; replaces undersized shared 32x32 village art without modifying village itself",
+      "approvalNote": "Pending iPhone Safari visual review; branch-only, not yet merged to main"
+    },
+    {
+      "id": "cove-fish-barrel-64x86",
+      "type": "object",
+      "path": "assets/sea-cove/objects/fish-barrel-64x86.png",
+      "status": "review",
+      "usage": "sea-cove-native-fishing-props",
+      "dimensions": {
+        "width": 64,
+        "height": 86
+      },
+      "footAnchor": [
+        32,
+        86
+      ],
+      "origin": {
+        "kind": "original-generated-pixel-art",
+        "source": "transparent image generation; individual sprite crops and palette limited to 64 colors"
+      },
+      "description": "native-size barrel dedicated to the sea cove; replaces undersized shared 32x32 village art without modifying village itself",
+      "approvalNote": "Pending iPhone Safari visual review; branch-only, not yet merged to main"
+    },
+    {
+      "id": "cove-fish-crate-92x70",
+      "type": "object",
+      "path": "assets/sea-cove/objects/fish-crate-92x70.png",
+      "status": "review",
+      "usage": "sea-cove-native-fishing-props",
+      "dimensions": {
+        "width": 92,
+        "height": 70
+      },
+      "footAnchor": [
+        46,
+        70
+      ],
+      "origin": {
+        "kind": "original-generated-pixel-art",
+        "source": "transparent image generation; individual sprite crops and palette limited to 64 colors"
+      },
+      "description": "native-size crate dedicated to the sea cove; replaces undersized shared 32x32 village art without modifying village itself",
+      "approvalNote": "Pending iPhone Safari visual review; branch-only, not yet merged to main"
     }
   ],
   "designReferences": [

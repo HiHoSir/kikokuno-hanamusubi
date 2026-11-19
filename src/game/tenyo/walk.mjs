@@ -23,6 +23,26 @@ const SPEED_MS=156,VIEWPORT_EDGE=768;
 const previewMode=typeof location!=='undefined' &&
  location.pathname.includes('/previews/tenyo-scale-review/') &&
  new URL(import.meta.url).searchParams.get('tenyo-review')==='1';
+// Only the standalone review can select a non-production camera.
+let reviewCamera=1.4;
+// A source sheet's 80x112 frame is NOT its actual visible character size.
+// Shirotae and guardians currently occupy about half Hizuki's visible height.
+// For this review alone, nearest-neighbor-recompose each 80x112 frame around
+// its existing (40,106) foot. This changes no official NPC PNG asset.
+function reviewNpcFullSize(original){
+ const canvas=document.createElement('canvas');
+ canvas.width=240;canvas.height=448;
+ const c=canvas.getContext('2d');
+ c.imageSmoothingEnabled=false;
+ for(let row=0;row<4;row++)for(let frame=0;frame<3;frame++){
+  const sx=frame*80,sy=row*112;
+  c.save();
+  c.beginPath();c.rect(sx,sy,80,112);c.clip();
+  c.drawImage(original,sx,sy,80,112,sx-40,sy-106,160,224);
+  c.restore();
+ }
+ return canvas;
+}
 let pendingInput=null;
 
 function setInput(id,direction){
@@ -91,7 +111,9 @@ async function start(){
   ]);
   const allIds=[...ids],allNpcPaths=[...new Set(map.game.residents.map(npc=>npc.asset))];
   const images=Object.fromEntries(allIds.map((id,i)=>[id,loaded[i]]));
-  const npcArt=new Map(allNpcPaths.map((path,i)=>[path,loaded[allIds.length+i]]));
+  const npcArt=new Map(allNpcPaths.map((path,i)=>[
+    path,previewMode?reviewNpcFullSize(loaded[allIds.length+i]):loaded[allIds.length+i]
+  ]));
   images.sanctuary_npc_shirotae=npcArt.get(residents.find(n=>n.id==='shirotae').asset);
   images.sanctuary_npc_guard=npcArt.get(residents.find(n=>n.id!=='shirotae').asset);
 
@@ -201,8 +223,13 @@ async function start(){
     const {clientWidth,clientHeight}=scene.parentElement;
     // The 768px buffer is only a raster resolution. It must NOT set the
     // apparent camera scale; match village/interiors/cove in CSS world pixels.
-    const worldPixelsPerPixel=Math.max(clientWidth,clientHeight,1)/
-      (Math.max(width,height)*WORLD_SCENE_ZOOM);
+    const zoom=previewMode?reviewCamera:WORLD_SCENE_ZOOM;
+    // Reproduce the actual pre-11/18 sanctuary camera framing precisely:
+    // legacy ZOOM=1.4 used the fixed 768px buffer, not CSS pixels.
+    // The preview-only 1.0 option uses a true CSS pixel/world ratio.
+    const worldPixelsPerPixel=previewMode&&reviewCamera===1.4
+      ?VIEWPORT_EDGE/(Math.max(width,height)*1.4)
+      :Math.max(clientWidth,clientHeight,1)/(Math.max(width,height)*zoom);
     const viewWidth=width*worldPixelsPerPixel,viewHeight=height*worldPixelsPerPixel;
     const cameraX=viewWidth>=world.width?(world.width-viewWidth)/2:
       clamp((player.x+.5)*32-viewWidth/2,0,world.width-viewWidth);
@@ -215,8 +242,9 @@ async function start(){
     // become symmetric sea-background margins rather than clipping/stretching.
     ctx.drawImage(world,-cameraX/worldPixelsPerPixel,-cameraY/worldPixelsPerPixel,
       world.width/worldPixelsPerPixel,world.height/worldPixelsPerPixel);
-    scene.dataset.zoom=String(WORLD_SCENE_ZOOM);
+    scene.dataset.zoom=String(zoom);
     scene.dataset.actorFrame=WORLD_ACTOR_FRAME.join('x');
+    scene.dataset.reviewNpcArt=previewMode?'native-recomposed-2x':'original';
     const foot=center([state.x,state.y]);
     const npc=residentInFront(foot.x,foot.y,state.face,residents);
     dialogue.update(npc,foot.x,foot.y);
@@ -242,6 +270,18 @@ async function start(){
       render(now);lastPaint=now;
     }
     requestAnimationFrame(frame);
+  }
+
+  if(previewMode){
+    for(const button of document.querySelectorAll('[data-tenyo-camera]')){
+      button.addEventListener('click',()=>{
+        const requested=Number(button.dataset.tenyoCamera);
+        if(![1,1.4].includes(requested))return;
+        reviewCamera=requested;
+        for(const candidate of document.querySelectorAll('[data-tenyo-camera]'))
+          candidate.setAttribute('aria-pressed',String(candidate===button));
+      });
+    }
   }
 
   for(const button of buttons){

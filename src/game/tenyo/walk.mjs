@@ -5,7 +5,7 @@ import {residentInFront} from '../village/residents.mjs';
 import {readStoryStage,advanceStoryStage,objectiveForStage} from '../story/chapter-one.mjs';
 import {consumeRestorePosition} from '../save/save-game.mjs?v=save-slots-1';
 import {WORLD_ACTOR_FRAME} from '../ui/world-scale.mjs';
-import {TENYO_STEP,shrineCanStand,shrineExitReached} from './movement.mjs';
+import {sanctuaryCollisionGeometry,shrineCanStand,shrineAdvance,shrineExitReached,TENYO_PLAYER_FOOT_RADIUS} from './movement.mjs';
 
 const {SMModel,SMRender}=globalThis;
 const scene=document.querySelector('#scene');
@@ -18,7 +18,8 @@ const directions={down:[0,1,0,'d'],up:[0,-1,1,'u'],right:[1,0,2,'r'],left:[-1,0,
 const keys={ArrowDown:'down',ArrowUp:'up',ArrowRight:'right',ArrowLeft:'left',s:'down',w:'up',d:'right',a:'left'};
 const facing=['d','u','r','l'];
 const input=new Map();
-const SPEED_MS=156,VIEWPORT_EDGE=768;
+const VIEWPORT_EDGE=768;
+const WALK_PX_PER_MS=32/156; // preserve prior travel speed, not its grid step
 const TENYO_APPROVED_CAMERA=1;
 // On the selected wide-angle + legacy-person proportions, recompose the
 // hero's visual painting around its unchanged foot. This is NOT camera zoom.
@@ -110,7 +111,11 @@ async function start(){
   }));
   // Ground collision uses each cell's actual rectangular bounds, rather than
   // rejecting an entire 32px square around a tiny character or guardian.
-  const canEnter=(x,y)=>shrineCanStand(map,blocked,residents,x,y);
+  const collider=sanctuaryCollisionGeometry(map,blocked,residents);
+  // Convert source-map coordinates only when loading the old scene/save.
+  // The live player moves in continuous world PIXELS, not grid fractions.
+  const worldPoint=(x,y)=>({x:(x+.5)*map.tileSize,y:(y+.5)*map.tileSize});
+  const canEnter=(x,y)=>shrineCanStand(collider,x,y);
 
   const ids=new Set([
     ...map.objects.map(item=>item.templateId),
@@ -157,10 +162,12 @@ async function start(){
   const paintedMap={...map,objects:[...map.objects,...residentObjects]};
 
   const resumed=previewMode?null:consumeRestorePosition('tenyo');
-  const savedPoint=resumed&&canEnter(resumed.x,resumed.y)?resumed:null;
+  const restoreFoot=resumed?worldPoint(resumed.x,resumed.y):null;
+  const savedPoint=restoreFoot&&canEnter(restoreFoot.x,restoreFoot.y)?resumed:null;
+  const initialFoot=worldPoint(savedPoint?.x??entry[0],savedPoint?.y??entry[1]);
   const face=savedPoint?.face??1;
-  const state={x:savedPoint?.x??entry[0],y:savedPoint?.y??entry[1],
-    face,dir:facing[face],motion:null,steps:0};
+  const state={x:initialFoot.x,y:initialFoot.y,
+    face,dir:facing[face],moving:false,distance:0,steps:0};
   function refreshObjective(){
     objective.textContent=objectiveForStage(readStoryStage());
     for(const npc of residents)npc.lines=storyLines(npc);
@@ -200,31 +207,30 @@ async function start(){
     clearInput();waterfall.pause();
     if(previewMode){
       // Keep the comparison session walkable without leaving Pages or saving.
-      state.x=entry[0];state.y=entry[1];state.motion=null;
+      const reset=worldPoint(entry[0],entry[1]);
+      state.x=reset.x;state.y=reset.y;state.moving=false;
       requestAnimationFrame(frame);
       return;
     }
     window.KIKOKU_ROUTE.go(new URL('../../field/?from=shrine',import.meta.url));
   }
-  function startMove(direction,now){
+  function startMove(direction,elapsedMs){
     const [dx,dy,face,dir]=directions[direction];
     state.face=face;state.dir=dir;
-    const nx=state.x+dx*TENYO_STEP,ny=state.y+dy*TENYO_STEP;
-    if(!canEnter(nx,ny))return false;
-    state.motion={fromX:state.x,fromY:state.y,toX:nx,toY:ny,
-      at:now,duration:SPEED_MS*TENYO_STEP};
-    ++state.steps;
-    return true;
+    const result=shrineAdvance(collider,state.x,state.y,dx,dy,
+      elapsedMs*WALK_PX_PER_MS);
+    state.x=result.x;state.y=result.y;
+    state.moving=result.traveled>0;
+    state.distance+=result.traveled;
+    if(state.moving)state.steps++;
+    return state.moving;
   }
-  function actor(now){
-    const motion=state.motion;
-    if(!motion)return {x:state.x,y:state.y,dir:state.dir,frame:0};
-    const t=clamp((now-motion.at)/motion.duration,0,1);
-    return {
-      x:motion.fromX+(motion.toX-motion.fromX)*t,
-      y:motion.fromY+(motion.toY-motion.fromY)*t,
-      dir:state.dir,frame:[1,0,1,2][Math.min(3,Math.floor(t*4))],
-    };
+  function actor(){
+    // Renderer reads legacy map coordinates. This conversion is solely at
+    // the rendering boundary; movement has no 32px/8px snapping.
+    const x=state.x/map.tileSize-.5,y=state.y/map.tileSize-.5;
+    return {x,y,dir:state.dir,
+      frame:state.moving?[0,1,0,2][Math.floor(state.distance/14)%4]:0};
   }
   function resize(){
     const {clientWidth,clientHeight}=scene.parentElement;
@@ -236,7 +242,7 @@ async function start(){
     scene.height=height;
   }
   function render(now){
-    const player=actor(now);
+    const player=actor();
     for(let i=0;i<residents.length;i++)
       residentObjects[i].dir=facing[residents[i].face??0]??'d';
     SMRender.draw(wc,paintedMap,{
@@ -267,25 +273,26 @@ async function start(){
     // become symmetric sea-background margins rather than clipping/stretching.
     ctx.drawImage(world,-cameraX/worldPixelsPerPixel,-cameraY/worldPixelsPerPixel,
       world.width/worldPixelsPerPixel,world.height/worldPixelsPerPixel);
-    // Optional real collision overlay in the mobile review, never gameplay.
+    // Overlay paints the same WORLD-PIXEL contact shapes used by movement,
+    // including non-grid scenery. It is never visible in the real game.
     if(previewMode&&showCollision){
       ctx.save();ctx.fillStyle='rgba(225,64,58,.26)';
-      for(const key of blocked){
-        const [cx,cy]=key.split(',').map(Number);
-        ctx.fillRect((cx*32-cameraX)/worldPixelsPerPixel,
-          (cy*32-cameraY)/worldPixelsPerPixel,
-          32/worldPixelsPerPixel,32/worldPixelsPerPixel);
-      }
+      for(const rect of collider.rects)
+        ctx.fillRect((rect.left-cameraX)/worldPixelsPerPixel,
+          (rect.top-cameraY)/worldPixelsPerPixel,
+          (rect.right-rect.left)/worldPixelsPerPixel,
+          (rect.bottom-rect.top)/worldPixelsPerPixel);
       ctx.strokeStyle='rgba(255,216,88,.94)';ctx.lineWidth=2;
-      for(const npc of residents){
-        const px=(npc.tile[0]+.5)*32,py=(npc.tile[1]+.5)*32;
-        ctx.beginPath();ctx.arc((px-cameraX)/worldPixelsPerPixel,
-          (py-cameraY)/worldPixelsPerPixel,18/worldPixelsPerPixel,0,Math.PI*2);
+      for(const npc of collider.npcs){
+        ctx.beginPath();ctx.arc((npc.x-cameraX)/worldPixelsPerPixel,
+          (npc.y-cameraY)/worldPixelsPerPixel,
+          (npc.radius+TENYO_PLAYER_FOOT_RADIUS)/worldPixelsPerPixel,0,Math.PI*2);
         ctx.stroke();
       }
       ctx.strokeStyle='rgba(55,242,237,.95)';
-      ctx.beginPath();ctx.arc(((player.x+.5)*32-cameraX)/worldPixelsPerPixel,
-        ((player.y+.5)*32-cameraY)/worldPixelsPerPixel,8/worldPixelsPerPixel,0,Math.PI*2);
+      ctx.beginPath();ctx.arc((state.x-cameraX)/worldPixelsPerPixel,
+        (state.y-cameraY)/worldPixelsPerPixel,
+        TENYO_PLAYER_FOOT_RADIUS/worldPixelsPerPixel,0,Math.PI*2);
       ctx.stroke();ctx.restore();
     }
     scene.dataset.zoom=String(zoom);
@@ -295,30 +302,30 @@ async function start(){
     scene.dataset.reviewNpcArt=previewMode&&reviewCharacters==='largeNpc'
       ?'native-recomposed-2x':'original';
     scene.dataset.reviewCharacters=previewMode?reviewCharacters:'production';
-    const foot=center([state.x,state.y]);
+    const foot={x:state.x,y:state.y};
     const npc=residentInFront(foot.x,foot.y,state.face,residents);
     dialogue.update(npc,foot.x,foot.y);
-    const hint=npc?'Aで話す':state.y>=map.height-3?'南へ進むとフィールドへ':'';
+    const hint=npc?'Aで話す':state.y>=(map.height-3)*map.tileSize?'南へ進むとフィールドへ':'';
     if(interactionHint.textContent!==hint)interactionHint.textContent=hint;
-    scene.dataset.x=String(state.x);
-    scene.dataset.y=String(state.y);
+    scene.dataset.x=String(state.x.toFixed(2));
+    scene.dataset.y=String(state.y.toFixed(2));
+    scene.dataset.movementUnit='world-pixels';
   }
-  let lastPaint=0;
+  let lastPaint=0,lastMotionTime=0;
   function frame(now){
-    if(state.motion&&now-state.motion.at>=state.motion.duration){
-      state.x=state.motion.toX;state.y=state.motion.toY;state.motion=null;
-      if(shrineExitReached(map,state.x,state.y)){leave();return;}
-    }
-    if(!state.motion&&!dialogue.active){
+    // Continuous movement follows elapsed time and stops at world-pixel
+    // shapes, with swept foot-circle checks to avoid crossing thin walls.
+    const elapsed=lastMotionTime?Math.min(48,Math.max(0,now-lastMotionTime)):16;
+    lastMotionTime=now;
+    state.moving=false;
+    if(!dialogue.active){
       const direction=pendingInput??[...input.values()].at(-1);
       pendingInput=null;
-      if(direction)startMove(direction,now);
+      if(direction)startMove(direction,elapsed);
+      if(shrineExitReached(collider,state.x,state.y)){leave();return;}
     }
-    // The original sanctuary renderer composites reflections and focus blur.
-    // Cap full-scene paints without affecting input or movement cadence.
-    if(now-lastPaint>=55){
-      render(now);lastPaint=now;
-    }
+    // Preserve existing costly water/reflection paint budget.
+    if(now-lastPaint>=55){render(now);lastPaint=now;}
     requestAnimationFrame(frame);
   }
 
@@ -386,7 +393,8 @@ async function start(){
   new ResizeObserver(resize).observe(scene.parentElement);
   render(performance.now());
   load.hidden=true;
-  window.KIKOKU_SAVE_SNAPSHOT=()=>({scene:'tenyo',position:{x:state.x,y:state.y,face:state.face}});
+  window.KIKOKU_SAVE_SNAPSHOT=()=>({scene:'tenyo',position:{
+    x:state.x/map.tileSize-.5,y:state.y/map.tileSize-.5,face:state.face}});
   window.parent?.KIKOKU_GAME?.autosave?.(window);
   requestAnimationFrame(frame);
 }

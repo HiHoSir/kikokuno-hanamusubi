@@ -32,6 +32,8 @@ test('village, rooms and cove use stable world scale without district zoom',()=>
  assert.match(tenyo,/TENYO_HERO_ART_FACTOR=0\.52/);
  assert.match(tenyo,/const zoom=previewMode\?reviewCamera:TENYO_APPROVED_CAMERA/);
  assert.match(tenyo,/Math\.max\(width,height\)\*zoom/);
+ assert.match(tenyo,/shrineAdvance\(collider,state\.x,state\.y,dx,dy,/);
+ assert.doesNotMatch(tenyo,/TENYO_STEP|32px\/156ms/);
  assert.doesNotMatch(tenyo,/ZOOM=1\.4|heroDisplayScale/);
  assert.doesNotMatch(cove,/hamletCameraZoom|basePixelStep|1\.18|0\.65/);
  const scene=JSON.parse(source('data/maps/tenyo-sanctuary/scene.json'));

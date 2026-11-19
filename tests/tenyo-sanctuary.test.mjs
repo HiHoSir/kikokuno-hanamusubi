@@ -5,7 +5,8 @@ import {createHash} from 'node:crypto';
 import {execFileSync} from 'node:child_process';
 import {createContext,runInContext} from 'node:vm';
 import {readStoryStage,advanceStoryStage,objectiveForStage} from '../src/game/story/chapter-one.mjs';
-import {TENYO_STEP,TENYO_PLAYER_FOOT_RADIUS,shrineCanStand,shrineExitReached}
+import {TENYO_PLAYER_FOOT_RADIUS,sanctuaryCollisionGeometry,
+ shrineCanStand,shrineAdvance,shrineExitReached}
  from '../src/game/tenyo/movement.mjs';
 
 const raw=readFileSync('data/maps/tenyo-sanctuary/scene.json','utf8');
@@ -251,29 +252,40 @@ test('selected wide-angle camera and previous actual figure-size ratio are indep
  const movement=readFileSync('src/game/tenyo/movement.mjs','utf8');
  assert.doesNotMatch(movement,/TENYO_HERO_ART_FACTOR|heroDisplayScale|WORLD_SCENE_ZOOM/);
 });
-test('scenic water behind gate blocks, while shallow approach and actual NPC feet stay reachable',()=>{
- const b=M.collision(model),actors=map.game.residents;
- assert.equal(TENYO_STEP,0.25);
+test('outside the field, sanctuary uses independent pixel geometry and continuous foot movement',()=>{
+ const world=sanctuaryCollisionGeometry(model,M.collision(model),map.game.residents);
+ const oldGridSize=map.tileSize;
+ assert.equal(world.width,28*oldGridSize);
+ assert.equal(world.height,25*oldGridSize);
  assert.equal(TENYO_PLAYER_FOOT_RADIUS,8);
- for(let y=4;y<=7;y++)for(let x=8;x<=19;x++){
-  if(y===7&&(x===13||x===14)){
-   assert.equal(b.has(x+','+y),false,'guardian's authored feet are not water obstructions');
-   continue;
-  }
-  assert.ok(b.has(x+','+y),'background lake should block walking at '+x+','+y);
+ assert.ok(world.rects.some(r=>r.source==='rear-scenic-water'));
+ assert.ok(!M.collision(model).has('13,7'),'NPC entry is not a forbidden terrain tile');
+ const feet=(x,y)=>[(x+.5)*oldGridSize,(y+.5)*oldGridSize];
+ for(const [x,y] of [[13,23],[13,22],[13,10],[13,9],[14,8],[12,9],[12,10],[13,8]]){
+   const [px,py]=feet(x,y);
+   assert.equal(shrineCanStand(world,px,py),true,'approach '+x+','+y);
  }
- for(const [x,y] of [[13,23],[13,22],[13,10],[13,9],[14,8],[12,9],[12,10],[13,8]])
-  assert.ok(shrineCanStand(model,b,actors,x,y),'approach '+x+','+y);
- assert.equal(shrineCanStand(model,b,actors,10,6),false);
- assert.equal(shrineCanStand(model,b,actors,12,8),false,'Shirotae feet blocked');
- assert.equal(shrineCanStand(model,b,actors,13,7),false,'guardian feet blocked');
- assert.equal(shrineCanStand(model,b,actors,12,8.75),true,'can walk up to visible foot');
- assert.equal(shrineCanStand(model,b,actors,12,8.5),false,'NPC visible foot has contact');
- assert.equal(shrineCanStand(model,b,actors,8,10),false,'lantern island blocked');
- assert.equal(shrineExitReached(model,13,23.5),true,'fractional south exit');
- assert.equal(shrineExitReached(model,13,23.25),false,'no premature exit');
+ assert.equal(shrineCanStand(world,270.37,180.19),false,
+  'water behind the gate is blocked using a non-grid pixel rectangle');
+ assert.equal(shrineCanStand(world,...feet(12,8)),false,'Shirotae foot blocks');
+ assert.equal(shrineCanStand(world,...feet(13,7)),false,'guardian foot blocks');
+ assert.equal(shrineCanStand(world,...feet(12,8.75)),true,'NPC accessible from its actual foot');
+ assert.equal(shrineCanStand(world,...feet(12,8.5)),false,'NPC feet can actually collide');
+ assert.equal(shrineCanStand(world,...feet(8,10)),false,'lantern island cannot be crossed');
+ assert.equal(shrineExitReached(world,432,768),true);
+ assert.equal(shrineExitReached(world,432,760),false);
+ const before=feet(13,23);
+ const moved=shrineAdvance(world,...before,1,0,3.37);
+ assert.ok(Math.abs(moved.traveled-3.37)<0.001,'no 8px or 32px step snapping');
+ assert.ok(Math.abs(moved.x-(before[0]+3.37))<0.001);
+ const second=shrineAdvance(world,moved.x,moved.y,0,-1,1.75);
+ assert.ok(Math.abs(second.y-(before[1]-1.75))<0.001);
+ assert.equal(shrineAdvance(world,...before,1,0,0).traveled,0);
+ const walk=readFileSync('src/game/tenyo/walk.mjs','utf8');
+ assert.match(walk,/shrineAdvance\(collider,state\.x,state\.y,dx,dy,/);
+ assert.match(walk,/movementUnit='world-pixels'/);
+ assert.doesNotMatch(walk,/TENYO_STEP|SPEED_MS\*TENYO_STEP/);
 });
-
 test('all three character source frames stay 80x112 while painted size is selected separately',()=>{
  assert.equal(Object.hasOwn(map.game,'heroDisplayScale'),false,
    'unreviewed hero-only shrink is prohibited');

@@ -116,6 +116,11 @@ try{
  const afterReview=await review.evaluate(()=>{
    const c=document.querySelector('#scene');return {x:c.dataset.x,y:c.dataset.y};
  });
+ const unit=await review.evaluate(()=>document.querySelector('#scene').dataset.movementUnit);
+ if(unit!=='world-pixels')issues.push('sanctuary movement incorrectly snapped to field grid');
+ const dx=Number(afterReview.x)-Number(beforeReview.posX);
+ const dy=Number(afterReview.y)-Number(beforeReview.posY);
+ if(dx===0&&dy===0)issues.push('continuous shrine movement did not change world-pixel position');
  if(beforeReview.posY===afterReview.y)
   issues.push('Pages preview is not walkable by D-pad '+JSON.stringify({beforeReview,afterReview}));
  if(reviewErrors.length)issues.push('Pages review JS exceptions: '+reviewErrors.join(';'));

@@ -338,8 +338,8 @@ test('outside the field, sanctuary uses independent pixel geometry and continuou
    const [px,py]=feet(x,y);
    assert.equal(shrineCanStand(world,px,py),true,'approach '+x+','+y);
  }
- assert.equal(shrineCanStand(world,270.37,180.19),false,
-  'water behind the gate is blocked using a non-grid pixel rectangle');
+ assert.equal(shrineCanStand(world,270.37,180.19),true,
+  'naturally shallow water remains accessible without the invented rear wall');
  assert.equal(shrineCanStand(world,...feet(12,8)),false,'Shirotae foot blocks');
  assert.equal(shrineCanStand(world,...feet(13,7)),false,'guardian foot blocks');
  assert.equal(shrineCanStand(world,...feet(12,8.75)),true,'NPC accessible from its actual foot');

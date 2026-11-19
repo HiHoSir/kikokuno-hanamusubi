@@ -156,9 +156,15 @@ try{
  const nearFall=await review.evaluate(()=>{
   const c=document.querySelector('#scene');return {x:Number(c.dataset.x),y:Number(c.dataset.y)};
  });
- if(!(nearFall.x>592&&nearFall.x<620&&Math.abs(nearFall.y-176)<1))
-   issues.push('waterfall physical contact not aligned with visible foam '+JSON.stringify(nearFall));
- await review.screenshot({path:'artifacts/tenyo-waterfall-stopped-before-pool.png'});
+ if(!(nearFall.x>620&&nearFall.x<650&&Math.abs(nearFall.y-176)<1))
+   issues.push('keep the authored fall-side passage walkable '+JSON.stringify(nearFall));
+ await review.screenshot({path:'artifacts/tenyo-waterfall-walk-behind-art.png'});
+ await review.locator('.review-panel summary').click();
+ await review.locator('[data-tenyo-spot="waterfallOverlap"]').click();
+ await review.waitForFunction(()=>document.querySelector('#scene')?.dataset.x==='631.30',{timeout:5000});
+ await review.locator('.review-panel summary').click();
+ await review.waitForTimeout(90);
+ await review.screenshot({path:'artifacts/tenyo-waterfall-foreground-occlusion.png'});
  await review.close();
  await page.setViewportSize({width:900,height:390});
  await page.waitForFunction(()=>getComputedStyle(document.querySelector('#landscape-required')).display==='none');

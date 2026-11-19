@@ -5,6 +5,9 @@ import {createHash} from 'node:crypto';
 import {execFileSync} from 'node:child_process';
 import {createContext,runInContext} from 'node:vm';
 import {readStoryStage,advanceStoryStage,objectiveForStage} from '../src/game/story/chapter-one.mjs';
+import {TENYO_PLAYER_FOOT_RADIUS,sanctuaryCollisionGeometry,
+ shrineCanStand,shrineAdvance,shrineExitReached}
+ from '../src/game/tenyo/movement.mjs';
 
 const raw=readFileSync('data/maps/tenyo-sanctuary/scene.json','utf8');
 const map=JSON.parse(raw);
@@ -116,7 +119,7 @@ test('the production game loads original water render, common controller and fie
   assert.ok(code.includes('waterfall-loop.m4a'));
   assert.ok(code.includes('bindDialogue'));
   assert.ok(code.includes("advanceStoryStage('cove')"));
-  assert.ok(code.includes('exitReached'));
+  assert.ok(code.includes('shrineExitReached'));
   assert.ok(code.includes('../../field/?from=shrine'));
   assert.ok(field.includes('../game/tenyo/'));
   assert.ok(field.includes('shrineReturnPosition'));
@@ -141,7 +144,9 @@ test('production sanctuary paints its entrance within landscape and portrait vie
     globalThis.document={
       querySelector:id=>({'#scene':scene,'#load':load}[id]??{...element}),
       querySelectorAll:()=>[],
-      createElement:()=>({getContext:()=>({})}),
+      createElement:()=>({getContext:()=>({
+        save(){},restore(){},beginPath(){},rect(){},clip(){},drawImage(){},
+      })}),
       addEventListener(){},
     };
     globalThis.SMModel={parse:JSON.parse,collision:()=>new Set()};
@@ -166,8 +171,8 @@ test('production sanctuary paints its entrance within landscape and portrait vie
       const cssPerBufferX=viewport.clientWidth/scene.width;
       const cssPerBufferY=viewport.clientHeight/scene.height;
       const scaleX=(dw/896)*cssPerBufferX,scaleY=(dh/800)*cssPerBufferY;
-      assert.ok(Math.abs(scaleX-0.5)<0.005,'shrine objects use village world zoom');
-      assert.ok(Math.abs(scaleY-0.5)<0.005,'shrine never stretches vertically');
+      assert.ok(Math.abs(scaleX-1)<0.005,'shrine uses the user-selected 1.0 camera');
+      assert.ok(Math.abs(scaleY-1)<0.005,'shrine view retains the same CSS scale vertically');
       const toCssX=x=>(left+x*dw/896)*cssPerBufferX;
       const toCssY=y=>(top+y*dh/800)*cssPerBufferY;
       const heroX=toCssX((actor.x+.5)*32);
@@ -176,8 +181,8 @@ test('production sanctuary paints its entrance within landscape and portrait vie
         'Hizuki remains visible horizontally in both orientations');
       assert.ok(heroFootY>=0&&heroFootY<=viewport.clientHeight,
         'Hizuki remains visible vertically in both orientations');
-      if(viewport.clientWidth>=896*0.5){
-        assert.ok(Math.abs(toCssX(0)-(viewport.clientWidth-896*.5)/2)<1,
+      if(viewport.clientWidth>=896*1){
+        assert.ok(Math.abs(toCssX(0)-(viewport.clientWidth-896*1)/2)<1,
           'shorter map has equal blue margins rather than a left anchor');
       }
     }
@@ -237,7 +242,51 @@ test('original sanctuary renderer draws 80x112 atlas frames at the SAME foot anc
   }
 });
 
-test('Hizuki, Shirotae and shrine guards use the same full-size 80x112 world frame',()=>{
+test('selected wide-angle camera and previous actual figure-size ratio are independent of collision',()=>{
+ const source=readFileSync('src/game/tenyo/walk.mjs','utf8');
+ assert.match(source,/TENYO_APPROVED_CAMERA=1/);
+ assert.match(source,/TENYO_HERO_ART_FACTOR=0\.52/);
+ assert.match(source,/halfHero=previewRecompose\(hero,TENYO_HERO_ART_FACTOR\)/);
+ assert.match(source,/const zoom=previewMode\?reviewCamera:TENYO_APPROVED_CAMERA/);
+ assert.doesNotMatch(source,/ZOOM=1\.4|heroDisplayScale/);
+ const movement=readFileSync('src/game/tenyo/movement.mjs','utf8');
+ assert.doesNotMatch(movement,/TENYO_HERO_ART_FACTOR|heroDisplayScale|WORLD_SCENE_ZOOM/);
+});
+test('outside the field, sanctuary uses independent pixel geometry and continuous foot movement',()=>{
+ const world=sanctuaryCollisionGeometry(model,M.collision(model),map.game.residents);
+ const oldGridSize=map.tileSize;
+ assert.equal(world.width,28*oldGridSize);
+ assert.equal(world.height,25*oldGridSize);
+ assert.equal(TENYO_PLAYER_FOOT_RADIUS,8);
+ assert.ok(world.rects.some(r=>r.source==='rear-scenic-water'));
+ assert.ok(!M.collision(model).has('13,7'),'NPC entry is not a forbidden terrain tile');
+ const feet=(x,y)=>[(x+.5)*oldGridSize,(y+.5)*oldGridSize];
+ for(const [x,y] of [[13,23],[13,22],[13,10],[13,9],[14,8],[12,9],[12,10],[13,8]]){
+   const [px,py]=feet(x,y);
+   assert.equal(shrineCanStand(world,px,py),true,'approach '+x+','+y);
+ }
+ assert.equal(shrineCanStand(world,270.37,180.19),false,
+  'water behind the gate is blocked using a non-grid pixel rectangle');
+ assert.equal(shrineCanStand(world,...feet(12,8)),false,'Shirotae foot blocks');
+ assert.equal(shrineCanStand(world,...feet(13,7)),false,'guardian foot blocks');
+ assert.equal(shrineCanStand(world,...feet(12,8.75)),true,'NPC accessible from its actual foot');
+ assert.equal(shrineCanStand(world,...feet(12,8.5)),false,'NPC feet can actually collide');
+ assert.equal(shrineCanStand(world,...feet(8,10)),false,'lantern island cannot be crossed');
+ assert.equal(shrineExitReached(world,432,768),true);
+ assert.equal(shrineExitReached(world,432,760),false);
+ const before=feet(13,23);
+ const moved=shrineAdvance(world,...before,1,0,3.37);
+ assert.ok(Math.abs(moved.traveled-3.37)<0.001,'no 8px or 32px step snapping');
+ assert.ok(Math.abs(moved.x-(before[0]+3.37))<0.001);
+ const second=shrineAdvance(world,moved.x,moved.y,0,-1,1.75);
+ assert.ok(Math.abs(second.y-(before[1]-1.75))<0.001);
+ assert.equal(shrineAdvance(world,...before,1,0,0).traveled,0);
+ const walk=readFileSync('src/game/tenyo/walk.mjs','utf8');
+ assert.match(walk,/shrineAdvance\(collider,state\.x,state\.y,dx,dy,/);
+ assert.match(walk,/movementUnit='world-pixels'/);
+ assert.doesNotMatch(walk,/TENYO_STEP|SPEED_MS\*TENYO_STEP/);
+});
+test('all three character source frames stay 80x112 while painted size is selected separately',()=>{
  assert.equal(Object.hasOwn(map.game,'heroDisplayScale'),false,
    'unreviewed hero-only shrink is prohibited');
  const renderer=sandbox.SMRender,im={width:240,height:448};
@@ -254,7 +303,8 @@ test('Hizuki, Shirotae and shrine guards use the same full-size 80x112 world fra
  assert.deepEqual(actual,[[80,112],[80,112],[80,112]]);
  const walk=readFileSync('src/game/tenyo/walk.mjs','utf8');
  const painter=readFileSync('src/game/tenyo/rendering/render.js','utf8');
- assert.match(walk,/WORLD_SCENE_ZOOM/);
+ assert.match(walk,/TENYO_APPROVED_CAMERA=1/);
+ assert.match(walk,/TENYO_HERO_ART_FACTOR=0\.52/);
  assert.match(walk,/WORLD_ACTOR_FRAME/);
  assert.doesNotMatch(walk,/ZOOM=1\.4|heroDisplayScale/);
  assert.doesNotMatch(painter,/heroDisplayScale|displayScale/);

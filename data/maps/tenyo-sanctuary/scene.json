@@ -5260,6 +5260,16 @@
       "repository": "HiHoSir/yaksha-hanamusubi",
       "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
       "path": "assets/settlement-editor/maps/tenyo-sanctuary-water-v5.json"
-    }
+    },
+    "footCollisionZones": [
+      {
+        "id": "rear-scenic-water",
+        "type": "rectangle",
+        "x": 257.5,
+        "y": 126.5,
+        "width": 382,
+        "height": 101.25
+      }
+    ]
   }
 }

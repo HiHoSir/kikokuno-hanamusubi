@@ -77,6 +77,7 @@ button{border:1px solid #777d62;border-radius:8px;background:#314337;color:inher
     <div class="review-control-row">
       <button type="button" data-tenyo-spot="gate">門前で比較</button>
       <button type="button" data-tenyo-spot="waterfall">右滝の手前で比較</button>
+      <button type="button" data-tenyo-spot="waterfallOverlap">滝と緋月の重なり</button>
     </div>
     <div class="review-control-row">
       <button type="button" data-tenyo-contact="visual" aria-pressed="true">足元に合わせた判定</button>
@@ -86,7 +87,7 @@ button{border:1px solid #777d62;border-radius:8px;background:#314337;color:inher
   </nav>
   </details>
   <button class="collision-toggle" type="button" data-tenyo-collision aria-pressed="false">判定を表示</button>
-  <div class="review-note">浅瀬を歩行可／門・柵は衝突／社守の間は続編まで封鎖</div>
+  <div class="review-note">滝の近くも歩ける／滝・門の遮蔽を検査中｜本編の描画は未変更</div>
   <p id="load">天妖の社を読み込んでいます</p>
   <button id="talk" type="button" hidden>話す</button>
   <section id="dialogue" aria-labelledby="speaker" hidden>
@@ -109,10 +110,10 @@ button{border:1px solid #777d62;border-radius:8px;background:#314337;color:inher
 </section>
 <button id="sound-toggle" type="button" aria-label="サウンドを再生" aria-pressed="false">♪ 再生</button>
 </main>
-<script src="../../src/game/tenyo/rendering/catalog.js?v=tenyo-npc-80x112"></script>
+<script src="../../src/game/tenyo/rendering/catalog.js?v=tenyo-foreground-capability-1"></script>
 <script src="../../src/game/tenyo/rendering/autotile.js"></script>
 <script src="../../src/game/tenyo/rendering/model.js"></script>
-<script src="../../src/game/tenyo/rendering/render.js?v=tenyo-unified-character-foot-1"></script>
-<script type="module" src="../../src/game/tenyo/walk.mjs?tenyo-review=1&amp;v=tenyo-waterfall-footprint-1"></script>
+<script src="../../src/game/tenyo/rendering/render.js?v=tenyo-foreground-capability-1"></script>
+<script type="module" src="../../src/game/tenyo/walk.mjs?tenyo-review=1&amp;v=tenyo-occlusion-review-1"></script>
 </body>
 </html>

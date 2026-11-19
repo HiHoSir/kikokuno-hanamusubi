@@ -5270,6 +5270,26 @@
         "width": 382,
         "height": 101.25
       }
+    ],
+    "passageLocks": [
+      {
+        "id": "guardian-sequel-passage",
+        "type": "rectangle",
+        "x": 386,
+        "y": 230,
+        "width": 126,
+        "height": 29,
+        "unlockIn": "sequel"
+      },
+      {
+        "id": "sacred-rear-perimeter",
+        "type": "rectangle",
+        "x": 192,
+        "y": 213,
+        "width": 512,
+        "height": 17,
+        "unlockIn": "sequel"
+      }
     ]
   }
 }

@@ -91,6 +91,7 @@ try{
  if(heroFactor!=='0.52')issues.push('approved legacy visual hero size must be 0.52');
  if(art!=='original')
   issues.push('preview default should be the previous actual character proportions'); 
+ await review.locator('.review-panel summary').click();
  await review.locator('[data-tenyo-figures="largeNpc"]').click();
  await review.waitForFunction(()=>document.querySelector('#scene')?.dataset.reviewNpcArt==='native-recomposed-2x',{timeout:5000});
  await review.screenshot({path:'artifacts/tenyo-large-npc-contrast.png'});
@@ -102,6 +103,15 @@ try{
  await review.locator('[data-tenyo-camera="1"]').click();
  await review.waitForFunction(()=>document.querySelector('#scene')?.dataset.zoom==='1',{timeout:5000});
  await review.screenshot({path:'artifacts/tenyo-native-characters-zoom1.png'});
+ const sealed=await review.evaluate(()=>document.querySelector('#scene').dataset.sequelSealed);
+ if(sealed!=='true')issues.push('sequel passage must be sealed in every review mode');
+ await review.locator('[data-tenyo-contact="legacy"]').click();
+ await review.waitForFunction(()=>document.querySelector('#scene')?.dataset.collisionProfile==='legacy',{timeout:5000});
+ const legacySealed=await review.evaluate(()=>document.querySelector('#scene').dataset.sequelSealed);
+ if(legacySealed!=='true')issues.push('switching to previous collision reopened the sequel gate');
+ await review.locator('[data-tenyo-contact="visual"]').click();
+ await review.waitForFunction(()=>document.querySelector('#scene')?.dataset.collisionProfile==='visual',{timeout:5000});
+ await review.locator('.review-panel summary').click();
  await review.locator('[data-tenyo-collision]').click();
  await review.waitForFunction(()=>document.querySelector('[data-tenyo-collision]')?.getAttribute('aria-pressed')==='true');
  await review.waitForTimeout(80);

@@ -1,10 +1,10 @@
 // This sanctuary is not constrained to the field's 32px movement grid.
 // Authoritative movement uses continuous world pixels and a small foot circle.
 //
-// The original settlement-editor water map still has legacy occupied cells.
-// The 'legacy' profile retains its collision exactly for the published game.
-// The 'visual' profile is a review-only correction that converts old data to
-// shapes matching the rendered feet of gates, lanterns and stone islands.
+// The field alone has a tile movement rule. Both review and game profiles
+// enforce the same authored sequel-only passage seals, even if NPC art,
+ // camera zoom or decorative scenery is later changed.
+ // The visual profile separately corrects inherited artist-foot collisions.
 export const TENYO_PLAYER_FOOT_RADIUS=8; // published legacy collision
 export const TENYO_NPC_FOOT_RADIUS=10;
 export const TENYO_VISUAL_PLAYER_FOOT_RADIUS=4;
@@ -22,12 +22,17 @@ function footShapes(map){
   if(!VISUAL_OBJECTS.has(o.templateId))continue;
   const left=o.x*unit,groundY=(o.y+1)*unit;
   if(o.templateId==='tenyo_water_gate'){
-   // The approved 192x128 art touches the ground at two narrow wooden
-   // posts; the decorative rail and roof are not four solid 32px blocks.
-   shapes.push({type:'box',left:left+30,right:left+51,
-     top:groundY-15,bottom:groundY,id:o.id+':left-foot'});
-   shapes.push({type:'box',left:left+140,right:left+160,
-     top:groundY-15,bottom:groundY,id:o.id+':right-foot'});
+   // Actual water-gate PNG: narrow wooden posts at the LEFT and RIGHT
+   // edges and low fence rails joined to those posts. No free passage
+   // through the fence artwork or the guards' sequel-only doorway.
+   shapes.push({type:'box',left:left+11,right:left+35,
+     top:groundY-39,bottom:groundY,id:o.id+':left-post'});
+   shapes.push({type:'box',left:left+157,right:left+181,
+     top:groundY-39,bottom:groundY,id:o.id+':right-post'});
+   shapes.push({type:'box',left:left,right:left+37,
+     top:groundY-29,bottom:groundY,id:o.id+':left-fence'});
+   shapes.push({type:'box',left:left+155,right:left+192,
+     top:groundY-29,bottom:groundY,id:o.id+':right-fence'});
   }else if(o.templateId==='torii_gate_v2'){
    shapes.push({type:'box',left:left+15,right:left+35,
      top:groundY-15,bottom:groundY,id:o.id+':left-foot'});
@@ -95,13 +100,29 @@ export function sanctuaryCollisionGeometry(map,legacyBlocked,residents,{profile=
     !Number.isFinite(region.y)||!Number.isFinite(region.width)||
     !Number.isFinite(region.height)||region.width<=0||region.height<=0)
    throw Error('Invalid sanctuary pixel-space contact region');
-  // The large scene-backdrop rectangle previously ended almost at the
-  // guardians' feet. Its final 16 pixels are visual foreground, not a wall.
-  const correction=profile==='visual'&&region.id==='rear-scenic-water'?16:0;
+  // The original rectangular "scenic water" mask covers actual shallow
+  // water with a giant invisible wall. In the visual profile, actual
+  // depth handles water; explicit narrow narrative locks seal the sequel
+  // boundary instead. Legacy profile remains as a rollback reference.
+  if(profile==='visual'&&region.id==='rear-scenic-water')continue;
   rects.push({left:region.x,top:region.y,
-   right:region.x+region.width,bottom:region.y+region.height-correction,
+   right:region.x+region.width,bottom:region.y+region.height,
    source:region.id});
  }
+ // Never infer a sequel seal from NPC circles: with two small guardians
+ // there is naturally a walkable gap between their feet.
+ const locks=(map.game?.passageLocks||[]).map(zone=>{
+  if(zone.type!=='rectangle'||zone.unlockIn!=='sequel'||
+   !Number.isFinite(zone.x)||!Number.isFinite(zone.y)||
+   !Number.isFinite(zone.width)||!Number.isFinite(zone.height)||
+   zone.width<=0||zone.height<=0)
+   throw Error('Invalid unbreakable sanctuary sequel passage lock');
+  return {id:zone.id,left:zone.x,top:zone.y,
+   right:zone.x+zone.width,bottom:zone.y+zone.height};
+ });
+ if(!locks.some(z=>z.id==='guardian-sequel-passage')||
+    !locks.some(z=>z.id==='sacred-rear-perimeter'))
+  throw Error('Sanctuary sequel passage must remain sealed');
  const npcRadius=profile==='visual'
   ?TENYO_VISUAL_NPC_FOOT_RADIUS:TENYO_NPC_FOOT_RADIUS;
  const npcs=residents.map(npc=>({
@@ -111,6 +132,7 @@ export function sanctuaryCollisionGeometry(map,legacyBlocked,residents,{profile=
  return {
   rects,
   shapes:profile==='visual'?footShapes(map):[],
+  locks,
   npcs,
   profile,
   playerRadius:profile==='visual'
@@ -133,6 +155,9 @@ export function shrineCanStand(world,x,y){
  const r=world.playerRadius??TENYO_PLAYER_FOOT_RADIUS;
  if(x<r||y<r||x>world.width-r||y>world.height-r)return false;
  for(const box of world.rects)if(rectTouch(box,x,y,r))return false;
+ // Story seal is checked independently of sprites, walkable water,
+ // and visual/legacy collision mode. No position or zoom can bypass it.
+ for(const zone of world.locks||[])if(rectTouch(zone,x,y,r))return false;
  for(const shape of world.shapes||[]){
   if(shape.type==='box'&&rectTouch(shape,x,y,r))return false;
   if(shape.type==='ellipse'&&

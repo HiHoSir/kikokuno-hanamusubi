@@ -30,9 +30,9 @@ function footShapes(map){
    shapes.push({type:'box',left:left+157,right:left+181,
      top:groundY-39,bottom:groundY,id:o.id+':right-post'});
    shapes.push({type:'box',left:left,right:left+37,
-     top:groundY-26,bottom:groundY-13,id:o.id+':left-fence'});
+     top:groundY-29,bottom:groundY,id:o.id+':left-fence'});
    shapes.push({type:'box',left:left+155,right:left+192,
-     top:groundY-26,bottom:groundY-13,id:o.id+':right-fence'});
+     top:groundY-29,bottom:groundY,id:o.id+':right-fence'});
   }else if(o.templateId==='torii_gate_v2'){
    shapes.push({type:'box',left:left+15,right:left+35,
      top:groundY-15,bottom:groundY,id:o.id+':left-foot'});

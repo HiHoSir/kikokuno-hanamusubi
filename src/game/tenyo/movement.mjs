@@ -39,10 +39,12 @@ function footShapes(map){
    shapes.push({type:'box',left:left+94,right:left+114,
      top:groundY-15,bottom:groundY,id:o.id+':right-foot'});
   }else if(o.templateId==='sanctuary_fall_v2'){
-   // Waterfall's authored 128x160 painting ends at this world-foot;
-   // the turbulent plunge pool is not a walkable shallow shore.
+   // Waterfall's approved 128x160 painting reaches right to its lower
+   // rock shoulders and white plunge spray. Keep the footprint wide
+   // enough to include the LEFT rock edge, not only the bright center.
+   // The churning pool is not a walkable shallow shore.
    shapes.push({type:'ellipse',x:left+64,y:groundY-5,
-     rx:51,ry:27,id:o.id+':plunge-pool'});
+     rx:65,ry:38,id:o.id+':plunge-pool'});
   }else if(o.templateId==='tenyo_stone_lantern'){
    // The lamp artwork is supported above the island by 26 world px.
    // Its base occupies only a small contact patch, not a whole 32px cell.

@@ -13,7 +13,7 @@ const MAX_SWEEP_SLICE_PX=2;
 const VISUAL_OBJECTS=new Set([
  'tenyo_water_gate','torii_gate_v2',
  'rock_island_lantern_base','rock_island_lantern_base_mirror',
- 'tenyo_stone_lantern'
+ 'tenyo_stone_lantern','sanctuary_fall_v2'
 ]);
 
 function footShapes(map){
@@ -38,6 +38,13 @@ function footShapes(map){
      top:groundY-15,bottom:groundY,id:o.id+':left-foot'});
    shapes.push({type:'box',left:left+94,right:left+114,
      top:groundY-15,bottom:groundY,id:o.id+':right-foot'});
+  }else if(o.templateId==='sanctuary_fall_v2'){
+   // Waterfall's approved 128x160 painting reaches right to its lower
+   // rock shoulders and white plunge spray. Keep the footprint wide
+   // enough to include the LEFT rock edge, not only the bright center.
+   // The churning pool is not a walkable shallow shore.
+   shapes.push({type:'ellipse',x:left+64,y:groundY-5,
+     rx:65,ry:38,id:o.id+':plunge-pool'});
   }else if(o.templateId==='tenyo_stone_lantern'){
    // The lamp artwork is supported above the island by 26 world px.
    // Its base occupies only a small contact patch, not a whole 32px cell.
@@ -74,20 +81,13 @@ function blockedCellRects(map,legacyBlocked,profile){
  for(const key of custom)
   if(!water.has(key)&&!hard.has(key)&&!other.has(key))
    remainder.delete(key);
- // Shallow water fades over a smooth shoreline transition; the original
- // nearest-cell collision used the entire deep-water tile and stopped the
- // player visibly before reaching the painted waterline. Recess ONLY the
- // exposed deep-water edge, never the interior wall of a blocked region.
- const inset=Math.min(10,unit/3);
- const has=(x,y)=>remainder.has(x+','+y);
+ // Mid/deep-water tiles are never shrunk: the previous 10px recess
+ // allowed the actor to stand *inside* a forbidden waterfall pool.
  return [...remainder].map(key=>{
   const [cx,cy]=key.split(',').map(Number);
   const soft=water.has(key)&&!hard.has(key)&&!other.has(key);
-  const left=cx*unit+(soft&&!has(cx-1,cy)?inset:0);
-  const right=(cx+1)*unit-(soft&&!has(cx+1,cy)?inset:0);
-  const top=cy*unit+(soft&&!has(cx,cy-1)?inset:0);
-  const bottom=(cy+1)*unit-(soft&&!has(cx,cy+1)?inset:0);
-  return {left,top,right,bottom,source:soft?'waterline':'legacy-map'};
+  return {left:cx*unit,top:cy*unit,right:(cx+1)*unit,
+   bottom:(cy+1)*unit,source:soft?'waterline':'legacy-map'};
  });
 }
 

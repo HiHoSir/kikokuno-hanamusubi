@@ -135,6 +135,30 @@ try{
   issues.push('Pages preview is not walkable by D-pad '+JSON.stringify({beforeReview,afterReview}));
  if(reviewErrors.length)issues.push('Pages review JS exceptions: '+reviewErrors.join(';'));
  await review.screenshot({path:'artifacts/tenyo-native-characters-walking.png'});
+ await review.locator('.review-panel summary').click();
+ await review.locator('[data-tenyo-spot="gate"]').click();
+ await review.waitForFunction(()=>document.querySelector('#scene')?.dataset.x==='416.00',{timeout:5000});
+ await review.locator('.review-panel summary').click();
+ await review.waitForTimeout(90);
+ await review.screenshot({path:'artifacts/tenyo-shirotae-clear-of-gate.png'});
+ await review.locator('.review-panel summary').click();
+ await review.locator('[data-tenyo-spot="waterfall"]').click();
+ await review.waitForFunction(()=>document.querySelector('#scene')?.dataset.x==='592.00',{timeout:5000});
+ await review.locator('.review-panel summary').click();
+ await review.waitForTimeout(90);
+ await review.screenshot({path:'artifacts/tenyo-waterfall-safe-approach.png'});
+ const right=await review.locator('#right').boundingBox();
+ await review.mouse.move(right.x+right.width/2,right.y+right.height/2);
+ await review.mouse.down();
+ await review.waitForTimeout(850);
+ await review.mouse.up();
+ await review.waitForTimeout(200);
+ const nearFall=await review.evaluate(()=>{
+  const c=document.querySelector('#scene');return {x:Number(c.dataset.x),y:Number(c.dataset.y)};
+ });
+ if(!(nearFall.x>592&&nearFall.x<620&&Math.abs(nearFall.y-176)<1))
+   issues.push('waterfall physical contact not aligned with visible foam '+JSON.stringify(nearFall));
+ await review.screenshot({path:'artifacts/tenyo-waterfall-stopped-before-pool.png'});
  await review.close();
  await page.setViewportSize({width:900,height:390});
  await page.waitForFunction(()=>getComputedStyle(document.querySelector('#landscape-required')).display==='none');

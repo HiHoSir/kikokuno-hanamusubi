@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {createHash} from 'node:crypto';
 import {readFileSync,existsSync} from 'node:fs';
 import {SHORE_Y,SCENERY} from '../data/maps/shoreline-study/scene.mjs';
 import {COVE_SHELL_SITES,validateCoveShellSites} from '../data/maps/sea-cove/shells.mjs';
@@ -178,6 +179,38 @@ test('fisher homestead uses new southern sand; native assets; no blocked field r
  assert.equal(collision(house.x,house.y-70),true,'house must block roof invisibility');
  assert.equal(collision(net.x,net.y-40),true,'cannot walk through net mesh');
  assert.equal(collision(COVE_MAP.entry.x,COVE_MAP.entry.y),false);
+});
+
+
+test('reviewed fishing-prop drawings replace the mixed old assets without size or palette regressions',()=>{
+ const walk=source('src/game/cove/walk.mjs');
+ const oldGenerator=source('tools/generate-cove-fishing-gear.py');
+ const artPipeline=source('tools/process-cove-gear-source.py');
+ for(const [path,width,height,expectedSha] of [
+  ['assets/sea-cove/objects/fish-basket-80x74.png',80,74,
+   '7a0183e89e8e0da8dbeedfb6de6c87c1e516eb0b1529660802fd7876037be7f6'],
+  ['assets/sea-cove/objects/rope-coil-88x62.png',88,62,
+   '7bfd4a446a2e3e6af0402fcd759b0aac2514aa0ad9385ed0873dbe2956beac2e'],
+  ['assets/sea-cove/objects/net-bundle-146x88.png',146,88,
+   'bd266ce9ac1860147274f1030928de6541318275aa40bf961209443d3d3a70f9']
+ ]){
+  const png=readFileSync(path);
+  assert.equal(png.subarray(1,4).toString('ascii'),'PNG');
+  assert.equal(png.readUInt32BE(16),width,'preserve native sprite width '+path);
+  assert.equal(png.readUInt32BE(20),height,'preserve native sprite height '+path);
+  assert.equal(png[25],6,'transparent RGBA '+path);
+  assert.equal(createHash('sha256').update(png).digest('hex'),expectedSha,
+   'do not silently revert the reviewed sprite or re-run an old generator: '+path);
+ }
+ assert.ok(walk.includes("redrawnGear=new Set("),
+   'Safari must refetch changed images without duplicating tracked filenames');
+ assert.ok(walk.includes("cove-gear-style-20261119"));
+ assert.doesNotMatch(oldGenerator,/def rolled_net\(\)/);
+ assert.doesNotMatch(oldGenerator,/def rope_coil\(\)/);
+ assert.doesNotMatch(oldGenerator,/['"](?:net-bundle-146x88|rope-coil-88x62)\.png['"]/,
+   'the drying-rack generator MUST NOT write the newly adopted sprites');
+ assert.match(artPipeline,/Image.Resampling.BOX/);
+ assert.match(artPipeline,/Image\.Quantize\.MEDIANCUT/);
 });
 
 test('cove supply sprites have actual native dimensions, never fake-size 32px village props',()=>{

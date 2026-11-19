@@ -25,6 +25,22 @@ const previewMode=typeof location!=='undefined' &&
  new URL(import.meta.url).searchParams.get('tenyo-review')==='1';
 // Only the standalone review can select a non-production camera.
 let reviewCamera=1.4;
+let reviewCharacters='legacy';
+// Reproduce the former relative figure sizes as an explicit optional
+// PREVIEW, without adding a runtime per-actor scale or touching hero PNG.
+function previewRecompose(image,factor){
+ const sheet=document.createElement('canvas');
+ sheet.width=240;sheet.height=448;
+ const c=sheet.getContext('2d');c.imageSmoothingEnabled=false;
+ for(let row=0;row<4;row++)for(let frame=0;frame<3;frame++){
+  const sx=frame*80,sy=row*112;
+  c.save();c.beginPath();c.rect(sx,sy,80,112);c.clip();
+  c.drawImage(image,sx,sy,80,112,
+    sx+40*(1-factor),sy+106*(1-factor),80*factor,112*factor);
+  c.restore();
+ }
+ return sheet;
+}
 // A source sheet's 80x112 frame is NOT its actual visible character size.
 // Shirotae and guardians currently occupy about half Hizuki's visible height.
 // For this review alone, nearest-neighbor-recompose each 80x112 frame around
@@ -111,11 +127,19 @@ async function start(){
   ]);
   const allIds=[...ids],allNpcPaths=[...new Set(map.game.residents.map(npc=>npc.asset))];
   const images=Object.fromEntries(allIds.map((id,i)=>[id,loaded[i]]));
-  const npcArt=new Map(allNpcPaths.map((path,i)=>[
-    path,previewMode?reviewNpcFullSize(loaded[allIds.length+i]):loaded[allIds.length+i]
-  ]));
-  images.sanctuary_npc_shirotae=npcArt.get(residents.find(n=>n.id==='shirotae').asset);
-  images.sanctuary_npc_guard=npcArt.get(residents.find(n=>n.id!=='shirotae').asset);
+  const npcOriginal=new Map(allNpcPaths.map((path,i)=>[path,loaded[allIds.length+i]]));
+  const npcExpanded=previewMode
+    ?new Map(allNpcPaths.map((path,i)=>[path,reviewNpcFullSize(loaded[allIds.length+i])]))
+    :npcOriginal;
+  const halfHero=previewMode?previewRecompose(hero,.52):hero;
+  const whiteAsset=residents.find(n=>n.id==='shirotae').asset;
+  const guardAsset=residents.find(n=>n.id!=='shirotae').asset;
+  function useReviewFigures(){
+    const art=previewMode&&reviewCharacters==='largeNpc'?npcExpanded:npcOriginal;
+    images.sanctuary_npc_shirotae=art.get(whiteAsset);
+    images.sanctuary_npc_guard=art.get(guardAsset);
+  }
+  useReviewFigures();
 
   const world=document.createElement('canvas');
   world.width=map.width*map.tileSize;
@@ -216,7 +240,8 @@ async function start(){
     for(let i=0;i<residents.length;i++)
       residentObjects[i].dir=facing[residents[i].face??0]??'d';
     SMRender.draw(wc,paintedMap,{
-      images,hero,bounds,actor:player,animationTime:now,shadows:true,
+      images,hero:previewMode&&reviewCharacters==='legacy'?halfHero:hero,
+      bounds,actor:player,animationTime:now,shadows:true,
       lighting:true,reflections:true,atmosphere:true,depthOfField:true,
     });
     const width=scene.width,height=scene.height;
@@ -224,8 +249,8 @@ async function start(){
     // The 768px buffer is only a raster resolution. It must NOT set the
     // apparent camera scale; match village/interiors/cove in CSS world pixels.
     const zoom=previewMode?reviewCamera:WORLD_SCENE_ZOOM;
-    // Reproduce the actual pre-11/18 sanctuary camera framing precisely:
-    // legacy ZOOM=1.4 used the fixed 768px buffer, not CSS pixels.
+    // Reproduce the earlier sanctuary camera framing precisely:
+    // historic camera factor 1.4 used the fixed 768px buffer, not CSS pixels.
     // The preview-only 1.0 option uses a true CSS pixel/world ratio.
     const worldPixelsPerPixel=previewMode&&reviewCamera===1.4
       ?VIEWPORT_EDGE/(Math.max(width,height)*1.4)
@@ -244,7 +269,9 @@ async function start(){
       world.width/worldPixelsPerPixel,world.height/worldPixelsPerPixel);
     scene.dataset.zoom=String(zoom);
     scene.dataset.actorFrame=WORLD_ACTOR_FRAME.join('x');
-    scene.dataset.reviewNpcArt=previewMode?'native-recomposed-2x':'original';
+    scene.dataset.reviewNpcArt=previewMode&&reviewCharacters==='largeNpc'
+      ?'native-recomposed-2x':'original';
+    scene.dataset.reviewCharacters=previewMode?reviewCharacters:'production';
     const foot=center([state.x,state.y]);
     const npc=residentInFront(foot.x,foot.y,state.face,residents);
     dialogue.update(npc,foot.x,foot.y);
@@ -279,6 +306,15 @@ async function start(){
         if(![1,1.4].includes(requested))return;
         reviewCamera=requested;
         for(const candidate of document.querySelectorAll('[data-tenyo-camera]'))
+          candidate.setAttribute('aria-pressed',String(candidate===button));
+      });
+    }
+    for(const button of document.querySelectorAll('[data-tenyo-figures]')){
+      button.addEventListener('click',()=>{
+        if(!['legacy','largeNpc'].includes(button.dataset.tenyoFigures))return;
+        reviewCharacters=button.dataset.tenyoFigures;
+        useReviewFigures();
+        for(const candidate of document.querySelectorAll('[data-tenyo-figures]'))
           candidate.setAttribute('aria-pressed',String(candidate===button));
       });
     }

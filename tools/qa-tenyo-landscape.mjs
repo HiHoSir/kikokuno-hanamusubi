@@ -87,8 +87,13 @@ try{
   issues.push('Pages preview does not load uniform full-size characters '+JSON.stringify(beforeReview));
  await review.screenshot({path:'artifacts/tenyo-native-characters-preview.png'});
  const art=await review.evaluate(()=>document.querySelector('#scene').dataset.reviewNpcArt);
- if(art!=='native-recomposed-2x')
-  issues.push('preview should compare actual NPC art proportions, not just 80x112 empty frames');
+ if(art!=='original')
+  issues.push('preview default should be the previous actual character proportions'); 
+ await review.locator('[data-tenyo-figures="largeNpc"]').click();
+ await review.waitForFunction(()=>document.querySelector('#scene')?.dataset.reviewNpcArt==='native-recomposed-2x',{timeout:5000});
+ await review.screenshot({path:'artifacts/tenyo-large-npc-contrast.png'});
+ await review.locator('[data-tenyo-figures="legacy"]').click();
+ await review.waitForFunction(()=>document.querySelector('#scene')?.dataset.reviewCharacters==='legacy',{timeout:5000});
  await review.locator('[data-tenyo-camera="1"]').click();
  await review.waitForFunction(()=>document.querySelector('#scene')?.dataset.zoom==='1',{timeout:5000});
  await review.screenshot({path:'artifacts/tenyo-native-characters-zoom1.png'});

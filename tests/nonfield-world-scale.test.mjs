@@ -29,7 +29,8 @@ test('village, rooms and cove use stable world scale without district zoom',()=>
  // Tenyo uses the SAME CSS/world ratio as village, rooms and sea cove.
  // Its 768px intermediate buffer is not a camera magnification setting.
  assert.match(tenyo,/WORLD_SCENE_ZOOM/);
- assert.match(tenyo,/Math\.max\(width,height\)\*WORLD_SCENE_ZOOM/);
+ assert.match(tenyo,/const zoom=previewMode\?reviewCamera:WORLD_SCENE_ZOOM/);
+ assert.match(tenyo,/Math\.max\(width,height\)\*zoom/);
  assert.doesNotMatch(tenyo,/ZOOM=1\.4|heroDisplayScale/);
  assert.doesNotMatch(cove,/hamletCameraZoom|basePixelStep|1\.18|0\.65/);
  const scene=JSON.parse(source('data/maps/tenyo-sanctuary/scene.json'));

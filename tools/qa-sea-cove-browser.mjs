@@ -290,6 +290,18 @@ try{
    'real on-screen movement reaches expanded fishing worksite');
  assert.ok(hamletView.x<950,'worksite route should use the central house/net corridor');
  await review.screenshot({path:'artifacts/sea-cove-hamlet-worksite.png'});
+ // On a real iPhone the art cannot be judged from a test log. Ensure the
+ // public review has touch-friendly rock/worksite shortcuts and real movement.
+ await review.locator('[data-review-spot="rocks"]').click();
+ const rockShortcut=await review.evaluate(()=>window.KIKOKU_SAVE_SNAPSHOT().position);
+ assert.deepEqual([rockShortcut.x,rockShortcut.y],[710,460],
+   'rock visual review shortcut must place the avatar beside the actual rocks');
+ await review.locator('.viewport').screenshot({path:'artifacts/sea-cove-rocks-near-hero.png'});
+ await review.locator('[data-review-spot="worksite"]').click();
+ const worksiteShortcut=await review.evaluate(()=>window.KIKOKU_SAVE_SNAPSHOT().position);
+ assert.deepEqual([worksiteShortcut.x,worksiteShortcut.y],[884,805],
+   'worksite visual review shortcut must place the avatar between house and net');
+ await review.locator('.viewport').screenshot({path:'artifacts/sea-cove-worksite-near-hero.png'});
  // PSP is the target DISPLAY, not the iPhone's extra-wide browser view.
  // Size the actual content box to 480x272, accounting for whatever border
  // rules the game CSS cascade applies. Do not change runtime camera/terrain.

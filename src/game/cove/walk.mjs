@@ -16,6 +16,13 @@ import {
 // change the player's story, bag, scene checkpoint or persistent game state.
 const previewMode=location.pathname.endsWith('/previews/sea-cove-review/')&&
   new URL(import.meta.url).searchParams.get('cove-review')==='1';
+// Shortcuts only move the local review avatar. They must never write the
+// player's save, alter the real game entry, or change camera/world scaling.
+const previewSpots=Object.freeze({
+ shore:Object.freeze({x:336,y:432,face:1}),
+ rocks:Object.freeze({x:710,y:460,face:3}),
+ worksite:Object.freeze({x:884,y:805,face:0})
+});
 const scene=document.querySelector('#scene');
 const load=document.querySelector('#load');
 const objective=document.querySelector('#objective');
@@ -154,6 +161,13 @@ async function start(){
  const usable=restored&&walk.canStand(restored.x,restored.y)&&!occupied(restored.x,restored.y);
  let x=usable?restored.x:entry.x,y=usable?restored.y:entry.y;
  let face=usable?(restored.face??entry.face):entry.face;
+ if(previewMode){
+  const requested=new URLSearchParams(location.search).get('spot');
+  const spot=previewSpots[requested];
+  if(spot&&walk.canStand(spot.x,spot.y)&&!occupied(spot.x,spot.y)){
+   x=spot.x;y=spot.y;face=spot.face;
+  }
+ }
  let elapsedMs=0,lastFrame=0,distance=0,menuPaused=false,lastRenderedFrame=-1;
  const renderer=createCoveRenderer(scene.getContext('2d',{alpha:false}),images);
  const dialogue=bindDialogue(clearInputs,ended=>{
@@ -241,6 +255,19 @@ async function start(){
    }
    dialogue.open();
  };
+ if(previewMode){
+  for(const button of document.querySelectorAll('[data-review-spot]')){
+   button.addEventListener('click',()=>{
+    const spot=previewSpots[button.dataset.reviewSpot];
+    if(!spot||!walk.canStand(spot.x,spot.y)||occupied(spot.x,spot.y))return;
+    clearInputs();
+    x=spot.x;y=spot.y;face=spot.face;
+    distance=0;lastRenderedFrame=-1;
+    for(const other of document.querySelectorAll('[data-review-spot]'))
+     other.setAttribute('aria-pressed',String(other===button));
+   });
+  }
+ }
  document.querySelector('#action-a')?.addEventListener('click',interact);
  document.querySelector('#action-b')?.addEventListener('click',()=>dialogue.advance());
  for(const button of buttons){

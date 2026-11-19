@@ -40,6 +40,10 @@ button:active,button.held,button[aria-pressed=true]{background:#e8cc8b;color:#27
 .village-hud{position:absolute;z-index:2;top:8px;left:8px;max-width:min(80%,340px);padding:7px 11px;border:1px solid #81785c;border-radius:5px;background:rgba(18,25,20,.83);display:grid;gap:3px;pointer-events:none;font-size:12px}
 .village-hud #objective{margin:0;font-size:12px;line-height:1.4;color:#f1ead9}
 .village-hud #shell-hint{margin:0;font-size:11px;line-height:1.35;color:#e9ce95}
+.review-shortcuts{position:absolute;top:7px;right:7px;z-index:4;display:flex;gap:4px;max-width:60%;flex-wrap:wrap;justify-content:flex-end}
+.review-shortcuts button{padding:4px 7px;min-height:27px;border-radius:4px;font-size:11px;white-space:nowrap;background:#273c39e8}
+.viewport .village-hud{max-width:min(45%,255px)}
+@media(max-width:600px){.review-shortcuts{gap:2px}.review-shortcuts button{padding:3px 5px;font-size:10px}}
 </style>
 <link rel="stylesheet" href="../../src/game/village/dialogue.css?v=dotgothic16">
 <link rel="stylesheet" href="../../src/game/ui/controls.css?v=dotgothic16">
@@ -55,6 +59,11 @@ button:active,button.held,button[aria-pressed=true]{background:#e8cc8b;color:#27
 <h1 class="screen-reader">海の入り江</h1>
 <section class="viewport" aria-label="海の入り江">
 <div class="village-hud"><p id="objective" aria-live="polite">GitHub Pages：波が動く浜辺を歩いて確認</p><p id="shell-hint" aria-live="polite">貝殻を調べる：A</p></div>
+<nav class="review-shortcuts" aria-label="外観検査の移動先">
+ <button type="button" data-review-spot="shore" aria-label="波打ち際で検査">波打ち際</button>
+ <button type="button" data-review-spot="rocks" aria-label="岩場で緋月との大きさを比較">岩場</button>
+ <button type="button" data-review-spot="worksite" aria-label="漁師小屋と漁具の大きさを比較">漁師小屋</button>
+</nav>
 <canvas id="scene"></canvas><p id="load">海の入り江を読み込んでいます</p>
 <button id="talk" type="button" hidden>話す</button>
 <section id="dialogue" aria-labelledby="speaker" hidden>

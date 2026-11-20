@@ -116,7 +116,7 @@ export function inspectRegion(image, rect) {
   const { x, y, width, height } = rect;
   requireThat(x >= 0 && y >= 0 && width > 0 && height > 0 &&
     x + width <= image.width && y + height <= image.height, 'Region outside image');
-  let colored = 0, translucent = 0, isolated = 0;
+  let colored = 0, translucent = 0, visiblyTranslucent = 0, nearOpaque = 0, isolated = 0;
   let minX = width, minY = height, maxX = -1, maxY = -1;
   const colors = new Map();
   for (let iy = 0; iy < height; iy++) for (let ix = 0; ix < width; ix++) {
@@ -125,6 +125,10 @@ export function inspectRegion(image, rect) {
     if (!a) continue;
     colored++;
     if (a < 255) translucent++;
+    // 240..254 is almost opaque (e.g. alpha=252/255); report it
+    // separately from transparencies that can visibly fade a sprite.
+    if (a >= 240 && a < 255) nearOpaque++;
+    if (a > 0 && a < 240) visiblyTranslucent++;
     minX = Math.min(minX, ix); maxX = Math.max(maxX, ix);
     minY = Math.min(minY, iy); maxY = Math.max(maxY, iy);
     const rgb = Array.from(image.rgba.subarray(off, off + 3))
@@ -143,6 +147,8 @@ export function inspectRegion(image, rect) {
       bottom: height - 1 - maxY } : null,
     visiblePixels: colored,
     translucentPixels: translucent,
+    visiblyTranslucentPixels: visiblyTranslucent,
+    nearOpaquePixels: nearOpaque,
     opaqueCoverage: Number((colored / (width * height)).toFixed(4)),
     opaqueColorCount: colors.size,
     isolatedPixels: isolated,
@@ -205,7 +211,8 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
       for (const [i, r] of result.regions.entries()) {
         console.log('[' + r.row + ',' + r.column + '] visible=' + r.visiblePixels +
           ' bounds=' + JSON.stringify(r.visibleBounds) + ' colors=' + r.opaqueColorCount +
-          ' partialAlpha=' + r.translucentPixels + ' isolated=' + r.isolatedPixels +
+          ' partialAlpha=' + r.translucentPixels + ' visibleTranslucent=' +
+          r.visiblyTranslucentPixels + ' nearOpaque=' + r.nearOpaquePixels + ' isolated=' + r.isolatedPixels +
           (result.comparison ? ' changed=' + result.comparison[i].changedPixels : ''));
       }
       console.log('These are measurement diagnostics, NOT automatic style-approval results.');

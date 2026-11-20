@@ -44,6 +44,8 @@ test('reports RGBA palette, opacity, transparent margins and per-frame visible b
   assert.deepEqual(report.visibleBounds, { x: 0, y: 0, width: 2, height: 2 });
   assert.equal(report.visiblePixels, 3);
   assert.equal(report.translucentPixels, 1);
+  assert.equal(report.visiblyTranslucentPixels, 1);
+  assert.equal(report.nearOpaquePixels, 0);
   assert.equal(report.opaqueColorCount, 3);
   assert.equal(report.opaqueCoverage, 0.75);
 });
@@ -81,4 +83,15 @@ test('rejects corrupt and unsupported PNG data explicitly', () => {
   assert.throws(() => decodePng(Buffer.from('hello')), /signature/);
   assert.throws(() => decodePng(png(1, 1, 6, 8, [5, 1, 2, 3, 4])), /filter/);
   assert.throws(() => decodePng(png(1, 1, 6, 16, [0, 1, 2, 3, 4, 5, 6, 7, 8])), /Unsupported/);
+});
+
+
+test('nearly opaque indexed alpha 252 is distinguished from visible fading', () => {
+  const image = decodePng(png(2, 1, 3, 8, [0, 0, 1],
+    [255, 0, 0, 0, 0, 255], [252, 101]));
+  const item = inspectRegion(image, { x: 0, y: 0, width: 2, height: 1 });
+  assert.equal(item.visiblePixels, 2);
+  assert.equal(item.translucentPixels, 2);
+  assert.equal(item.nearOpaquePixels, 1);
+  assert.equal(item.visiblyTranslucentPixels, 1);
 });

@@ -1969,7 +1969,7 @@
         "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
         "path": "assets/settlement-editor/tenyo-gate-v1/tenyo_gate_6x4_v3.png"
       },
-      "usage": "tenyo-water-sanctuary-production",
+      "usage": "tenyo-sanctuary-legacy-review-only",
       "gitBlobSha": "aab305c01876c6a7f0c1a5d2ee3fc789ffb3a7ea"
     },
     {
@@ -1995,7 +1995,7 @@
         "commit": "26136fef4e73bcea60a73edf4e02cd252b3976d0",
         "path": "assets/settlement-editor/tenyo-gate-v1/stone_lantern_1x2.png"
       },
-      "usage": "tenyo-water-sanctuary-production",
+      "usage": "tenyo-sanctuary-legacy-review-only",
       "gitBlobSha": "b12adaa9ab2dfcf728a1dcc015a0a2b3e548ca65"
     },
     {
@@ -2556,7 +2556,7 @@
       "type": "object",
       "path": "assets/tenyo-rebuild-v1/original-atlas.png",
       "status": "approved",
-      "usage": "tenyo-sanctuary-review-only",
+      "usage": "tenyo-sanctuary-production-and-legacy-review",
       "dimensions": {
         "width": 320,
         "height": 224
@@ -2566,7 +2566,7 @@
         "kind": "original-generated-pixel-art",
         "source": "five distinct original shrine object illustrations, cropped and palette reduced; Tengai Makyou ZERO used only as structural reference"
       },
-      "approvalNote": "Registry approval to run the preview only; iPhone artistic appearance is NOT user-approved."
+      "approvalNote": "Provisional in-game adoption on 2026-11-20 after user accepted the new art/depth as tolerable and requested main integration; further visual polish is not yet approved. Preview continues to allow legacy comparison."
     }
   ],
   "designReferences": [

@@ -57,8 +57,7 @@ test('review signals distinguish visible alpha from nearly-opaque alpha', () => 
 
 
 test('alpha 252 is near opaque, not visually faded', () => {
-  const nearly = { ...measureSamples(() => readFileSync('assets/characters/npc/shirotae-walk-4dir-80x112.png'))[0],
-    group: 'nonfield-actor',
+  const nearly = { group: 'nonfield-actor',
     path: 'assets/characters/npc/example.png',
     visiblePixels: 100, partiallyTransparentPixels: 90,
     visiblyTranslucentPixels: 0, nearOpaquePixels: 90 };

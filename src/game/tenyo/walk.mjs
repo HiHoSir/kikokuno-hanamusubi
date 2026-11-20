@@ -386,6 +386,10 @@ async function start(){
   }
 
   if(previewMode){
+    const artNote=document.querySelector('.review-note');
+    if(artNote)artNote.textContent=reviewRebuild
+      ?'新規スプライト候補（未採用）／足元のみ前景描画'
+      :'従来スプライトとの比較／新規前景描画は無効';
     for(const button of document.querySelectorAll('[data-tenyo-art]')){
       const choice=button.dataset.tenyoArt;
       button.setAttribute('aria-pressed',String((choice==='rebuild')===reviewRebuild));

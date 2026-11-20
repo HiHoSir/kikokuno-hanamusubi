@@ -53,7 +53,7 @@ test('Shirotae and both shrine guardians use exactly the same foot depth as Hizu
  const render=readFileSync('src/game/tenyo/rendering/render.js','utf8');
  // The adopted Tenyo override must never recalculate an NPC's depth using
  // the image's rectangular bottom (that is only for scenery).
- assert.match(render,/let depth=t\\.character\\?item\\.depth:tenyoVisibleFoot\\(v\\)/);
+ assert.ok(render.includes('let depth=t.character?item.depth:tenyoVisibleFoot(v);'));
  const C=context.SMCatalog;
  for(const npc of m.game.residents){
   const templateId=npc.id==='shirotae'?'sanctuary_npc_shirotae':'sanctuary_npc_guard';

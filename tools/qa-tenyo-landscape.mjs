@@ -174,12 +174,12 @@ try{
  await review.locator('.review-panel summary').click();
  await review.locator('[data-tenyo-depth="legacy"]').click();
  await review.waitForFunction(()=>document.querySelector('#load')?.hidden===true &&
-  document.querySelector('#scene')?.dataset.sceneDepth==='production-depth',{timeout:65000});
+  document.querySelector('#scene')?.dataset.sceneDepth==='previous-depth',{timeout:65000});
  await review.locator('.review-panel summary').click();
  await review.locator('[data-tenyo-spot="waterfallOverlap"]').click();
  await review.waitForFunction(()=>document.querySelector('#scene')?.dataset.x==='631.30'&&document.querySelector('#scene')?.dataset.y==='158.00',{timeout:5000});
  await review.locator('.review-panel summary').click();
- await review.screenshot({path:'artifacts/tenyo-production-depth-waterfall-overlap.png'});
+ await review.screenshot({path:'artifacts/tenyo-previous-depth-waterfall-overlap.png'});
  await review.locator('.review-panel summary').click();
  await review.locator('[data-tenyo-depth="grounded"]').click();
  await review.waitForFunction(()=>document.querySelector('#load')?.hidden===true &&

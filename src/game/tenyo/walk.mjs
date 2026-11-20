@@ -365,7 +365,7 @@ async function start(){
     scene.dataset.previewOcclusion='false';
     scene.dataset.spriteSet=reviewRebuild?'tenyo-rebuild-v1':'legacy';
     scene.dataset.sceneDepth=reviewSceneDepth?'grounded-two-plane':
-      reviewRebuild?'old-foreground-lip-disabled':'production';
+      reviewRebuild?'production-depth':'production';
     scene.dataset.collisionProfile=collider.profile;
     scene.dataset.sequelSealed=String(collider.locks.length===1&&
       collider.locks[0].id==='guardian-sequel-passage');

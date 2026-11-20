@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { STYLE_REFERENCES, measureSamples, formatMarkdown, reviewSignals } from '../tools/report-graphic-style.mjs';
+import { STYLE_REFERENCES, measureSamples, formatMarkdown, reviewSignals, tenyoHeroArtFactor } from '../tools/report-graphic-style.mjs';
 import { decodePng, inspectRegion } from '../tools/analyze-sprite.mjs';
 
 // This reports facts about current images, not automatic subjective style acceptance.
@@ -88,6 +88,22 @@ test('production Tenyo uses exactly the measured atlas crops and visual-foot row
   const recorded = measureSamples().filter(item => item.group === 'tenyo-production');
   assert.equal(recorded.length, samples.length);
   assert.ok(recorded.every(item => item.regionPx));
+});
+
+test('Tenyo NPC sizes are compared to in-game approved 0.52 hero display, not raw atlas height', () => {
+  assert.equal(tenyoHeroArtFactor(), 0.52);
+  assert.equal(tenyoHeroArtFactor(() => 'const TENYO_HERO_ART_FACTOR=0.5;'), 0.5);
+  assert.throws(() => tenyoHeroArtFactor(() => 'unset'), /not found/);
+  const rows = measureSamples();
+  const heroHeight = rows.find(x => x.path === 'assets/characters/hizuki/walk-4dir-80x112.png')
+    .frontIdle.visibleBounds.height;
+  assert.equal(heroHeight, 87);
+  for (const npc of rows.filter(x => x.group === 'tenyo-actor')) {
+    const height = npc.frontIdle.visibleBounds.height;
+    assert.ok(height / (heroHeight * tenyoHeroArtFactor()) > 0.95, npc.path);
+    assert.ok(height / (heroHeight * tenyoHeroArtFactor()) < 1.15, npc.path);
+    assert.equal(reviewSignals(rows).some(s => s.path === npc.path && s.kind === 'human-height'), false);
+  }
 });
 
 test('Shirotae and guards are not mistakenly called faded for near-opaque palette entries', () => {

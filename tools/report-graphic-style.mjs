@@ -56,6 +56,35 @@ export function measureSamples(readBytes = p => readFileSync(resolve(repoRoot, p
     return fields;
   });
 }
+
+// Advisory signals derived from *measured* current assets, never acceptance gates.
+export function reviewSignals(rows) {
+  const heroHeight = rows.find(r => r.path ===
+    'assets/characters/hizuki/walk-4dir-80x112.png')?.frontIdle?.visibleBounds?.height;
+  const notes = [];
+  for (const r of rows) {
+    if (r.group === 'review-only') continue;
+    const height = r.frontIdle?.visibleBounds?.height;
+    if (r.group === 'nonfield-actor' && heroHeight && height && height / heroHeight < 0.7) {
+      notes.push({ path: r.path, kind: 'human-height', detail:
+        'Front idle visible height ' + height + 'px = ' + Math.round(height / heroHeight * 100) +
+        '% of Hizuki ' + heroHeight + 'px. Confirm intended age/stature and in-game scale.' });
+    }
+    if (r.visiblePixels && r.partiallyTransparentPixels / r.visiblePixels > 0.75) {
+      notes.push({ path: r.path, kind: 'partial-alpha', detail:
+        'Partly transparent pixels account for ' +
+        Math.round(r.partiallyTransparentPixels / r.visiblePixels * 100) +
+        '% of visible pixels. Confirm deliberate translucency, not accidental fade.' });
+    }
+    if (r.group === 'field' && r.imagePx[0] === 32 && r.imagePx[1] === 32 &&
+        r.paletteColors > 512) {
+      notes.push({ path: r.path, kind: 'dense-palette', detail:
+        r.paletteColors + ' distinct RGB values on a 32×32 field tile; compare dot density with approved adjacent tiles.' });
+    }
+  }
+  return notes;
+}
+
 function cell(v) {
   return v == null ? '—' : String(v);
 }
@@ -77,6 +106,12 @@ export function formatMarkdown(rows) {
     '% | ' + r.partiallyTransparentPixels + ' | ' + bounds(r.visibleBounds) +
     ' | ' + (r.frontIdle ? bounds(r.frontIdle.visibleBounds) : '—') + ' |'
   );
+  const flags = reviewSignals(rows);
+  out.push('', '## Review signals (advisory; no automatic rejection)', '');
+  if (flags.length) {
+    out.push('| Existing asset | Signal | Why to check |', '|---|---|---|');
+    for (const f of flags) out.push('| ' + f.path + ' | ' + f.kind + ' | ' + f.detail + ' |');
+  } else out.push('No advisory signals among these samples.');
   out.push('', 'Notes: Compare within matching roles and approved assets only. Perspective, outline style, depth, feet anchors, animation, and shadows still need visual/gameplay checks.');
   return out.join('\n');
 }

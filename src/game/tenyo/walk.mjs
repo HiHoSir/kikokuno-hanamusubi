@@ -394,7 +394,7 @@ async function start(){
     if(artNote)artNote.textContent=reviewSceneDepth
       ?'新規素材・接地点順の遮蔽（未採用）／滝のしぶきは別レイヤー'
       :reviewRebuild
-      ?'新規素材・旧描画方式（比較専用）'
+      ?'新規素材・本編と同じ描画順（比較専用）'
       :'従来素材・本編と同じ描画方式';
     for(const button of document.querySelectorAll('[data-tenyo-art]')){
       const choice=button.dataset.tenyoArt;

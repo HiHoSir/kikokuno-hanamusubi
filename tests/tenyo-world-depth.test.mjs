@@ -1,11 +1,17 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {createRequire} from 'node:module';
+import vm from 'node:vm';
 
-const require=createRequire(import.meta.url);
-const R=require('../src/game/tenyo/rendering/render.js');
-const M=require('../src/game/tenyo/rendering/model.js');
+// Real game UMD modules depend on browser globals and are evaluated here
+// in the same dependency order. No ESM/CJS module-loader assumptions.
+const context=vm.createContext({});
+for(const name of ['catalog','autotile','model','render']){
+ const file='src/game/tenyo/rendering/'+name+'.js';
+ vm.runInContext(readFileSync(file,'utf8'),context,{filename:file});
+}
+const R=context.SMRender;
+const M=context.SMModel;
 const m=M.parse(readFileSync('data/maps/tenyo-sanctuary/scene.json','utf8'));
 const bounds=Object.fromEntries(['d','u','r','l'].map(k=>[k,{village:true}]));
 const depthAt=(id,heroY)=>{

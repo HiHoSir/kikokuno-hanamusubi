@@ -164,7 +164,7 @@ try{
  await review.screenshot({path:'artifacts/tenyo-waterfall-walking-occlusion.png'});
  await review.locator('.review-panel summary').click();
  await review.locator('[data-tenyo-spot="waterfallOverlap"]').click();
- await review.waitForFunction(()=>document.querySelector('#scene')?.dataset.x==='631.30',{timeout:5000});
+ await review.waitForFunction(()=>document.querySelector('#scene')?.dataset.x==='631.30'&&document.querySelector('#scene')?.dataset.y==='158.00',{timeout:5000});
  await review.locator('.review-panel summary').click();
  await review.waitForTimeout(90);
  await review.screenshot({path:'artifacts/tenyo-grounded-waterfall-overlap.png'});
@@ -175,7 +175,7 @@ try{
   document.querySelector('#scene')?.dataset.sceneDepth==='old-foreground-lip-disabled',{timeout:65000});
  await review.locator('.review-panel summary').click();
  await review.locator('[data-tenyo-spot="waterfallOverlap"]').click();
- await review.waitForFunction(()=>document.querySelector('#scene')?.dataset.x==='631.30',{timeout:5000});
+ await review.waitForFunction(()=>document.querySelector('#scene')?.dataset.x==='631.30'&&document.querySelector('#scene')?.dataset.y==='158.00',{timeout:5000});
  await review.locator('.review-panel summary').click();
  await review.screenshot({path:'artifacts/tenyo-production-depth-waterfall-overlap.png'});
  await review.locator('.review-panel summary').click();

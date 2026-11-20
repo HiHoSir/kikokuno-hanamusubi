@@ -50,13 +50,15 @@ try{
      return {window:[innerWidth,innerHeight],canvas:[canvas.width,canvas.height],canvasRect:rect(canvas),
        fieldRect:rect(parent),pad:rect(pad),position:canvas.dataset.x+','+canvas.dataset.y,
        gate:getComputedStyle(document.querySelector('#landscape-required')).display,loading:doc.querySelector('#load').hidden,
-       zoom:canvas.dataset.zoom,actorFrame:canvas.dataset.actorFrame};
+       zoom:canvas.dataset.zoom,actorFrame:canvas.dataset.actorFrame,
+       spriteSet:canvas.dataset.spriteSet,sceneDepth:canvas.dataset.sceneDepth};
    });
    results.push(data);
    const actual=data.canvas[0]/data.canvas[1],expected=data.canvasRect.width/data.canvasRect.height;
    if(!data.loading||data.gate!=='none'||Math.abs(actual-expected)>.015||
       data.canvasRect.width>data.fieldRect.width+2||data.canvasRect.height>data.fieldRect.height+2||
       data.position!==before.position||data.zoom!=='1'||data.actorFrame!=='80x112'||
+      data.spriteSet!=='tenyo-rebuild-v1'||data.sceneDepth!=='grounded-two-plane'||
       data.pad.y<0||data.pad.bottom>height+2)
      issues.push('landscape '+width+'x'+height+' shrine viewport mismatch: '+JSON.stringify(data));
    await page.screenshot({path:'artifacts/tenyo-'+width+'x'+height+'.png',fullPage:true});
@@ -172,12 +174,12 @@ try{
  await review.locator('.review-panel summary').click();
  await review.locator('[data-tenyo-depth="legacy"]').click();
  await review.waitForFunction(()=>document.querySelector('#load')?.hidden===true &&
-  document.querySelector('#scene')?.dataset.sceneDepth==='production-depth',{timeout:65000});
+  document.querySelector('#scene')?.dataset.sceneDepth==='previous-depth',{timeout:65000});
  await review.locator('.review-panel summary').click();
  await review.locator('[data-tenyo-spot="waterfallOverlap"]').click();
  await review.waitForFunction(()=>document.querySelector('#scene')?.dataset.x==='631.30'&&document.querySelector('#scene')?.dataset.y==='158.00',{timeout:5000});
  await review.locator('.review-panel summary').click();
- await review.screenshot({path:'artifacts/tenyo-production-depth-waterfall-overlap.png'});
+ await review.screenshot({path:'artifacts/tenyo-previous-depth-waterfall-overlap.png'});
  await review.locator('.review-panel summary').click();
  await review.locator('[data-tenyo-depth="grounded"]').click();
  await review.waitForFunction(()=>document.querySelector('#load')?.hidden===true &&

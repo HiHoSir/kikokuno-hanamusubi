@@ -33,8 +33,8 @@ const previewMode=typeof location!=='undefined' &&
 let reviewCamera=TENYO_APPROVED_CAMERA;
 let showCollision=false;
 let reviewCharacters='legacy';
-// Only the walking preview may opt into brand-new original pixel art.
-// These atlas coordinates keep the game's native sprite dimensions unchanged.
+// Approved shrine sprites are now shared by the game and its walking preview.
+// These atlas coordinates keep the native sprite dimensions unchanged.
 const REBUILD_RECTS={
  sanctuary_fall_v2:[0,0,128,160],
  tenyo_water_gate:[128,0,192,128],
@@ -54,11 +54,13 @@ const REBUILD_VISUAL_FOOT_ROWS={
  rock_island_lantern_base_mirror:58,
  tenyo_stone_lantern:56
 };
-const reviewRebuild=previewMode &&
+// Normal gameplay always uses the reviewed art and grounded occlusion.
+// Only the isolated preview can select the former art/depth for comparison.
+const useRebuiltArt=!previewMode ||
  new URL(location.href).searchParams.get('sprites')!=='legacy';
-const reviewSceneDepth=reviewRebuild &&
- new URL(location.href).searchParams.get('depth')!=='legacy';
-if(reviewRebuild){
+const useGroundedDepth=useRebuiltArt && (!previewMode ||
+ new URL(location.href).searchParams.get('depth')!=='legacy');
+if(useRebuiltArt){
  for(const [id,rect] of Object.entries(REBUILD_RECTS)){
   const template=globalThis.SMCatalog.byId[id];
   template.sourceRect=rect.slice();
@@ -123,7 +125,7 @@ async function image(path){
 function sourceIdToAsset(id){
   // Original authored IDs remain the renderer's object identifiers.
   // The new repository uses one adopted file per ID with descriptive names.
-  if(reviewRebuild&&Object.hasOwn(REBUILD_RECTS,id))
+  if(useRebuiltArt&&Object.hasOwn(REBUILD_RECTS,id))
    return 'assets/tenyo-rebuild-v1/original-atlas.png?v=tenyo-rebuild-atlas24-1';
   return 'assets/tenyo/'+id.replaceAll('_','-').toLowerCase()+'.png?v=tenyo-water-art';
 }
@@ -287,7 +289,7 @@ async function start(){
       images,hero:previewMode&&reviewCharacters==='largeNpc'?hero:halfHero,
       bounds,actor:player,animationTime:now,shadows:true,
       lighting:true,reflections:true,atmosphere:true,depthOfField:true,
-      previewSceneDepth:reviewSceneDepth,
+      tenyoSceneDepth:useGroundedDepth,
     });
     const width=scene.width,height=scene.height;
     const {clientWidth,clientHeight}=scene.parentElement;
@@ -378,9 +380,9 @@ async function start(){
     scene.dataset.y=String(state.y.toFixed(2));
     scene.dataset.movementUnit='world-pixels';
     scene.dataset.previewOcclusion='false';
-    scene.dataset.spriteSet=reviewRebuild?'tenyo-rebuild-v1':'legacy';
-    scene.dataset.sceneDepth=reviewSceneDepth?'grounded-two-plane':
-      reviewRebuild?'production-depth':'production';
+    scene.dataset.spriteSet=useRebuiltArt?'tenyo-rebuild-v1':'legacy';
+    scene.dataset.sceneDepth=useGroundedDepth?'grounded-two-plane':
+      useRebuiltArt?'previous-depth':'previous-art-and-depth';
     scene.dataset.collisionProfile=collider.profile;
     scene.dataset.sequelSealed=String(collider.locks.length===1&&
       collider.locks[0].id==='guardian-sequel-passage');
@@ -406,16 +408,16 @@ async function start(){
 
   if(previewMode){
     const artNote=document.querySelector('.review-note');
-    if(artNote)artNote.textContent=reviewSceneDepth
-      ?'新規素材・接地点順の遮蔽（未採用）／滝のしぶきは別レイヤー'
-      :reviewRebuild
-      ?'新規素材・本編と同じ描画順（比較専用）'
-      :'従来素材・本編と同じ描画方式';
+    if(artNote)artNote.textContent=useGroundedDepth
+      ?'本編採用：新素材・接地点順の遮蔽／滝のしぶきは別レイヤー'
+      :useRebuiltArt
+      ?'本編採用素材・旧描画順（比較専用）'
+      :'旧素材・旧描画順（比較専用）';
     for(const button of document.querySelectorAll('[data-tenyo-art]')){
       const choice=button.dataset.tenyoArt;
-      button.setAttribute('aria-pressed',String((choice==='rebuild')===reviewRebuild));
+      button.setAttribute('aria-pressed',String((choice==='rebuild')===useRebuiltArt));
       button.addEventListener('click',()=>{
-        if((choice==='rebuild')===reviewRebuild)return;
+        if((choice==='rebuild')===useRebuiltArt)return;
         const url=new URL(location.href);
         url.searchParams.set('sprites',choice==='rebuild'?'rebuild':'legacy');
         location.search=url.search; // isolated comparison reload; never an in-world route
@@ -423,12 +425,12 @@ async function start(){
     }
     for(const button of document.querySelectorAll('[data-tenyo-depth]')){
       const choice=button.dataset.tenyoDepth;
-      button.disabled=!reviewRebuild;
+      button.disabled=!useRebuiltArt;
       button.setAttribute('aria-pressed',
-        String((choice==='grounded')===reviewSceneDepth));
+        String((choice==='grounded')===useGroundedDepth));
       button.addEventListener('click',()=>{
         const target=choice==='grounded';
-        if(!reviewRebuild||target===reviewSceneDepth)return;
+        if(!useRebuiltArt||target===useGroundedDepth)return;
         const url=new URL(location.href);
         url.searchParams.set('depth',target?'grounded':'legacy');
         location.search=url.search; // preview-only A/B, no story/save change

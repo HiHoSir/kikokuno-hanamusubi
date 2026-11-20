@@ -109,7 +109,7 @@ function reflect(im,src,r,foot){const top=2*foot-r.y-r.height;if(top>=m.height*t
 for(const v of objects){const t=C.byId[v.templateId],im=images[v.templateId];if(!im||t.layer!=='object'||t.autotile||t.id==='sanctuary_horizon_v1'||t.id.startsWith('sanctuary_forest_frame_'))continue;if(t.character){const state={x:v.x,y:v.y,dir:v.dir||'d',frame:v.frame||0},bounds=characterBounds(im);actor(c,state,im,bounds,tile,(ctx,img,sx,sy,sw,sh,x,y,width,height)=>reflect(img,[sx,sy,sw,sh],{x,y,width,height},actorDepth(state,bounds,tile)));continue;}const r=M.visualRect(m,v);reflect(im,t.sourceRect,r,Math.max(r.y+r.height,(v.y+1)*tile));}
 if(!o.forExport&&o.hero&&o.actor&&o.bounds)actor(c,o.actor,o.hero,o.bounds,tile,(ctx,im,sx,sy,sw,sh,x,y,width,height)=>reflect(im,[sx,sy,sw,sh],{x,y,width,height},actorDepth(o.actor,o.bounds,tile)));
 c.restore();}
-// Tenyo original-art review: fixed world-foot depth, not whole-sprite
+// Tenyo adopted original art: fixed world-foot depth, not whole-sprite
 // foreground overrides or an arbitrary clip over a moving character.
 // A gate, torii, rock island and supported lantern each have one physical
 // front contact depth. The falling water alone has two separately painted
@@ -183,13 +183,13 @@ function paintDepthItem(item){
      actorDepth(item.actor,o.bounds,tile),7*tile/32,true));
  }
 }
-if(!o.groundOnly&&o.previewSceneDepth===true){
+if(!o.groundOnly&&o.tenyoSceneDepth===true){
  // Horizon behind the rock-framed shoreline; both behind gameplay objects.
  for(const v of objects.filter(v=>v.templateId==='sanctuary_horizon_v1'))object(v);
  for(const v of objects.filter(v=>v.templateId.startsWith('sanctuary_forest_frame_')))object(v);
  for(const item of tenyoWorldDepthQueue())paintDepthItem(item);
 }else if(!o.groundOnly){
- // Published game and legacy comparison use the established renderer.
+ // Older maps and the old-art comparison retain the established renderer.
  for(const item of depthQueue(m,!o.forExport&&o.hero?o.actor:null,o.bounds))
   paintDepthItem(item);
 }

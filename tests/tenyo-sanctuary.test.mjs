@@ -135,7 +135,7 @@ test('production sanctuary paints its entrance within landscape and portrait vie
     import assert from 'node:assert/strict';
     import {readFileSync} from 'node:fs';
     const viewport={clientWidth:1363,clientHeight:936};
-    let view, actor, resize, nextFrame;
+    let view, actor, resize, nextFrame, chosenDepth;
     const context={setTransform(){},fillRect(){},drawImage(_world,...args){view=args;}};
     const scene={width:768,height:768,parentElement:viewport,dataset:{},getContext:()=>context};
     const load={hidden:false};
@@ -150,7 +150,17 @@ test('production sanctuary paints its entrance within landscape and portrait vie
       addEventListener(){},
     };
     globalThis.SMModel={parse:JSON.parse,collision:()=>new Set()};
-    globalThis.SMRender={actorBounds(){},draw(_context,_map,options){actor=options.actor;}};
+    // The production scene now adopts the same original atlas that the
+    // browser loads through catalog.js. A headless geometry test must
+    // supply the six corresponding catalog templates.
+    globalThis.SMCatalog={byId:Object.fromEntries([
+      'sanctuary_fall_v2','tenyo_water_gate','torii_gate_v2',
+      'rock_island_lantern_base','rock_island_lantern_base_mirror',
+      'tenyo_stone_lantern'
+    ].map(id=>[id,{sourceRect:[]}]))};
+    globalThis.SMRender={actorBounds(){},draw(_context,_map,options){
+      actor=options.actor;chosenDepth=options.tenyoSceneDepth;
+    }};
     globalThis.Image=class{naturalWidth=240;async decode(){}};
     globalThis.Audio=class{};
     globalThis.fetch=async url=>({ok:true,text:async()=>readFileSync(url,'utf8')});
@@ -164,6 +174,9 @@ test('production sanctuary paints its entrance within landscape and portrait vie
     await new Promise(setImmediate);
     assert.equal(load.hidden,true,'first paint completes the loading screen');
     assert.deepEqual([actor.x,actor.y],[13,23]);
+    assert.equal(chosenDepth,true,'new grounded renderer must be active in the game');
+    assert.equal(scene.dataset.spriteSet,'tenyo-rebuild-v1');
+    assert.equal(scene.dataset.sceneDepth,'grounded-two-plane');
     function checkView(){
       const [left,top,dw,dh]=view;
       assert.ok(Math.abs(scene.width/scene.height-viewport.clientWidth/viewport.clientHeight)<0.005,

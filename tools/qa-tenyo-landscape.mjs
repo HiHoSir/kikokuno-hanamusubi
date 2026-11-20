@@ -172,7 +172,7 @@ try{
  await review.locator('.review-panel summary').click();
  await review.locator('[data-tenyo-depth="legacy"]').click();
  await review.waitForFunction(()=>document.querySelector('#load')?.hidden===true &&
-  document.querySelector('#scene')?.dataset.sceneDepth==='old-foreground-lip-disabled',{timeout:65000});
+  document.querySelector('#scene')?.dataset.sceneDepth==='production-depth',{timeout:65000});
  await review.locator('.review-panel summary').click();
  await review.locator('[data-tenyo-spot="waterfallOverlap"]').click();
  await review.waitForFunction(()=>document.querySelector('#scene')?.dataset.x==='631.30'&&document.querySelector('#scene')?.dataset.y==='158.00',{timeout:5000});

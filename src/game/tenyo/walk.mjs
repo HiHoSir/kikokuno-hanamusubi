@@ -45,6 +45,8 @@ const REBUILD_RECTS={
 };
 const reviewRebuild=previewMode &&
  new URL(location.href).searchParams.get('sprites')!=='legacy';
+const reviewSceneDepth=reviewRebuild &&
+ new URL(location.href).searchParams.get('depth')!=='legacy';
 if(reviewRebuild){
  for(const [id,rect] of Object.entries(REBUILD_RECTS))
   globalThis.SMCatalog.byId[id].sourceRect=rect.slice();
@@ -270,7 +272,7 @@ async function start(){
       images,hero:previewMode&&reviewCharacters==='largeNpc'?hero:halfHero,
       bounds,actor:player,animationTime:now,shadows:true,
       lighting:true,reflections:true,atmosphere:true,depthOfField:true,
-      previewFrontLip:reviewRebuild,
+      previewSceneDepth:reviewSceneDepth,
     });
     const width=scene.width,height=scene.height;
     const {clientWidth,clientHeight}=scene.parentElement;
@@ -362,6 +364,8 @@ async function start(){
     scene.dataset.movementUnit='world-pixels';
     scene.dataset.previewOcclusion='false';
     scene.dataset.spriteSet=reviewRebuild?'tenyo-rebuild-v1':'legacy';
+    scene.dataset.sceneDepth=reviewSceneDepth?'grounded-two-plane':
+      reviewRebuild?'old-foreground-lip-disabled':'production';
     scene.dataset.collisionProfile=collider.profile;
     scene.dataset.sequelSealed=String(collider.locks.length===1&&
       collider.locks[0].id==='guardian-sequel-passage');
@@ -387,9 +391,11 @@ async function start(){
 
   if(previewMode){
     const artNote=document.querySelector('.review-note');
-    if(artNote)artNote.textContent=reviewRebuild
-      ?'新規スプライト候補（未採用）／足元のみ前景描画'
-      :'従来スプライトとの比較／新規前景描画は無効';
+    if(artNote)artNote.textContent=reviewSceneDepth
+      ?'新規素材・接地点順の遮蔽（未採用）／滝のしぶきは別レイヤー'
+      :reviewRebuild
+      ?'新規素材・旧描画方式（比較専用）'
+      :'従来素材・本編と同じ描画方式';
     for(const button of document.querySelectorAll('[data-tenyo-art]')){
       const choice=button.dataset.tenyoArt;
       button.setAttribute('aria-pressed',String((choice==='rebuild')===reviewRebuild));
@@ -398,6 +404,19 @@ async function start(){
         const url=new URL(location.href);
         url.searchParams.set('sprites',choice==='rebuild'?'rebuild':'legacy');
         location.search=url.search; // isolated comparison reload; never an in-world route
+      });
+    }
+    for(const button of document.querySelectorAll('[data-tenyo-depth]')){
+      const choice=button.dataset.tenyoDepth;
+      button.disabled=!reviewRebuild;
+      button.setAttribute('aria-pressed',
+        String((choice==='grounded')===reviewSceneDepth));
+      button.addEventListener('click',()=>{
+        const target=choice==='grounded';
+        if(!reviewRebuild||target===reviewSceneDepth)return;
+        const url=new URL(location.href);
+        url.searchParams.set('depth',target?'grounded':'legacy');
+        location.search=url.search; // preview-only A/B, no story/save change
       });
     }
     // Review shortcuts move ONLY the unsaved test avatar to valid authored

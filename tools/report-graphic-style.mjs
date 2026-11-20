@@ -10,8 +10,8 @@ const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 export const STYLE_REFERENCES = Object.freeze([
   { group: 'nonfield-actor', path: 'assets/characters/hizuki/walk-4dir-80x112.png', frame: [80,112] },
   { group: 'nonfield-actor', path: 'assets/characters/npc/villager-walk-4dir-80x112.png', frame: [80,112] },
-  { group: 'nonfield-actor', path: 'assets/characters/npc/shirotae-walk-4dir-80x112.png', frame: [80,112] },
-  { group: 'nonfield-actor', path: 'assets/characters/npc/shrine-guardian-walk-4dir-80x112.png', frame: [80,112] },
+  { group: 'tenyo-actor', path: 'assets/characters/npc/shirotae-walk-4dir-80x112.png', frame: [80,112] },
+  { group: 'tenyo-actor', path: 'assets/characters/npc/shrine-guardian-walk-4dir-80x112.png', frame: [80,112] },
   { group: 'nonfield-actor', path: 'assets/characters/npc/farm-worker-walk-4dir-80x112.png', frame: [80,112] },
   { group: 'nonfield-prop', path: 'assets/village/scene/house-thatch.png' },
   { group: 'nonfield-prop', path: 'assets/village/scene/belltower.png' },
@@ -73,7 +73,16 @@ export function measureSamples(readBytes = p => readFileSync(resolve(repoRoot, p
   });
 }
 
-// Advisory signals derived from *measured* current assets, never acceptance gates.
+// Read the ACTUAL selected Tenyo relative size instead of comparing raw PNG bounds.
+export function tenyoHeroArtFactor(source = () => readFileSync(resolve(repoRoot, 'src/game/tenyo/walk.mjs'), 'utf8')) {
+  const match = source().match(/\bconst TENYO_HERO_ART_FACTOR=([0-9]+(?:\.[0-9]+)?);/);
+  if (!match) throw new Error('Approved Tenyo hero art factor not found');
+  const scale = Number(match[1]);
+  if (!Number.isFinite(scale) || scale <= 0 || scale > 2) throw new Error('Tenyo factor out of range');
+  return scale;
+}
+// Advisory signals derived from *measured* current assets and displayed scale.
+// Never used as an automatic image approval gate.
 export function reviewSignals(rows) {
   const heroHeight = rows.find(r => r.path ===
     'assets/characters/hizuki/walk-4dir-80x112.png')?.frontIdle?.visibleBounds?.height;
@@ -81,10 +90,15 @@ export function reviewSignals(rows) {
   for (const r of rows) {
     if (r.group === 'tenyo-legacy-preview') continue;
     const height = r.frontIdle?.visibleBounds?.height;
-    if (r.group === 'nonfield-actor' && heroHeight && height && height / heroHeight < 0.7) {
-      notes.push({ path: r.path, kind: 'human-height', detail:
-        'Front idle visible height ' + height + 'px = ' + Math.round(height / heroHeight * 100) +
-        '% of Hizuki ' + heroHeight + 'px. Confirm intended age/stature and in-game scale.' });
+    if (['nonfield-actor', 'tenyo-actor'].includes(r.group) && heroHeight && height) {
+      const displayedHeroHeight = heroHeight * (r.group === 'tenyo-actor' ? tenyoHeroArtFactor() : 1);
+      if (height / displayedHeroHeight < 0.7) {
+        notes.push({ path: r.path, kind: 'human-height', detail:
+          'Front idle visible height ' + height + 'px = ' +
+          Math.round(height / displayedHeroHeight * 100) +
+          '% of APPROVED displayed Hizuki ' + displayedHeroHeight.toFixed(1) +
+          'px. Verify intended stature in that area.' });
+      }
     }
     // Only visibly translucent pixels should suggest a faded sprite.
     // Alpha=252 (~99%) is effectively opaque and must not trigger a false alarm.
@@ -113,7 +127,7 @@ export function formatMarkdown(rows) {
   const out = [
     '# Adopted graphic style measurement (diagnostic; not auto-approved)',
     '',
-    'Tenyo production entries are crops from the currently rendered atlas, while tenyo-legacy-preview entries are obsolete comparisons. Colors are distinct RGB values at alpha>0; near-opaque alpha 240..254 is reported separately from visibly translucent alpha 1..239. These are diagnostic measurements, not art approvals.',
+    'Tenyo production entries are crops from the currently rendered atlas, while tenyo-legacy-preview entries are older comparison images. Tenyo NPC heights are checked against the hero as DISPLAYED (approved 0.52 art factor), not raw 80x112 PNG height. Colors are distinct RGB values at alpha>0; near-opaque alpha 240..254 is reported separately from visibly translucent alpha 1..239. These are diagnostic measurements, not art approvals.',
     '',
     '| Group | Existing asset / crop | PNG px | Visible RGB colors | Coverage | Visible alpha 1..239 | Near opaque 240..254 | Visible bounds | Front idle bounds |',
     '|---|---|---:|---:|---:|---:|---:|---|---|'

@@ -18,30 +18,43 @@ export const STYLE_REFERENCES = Object.freeze([
   { group: 'nonfield-prop', path: 'assets/village/objects/tree-sakura-pale.png' },
   { group: 'nonfield-prop', path: 'assets/village/objects/barrel.png' },
   { group: 'nonfield-prop', path: 'assets/village/interiors/furniture.png' },
-  { group: 'nonfield-prop', path: 'assets/tenyo/tenyo-water-gate.png' },
-  { group: 'nonfield-prop', path: 'assets/tenyo/tenyo-stone-lantern.png' },
+  // The older gate/lantern PNGs remain available ONLY for the legacy review switch.
+  // Production loads the cropped rebuilt atlas in src/game/tenyo/walk.mjs.
+  { group: 'tenyo-legacy-preview', path: 'assets/tenyo/tenyo-water-gate.png' },
+  { group: 'tenyo-legacy-preview', path: 'assets/tenyo/tenyo-stone-lantern.png' },
   { group: 'nonfield-prop', path: 'assets/sea-cove/objects/fish-basket-80x74.png' },
   { group: 'field', path: 'assets/characters/hizuki/walk-sd-32.png', frame: [32,32] },
   { group: 'field', path: 'assets/field/terrain/forest-core.png' },
   { group: 'field', path: 'assets/field/terrain/grass-cliff.png' },
   { group: 'field', path: 'assets/field/terrain/water.png' },
-  { group: 'review-only', path: 'assets/tenyo-rebuild-v1/original-atlas.png' }
+  // These are actual runtime crops in REBUILD_RECTS (walk.mjs), not proposed sprites.
+  // Preserve source rectangles so statistics cannot accidentally include neighbors.
+  { group: 'tenyo-production', path: 'assets/tenyo-rebuild-v1/original-atlas.png', name: 'sanctuary_fall_v2', rect: [0,0,128,160] },
+  { group: 'tenyo-production', path: 'assets/tenyo-rebuild-v1/original-atlas.png', name: 'tenyo_water_gate', rect: [128,0,192,128] },
+  { group: 'tenyo-production', path: 'assets/tenyo-rebuild-v1/original-atlas.png', name: 'torii_gate_v2', rect: [128,128,128,96] },
+  { group: 'tenyo-production', path: 'assets/tenyo-rebuild-v1/original-atlas.png', name: 'rock_island_lantern_base', rect: [0,160,96,64] },
+  { group: 'tenyo-production', path: 'assets/tenyo-rebuild-v1/original-atlas.png', name: 'tenyo_stone_lantern', rect: [96,160,32,64] }
 ]);
 
 export function measureSamples(readBytes = p => readFileSync(resolve(repoRoot, p)), samples = STYLE_REFERENCES) {
   return samples.map(sample => {
     const png = decodePng(readBytes(sample.path));
-    const whole = inspectRegion(png, { x: 0, y: 0, width: png.width, height: png.height, row: 0, column: 0 });
+    const [x, y, width, height] = sample.rect ?? [0, 0, png.width, png.height];
+    const whole = inspectRegion(png, { x, y, width, height, row: 0, column: 0 });
     const frames = sample.frame ? frameRegions(png, sample.frame).map(region => inspectRegion(png, region)) : null;
     const idleFront = frames ? frames[0] : null;
     const fields = {
       group: sample.group,
       path: sample.path,
+      name: sample.name ?? null,
+      regionPx: sample.rect ?? null,
       imagePx: [png.width, png.height],
       pngType: png.colorType,
       paletteColors: whole.opaqueColorCount,
       visiblePixels: whole.visiblePixels,
       partiallyTransparentPixels: whole.translucentPixels,
+      visiblyTranslucentPixels: whole.visiblyTranslucentPixels,
+      nearOpaquePixels: whole.nearOpaquePixels,
       visibleCoverage: whole.opaqueCoverage,
       visibleBounds: whole.visibleBounds,
       isolatedPixels: whole.isolatedPixels,
@@ -66,18 +79,20 @@ export function reviewSignals(rows) {
     'assets/characters/hizuki/walk-4dir-80x112.png')?.frontIdle?.visibleBounds?.height;
   const notes = [];
   for (const r of rows) {
-    if (r.group === 'review-only') continue;
+    if (r.group === 'tenyo-legacy-preview') continue;
     const height = r.frontIdle?.visibleBounds?.height;
     if (r.group === 'nonfield-actor' && heroHeight && height && height / heroHeight < 0.7) {
       notes.push({ path: r.path, kind: 'human-height', detail:
         'Front idle visible height ' + height + 'px = ' + Math.round(height / heroHeight * 100) +
         '% of Hizuki ' + heroHeight + 'px. Confirm intended age/stature and in-game scale.' });
     }
-    if (r.visiblePixels && r.partiallyTransparentPixels / r.visiblePixels > 0.75) {
-      notes.push({ path: r.path, kind: 'partial-alpha', detail:
-        'Partly transparent pixels account for ' +
-        Math.round(r.partiallyTransparentPixels / r.visiblePixels * 100) +
-        '% of visible pixels. Confirm deliberate translucency, not accidental fade.' });
+    // Only visibly translucent pixels should suggest a faded sprite.
+    // Alpha=252 (~99%) is effectively opaque and must not trigger a false alarm.
+    if (r.visiblePixels && r.visiblyTranslucentPixels / r.visiblePixels > 0.75) {
+      notes.push({ path: r.path, kind: 'visible-alpha', detail:
+        'Pixels with alpha 1..239 account for ' +
+        Math.round(r.visiblyTranslucentPixels / r.visiblePixels * 100) +
+        '% of visible pixels. Check whether translucency was intended.' });
     }
     if (r.group === 'field' && r.imagePx[0] === 32 && r.imagePx[1] === 32 &&
         r.paletteColors > 512) {
@@ -98,15 +113,17 @@ export function formatMarkdown(rows) {
   const out = [
     '# Adopted graphic style measurement (diagnostic; not auto-approved)',
     '',
-    'Samples listed as review-only are **not approved style references**. Colors are the distinct RGB values among visible pixels (alpha>0). Coverage includes partly translucent pixels. Metrics do not determine aesthetic quality.',
+    'Tenyo production entries are crops from the currently rendered atlas, while tenyo-legacy-preview entries are obsolete comparisons. Colors are distinct RGB values at alpha>0; near-opaque alpha 240..254 is reported separately from visibly translucent alpha 1..239. These are diagnostic measurements, not art approvals.',
     '',
-    '| Group | Existing asset | PNG px | Visible RGB colors | Coverage | Partial alpha | Visible bounds | Front idle bounds (if sheet) |',
-    '|---|---|---:|---:|---:|---:|---|---|'
+    '| Group | Existing asset / crop | PNG px | Visible RGB colors | Coverage | Visible alpha 1..239 | Near opaque 240..254 | Visible bounds | Front idle bounds |',
+    '|---|---|---:|---:|---:|---:|---:|---|---|'
   ];
   for (const r of rows) out.push(
-    '| ' + r.group + ' | ' + r.path + ' | ' + r.imagePx.join('×') +
+    '| ' + r.group + ' | ' + r.path + (r.name ? ' :: ' + r.name : '') +
+    ' | ' + (r.regionPx ? r.regionPx.slice(2).join('×') : r.imagePx.join('×')) +
     ' | ' + cell(r.paletteColors) + ' | ' + (r.visibleCoverage * 100).toFixed(1) +
-    '% | ' + r.partiallyTransparentPixels + ' | ' + bounds(r.visibleBounds) +
+    '% | ' + r.visiblyTranslucentPixels + ' | ' + r.nearOpaquePixels +
+    ' | ' + bounds(r.visibleBounds) +
     ' | ' + (r.frontIdle ? bounds(r.frontIdle.visibleBounds) : '—') + ' |'
   );
   const flags = reviewSignals(rows);

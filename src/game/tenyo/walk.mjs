@@ -424,7 +424,7 @@ async function start(){
     const spots={
       gate:{x:416,y:376,face:1},
       waterfall:{x:592,y:176,face:2},
-      waterfallOverlap:{x:631.3,y:176,face:2}
+      waterfallOverlap:{x:631.3,y:158,face:2}
     };
     for(const button of document.querySelectorAll('[data-tenyo-spot]')){
       button.addEventListener('click',()=>{

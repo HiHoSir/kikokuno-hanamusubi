@@ -40,7 +40,7 @@ test('the waterfall and gate never reorder their complete image over the hero',(
  assert.match(render,/function tenyoWorldDepthQueue/);
  assert.match(render,/section:'cliff'/);
  assert.match(render,/section:'splash'/);
- assert.match(render,/depth:item.depth\+16\*tile\/32/);
+ assert.match(render,/depth:r.y\+t.previewVisualFootRow\*scaleY/);
  assert.match(render,/if\(!o.groundOnly&&o.previewSceneDepth===true\)/);
  assert.doesNotMatch(render,/paintContactLip|previewFrontLip|reviewLipHeights/);
  assert.doesNotMatch(render,/foregroundOcclusion/);

@@ -21,7 +21,8 @@ test('production shrine and mobile preview share approved new sprite atlas, with
  const review=read('previews/tenyo-scale-review/index.html');
  const walk=read('src/game/tenyo/walk.mjs');
  assert.match(game,/walk\.mjs\?v=fb40c1b-tenyo-main-depth-v1/);
- assert.match(game,/render\.js\?v=tenyo-main-depth-v1/);
+ assert.match(game,/render\.js\?v=tenyo-npc-actor-depth-v2/);
+ assert.match(review,/render\.js\?v=tenyo-npc-actor-depth-v2/);
  assert.match(review,/data-tenyo-art="rebuild"/);
  assert.match(review,/data-tenyo-art="legacy"/);
  assert.match(walk,/const useRebuiltArt=!previewMode \|\|/);

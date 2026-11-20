@@ -141,7 +141,10 @@ function tenyoWorldDepthQueue(){
     depth:r.y+t.previewVisualFootRow*scaleY});
   }else if(v){
    const t=C.byId[v.templateId];
-   let depth=tenyoVisibleFoot(v);
+   // Resident NPCs are map objects for storage, but PEOPLE for occlusion.
+   // Keep the same center-foot depth as Hizuki (depthQueue/actorDepth).
+   // Only scenery uses the visible-bottom row of its sprite.
+   let depth=t.character?item.depth:tenyoVisibleFoot(v);
    if(v.templateId==='tenyo_stone_lantern'){
     // The lantern is elevated on a separate stone island. It inherits
     // that island's contact depth so the support always paints first,

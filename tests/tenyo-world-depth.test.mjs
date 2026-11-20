@@ -49,6 +49,30 @@ test('lanterns are supported by islands, not painted into a global foreground la
  assert.equal(q[islandIndex].depth,q[lanternIndex].depth);
 });
 
+test('Shirotae and both shrine guardians use exactly the same foot depth as Hizuki',()=>{
+ const render=readFileSync('src/game/tenyo/rendering/render.js','utf8');
+ // The adopted Tenyo override must never recalculate an NPC's depth using
+ // the image's rectangular bottom (that is only for scenery).
+ assert.ok(render.includes('let depth=t.character?item.depth:tenyoVisibleFoot(v);'));
+ const C=context.SMCatalog;
+ for(const npc of m.game.residents){
+  const templateId=npc.id==='shirotae'?'sanctuary_npc_shirotae':'sanctuary_npc_guard';
+  assert.equal(C.byId[templateId].character,true,npc.id+' should be an actor');
+  const storyObject={id:'test-'+npc.id,templateId,x:npc.tile[0],y:npc.tile[1],
+    dir:'d',frame:0,occupiedTiles:[]};
+  const heroAtSameFoot={x:storyObject.x,y:storyObject.y,dir:'d',frame:0};
+  const queue=R.depthQueue({...m,objects:[...m.objects,storyObject]},
+    heroAtSameFoot,bounds);
+  const npcEntry=queue.find(item=>item.object?.id===storyObject.id);
+  const heroEntry=queue.find(item=>item.actor===heroAtSameFoot);
+  assert.ok(npcEntry&&heroEntry,npc.id+' must share the character queue');
+  assert.equal(npcEntry.depth,heroEntry.depth,
+    npc.id+' must not be treated as a 32px object contact');
+  assert.equal(npcEntry.depth,(storyObject.y+.5)*m.tileSize);
+  assert.notEqual(npcEntry.depth,(storyObject.y+1)*m.tileSize);
+ }
+});
+
 test('production adopts grounded depth without modifying walkable shallows or sequel lock',()=>{
  const walk=readFileSync('src/game/tenyo/walk.mjs','utf8');
  const render=readFileSync('src/game/tenyo/rendering/render.js','utf8');

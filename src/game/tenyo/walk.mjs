@@ -33,6 +33,22 @@ const previewMode=typeof location!=='undefined' &&
 let reviewCamera=TENYO_APPROVED_CAMERA;
 let showCollision=false;
 let reviewCharacters='legacy';
+// Only the walking preview may opt into brand-new original pixel art.
+// These atlas coordinates keep the game's native sprite dimensions unchanged.
+const REBUILD_RECTS={
+ sanctuary_fall_v2:[0,0,128,160],
+ tenyo_water_gate:[128,0,192,128],
+ torii_gate_v2:[128,128,128,96],
+ rock_island_lantern_base:[0,160,96,64],
+ rock_island_lantern_base_mirror:[0,160,96,64],
+ tenyo_stone_lantern:[96,160,32,64]
+};
+const reviewRebuild=previewMode &&
+ new URL(location.href).searchParams.get('sprites')!=='legacy';
+if(reviewRebuild){
+ for(const [id,rect] of Object.entries(REBUILD_RECTS))
+  globalThis.SMCatalog.byId[id].sourceRect=rect.slice();
+}
 // Reproduce the former relative figure sizes as an explicit optional
 // PREVIEW, without adding a runtime per-actor scale or touching hero PNG.
 function previewRecompose(image,factor){
@@ -90,6 +106,8 @@ async function image(path){
 function sourceIdToAsset(id){
   // Original authored IDs remain the renderer's object identifiers.
   // The new repository uses one adopted file per ID with descriptive names.
+  if(reviewRebuild&&Object.hasOwn(REBUILD_RECTS,id))
+   return 'assets/tenyo-rebuild-v1/original-atlas.png?v=tenyo-rebuild-atlas24-1';
   return 'assets/tenyo/'+id.replaceAll('_','-').toLowerCase()+'.png?v=tenyo-water-art';
 }
 function storyLines(npc){return npc.dialogue?.[readStoryStage()]??npc.lines??[];}
@@ -252,6 +270,7 @@ async function start(){
       images,hero:previewMode&&reviewCharacters==='largeNpc'?hero:halfHero,
       bounds,actor:player,animationTime:now,shadows:true,
       lighting:true,reflections:true,atmosphere:true,depthOfField:true,
+      previewFrontLip:reviewRebuild,
     });
     const width=scene.width,height=scene.height;
     const {clientWidth,clientHeight}=scene.parentElement;
@@ -342,6 +361,7 @@ async function start(){
     scene.dataset.y=String(state.y.toFixed(2));
     scene.dataset.movementUnit='world-pixels';
     scene.dataset.previewOcclusion='false';
+    scene.dataset.spriteSet=reviewRebuild?'tenyo-rebuild-v1':'legacy';
     scene.dataset.collisionProfile=collider.profile;
     scene.dataset.sequelSealed=String(collider.locks.length===1&&
       collider.locks[0].id==='guardian-sequel-passage');
@@ -366,6 +386,16 @@ async function start(){
   }
 
   if(previewMode){
+    for(const button of document.querySelectorAll('[data-tenyo-art]')){
+      const choice=button.dataset.tenyoArt;
+      button.setAttribute('aria-pressed',String((choice==='rebuild')===reviewRebuild));
+      button.addEventListener('click',()=>{
+        if((choice==='rebuild')===reviewRebuild)return;
+        const url=new URL(location.href);
+        url.searchParams.set('sprites',choice==='rebuild'?'rebuild':'legacy');
+        location.assign(url.href); // only the isolated preview, never game saves
+      });
+    }
     // Review shortcuts move ONLY the unsaved test avatar to valid authored
     // world-pixel spots. The production game never sees these buttons.
     const spots={

@@ -25,7 +25,7 @@ test('rebuilding is restricted to the walkable preview; published game still loa
  assert.match(review,/data-tenyo-art="legacy"/);
  assert.match(walk,/const reviewRebuild=previewMode &&/);
  assert.match(walk,/if\(reviewRebuild&&Object\.hasOwn\(REBUILD_RECTS,id\)\)/);
- assert.match(walk,/previewFrontLip:reviewRebuild/);
+ assert.match(walk,/previewSceneDepth:reviewSceneDepth/);
  assert.match(walk,/tenyo-rebuild-v1\/original-atlas\.png/);
  for(const token of ['sanctuary_fall_v2:[0,0,128,160]',
   'tenyo_water_gate:[128,0,192,128]','torii_gate_v2:[128,128,128,96]',
@@ -36,10 +36,13 @@ test('rebuilding is restricted to the walkable preview; published game still loa
 
 test('the waterfall and gate never reorder their complete image over the hero',()=>{
  const render=read('src/game/tenyo/rendering/render.js');
- assert.match(render,/const lipObjects=o\.previewFrontLip/);
- assert.match(render,/const lipSet=new Set\(lipObjects\)/);
- assert.match(render,/c\.drawImage\(im,sx,sy\+sh-band,sw,band/);
- assert.match(render,/if\(lipSet\.has\(item\.object\)\)continue/);
+ assert.match(render,/const tenyoBackdropIds=new Set/);
+ assert.match(render,/function tenyoWorldDepthQueue/);
+ assert.match(render,/section:'cliff'/);
+ assert.match(render,/section:'splash'/);
+ assert.match(render,/depth:item.depth\+16\*tile\/32/);
+ assert.match(render,/if\(!o.groundOnly&&o.previewSceneDepth===true\)/);
+ assert.doesNotMatch(render,/paintContactLip|previewFrontLip|reviewLipHeights/);
  assert.doesNotMatch(render,/foregroundOcclusion/);
  const map=JSON.parse(read('data/maps/tenyo-sanctuary/scene.json'));
  assert.deepEqual(map.game.passageLocks.map(x=>x.id),['guardian-sequel-passage']);

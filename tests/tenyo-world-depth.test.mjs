@@ -59,6 +59,6 @@ test('preview changes only local compositing, never blocks walkable shallows or 
  assert.match(render,/return entries\.sort\(\(a,b\)=>a\.depth-b\.depth\)/);
  assert.doesNotMatch(render,/paintContactLip|previewFrontLip|reviewLipHeights/);
  const scene=m.game;
- assert.deepEqual(scene.passageLocks.map(x=>x.id),['guardian-sequel-passage']);
+ assert.deepEqual(Array.from(scene.passageLocks,x=>x.id),['guardian-sequel-passage']);
  assert.ok(m.waterSurface.some(x=>x.depth==='shallow'));
 });

@@ -119,28 +119,58 @@ const tenyoBackdropIds=new Set([
  'sanctuary_horizon_v1','sanctuary_forest_frame_v1',
  'sanctuary_forest_frame_v2','sanctuary_forest_frame_v3'
 ]);
+function tenyoVisibleFoot(v){
+ const t=C.byId[v.templateId],r=M.visualRect(m,v);
+ if(!Number.isFinite(t.previewVisualFootRow))return (v.y+1)*tile;
+ return r.y+r.height*t.previewVisualFootRow/t.sourceRect[3];
+}
 function tenyoWorldDepthQueue(){
  const entries=[];
  for(const item of depthQueue(m,!o.forExport&&o.hero?o.actor:null,o.bounds)){
-  if(item.object&&tenyoBackdropIds.has(item.object.templateId))continue;
-  if(item.object?.templateId==='sanctuary_fall_v2'){
-   entries.push({...item,section:'cliff'});
-   entries.push({...item,section:'splash',depth:item.depth+16*tile/32});
+  const v=item.object;
+  if(v&&tenyoBackdropIds.has(v.templateId))continue;
+  if(v?.templateId==='sanctuary_fall_v2' &&
+     Number.isFinite(C.byId[v.templateId].previewSplashStartRow)){
+   const t=C.byId[v.templateId],r=M.visualRect(m,v);
+   const scaleY=r.height/t.sourceRect[3];
+   // The transparent PNG extends to row 160, but the drawn water
+   // ends at row 143. A character at y158 is IN FRONT of the rocks.
+   entries.push({...item,section:'cliff',
+    depth:r.y+t.previewSplashStartRow*scaleY});
+   entries.push({...item,section:'splash',
+    depth:r.y+t.previewVisualFootRow*scaleY});
+  }else if(v){
+   const t=C.byId[v.templateId];
+   let depth=tenyoVisibleFoot(v);
+   if(v.templateId==='tenyo_stone_lantern'){
+    // The lantern is elevated on a separate stone island. It inherits
+    // that island's contact depth so the support always paints first,
+    // even though the lantern's on-screen bottom is 26px higher.
+    const support=m.objects.find(candidate=>{
+     const p=C.byId[candidate.templateId]?.supportSurface;
+     return p?.accept.includes(v.templateId) &&
+      candidate.x+p.slot[0]===v.x &&
+      candidate.y+p.slot[1]===v.y;
+    });
+    if(support)depth=tenyoVisibleFoot(support);
+   }
+   entries.push({...item,depth});
   }else entries.push(item);
  }
- // Stable sort preserves the shared queue's support-before-lantern ordering
- // for equal world-foot depths, without frame-dependent priority jumps.
+ // Sorting does not change when a character enters a bounding rectangle.
+ // Equal-depth order remains stable, preserving island before lantern.
  return entries.sort((a,b)=>a.depth-b.depth);
 }
 function paintDepthItem(item){
  if(item.object){
   if(item.section){
-   const r=M.visualRect(m,item.object),splash=Math.min(r.height,18*tile/32);
+   const t=C.byId[item.object.templateId],r=M.visualRect(m,item.object);
+   const start=t.previewSplashStartRow*r.height/t.sourceRect[3];
    c.save();
    c.beginPath();
    if(item.section==='cliff')
-    c.rect(r.x,r.y,r.width,r.height-splash);
-   else c.rect(r.x,r.y+r.height-splash,r.width,splash);
+    c.rect(r.x,r.y,r.width,start);
+   else c.rect(r.x,r.y+start,r.width,r.height-start);
    c.clip();
    object(item.object);
    c.restore();

@@ -44,5 +44,5 @@ test('the waterfall and gate never reorder their complete image over the hero',(
  const map=JSON.parse(read('data/maps/tenyo-sanctuary/scene.json'));
  assert.deepEqual(map.game.passageLocks.map(x=>x.id),['guardian-sequel-passage']);
  assert.deepEqual(map.game.residents.find(x=>x.id==='shirotae').tile,[12,8]);
- assert.equal(map.game.footCollisionZones.some(x=>x.id==='rear-scenic-water'),false);
+ assert.equal((map.game.footCollisionZones??[]).some(x=>x.id==='rear-scenic-water'),false);
 });

@@ -11,7 +11,7 @@ test('new shrine sprite atlas is an original standalone indexed PNG, without sca
  assert.equal(atlas.subarray(0,8).toString('hex'),'89504e470d0a1a0a');
  assert.equal(atlas.readUInt32BE(16),320);
  assert.equal(atlas.readUInt32BE(20),224);
- assert.equal(atlas.toString('ascii',25,29),'PLTE');
+ assert.equal(atlas[25],3,'palette-indexed PNG, not scaled RGBA canvas');
  assert.equal(createHash('sha256').update(atlas).digest('hex'),
   'e6f19cba8a7ba8a74b3416da0dd3d7e1a5d0a3169bdddd2110e9ef53ea21d679');
 });

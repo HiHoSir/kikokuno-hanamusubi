@@ -2550,6 +2550,23 @@
       },
       "description": "headland rock outcrop in native world pixels, not enlarged 32px village art",
       "approvalNote": "Technical manifest entry on review branch only. User's appearance review remains pending."
+    },
+    {
+      "id": "tenyo-rebuild-sprite-atlas",
+      "type": "object",
+      "path": "assets/tenyo-rebuild-v1/original-atlas.png",
+      "status": "approved",
+      "usage": "tenyo-sanctuary-review-only",
+      "dimensions": {
+        "width": 320,
+        "height": 224
+      },
+      "gitBlobSha": "5c4fddc7c2610eb53395e58849e876a170fe820c",
+      "origin": {
+        "kind": "original-generated-pixel-art",
+        "source": "five distinct original shrine object illustrations, cropped and palette reduced; Tengai Makyou ZERO used only as structural reference"
+      },
+      "approvalNote": "Registry approval to run the preview only; iPhone artistic appearance is NOT user-approved."
     }
   ],
   "designReferences": [

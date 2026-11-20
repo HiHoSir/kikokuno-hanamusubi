@@ -82,10 +82,11 @@ try{
    return {zoom:c.dataset.zoom,frame:c.dataset.actorFrame,
     posX:c.dataset.x,posY:c.dataset.y,
     previewOcclusion:c.dataset.previewOcclusion,
+    spriteSet:c.dataset.spriteSet,
     viewportW:c.getBoundingClientRect().width,
     canvasW:c.width,canvasH:c.height};
  });
- if(beforeReview.zoom!=='1'||beforeReview.frame!=='80x112'||beforeReview.previewOcclusion!=='false')
+ if(beforeReview.zoom!=='1'||beforeReview.frame!=='80x112'||beforeReview.previewOcclusion!=='false'||beforeReview.spriteSet!=='tenyo-rebuild-v1')
   issues.push('Pages preview does not load uniform full-size characters '+JSON.stringify(beforeReview));
  await review.screenshot({path:'artifacts/tenyo-native-characters-preview.png'});
  const art=await review.evaluate(()=>document.querySelector('#scene').dataset.reviewNpcArt);
@@ -166,7 +167,16 @@ try{
  await review.waitForFunction(()=>document.querySelector('#scene')?.dataset.x==='631.30',{timeout:5000});
  await review.locator('.review-panel summary').click();
  await review.waitForTimeout(90);
- await review.screenshot({path:'artifacts/tenyo-waterfall-overlay-point.png'});
+ await review.screenshot({path:'artifacts/tenyo-rebuild-waterfall-overlap.png'});
+ // Verify the comparison control loads the old scene art without touching
+ // movement, saves, the permanent guardian lock, or the production page.
+ await review.locator('.review-panel summary').click();
+ await review.locator('[data-tenyo-art="legacy"]').click();
+ await review.waitForFunction(()=>document.querySelector('#load')?.hidden===true&&
+   document.querySelector('#scene')?.dataset.spriteSet==='legacy',{timeout:65000});
+ if((await review.locator('#scene').getAttribute('data-sequel-sealed'))!=='true')
+  issues.push('legacy art comparison must still seal only the guardian gap');
+ await review.screenshot({path:'artifacts/tenyo-rebuild-legacy-comparison.png'});
  await review.close();
  await page.setViewportSize({width:900,height:390});
  await page.waitForFunction(()=>getComputedStyle(document.querySelector('#landscape-required')).display==='none');

@@ -109,57 +109,59 @@ function reflect(im,src,r,foot){const top=2*foot-r.y-r.height;if(top>=m.height*t
 for(const v of objects){const t=C.byId[v.templateId],im=images[v.templateId];if(!im||t.layer!=='object'||t.autotile||t.id==='sanctuary_horizon_v1'||t.id.startsWith('sanctuary_forest_frame_'))continue;if(t.character){const state={x:v.x,y:v.y,dir:v.dir||'d',frame:v.frame||0},bounds=characterBounds(im);actor(c,state,im,bounds,tile,(ctx,img,sx,sy,sw,sh,x,y,width,height)=>reflect(img,[sx,sy,sw,sh],{x,y,width,height},actorDepth(state,bounds,tile)));continue;}const r=M.visualRect(m,v);reflect(im,t.sourceRect,r,Math.max(r.y+r.height,(v.y+1)*tile));}
 if(!o.forExport&&o.hero&&o.actor&&o.bounds)actor(c,o.actor,o.hero,o.bounds,tile,(ctx,im,sx,sy,sw,sh,x,y,width,height)=>reflect(im,[sx,sy,sw,sh],{x,y,width,height},actorDepth(o.actor,o.bounds,tile)));
 c.restore();}
-// Only the original-art review has split foreground bands. A complete gate,
-// waterfall or island sprite must NEVER move wholesale ahead of a character.
-// Paint the sculpture behind actors, then only its *bottom contact pixels*
-// over a nearby actor whose feet are behind that lip; collisions stay separate.
-const reviewLipHeights={
- sanctuary_fall_v2:34,
- tenyo_water_gate:28,
- torii_gate_v2:17,
- rock_island_lantern_base:18,
- rock_island_lantern_base_mirror:18,
- tenyo_stone_lantern:13
-};
-const lipObjects=o.previewFrontLip
- ?m.objects.filter(v=>Object.hasOwn(reviewLipHeights,v.templateId)):[];
-const lipSet=new Set(lipObjects);
-if(!o.groundOnly)for(const v of lipObjects)object(v);
-function paintContactLip(px,py){
- for(const v of lipObjects){
-  const im=images[v.templateId],t=C.byId[v.templateId];
-  if(!im)continue;
-  const r=M.visualRect(m,v),foot=r.y+r.height;
-  const band=reviewLipHeights[v.templateId];
-  if(px<r.x-8||px>r.x+r.width+8||
-     py<foot-band-16||py>foot-2)continue;
-  const [sx,sy,sw,sh]=t.sourceRect;
-  const displayBand=band*r.height/sh;
-  c.save();
-  c.beginPath();
-  // Only paint atop this actor, never over another person or a wide map area.
-  c.rect(px-23,py-37,46,42);
-  c.clip();
-  c.drawImage(im,sx,sy+sh-band,sw,band,
-    r.x,foot-displayBand,r.width,displayBand);
-  c.restore();
+// Tenyo original-art review: fixed world-foot depth, not whole-sprite
+// foreground overrides or an arbitrary clip over a moving character.
+// A gate, torii, rock island and supported lantern each have one physical
+// front contact depth. The falling water alone has two separately painted
+// depth planes: the tall cliff/stream, then its low 18px splash.
+// Broad scenery is a backdrop; it must NEVER draw last over all characters.
+const tenyoBackdropIds=new Set([
+ 'sanctuary_horizon_v1','sanctuary_forest_frame_v1',
+ 'sanctuary_forest_frame_v2','sanctuary_forest_frame_v3'
+]);
+function tenyoWorldDepthQueue(){
+ const entries=[];
+ for(const item of depthQueue(m,!o.forExport&&o.hero?o.actor:null,o.bounds)){
+  if(item.object&&tenyoBackdropIds.has(item.object.templateId))continue;
+  if(item.object?.templateId==='sanctuary_fall_v2'){
+   entries.push({...item,section:'cliff'});
+   entries.push({...item,section:'splash',depth:item.depth+16*tile/32});
+  }else entries.push(item);
  }
+ // Stable sort preserves the shared queue's support-before-lantern ordering
+ // for equal world-foot depths, without frame-dependent priority jumps.
+ return entries.sort((a,b)=>a.depth-b.depth);
 }
-if(!o.groundOnly)for(const item of depthQueue(m,!o.forExport&&o.hero?o.actor:null,o.bounds)){
+function paintDepthItem(item){
  if(item.object){
-  if(lipSet.has(item.object))continue;
-  object(item.object);
-  if(o.previewFrontLip&&C.byId[item.object.templateId].character)
-   paintContactLip((item.object.x+.5)*tile,(item.object.y+.5)*tile);
+  if(item.section){
+   const r=M.visualRect(m,item.object),splash=Math.min(r.height,18*tile/32);
+   c.save();
+   c.beginPath();
+   if(item.section==='cliff')
+    c.rect(r.x,r.y,r.width,r.height-splash);
+   else c.rect(r.x,r.y+r.height-splash,r.width,splash);
+   c.clip();
+   object(item.object);
+   c.restore();
+  }else object(item.object);
  }else{
   if(o.shadows)actorShadow(c,item.actor,o.bounds,tile,sun ? .38 : .28);
   actor(c,item.actor,o.hero,o.bounds,tile,
-    (ctx,im,sx,sy,sw,sh,x,y,width,height)=>
-      sprite(im,[sx,sy,sw,sh],{x,y,width,height},
-        actorDepth(item.actor,o.bounds,tile),7*tile/32,true));
-  if(o.previewFrontLip)
-   paintContactLip((item.actor.x+.5)*tile,actorDepth(item.actor,o.bounds,tile));
+   (ctx,im,sx,sy,sw,sh,x,y,width,height)=>
+    sprite(im,[sx,sy,sw,sh],{x,y,width,height},
+     actorDepth(item.actor,o.bounds,tile),7*tile/32,true));
  }
+}
+if(!o.groundOnly&&o.previewSceneDepth===true){
+ // Horizon behind the rock-framed shoreline; both behind gameplay objects.
+ for(const v of objects.filter(v=>v.templateId==='sanctuary_horizon_v1'))object(v);
+ for(const v of objects.filter(v=>v.templateId.startsWith('sanctuary_forest_frame_')))object(v);
+ for(const item of tenyoWorldDepthQueue())paintDepthItem(item);
+}else if(!o.groundOnly){
+ // Published game and legacy comparison use the established renderer.
+ for(const item of depthQueue(m,!o.forExport&&o.hero?o.actor:null,o.bounds))
+  paintDepthItem(item);
 }
 if(!o.forExport&&images.tenyo_ripple_fx){const legacy=m.objects.filter(v=>v.templateId==='tenyo_shallows'),shallow=s=>waterCells.get(Math.round(s.x)+','+Math.round(s.y))?.depth==='shallow'||legacy.some(v=>v.x===Math.round(s.x)&&v.y===Math.round(s.y)),frame=(offset)=>Math.floor(((o.animationTime||0)+offset)/180)%4;c.save();c.beginPath();for(const v of m.waterSurface||[])if((v.opacity??.65)>0)c.rect(v.x*tile,v.y*tile,tile,tile);for(const v of legacy)c.rect(v.x*tile,v.y*tile,tile,tile);c.clip();
 if(sun)for(const [i,p]of [[.29,.29],[.70,.34],[.30,.56],[.70,.63],[.41,.78]].entries()){const x=Math.floor(m.width*p[0]),y=Math.floor(m.height*p[1]);if(!waterCells.has(x+','+y))continue;c.globalAlpha=.45;c.drawImage(images.tenyo_ripple_fx,0,frame(i*120)*32,32,32,x*tile,y*tile,tile,tile);}

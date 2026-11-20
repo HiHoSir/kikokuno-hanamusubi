@@ -393,7 +393,7 @@ async function start(){
         if((choice==='rebuild')===reviewRebuild)return;
         const url=new URL(location.href);
         url.searchParams.set('sprites',choice==='rebuild'?'rebuild':'legacy');
-        location.assign(url.href); // only the isolated preview, never game saves
+        location.search=url.search; // isolated comparison reload; never an in-world route
       });
     }
     // Review shortcuts move ONLY the unsaved test avatar to valid authored

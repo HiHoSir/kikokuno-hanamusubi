@@ -43,13 +43,28 @@ const REBUILD_RECTS={
  rock_island_lantern_base_mirror:[0,160,96,64],
  tenyo_stone_lantern:[96,160,32,64]
 };
+// Bottom-exclusive alpha bounds of the newly authored atlas crops. These are
+// DRAWING depth anchors, not collision footprints or logical grid cells.
+// A source crop can have 17px of transparent bottom margin (the waterfalls).
+const REBUILD_VISUAL_FOOT_ROWS={
+ sanctuary_fall_v2:143,
+ tenyo_water_gate:124,
+ torii_gate_v2:94,
+ rock_island_lantern_base:58,
+ rock_island_lantern_base_mirror:58,
+ tenyo_stone_lantern:56
+};
 const reviewRebuild=previewMode &&
  new URL(location.href).searchParams.get('sprites')!=='legacy';
 const reviewSceneDepth=reviewRebuild &&
  new URL(location.href).searchParams.get('depth')!=='legacy';
 if(reviewRebuild){
- for(const [id,rect] of Object.entries(REBUILD_RECTS))
-  globalThis.SMCatalog.byId[id].sourceRect=rect.slice();
+ for(const [id,rect] of Object.entries(REBUILD_RECTS)){
+  const template=globalThis.SMCatalog.byId[id];
+  template.sourceRect=rect.slice();
+  template.previewVisualFootRow=REBUILD_VISUAL_FOOT_ROWS[id];
+  if(id==='sanctuary_fall_v2')template.previewSplashStartRow=128;
+ }
 }
 // Reproduce the former relative figure sizes as an explicit optional
 // PREVIEW, without adding a runtime per-actor scale or touching hero PNG.

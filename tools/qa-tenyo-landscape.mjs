@@ -85,7 +85,7 @@ try{
     viewportW:c.getBoundingClientRect().width,
     canvasW:c.width,canvasH:c.height};
  });
- if(beforeReview.zoom!=='1'||beforeReview.frame!=='80x112'||beforeReview.previewOcclusion!=='true')
+ if(beforeReview.zoom!=='1'||beforeReview.frame!=='80x112'||beforeReview.previewOcclusion!=='false')
   issues.push('Pages preview does not load uniform full-size characters '+JSON.stringify(beforeReview));
  await review.screenshot({path:'artifacts/tenyo-native-characters-preview.png'});
  const art=await review.evaluate(()=>document.querySelector('#scene').dataset.reviewNpcArt);

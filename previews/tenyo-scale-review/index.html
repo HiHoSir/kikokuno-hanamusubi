@@ -87,7 +87,7 @@ button{border:1px solid #777d62;border-radius:8px;background:#314337;color:inher
   </nav>
   </details>
   <button class="collision-toggle" type="button" data-tenyo-collision aria-pressed="false">判定を表示</button>
-  <div class="review-note">滝の近くも歩ける／滝・門の遮蔽を検査中｜本編の描画は未変更</div>
+  <div class="review-note">滝付近は歩行可能／不採用の強制前景描画を停止｜足元と重なりを確認</div>
   <p id="load">天妖の社を読み込んでいます</p>
   <button id="talk" type="button" hidden>話す</button>
   <section id="dialogue" aria-labelledby="speaker" hidden>
@@ -110,10 +110,10 @@ button{border:1px solid #777d62;border-radius:8px;background:#314337;color:inher
 </section>
 <button id="sound-toggle" type="button" aria-label="サウンドを再生" aria-pressed="false">♪ 再生</button>
 </main>
-<script src="../../src/game/tenyo/rendering/catalog.js?v=tenyo-foreground-capability-1"></script>
+<script src="../../src/game/tenyo/rendering/catalog.js?v=tenyo-restored-depth-1"></script>
 <script src="../../src/game/tenyo/rendering/autotile.js"></script>
 <script src="../../src/game/tenyo/rendering/model.js"></script>
-<script src="../../src/game/tenyo/rendering/render.js?v=tenyo-foreground-capability-1"></script>
-<script type="module" src="../../src/game/tenyo/walk.mjs?tenyo-review=1&amp;v=tenyo-occlusion-review-1"></script>
+<script src="../../src/game/tenyo/rendering/render.js?v=tenyo-restored-depth-1"></script>
+<script type="module" src="../../src/game/tenyo/walk.mjs?tenyo-review=1&amp;v=tenyo-restored-depth-1"></script>
 </body>
 </html>

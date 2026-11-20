@@ -49,11 +49,11 @@ test('lanterns are supported by islands, not painted into a global foreground la
  assert.equal(q[islandIndex].depth,q[lanternIndex].depth);
 });
 
-test('preview changes only local compositing, never blocks walkable shallows or sequel lock',()=>{
+test('production adopts grounded depth without modifying walkable shallows or sequel lock',()=>{
  const walk=readFileSync('src/game/tenyo/walk.mjs','utf8');
  const render=readFileSync('src/game/tenyo/rendering/render.js','utf8');
- assert.match(walk,/const reviewSceneDepth=reviewRebuild &&/);
- assert.match(walk,/previewSceneDepth:reviewSceneDepth/);
+ assert.match(walk,/const useGroundedDepth=useRebuiltArt && \(!previewMode \|\|/);
+ assert.match(walk,/tenyoSceneDepth:useGroundedDepth/);
  assert.match(render,/const tenyoBackdropIds=new Set/);
  assert.match(render,/for\(const v of objects\.filter\(v=>v\.templateId\.startsWith\('sanctuary_forest_frame_'\)\)\)object\(v\)/);
  assert.match(render,/return entries\.sort\(\(a,b\)=>a\.depth-b\.depth\)/);

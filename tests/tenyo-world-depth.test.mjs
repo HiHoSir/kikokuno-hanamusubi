@@ -58,6 +58,10 @@ test('preview changes only local compositing, never blocks walkable shallows or 
  assert.match(render,/for\(const v of objects\.filter\(v=>v\.templateId\.startsWith\('sanctuary_forest_frame_'\)\)\)object\(v\)/);
  assert.match(render,/return entries\.sort\(\(a,b\)=>a\.depth-b\.depth\)/);
  assert.doesNotMatch(render,/paintContactLip|previewFrontLip|reviewLipHeights/);
+ assert.match(render,/previewVisualFootRow/);
+ assert.match(render,/previewSplashStartRow/);
+ assert.match(walk,/sanctuary_fall_v2:143/);
+ assert.match(walk,/tenyo_water_gate:124/);
  const scene=m.game;
  assert.deepEqual(Array.from(scene.passageLocks,x=>x.id),['guardian-sequel-passage']);
  assert.ok(m.waterSurface.some(x=>x.depth==='shallow'));

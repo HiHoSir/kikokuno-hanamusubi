@@ -71,6 +71,10 @@ button{border:1px solid #777d62;border-radius:8px;background:#314337;color:inher
       <button type="button" data-tenyo-art="legacy" aria-pressed="false">従来の絵と比較</button>
     </div>
     <div class="review-control-row">
+      <button type="button" data-tenyo-depth="grounded" aria-pressed="true">接地点に沿う遮蔽</button>
+      <button type="button" data-tenyo-depth="legacy" aria-pressed="false">本編描画と比較</button>
+    </div>
+    <div class="review-control-row">
       <button type="button" data-tenyo-camera="1.4" aria-pressed="false">元の画角</button>
       <button type="button" data-tenyo-camera="1" aria-pressed="true">広めの画角</button>
     </div>
@@ -91,7 +95,7 @@ button{border:1px solid #777d62;border-radius:8px;background:#314337;color:inher
   </nav>
   </details>
   <button class="collision-toggle" type="button" data-tenyo-collision aria-pressed="false">判定を表示</button>
-  <div class="review-note">新規スプライト候補（未採用）｜滝・門は画像全体を前面に描かず、足元のみ重ねる／通行ルールは同じ</div>
+  <div class="review-note">新規スプライト候補（未採用）｜接地点順のレイヤーを検証／通行ルールは同じ</div>
   <p id="load">天妖の社を読み込んでいます</p>
   <button id="talk" type="button" hidden>話す</button>
   <section id="dialogue" aria-labelledby="speaker" hidden>
@@ -117,7 +121,7 @@ button{border:1px solid #777d62;border-radius:8px;background:#314337;color:inher
 <script src="../../src/game/tenyo/rendering/catalog.js?v=tenyo-restored-depth-1"></script>
 <script src="../../src/game/tenyo/rendering/autotile.js"></script>
 <script src="../../src/game/tenyo/rendering/model.js"></script>
-<script src="../../src/game/tenyo/rendering/render.js?v=tenyo-rebuild-lip-v1"></script>
-<script type="module" src="../../src/game/tenyo/walk.mjs?tenyo-review=1&amp;v=tenyo-rebuild-lip-v1"></script>
+<script src="../../src/game/tenyo/rendering/render.js?v=tenyo-grounded-depth-v1"></script>
+<script type="module" src="../../src/game/tenyo/walk.mjs?tenyo-review=1&amp;v=tenyo-grounded-depth-v1"></script>
 </body>
 </html>

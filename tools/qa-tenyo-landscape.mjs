@@ -82,11 +82,11 @@ try{
    return {zoom:c.dataset.zoom,frame:c.dataset.actorFrame,
     posX:c.dataset.x,posY:c.dataset.y,
     previewOcclusion:c.dataset.previewOcclusion,
-    spriteSet:c.dataset.spriteSet,
+    spriteSet:c.dataset.spriteSet,sceneDepth:c.dataset.sceneDepth,
     viewportW:c.getBoundingClientRect().width,
     canvasW:c.width,canvasH:c.height};
  });
- if(beforeReview.zoom!=='1'||beforeReview.frame!=='80x112'||beforeReview.previewOcclusion!=='false'||beforeReview.spriteSet!=='tenyo-rebuild-v1')
+ if(beforeReview.zoom!=='1'||beforeReview.frame!=='80x112'||beforeReview.previewOcclusion!=='false'||beforeReview.spriteSet!=='tenyo-rebuild-v1'||beforeReview.sceneDepth!=='grounded-two-plane')
   issues.push('Pages preview does not load uniform full-size characters '+JSON.stringify(beforeReview));
  await review.screenshot({path:'artifacts/tenyo-native-characters-preview.png'});
  const art=await review.evaluate(()=>document.querySelector('#scene').dataset.reviewNpcArt);
@@ -167,7 +167,26 @@ try{
  await review.waitForFunction(()=>document.querySelector('#scene')?.dataset.x==='631.30',{timeout:5000});
  await review.locator('.review-panel summary').click();
  await review.waitForTimeout(90);
- await review.screenshot({path:'artifacts/tenyo-rebuild-waterfall-overlap.png'});
+ await review.screenshot({path:'artifacts/tenyo-grounded-waterfall-overlap.png'});
+ // Side-by-side evidence from the same real actor coordinate and sprite set.
+ await review.locator('.review-panel summary').click();
+ await review.locator('[data-tenyo-depth="legacy"]').click();
+ await review.waitForFunction(()=>document.querySelector('#load')?.hidden===true &&
+  document.querySelector('#scene')?.dataset.sceneDepth==='old-foreground-lip-disabled',{timeout:65000});
+ await review.locator('.review-panel summary').click();
+ await review.locator('[data-tenyo-spot="waterfallOverlap"]').click();
+ await review.waitForFunction(()=>document.querySelector('#scene')?.dataset.x==='631.30',{timeout:5000});
+ await review.locator('.review-panel summary').click();
+ await review.screenshot({path:'artifacts/tenyo-production-depth-waterfall-overlap.png'});
+ await review.locator('.review-panel summary').click();
+ await review.locator('[data-tenyo-depth="grounded"]').click();
+ await review.waitForFunction(()=>document.querySelector('#load')?.hidden===true &&
+  document.querySelector('#scene')?.dataset.sceneDepth==='grounded-two-plane',{timeout:65000});
+ await review.locator('.review-panel summary').click();
+ await review.locator('[data-tenyo-spot="gate"]').click();
+ await review.waitForFunction(()=>document.querySelector('#scene')?.dataset.x==='416.00',{timeout:5000});
+ await review.locator('.review-panel summary').click();
+ await review.screenshot({path:'artifacts/tenyo-grounded-gate-guard-foreground.png'});
  // Verify the comparison control loads the old scene art without touching
  // movement, saves, the permanent guardian lock, or the production page.
  await review.locator('.review-panel summary').click();

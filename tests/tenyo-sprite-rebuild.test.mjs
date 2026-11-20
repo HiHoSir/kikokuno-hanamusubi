@@ -16,16 +16,18 @@ test('new shrine sprite atlas is an original standalone indexed PNG, without sca
   'e6f19cba8a7ba8a74b3416da0dd3d7e1a5d0a3169bdddd2110e9ef53ea21d679');
 });
 
-test('rebuilding is restricted to the walkable preview; published game still loads original art',()=>{
+test('production shrine and mobile preview share approved new sprite atlas, with old art preview-only',()=>{
  const game=read('src/game/tenyo/index.html');
  const review=read('previews/tenyo-scale-review/index.html');
  const walk=read('src/game/tenyo/walk.mjs');
- assert.ok(!game.includes('tenyo-rebuild-v1'));
+ assert.match(game,/walk\.mjs\?v=fb40c1b-tenyo-main-depth-v1/);
+ assert.match(game,/render\.js\?v=tenyo-main-depth-v1/);
  assert.match(review,/data-tenyo-art="rebuild"/);
  assert.match(review,/data-tenyo-art="legacy"/);
- assert.match(walk,/const reviewRebuild=previewMode &&/);
- assert.match(walk,/if\(reviewRebuild&&Object\.hasOwn\(REBUILD_RECTS,id\)\)/);
- assert.match(walk,/previewSceneDepth:reviewSceneDepth/);
+ assert.match(walk,/const useRebuiltArt=!previewMode \|\|/);
+ assert.match(walk,/if\(useRebuiltArt&&Object\.hasOwn\(REBUILD_RECTS,id\)\)/);
+ assert.match(walk,/const useGroundedDepth=useRebuiltArt && \(!previewMode \|\|/);
+ assert.match(walk,/tenyoSceneDepth:useGroundedDepth/);
  assert.match(walk,/tenyo-rebuild-v1\/original-atlas\.png/);
  for(const token of ['sanctuary_fall_v2:[0,0,128,160]',
   'tenyo_water_gate:[128,0,192,128]','torii_gate_v2:[128,128,128,96]',
@@ -41,7 +43,7 @@ test('the waterfall and gate never reorder their complete image over the hero',(
  assert.match(render,/section:'cliff'/);
  assert.match(render,/section:'splash'/);
  assert.match(render,/depth:r.y\+t.previewVisualFootRow\*scaleY/);
- assert.match(render,/if\(!o.groundOnly&&o.previewSceneDepth===true\)/);
+ assert.match(render,/if\(!o.groundOnly&&o.tenyoSceneDepth===true\)/);
  assert.doesNotMatch(render,/paintContactLip|previewFrontLip|reviewLipHeights/);
  assert.doesNotMatch(render,/foregroundOcclusion/);
  const map=JSON.parse(read('data/maps/tenyo-sanctuary/scene.json'));

@@ -12,6 +12,10 @@ import {
 import {roadCell} from '../src/game/shiomachi/render.mjs';
 import {residentInFront} from '../src/game/village/residents.mjs';
 import {DEFAULT_CAMERA_ZOOM} from '../src/game/village/render.mjs';
+import {rooms,prepareInterior} from '../src/game/interiors/rooms.mjs';
+import {SHIOMACHI_INN_PRICE,previewInnStay} from '../src/game/shiomachi/interior-preview.mjs';
+import {DEFAULT_PLAYER,normalizePlayer,ARMORY_STOCK,FOOD_ITEMS,purchaseArmory,purchaseFood} from '../src/game/battle/rules.mjs';
+import {SHIOMACHI_INTERIORS,shiomachiTouchedInterior} from '../data/maps/shiomachi-village/scene.mjs';
 
 const read=path=>readFileSync(path,'utf8');
 const dimensions=path=>{
@@ -195,4 +199,83 @@ test('review UI is landscape only, same 0.5 zoom, no purchases or save writes',(
  assert.match(render,/drawCharacter\(ctx,obj\)/);
  assert.match(render,/ctx\.drawImage\(art\.pierNative/);
  assert.ok(existsSync('docs/FOUR_VILLAGES_EQUIPMENT_PLAN.md'));
+});
+
+test('three mandatory interiors and the craft home use the approved shared room layouts',()=>{
+ assert.deepEqual(
+   SHIOMACHI_INTERIORS.map(site=>site.room),
+   ['inn','armory','teahouse','house-craft']);
+ assert.deepEqual(
+   SHIOMACHI_INTERIORS.slice(0,3).map(site=>site.sign),
+   ['signInn','signArmory','signTea']);
+ assert.deepEqual(SHIOMACHI_MAP.interiors,SHIOMACHI_INTERIORS);
+ assert.deepEqual(SHIOMACHI_INTERIORS.map(o=>o.building),
+   SHIOMACHI_BUILDINGS.map(o=>o.id));
+ for(const site of SHIOMACHI_INTERIORS){
+   const building=SHIOMACHI_BUILDINGS.find(item=>item.id===site.building);
+   assert.ok(building,site.building);
+   assert.ok(site.x>=building.collision.left&&site.x<=building.collision.right);
+   assert.equal(site.thresholdY,building.y+28);
+   assert.equal(site.returnY,building.y+49);
+   assert.ok(!shiomachiCollision(SHIOMACHI_MAP.objects,site.x,site.returnY,7),
+     'exit feet must stand outside the native house collider: '+site.room);
+   assert.ok(shiomachiWalkableCell(Math.floor(site.x/32),Math.floor(site.returnY/32)),
+     'door return tile must be dry, walkable sand: '+site.room);
+   assert.equal(shiomachiTouchedInterior(site.x,site.thresholdY+1,
+     site.x,site.thresholdY-1,1),site);
+   assert.equal(shiomachiTouchedInterior(site.x,site.thresholdY+1,
+     site.x,site.thresholdY-1,0),null,'no door trigger when facing south');
+   assert.equal(shiomachiTouchedInterior(site.x+54,site.thresholdY+1,
+     site.x+54,site.thresholdY-1,1),null,'no trigger from the solid wall');
+   assert.equal(shiomachiTouchedInterior(site.x,site.thresholdY-1,
+     site.x,site.thresholdY-2,1),null,'cannot trigger when already inside roof');
+   const room=rooms[site.room];
+   assert.ok(room,site.room);
+   const plan=prepareInterior(room);
+   assert.ok(plan.resident?.name);
+   assert.ok(plan.spawn.length===2&&plan.exitY>plan.spawn[1]);
+ }
+ for(const [sprite,path] of [
+   ['signArmory','assets/village/scene/sign-armory.png'],
+   ['signInn','assets/village/scene/sign-inn.png'],
+   ['signTea','assets/village/scene/sign-teahouse.png']
+ ])assert.deepEqual(dimensions(path),[96,120],sprite);
+});
+
+test('shop/inn preview uses actual purchase rules on volatile player data',()=>{
+ const hero=normalizePlayer({...DEFAULT_PLAYER,gold:250,hp:7,mp:3});
+ const lost=previewInnStay(normalizePlayer({...hero,gold:1}));
+ assert.equal(lost.accepted,false);
+ assert.equal(lost.player.gold,1);
+ const healed=previewInnStay(hero);
+ assert.equal(healed.accepted,true);
+ assert.equal(healed.player.hp,healed.player.maxhp);
+ assert.equal(healed.player.mp,healed.player.maxmp);
+ assert.equal(healed.player.gold,250-SHIOMACHI_INN_PRICE);
+ assert.equal(hero.hp,7,'old player snapshot must not mutate');
+ assert.equal(hero.gold,250,'the demo player remains immutable at the transaction boundary');
+ assert.equal(ARMORY_STOCK.length,4);
+ assert.equal(Object.keys(FOOD_ITEMS).length,2);
+ const equip=purchaseArmory(hero,ARMORY_STOCK[0].id);
+ const food=purchaseFood(hero,Object.keys(FOOD_ITEMS)[0]);
+ assert.equal(equip.accepted,true);
+ assert.equal(food.accepted,true);
+ assert.equal(hero.gold,250,'preview services must be pure and isolated');
+ const source=read('src/game/shiomachi/interior-preview.mjs');
+ const runtime=read('src/game/shiomachi/walk.mjs');
+ const html=read('previews/shiomachi-village/index.html');
+ assert.match(source,/prepareInterior\(room\)/);
+ assert.match(source,/paintRoom\(fctx,room\)/);
+ assert.match(source,/drawFurnitureLife\(ctx,obj/);
+ assert.match(source,/purchaseArmory\(trial/);
+ assert.match(source,/purchaseFood\(trial/);
+ assert.doesNotMatch(source,/localStorage|sessionStorage|savePlayer|saveGame|KIKOKU_ROUTE\.go/);
+ assert.match(runtime,/shiomachiTouchedInterior\(x,y,nx,ny,heading\)/);
+ assert.match(runtime,/interior\.advance\(dt,dir\)/);
+ assert.match(runtime,/returnOutside\(departed\)/);
+ assert.match(html,/id="shop-panel"/);
+ assert.match(html,/data-review-room="inn"/);
+ assert.match(html,/data-review-room="armory"/);
+ assert.match(html,/data-review-room="teahouse"/);
+ assert.match(read('src/game/shiomachi/render.mjs'),/visibleSigns:signs\.length/);
 });

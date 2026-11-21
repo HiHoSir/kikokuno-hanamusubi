@@ -298,6 +298,7 @@ async function start(){
    room:()=>interior.currentRoom,
    indoorPosition:()=>interior.position(),
    shopActive:()=>interior.shopActive,
+   openService:()=>interior.openShop(),
    trial:()=>interior.trial,
    enterRoom:room=>{
      const site=map.interiors.find(item=>item.room===room);

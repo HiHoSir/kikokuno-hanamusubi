@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<!-- REVIEW ONLY: no title guard, field registry or save writes. -->
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#142c38">
+<title>潮待村・歩行プレビュー｜鬼哭の花結び</title>
+<style>
+:root{color-scheme:dark;background:#142c38;color:#f7efdb;font:16px system-ui,sans-serif}
+*{box-sizing:border-box}
+html,body{width:100%;height:100%;margin:0;overflow:hidden;overscroll-behavior:none}
+main{width:min(100%,980px);height:100vh;height:100dvh;margin:auto;
+ padding:max(6px,env(safe-area-inset-top)) max(8px,env(safe-area-inset-right))
+ max(6px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left));
+ display:grid;grid-template-rows:minmax(0,1fr) auto;gap:6px}
+.viewport{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;
+ background:#28678e;border:1px solid #677e74;border-radius:7px;min-height:0}
+#scene{position:absolute;inset:0;width:100%;height:100%;display:block;
+ image-rendering:pixelated;touch-action:none}
+.hud{position:absolute;z-index:3;top:6px;left:8px;padding:5px 9px;max-width:47%;
+ color:#f8f0dd;background:#14262be8;border:1px solid #66765f;border-radius:4px;
+ font-size:12px;line-height:1.35;pointer-events:none}
+.hud b{font-size:14px}
+.hud p{margin:3px 0 0}
+.tools{z-index:4;position:absolute;top:7px;right:7px;display:flex;flex-wrap:wrap;
+ justify-content:flex-end;gap:4px;max-width:51%}
+button{touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
+ border-radius:5px;cursor:pointer;color:#fff7dd;background:#29453e;
+ border:1px solid #9b9880;font:inherit;min-height:36px}
+button:active,button.held,button[aria-pressed="true"]{background:#e5c781;color:#282923}
+.tools button{font-size:11px;padding:4px 6px;min-height:29px;background:#203c3ee8}
+.controls{display:flex;align-items:center;justify-content:center;gap:7px}
+.dpad{display:grid;grid-template-columns:repeat(3,44px);grid-template-rows:repeat(2,39px);gap:3px}
+.dpad button{font-size:18px}
+[data-dir=up]{grid-column:2;grid-row:1}
+[data-dir=left]{grid-column:1;grid-row:2}
+[data-dir=down]{grid-column:2;grid-row:2}
+[data-dir=right]{grid-column:3;grid-row:2}
+#load{position:absolute;z-index:10;inset:0;margin:0;padding:16px;
+ display:grid;place-items:center;background:#284d4b;text-align:center;font-size:14px}
+#load[hidden]{display:none}
+.rotate{display:none}
+@media(orientation:landscape) and (max-height:520px){
+ main{grid-template-columns:minmax(0,1fr) auto;grid-template-rows:minmax(0,1fr)}
+ .controls{flex-direction:column;align-items:center;justify-content:center}
+ .tools{max-width:54%}
+}
+@media(orientation:portrait){
+ .rotate{position:fixed;z-index:100;inset:0;display:grid;place-items:center;
+  color:#f6e8c8;background:#152733;text-align:center;padding:25px}
+}
+.screen-reader{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+</style>
+<link rel="stylesheet" href="../../src/game/village/dialogue.css?v=dotgothic16">
+<link rel="stylesheet" href="../../src/game/ui/controls.css?v=dotgothic16">
+<script type="module" src="../../src/game/ui/selection-guard.mjs"></script>
+<script src="../../src/field/assets.js"></script>
+<script src="../../src/field/landscape.js"></script>
+<script src="../../src/field/autotile.js"></script>
+</head>
+<body>
+<main>
+ <section class="viewport" aria-label="潮待村の横画面プレビュー">
+  <div class="hud">
+   <b>潮待村（制作中）</b>
+   <p id="objective" aria-live="polite">海辺の村を読み込んでいます。</p>
+  </div>
+  <nav class="tools" aria-label="試作マップ内の検査地点">
+   <button type="button" data-review-spot="shore">浜辺</button>
+   <button type="button" data-review-spot="worksite">漁具</button>
+   <button type="button" data-review-spot="buildings">家並み</button>
+   <button type="button" data-review-spot="south">南口</button>
+   <button type="button" id="collision-toggle" aria-pressed="false">判定</button>
+  </nav>
+  <canvas id="scene" aria-label="潮待村を歩いて確認するゲーム画面"></canvas>
+  <p id="load" role="status">潮待村の地形と建物を読み込んでいます……</p>
+  <button id="talk" type="button" hidden>話す</button>
+  <section id="dialogue" aria-labelledby="speaker" hidden>
+   <div class="dialog-window" role="dialog" aria-modal="false">
+    <strong id="speaker"></strong>
+    <p id="line"></p>
+    <button id="next" type="button" aria-label="次のセリフへ">▼</button>
+   </div>
+  </section>
+ </section>
+ <section class="controls" aria-label="ゲーム操作">
+  <div class="dpad" aria-label="十字キー・4方向移動" role="group">
+   <button type="button" data-dir="up" aria-label="上">▲</button>
+   <button type="button" data-dir="left" aria-label="左">◀</button>
+   <button type="button" data-dir="right" aria-label="右">▶</button>
+   <button type="button" data-dir="down" aria-label="下">▼</button>
+  </div>
+  <button id="action-b" class="round sub" type="button" aria-label="B 戻る">B<small>戻る</small></button>
+  <button id="action-a" class="round main" type="button" aria-label="A 決定・話す">A<small>決定</small></button>
+ </section>
+</main>
+<div class="rotate" role="status">潮待村の検査はiPhoneを横向きにしてください。</div>
+<script type="module" src="../../src/game/shiomachi/walk.mjs?v=shiomachi-preview-mvp-1"></script>
+</body>
+</html>

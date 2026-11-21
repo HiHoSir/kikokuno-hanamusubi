@@ -8,7 +8,7 @@ import {residentInFront} from '../village/residents.mjs';
 import {bindDialogue} from '../village/dialogue.mjs';
 import {pixelViewport,DEFAULT_CAMERA_ZOOM} from '../village/render.mjs';
 import {createShiomachiRenderer} from './render.mjs';
-import {createShiomachiInteriorPreview} from './interior-preview.mjs?v=shiomachi-armory-stock-20261121-1';
+import {createShiomachiInteriorPreview} from './interior-preview.mjs?v=shiomachi-short-route-balance-20261122-1';
 
 // Dedicated preview, not a game destination. No storage, story or save writes.
 const scene=document.querySelector('#scene');

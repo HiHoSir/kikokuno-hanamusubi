@@ -1,14 +1,15 @@
 // 潮待村の兵具屋（試作品揃え）。鬼灯村の4点と混ぜない。
-// Values are draft for level/price validation against the *future* coastal
-// encounter economy. The real battle item catalog/save is intentionally not
-// modified by this preview.
+// Short-route provisional balance: the current field encounters yield 8 ryo
+// per win. Never assume a rest-stop merchant or intervening dungeon exists.
+// Gear is an optional per-slot upgrade from the first village, not a mandatory
+// T2 total-bonus package; the real battle catalog/save stays unchanged.
 import {ARMORY_STOCK,normalizePlayer} from '../../../src/game/battle/rules.mjs';
 
 export const SHIOMACHI_ARMORY_STOCK=Object.freeze([
- Object.freeze({id:'shiomachi-tide-blade',name:'潮切りの太刀',slot:'weapon',attack:12,defense:0,price:160}),
- Object.freeze({id:'shiomachi-tide-armor',name:'潮革の胴当て',slot:'body',attack:0,defense:10,price:120}),
- Object.freeze({id:'shiomachi-wave-helm',name:'波除けの鉢金',slot:'head',attack:0,defense:5,price:80}),
- Object.freeze({id:'shiomachi-reef-gaiters',name:'磯歩きの脚絆',slot:'feet',attack:0,defense:4,price:60})
+ Object.freeze({id:'shiomachi-tide-blade',name:'潮切りの太刀',slot:'weapon',attack:8,defense:0,price:48}),
+ Object.freeze({id:'shiomachi-tide-armor',name:'潮革の胴当て',slot:'body',attack:0,defense:7,price:40}),
+ Object.freeze({id:'shiomachi-wave-helm',name:'波除けの鉢金',slot:'head',attack:0,defense:3,price:24}),
+ Object.freeze({id:'shiomachi-reef-gaiters',name:'磯歩きの脚絆',slot:'feet',attack:0,defense:2,price:16})
 ]);
 
 export function purchaseShiomachiArmory(player,owned,id){

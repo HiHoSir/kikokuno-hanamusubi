@@ -138,7 +138,7 @@ try{
  await page.screenshot({path:'artifacts/shiomachi-village-walk.png'});
  // Three mandatory interiors use the exact canonical game-room graphics and
  // preserve the outdoor controller and the real game save during visits.
- for(const [room,choice] of [['armory','wakizashi'],['inn','sleep'],['teahouse','onigiri']]){
+ for(const [room,choice] of [['armory','shiomachi-tide-blade'],['inn','sleep'],['teahouse','onigiri']]){
    if(!await page.locator('.review-tools').evaluate(node=>node.open))
      await page.locator('.review-tools summary').click();
    const doorway={armory:'armoryDoor',inn:'innDoor',teahouse:'teahouseDoor'}[room];
@@ -163,6 +163,15 @@ try{
      await page.locator('#action-a').click(); // Complete the line, open shop
    }else await page.evaluate(()=>window.__SHIOMACHI_QA.openService());
    assert.equal(await page.locator('#shop-panel').isHidden(),false,room+' service opens');
+   if(room==='armory'){
+     const labels=await page.locator('#shop-options [data-shop-item]').allTextContents();
+     for(const word of ['潮切りの太刀','潮革の胴当て','波除けの鉢金','磯歩きの脚絆'])
+       assert.ok(labels.some(text=>text.includes(word)),word+' must be for sale in Shiomachi');
+     for(const oldName of ['脇差','厚布の胴当て','鉢巻','足袋'])
+       assert.ok(!labels.some(text=>text.includes(oldName)),oldName+' belongs to Hozuki village only');
+     assert.equal(await page.locator('#shop-options [data-shop-item="wakizashi"]').count(),0);
+     assert.equal(await page.locator('#shop-options [data-shop-item="shiomachi-tide-blade"]').count(),1);
+   }
    const goldBefore=await page.evaluate(()=>window.__SHIOMACHI_QA.trial().gold);
    await page.locator('#shop-options [data-shop-item="'+choice+'"]').click();
    assert.ok((await page.locator('#shop-message').textContent()).length>3);
@@ -171,6 +180,14 @@ try{
    if(room==='inn'){
      assert.equal(afterPurchase.hp,afterPurchase.maxhp);
      assert.equal(afterPurchase.mp,afterPurchase.maxmp);
+   }else if(room==='armory'){
+     assert.equal(afterPurchase.shiomachiGear['shiomachi-tide-blade'],1,
+       'purchased item is recorded only in preview inventory');
+     const secondGold=afterPurchase.gold;
+     await page.locator('#shop-options [data-shop-item="shiomachi-tide-blade"]').click();
+     const again=await page.evaluate(()=>window.__SHIOMACHI_QA.trial());
+     assert.equal(again.gold,secondGold,'duplicate purchase must not charge twice');
+     assert.ok((await page.locator('#shop-message').textContent()).includes('もう持っています'));
    }
    await page.screenshot({path:'artifacts/shiomachi-village-'+room+'-shop.png'});
    await page.locator('#shop-options [data-shop-item="exit"]').click();

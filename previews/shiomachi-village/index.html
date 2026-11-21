@@ -41,6 +41,23 @@
  border-radius:5px;background:rgba(20,45,52,.95);color:#fff5de;
  font:12px "DotGothic16",system-ui,sans-serif;touch-action:manipulation}
 .review-tools button[aria-pressed=true]{background:#d8bb78;color:#17263a}
+/* Same room/shop visuals as the existing village interiors, with controls
+   supplied by the global controls.css rather than a new gamepad. */
+#shop-panel{position:absolute;z-index:26;left:17%;right:17%;top:max(6px,env(safe-area-inset-top));
+ max-height:calc(100dvh - 16px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+ overflow:auto;overscroll-behavior:contain;padding:8px 14px;
+ border:3px double #d6b881;border-radius:7px;background:#122438f5;
+ color:#fff4df;font-family:"DotGothic16",sans-serif;touch-action:pan-y;
+ box-shadow:0 10px 24px #000a}
+#shop-panel[hidden]{display:none!important}
+#shop-panel h2{margin:0 0 4px;font-size:17px;color:#eed59b}
+#shop-wallet,#shop-message{font-size:13px;margin:4px 0 7px}
+#shop-options{display:grid;gap:4px}
+#shop-options button{min-height:36px;text-align:left;padding:5px 8px;
+ border:1px solid #8f8c79;border-radius:4px;background:#29453e;color:#fff6dd;
+ font:13px "DotGothic16",sans-serif;touch-action:manipulation}
+#shop-options button.selected{border-color:#f4d482;background:#675435}
+@media(max-width:550px){#shop-panel{left:12%;right:12%}}
 .rotate{display:none}
 @media(orientation:portrait){
  .rotate{position:fixed;z-index:100;inset:0;display:grid;place-items:center;
@@ -67,6 +84,9 @@
       <button type="button" data-review-spot="worksite">漁具</button>
       <button type="button" data-review-spot="buildings">家並み</button>
       <button type="button" data-review-spot="south">南口</button>
+      <button type="button" data-review-room="armory">兵具屋室内</button>
+      <button type="button" data-review-room="inn">宿室内</button>
+      <button type="button" data-review-room="teahouse">茶店室内</button>
       <button type="button" id="collision-toggle" aria-pressed="false">判定</button>
     </nav>
   </details>
@@ -79,6 +99,12 @@
       <p id="line"></p>
       <button id="next" type="button" aria-label="次のセリフへ">▼</button>
     </div>
+  </section>
+  <section id="shop-panel" aria-label="潮待村の試用店メニュー" hidden>
+    <h2 id="shop-title">品書き</h2>
+    <p id="shop-wallet">所持金</p>
+    <div id="shop-options"></div>
+    <p id="shop-message" aria-live="polite"></p>
   </section>
 </section>
 <!-- Keep the exact shared controller structure used by the village, cove and sanctuary. -->
@@ -94,6 +120,6 @@
 </section>
 </main>
 <div class="rotate" role="status">潮待村の検査はiPhoneを横向きにしてください。</div>
-<script type="module" src="../../src/game/shiomachi/walk.mjs?v=shiomachi-shared-controls-20261121"></script>
+<script type="module" src="../../src/game/shiomachi/walk.mjs?v=shiomachi-indoor-preview-20261121-1"></script>
 </body>
 </html>

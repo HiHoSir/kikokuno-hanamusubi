@@ -6,7 +6,7 @@ import {drawFurnitureLife} from '../interiors/life-effects.mjs';
 import {drawCharacter,residentInFront} from '../village/residents.mjs';
 import {makeWalk,HIZUKI_INTERIOR_WALK_SPEED} from '../village/movement.mjs';
 import {normalizePlayer,DEFAULT_PLAYER,FOOD_ITEMS,purchaseFood} from '../battle/rules.mjs';
-import {SHIOMACHI_ARMORY_STOCK,purchaseShiomachiArmory} from '../../../data/maps/shiomachi-village/armory.mjs';
+import {SHIOMACHI_ARMORY_STOCK,purchaseShiomachiArmory} from '../../../data/maps/shiomachi-village/armory.mjs?v=approved-balance-contract-20261122';
 
 export const SHIOMACHI_INN_PRICE=20; // preview-only proposed price, not game economy canon
 export function previewInnStay(hero,price=SHIOMACHI_INN_PRICE){

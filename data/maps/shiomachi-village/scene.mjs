@@ -25,6 +25,21 @@ export const SHIOMACHI_BUILDINGS=Object.freeze([
   building('fish-teahouse','teahouse',270,1550,420,410),
   building('east-net-home','houseThatch',1100,1550,390,357)
 ]);
+// World-space south-facing door targets match the native exterior artwork.
+// The contact threshold stays *outside* the building's roof collider.
+export const SHIOMACHI_INTERIORS=Object.freeze([
+  Object.freeze({building:'west-fisher-home',room:'inn',name:'潮待の宿',sign:'signInn',x:280,thresholdY:1043,returnY:1064}),
+  Object.freeze({building:'east-fisher-home',room:'armory',name:'潮待の兵具屋',sign:'signArmory',x:1060,thresholdY:1043,returnY:1064}),
+  Object.freeze({building:'fish-teahouse',room:'teahouse',name:'潮待の茶店',sign:'signTea',x:252,thresholdY:1578,returnY:1599}),
+  Object.freeze({building:'east-net-home',room:'house-craft',name:'網職人の家',sign:null,x:1100,thresholdY:1578,returnY:1599})
+]);
+// Trigger only when walking north through the real visual doorway. Do not
+// allow interacting with the roof, side-wall, or by merely walking nearby.
+export function shiomachiTouchedInterior(x,y,nx,ny,face,sites=SHIOMACHI_INTERIORS){
+ if(face!==1||ny>=y)return null;
+ return sites.find(site=>y>=site.thresholdY&&ny<site.thresholdY&&
+   Math.abs(nx-site.x)<=23)??null;
+}
 export const SHIOMACHI_PROPS=Object.freeze([
   prop('drying-rack','netRack',423,601,232,176,66),
   prop('rolled-net','netBundle',800,605,146,88,48),
@@ -81,13 +96,17 @@ export const SHIOMACHI_REVIEW_SPOTS=Object.freeze({
  shore:Object.freeze({x:675,y:465,face:1}),
  buildings:Object.freeze({x:655,y:1115,face:1}),
  worksite:Object.freeze({x:775,y:760,face:1}),
+ innDoor:Object.freeze({x:280,y:1068,face:1}),
+ armoryDoor:Object.freeze({x:1060,y:1068,face:1}),
+ teahouseDoor:Object.freeze({x:252,y:1604,face:1}),
  south:Object.freeze({...SHIOMACHI_ENTRY})
 });
 export const SHIOMACHI_MAP=Object.freeze({
  id:'shiomachi-village',name:'潮待村（試作）',tileSize:SHIOMACHI_TILE,
  width:SHIOMACHI_WIDTH,height:SHIOMACHI_HEIGHT,tiles:SHIOMACHI_TILES,
  shore:SHIOMACHI_SHORE,pier:SHIOMACHI_PIER,entry:SHIOMACHI_ENTRY,
- exit:SHIOMACHI_EXIT,objects:Object.freeze([...SHIOMACHI_BUILDINGS,...SHIOMACHI_PROPS]),
+ exit:SHIOMACHI_EXIT,interiors:SHIOMACHI_INTERIORS,
+ objects:Object.freeze([...SHIOMACHI_BUILDINGS,...SHIOMACHI_PROPS]),
  residents:SHIOMACHI_NPCS
 });
 export function shiomachiTileAt(x,y,map=SHIOMACHI_MAP){

@@ -34,6 +34,12 @@ export function createShiomachiRenderer(ctx,art,map=SHIOMACHI_MAP){
  const surf=prepareCoveSurf(map,landscape.shoreMask);
  const roads=staticRoads(map,art);
  const sprites=map.objects.map(o=>({...o,image:art[o.sprite]}));
+ // Canonical village sign PNGs, retained at their original 96x120 size.
+ // Place them over their corresponding façades and depth-sort with buildings.
+ const signs=map.interiors.map(site=>({
+   type:'object',id:site.building+'-sign',x:site.x-80,
+   y:site.thresholdY-34,image:art[site.sign]
+ })).filter(o=>o.image);
  const {width,height}=map;
  const render=(player,residents,time,viewport,debug=false)=>{
    const {step,bufferWidth,bufferHeight}=viewport;
@@ -72,6 +78,7 @@ export function createShiomachiRenderer(ctx,art,map=SHIOMACHI_MAP){
    // Correct painter order: player/NPC feet on the deck stay in front of it.
    const actors=[
      ...sprites.map(o=>({...o,type:'object'})),
+     ...signs,
      ...residents.map(o=>({...o,type:'npc',bitmap:art[o.sprite]})),
      {...player,type:'hero',bitmap:art.hero}
    ].sort((a,b)=>a.y-b.y||((a.type==='hero'?1:0)-(b.type==='hero'?1:0)));
@@ -111,6 +118,10 @@ export function createShiomachiRenderer(ctx,art,map=SHIOMACHI_MAP){
          ctx.beginPath();ctx.arc(o.x,o.y,o.radius+7,0,Math.PI*2);ctx.stroke();
        }
      }
+     ctx.strokeStyle='#ffd45a';
+     for(const site of map.interiors){
+       ctx.strokeRect(site.x-23,site.thresholdY-10,46,20);
+     }
      ctx.strokeStyle='#40edb8';
      for(const npc of residents){
        ctx.beginPath();ctx.arc(npc.x,npc.y,22,0,Math.PI*2);ctx.stroke();
@@ -121,6 +132,7 @@ export function createShiomachiRenderer(ctx,art,map=SHIOMACHI_MAP){
  };
  render.qa=Object.freeze({waveFrames:8,coastTiles:surf.entries.length,
    buildings:sprites.filter(o=>o.kind==='building').length,
+   visibleSigns:signs.length,
    nativeObjectCount:sprites.length,pierSprite:[art.pierNative.naturalWidth,art.pierNative.naturalHeight],
    pierWalkableCells:(map.pier.right-map.pier.left+1)*(map.pier.bottom-map.pier.top+1),
    zoomRule:'shared non-field 0.5, fixed',

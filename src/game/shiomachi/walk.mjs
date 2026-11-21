@@ -1,6 +1,6 @@
 import {
  SHIOMACHI_MAP,SHIOMACHI_REVIEW_SPOTS,shiomachiWalkableCell,
- shiomachiCollision,shiomachiIsExit
+ shiomachiCollision,shiomachiIsExit,shiomachiPierFixtureCollision
 } from '../../../data/maps/shiomachi-village/scene.mjs';
 import {makeWalk,HIZUKI_WALK_SPEED} from '../village/movement.mjs';
 import {residentInFront} from '../village/residents.mjs';
@@ -35,7 +35,7 @@ const sources=Object.freeze({
  crate:'assets/sea-cove/objects/fish-crate-92x70.png',
  water:'assets/field/effects/water-motion.png',
  pathSoil:'assets/village/scene/path-soil.png',
- pier:'assets/village/terrain/auto-bridge.png',
+ pierNative:'assets/shiomachi/objects/wooden-pier-128x360.png',
  coastMask:'assets/field/terrain/atlas/coast-mask-32.png',
  coastSand0:'assets/field/terrain/atlas/coast-sand-0-32.png',
  coastSand1:'assets/field/terrain/atlas/coast-sand-1-32.png',
@@ -79,7 +79,7 @@ async function start(){
  for(const [key,w,h] of [
    ['hero',240,448],['houseThatch',390,357],['houseTile',360,373],
    ['teahouse',420,410],['netRack',232,176],['basket',80,74],
-   ['barrel',64,86],['crate',92,70],['pathSoil',256,256],['pier',256,96]
+   ['barrel',64,86],['crate',92,70],['pathSoil',256,256],['pierNative',128,360]
  ]){
    if(images[key].naturalWidth!==w||images[key].naturalHeight!==h)
      throw Error('既存原寸のサイズが変わっています: '+key);
@@ -97,6 +97,7 @@ async function start(){
  const walk=makeWalk(pixelWidth,pixelHeight,collision,7);
  const residents=map.residents.map(npc=>({...npc,distance:0,moving:false}));
  const occupied=(x,y)=>shiomachiCollision(map.objects,x,y,7)||
+   shiomachiPierFixtureCollision(x,y,7,map)||
    residents.some(n=>Math.hypot(n.x-x,n.y-y)<27);
  const initial=map.entry;
  if(!walk.canStand(initial.x,initial.y)||occupied(initial.x,initial.y))

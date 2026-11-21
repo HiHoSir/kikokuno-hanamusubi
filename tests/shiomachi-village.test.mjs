@@ -167,7 +167,7 @@ test('the user-generated pier is a native transparent sprite, no fake bridge-til
  assert.ok(!walk.includes('auto-bridge.png'));
 });
 
-test('review UI is landscape only, same 0.5 zoom, no purchases or save writes',()=>{
+test('review UI is landscape only, shared 0.5 zoom, local demo commerce without real save writes',()=>{
  assert.equal(DEFAULT_CAMERA_ZOOM,0.5);
  const html=read('previews/shiomachi-village/index.html');
  const walk=read('src/game/shiomachi/walk.mjs');
@@ -189,7 +189,7 @@ test('review UI is landscape only, same 0.5 zoom, no purchases or save writes',(
  for(const oldLayout of ['.dpad{','grid-template-columns:repeat(3,44px)','width:min(100%,980px)'])
    assert.ok(!html.includes(oldLayout),'custom controller layout must be absent: '+oldLayout);
  assert.match(walk,/const \[nx,ny\]=walk\.move/);
- assert.match(walk,/bindDialogue\(clearInput\)/);
+ assert.match(walk,/bindDialogue\(clearInput,ended=>/);
  assert.match(walk,/requestAnimationFrame\(frame\)/);
  assert.match(walk,/previewOnly:true/);
  assert.doesNotMatch(walk,/savePlayer|saveGame|localStorage|sessionStorage|advanceStoryStage|KIKOKU_ROUTE\.go/);

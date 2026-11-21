@@ -67,8 +67,8 @@ export const SHIOMACHI_EXIT=Object.freeze({
 });
 export const SHIOMACHI_REVIEW_SPOTS=Object.freeze({
  shore:Object.freeze({x:675,y:465,face:1}),
- buildings:Object.freeze({x:655,y:1122,face:0}),
- worksite:Object.freeze({x:775,y:760,face:3}),
+ buildings:Object.freeze({x:655,y:1115,face:1}),
+ worksite:Object.freeze({x:775,y:760,face:1}),
  south:Object.freeze({...SHIOMACHI_ENTRY})
 });
 export const SHIOMACHI_MAP=Object.freeze({

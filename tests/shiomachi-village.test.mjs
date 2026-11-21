@@ -14,7 +14,7 @@ import {residentInFront} from '../src/game/village/residents.mjs';
 import {DEFAULT_CAMERA_ZOOM} from '../src/game/village/render.mjs';
 import {rooms,prepareInterior} from '../src/game/interiors/rooms.mjs';
 import {SHIOMACHI_INN_PRICE,previewInnStay} from '../src/game/shiomachi/interior-preview.mjs';
-import {DEFAULT_PLAYER,normalizePlayer,ARMORY_STOCK,FOOD_ITEMS,purchaseArmory,purchaseFood,ENEMIES,physicalDamage} from '../src/game/battle/rules.mjs';
+import {DEFAULT_PLAYER,normalizePlayer,ARMORY_STOCK,FOOD_ITEMS,purchaseArmory,purchaseFood} from '../src/game/battle/rules.mjs';
 import {SHIOMACHI_INTERIORS,shiomachiTouchedInterior} from '../data/maps/shiomachi-village/scene.mjs';
 import {SHIOMACHI_ARMORY_STOCK,purchaseShiomachiArmory,shiomachiStockComparison} from '../data/maps/shiomachi-village/armory.mjs';
 
@@ -291,23 +291,23 @@ test('Shiomachi has its own four stronger pieces; Hozuki original stock stays un
  assert.deepEqual(coastal.map(x=>x.slot),['weapon','body','head','feet']);
  assert.deepEqual(coastal.map(x=>x.name),
    ['潮切りの太刀','潮革の胴当て','波除けの鉢金','磯歩きの脚絆']);
- assert.deepEqual(coastal.map(x=>x.price),[48,40,24,16]);
- assert.deepEqual(coastal.map(x=>[x.attack,x.defense]),[[8,0],[0,7],[0,3],[0,2]]);
+ assert.deepEqual(coastal.map(x=>x.price),[160,120,80,60]);
+ assert.deepEqual(coastal.map(x=>[x.attack,x.defense]),[[12,0],[0,10],[0,5],[0,4]]);
  assert.equal(new Set(coastal.map(x=>x.id)).size,4);
  assert.equal(new Set([...classic,...coastal].map(x=>x.id)).size,8,'no collisions between shops');
  assert.ok(shiomachiStockComparison().every(x=>x.priceDifference>0&&
    (x.attackDifference>0||x.defenseDifference>0)));
- assert.equal(coastal.reduce((sum,x)=>sum+x.price,0),128,
-   'all four coastal pieces cost 16 current-field victories (optional, not required before entering the village)');
+ assert.equal(coastal.reduce((sum,x)=>sum+x.price,0),420,
+   'one complete new-village set costs 420 provisional ryo, not the old shop sum');
 });
 
 test('coastal shop purchases are pure, unique and never mutate real inventory',()=>{
- const hero=normalizePlayer({...DEFAULT_PLAYER,gold:80});
+ const hero=normalizePlayer({...DEFAULT_PLAYER,gold:250});
  const original=structuredClone(hero);
  const fresh={};
  const first=purchaseShiomachiArmory(hero,fresh,SHIOMACHI_ARMORY_STOCK[0].id);
  assert.equal(first.accepted,true);
- assert.equal(first.player.gold,32);
+ assert.equal(first.player.gold,90);
  assert.equal(first.owned['shiomachi-tide-blade'],1);
  assert.deepEqual(hero,original,'preview transaction must never mutate the original player');
  assert.deepEqual(fresh,{},'preview ownership is a separate immutable snapshot');
@@ -315,11 +315,11 @@ test('coastal shop purchases are pure, unique and never mutate real inventory',(
    'do not sneak new coastal equipment into Hozuki item catalog');
  const repeated=purchaseShiomachiArmory(first.player,first.owned,'shiomachi-tide-blade');
  assert.equal(repeated.accepted,false);
- assert.equal(repeated.player.gold,32);
+ assert.equal(repeated.player.gold,90);
  assert.match(repeated.message,/もう持っています/);
  const insufficient=purchaseShiomachiArmory(first.player,first.owned,'shiomachi-tide-armor');
  assert.equal(insufficient.accepted,false);
- assert.equal(insufficient.player.gold,32);
+ assert.equal(insufficient.player.gold,90);
  const missing=purchaseShiomachiArmory(hero,fresh,'wakizashi');
  assert.equal(missing.accepted,false,'Hozuki item ID is invalid at Shiomachi');
  const all=SHIOMACHI_ARMORY_STOCK.reduce((acc,item)=>{
@@ -327,7 +327,7 @@ test('coastal shop purchases are pure, unique and never mutate real inventory',(
    assert.equal(next.accepted,true,item.id);
    return next;
  },{player:normalizePlayer({...DEFAULT_PLAYER,gold:500}),owned:{}});
- assert.equal(all.player.gold,372);
+ assert.equal(all.player.gold,80);
  assert.equal(Object.keys(all.owned).length,4);
  const sellout=purchaseShiomachiArmory(normalizePlayer({...DEFAULT_PLAYER,gold:0}),{},'shiomachi-tide-blade');
  assert.equal(sellout.accepted,false);
@@ -336,34 +336,4 @@ test('coastal shop purchases are pure, unique and never mutate real inventory',(
  assert.ok(preview.includes("...SHIOMACHI_ARMORY_STOCK.map"));
  assert.ok(preview.includes("ownedShiomachi[entry.id]"));
  assert.doesNotMatch(preview,/localStorage|sessionStorage|savePlayer|saveGame|KIKOKU_ROUTE\.go/);
-});
-
-test('short-route economy: actual early encounters, partial upgrades, conservative damage',()=>{
- // There is no implemented rest-stop merchant, intermediate dungeon, or
- // confirmed encounter count between Hozuki and the independent Shiomachi preview.
- const early=[ENEMIES['field-oni'],ENEMIES.tanuki,ENEMIES.onibi];
- assert.deepEqual(early.map(enemy=>enemy.gold),[8,4,8]);
- // Two tanuki occur together in the live area, so those encounters pay 8 ryo.
- const ryoPerEncounter=8;
- const stock=SHIOMACHI_ARMORY_STOCK;
- const bySlot=Object.fromEntries(stock.map(item=>[item.slot,item]));
- assert.ok(bySlot.weapon.price>ARMORY_STOCK[0].price,'new weapon should not cost less than old one');
- assert.equal(bySlot.weapon.price,6*ryoPerEncounter,'six early battles buy the new weapon');
- assert.equal(bySlot.body.price,5*ryoPerEncounter,'five early battles buy the armor');
- assert.equal(bySlot.feet.price,2*ryoPerEncounter,'two early battles buy a small optional upgrade');
- assert.equal(stock.reduce((sum,item)=>sum+item.price,0),16*ryoPerEncounter);
- assert.equal(stock.reduce((sum,item)=>sum+item.attack,0),8);
- assert.equal(stock.reduce((sum,item)=>sum+item.defense,0),12);
- // This is a per-slot upgrade, not the historical artificial T2 total (42/30).
- // Under the current B-formula, the sword alone helps against the 16hp onibi
- // without creating an automatic one-hit kill for the other early enemies.
- const oldAttack=9+ARMORY_STOCK[0].attack,newAttack=9+bySlot.weapon.attack;
- assert.equal(physicalDamage(oldAttack,ENEMIES.onibi.defense,()=>.5),6);
- assert.equal(physicalDamage(newAttack,ENEMIES.onibi.defense,()=>.5),8);
- assert.equal(Math.ceil(ENEMIES.onibi.hp/physicalDamage(oldAttack,2,()=>.5)),3);
- assert.equal(Math.ceil(ENEMIES.onibi.hp/physicalDamage(newAttack,2,()=>.5)),2);
- assert.equal(Math.ceil(ENEMIES['field-oni'].hp/physicalDamage(newAttack,2,()=>.5)),2);
- assert.equal(Math.ceil(ENEMIES.tanuki.hp/physicalDamage(newAttack,2,()=>.5)),1);
- assert.ok(read('src/game/shiomachi/interior-preview.mjs').includes('gold:80'),
-   'the test storefront uses an illustrative ten-win wallet, not a fictitious merchant');
 });

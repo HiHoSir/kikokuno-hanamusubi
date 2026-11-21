@@ -60,7 +60,36 @@ try{
  assert.ok(qa.loadHidden);
  assert.ok(Math.abs(qa.canvas[0]-qa.viewport[0])<2);
  assert.ok(Math.abs(qa.canvas[1]-qa.viewport[1])<2);
+ // Compare actual screen-space controls to the existing approved cove review
+ // at the exact same landscape iPhone viewport and DPR (not CSS literals).
+ const frameControls=async p=>p.evaluate(()=>{
+   const bounds=selector=>{
+     const rect=document.querySelector(selector).getBoundingClientRect();
+     return [rect.x,rect.y,rect.width,rect.height].map(n=>Math.round(n*10)/10);
+   };
+   return {up:bounds('#up'),left:bounds('#left'),
+     down:bounds('#down'),right:bounds('#right'),
+     a:bounds('#action-a'),b:bounds('#action-b'),
+     pad:bounds('#pad'),viewport:bounds('.viewport'),
+     main:bounds('main')};
+ });
+ const actual=await frameControls(page);
+ const reference=await browser.newPage({viewport:{width:874,height:402},
+   deviceScaleFactor:2,isMobile:true,hasTouch:true});
+ await reference.goto('http://127.0.0.1:'+server.address().port+
+   '/previews/sea-cove-review/',{waitUntil:'domcontentloaded'});
+ const expected=await frameControls(reference);
+ await reference.close();
+ assert.deepEqual(actual,expected,'controller position/size must match the sea-cove game review exactly');
+ assert.equal(actual.main[2],874,'the preview uses the whole screen, not a centered mini-page');
+ assert.equal(actual.viewport[2],874,'map viewport spans the full landscape screen');
+ assert.ok(actual.left[0]<actual.main[2]/3,'D-pad is in the bottom-left corner');
+ assert.ok(actual.a[0]>actual.main[2]*2/3,'A button is in the bottom-right corner');
+ assert.ok(actual.b[0]>actual.main[2]*2/3,'B button is beside A');
+ assert.equal(await page.locator('.review-tools').getAttribute('open'),null,
+   'debug buttons must not clutter the default gameplay surface');
  await page.screenshot({path:'artifacts/shiomachi-village-start.png'});
+ await page.locator('.review-tools summary').click();
  await page.locator('[data-review-spot="shore"]').click();
  await page.waitForTimeout(320);
  const first=await page.locator('#scene').screenshot();

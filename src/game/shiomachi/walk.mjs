@@ -1,12 +1,14 @@
 import {
  SHIOMACHI_MAP,SHIOMACHI_REVIEW_SPOTS,shiomachiWalkableCell,
- shiomachiCollision,shiomachiIsExit,shiomachiPierFixtureCollision
+ shiomachiCollision,shiomachiIsExit,shiomachiPierFixtureCollision,
+ shiomachiTouchedInterior
 } from '../../../data/maps/shiomachi-village/scene.mjs';
 import {makeWalk,HIZUKI_WALK_SPEED} from '../village/movement.mjs';
 import {residentInFront} from '../village/residents.mjs';
 import {bindDialogue} from '../village/dialogue.mjs';
 import {pixelViewport,DEFAULT_CAMERA_ZOOM} from '../village/render.mjs';
 import {createShiomachiRenderer} from './render.mjs';
+import {createShiomachiInteriorPreview} from './interior-preview.mjs';
 
 // Dedicated preview, not a game destination. No storage, story or save writes.
 const scene=document.querySelector('#scene');
@@ -24,6 +26,10 @@ const sources=Object.freeze({
  fisher:'assets/characters/npc/ushiohei-walk-4dir-80x112.png',
  osumi:'assets/characters/npc/osumi-walk-4dir-80x112.png',
  clerk:'assets/characters/npc/shop-clerk-walk-4dir-80x112.png',
+ furniture:'assets/village/interiors/furniture.png',
+ signInn:'assets/village/scene/sign-inn.png',
+ signArmory:'assets/village/scene/sign-armory.png',
+ signTea:'assets/village/scene/sign-teahouse.png',
  houseThatch:'assets/village/scene/house-thatch.png',
  houseTile:'assets/village/scene/house-tile.png',
  teahouse:'assets/village/scene/teahouse.png',
@@ -79,7 +85,8 @@ async function start(){
  for(const [key,w,h] of [
    ['hero',240,448],['houseThatch',390,357],['houseTile',360,373],
    ['teahouse',420,410],['netRack',232,176],['basket',80,74],
-   ['barrel',64,86],['crate',92,70],['pathSoil',256,256],['pierNative',128,360]
+   ['barrel',64,86],['crate',92,70],['pathSoil',256,256],['pierNative',128,360],
+   ['signInn',96,120],['signArmory',96,120],['signTea',96,120]
  ]){
    if(images[key].naturalWidth!==w||images[key].naturalHeight!==h)
      throw Error('既存原寸のサイズが変わっています: '+key);
@@ -114,9 +121,44 @@ async function start(){
    lastFrame=-1;
  };
  const renderer=createShiomachiRenderer(scene.getContext('2d',{alpha:false}),images,map);
- const dialogue=bindDialogue(clearInput);
+ const shopPanel={
+   panel:document.querySelector('#shop-panel'),title:document.querySelector('#shop-title'),
+   wallet:document.querySelector('#shop-wallet'),
+   options:document.querySelector('#shop-options'),message:document.querySelector('#shop-message')
+ };
+ const interior=createShiomachiInteriorPreview({
+   ctx:scene.getContext('2d',{alpha:false}),images,viewport,clearInput,shopPanel
+ });
+ const dialogue=bindDialogue(clearInput,ended=>{
+   if(interior.active&&ended===interior.resident())interior.openShop();
+ });
+ const enterRoom=site=>{
+   if(!site||dialogue.active)return false;
+   clearInput();moving=false;
+   const entered=interior.enter(site);
+   if(entered){
+     document.querySelector('.review-tools').open=false;
+     scene.dataset.room=site.room;
+     scene.dataset.mode='interior';
+     lastFrame=-1;
+   }
+   return entered;
+ };
+ const returnOutside=site=>{
+   clearInput();
+   x=site.x;y=site.returnY;face=0;distance=0;moving=false;
+   scene.dataset.room='';
+   scene.dataset.mode='exterior';
+   lastFrame=-1;
+ };
  const action=()=>{
+   if(interior.shopActive){interior.confirmShop();return;}
    if(dialogue.active){dialogue.advance();return;}
+   if(interior.active){
+     interior.updateDialogue(dialogue);
+     if(!dialogue.open())dialogue.openMessage('緋月「漁村の暮らしが感じられる部屋だ。」');
+     return;
+   }
    dialogue.update(residentInFront(x,y,face,residents),x,y);
    if(!dialogue.open())
      dialogue.openMessage('潮待村「海風に潮と干し網の匂いが混じっている。」');
@@ -124,7 +166,8 @@ async function start(){
  const render=(now,force=false)=>{
    const t=Math.floor(now/140);
    if(force||moving||t!==lastFrame){
-     renderer({x,y,face,distance,moving},residents,now,viewport,debug);
+     if(interior.active)interior.draw(now,debug);
+     else renderer({x,y,face,distance,moving},residents,now,viewport,debug);
      lastFrame=t;
    }
  };
@@ -132,30 +175,47 @@ async function start(){
    const dt=last?Math.max(0,Math.min(now-last,40)):0;last=now;
    moving=false;
    const dir=[...input.values()].at(-1);
-   if(!dialogue.active&&dir){
+   if(!dialogue.active&&!interior.shopActive&&dir){
      const [dx,dy,heading]=directions[dir];
-     face=heading;
-     const delta=HIZUKI_WALK_SPEED*dt/1000;
-     const [nx,ny]=walk.move(x,y,dx*delta,dy*delta,occupied);
-     distance+=Math.hypot(nx-x,ny-y);
-     moving=Math.abs(nx-x)+Math.abs(ny-y)>0.01;
-     x=nx;y=ny;
+     if(interior.active){
+       const departed=interior.advance(dt,dir);
+       if(departed)returnOutside(departed);
+       else moving=Boolean(interior.actor?.moving);
+     }else{
+       face=heading;
+       const delta=HIZUKI_WALK_SPEED*dt/1000;
+       const [nx,ny]=walk.move(x,y,dx*delta,dy*delta,occupied);
+       const site=shiomachiTouchedInterior(x,y,nx,ny,heading);
+       if(site)enterRoom(site);
+       else{
+         distance+=Math.hypot(nx-x,ny-y);
+         moving=Math.abs(nx-x)+Math.abs(ny-y)>0.01;
+         x=nx;y=ny;
+       }
+     }
    }
-   dialogue.update(residentInFront(x,y,face,residents),x,y);
-   if(shiomachiIsExit(x,y)){
-     objective.textContent='南口（プレビュー用の境界）。まだフィールドには接続していません。';
+   if(interior.active){
+     interior.updateDialogue(dialogue);
+     objective.textContent=interior.site.name+'（室内）　南口から外へ／Aで会話';
    }else{
-     objective.textContent='潮待村・試作：浜辺／家並み／漁の仕事場を歩いて確認';
+     dialogue.update(residentInFront(x,y,face,residents),x,y);
+     objective.textContent=shiomachiIsExit(x,y)
+       ?'南口（プレビュー用の境界）。まだフィールドには接続していません。'
+       :'潮待村・試作：兵具屋／宿／茶店の入口から室内へ';
    }
    render(now);
-   scene.dataset.x=String(Math.floor(x));
-   scene.dataset.y=String(Math.floor(y));
+   const pos=interior.active?interior.position():{x,y};
+   scene.dataset.x=String(Math.floor(pos.x));
+   scene.dataset.y=String(Math.floor(pos.y));
    requestAnimationFrame(frame);
  };
  for(const button of buttons){
    button.addEventListener('pointerdown',e=>{
      if(e.button!==0)return;
-     e.preventDefault();button.setPointerCapture(e.pointerId);
+     e.preventDefault();
+     if(interior.shopActive){interior.choose(button.dataset.dir);return;}
+     if(dialogue.active)return;
+     button.setPointerCapture(e.pointerId);
      hold(e.pointerId,button.dataset.dir);
    });
    for(const type of ['pointerup','pointercancel','lostpointercapture'])
@@ -163,7 +223,10 @@ async function start(){
    button.addEventListener('contextmenu',e=>e.preventDefault());
  }
  document.querySelector('#action-a').addEventListener('click',action);
- document.querySelector('#action-b').addEventListener('click',()=>dialogue.advance());
+ document.querySelector('#action-b').addEventListener('click',()=>{
+   if(interior.shopActive)interior.closeShop();
+   else if(dialogue.active)dialogue.advance();
+ });
  document.querySelector('#collision-toggle').addEventListener('click',e=>{
    debug=!debug;e.currentTarget.setAttribute('aria-pressed',String(debug));
    render(performance.now(),true);
@@ -172,16 +235,38 @@ async function start(){
    button.addEventListener('click',()=>{
      const spot=SHIOMACHI_REVIEW_SPOTS[button.dataset.reviewSpot];
      if(!spot||!walk.canStand(spot.x,spot.y)||occupied(spot.x,spot.y))return;
-     clearInput();x=spot.x;y=spot.y;face=spot.face;distance=0;moving=false;
+     clearInput();dialogue.close(false);
+     if(interior.active)interior.leave();
+     x=spot.x;y=spot.y;face=spot.face;distance=0;moving=false;
+     scene.dataset.room='';scene.dataset.mode='exterior';
      for(const candidate of document.querySelectorAll('[data-review-spot]'))
        candidate.setAttribute('aria-pressed',String(candidate===button));
+     lastFrame=-1;render(performance.now(),true);
+   });
+ }
+ for(const button of document.querySelectorAll('[data-review-room]')){
+   button.addEventListener('click',()=>{
+     const site=map.interiors.find(s=>s.room===button.dataset.reviewRoom);
+     if(!site)return;
      dialogue.close(false);
+     if(interior.active)interior.leave();
+     enterRoom(site);
      render(performance.now(),true);
    });
  }
  window.addEventListener('keydown',e=>{
    if(e.ctrlKey||e.metaKey||e.altKey)return;
    if((e.key==='Enter'||e.key===' ')&&e.target?.tagName==='BUTTON')return;
+   if(interior.shopActive){
+     if(['x','X','Escape','Backspace'].includes(e.key)){
+       e.preventDefault();if(!e.repeat)interior.closeShop();
+     }else if(['z','Z','Enter',' '].includes(e.key)){
+       e.preventDefault();if(!e.repeat)interior.confirmShop();
+     }else if(keys[e.key]){
+       e.preventDefault();if(!e.repeat)interior.choose(keys[e.key]);
+     }
+     return;
+   }
    if(['z','Z','Enter',' '].includes(e.key)){
      e.preventDefault();if(!e.repeat)action();return;
    }
@@ -208,7 +293,17 @@ async function start(){
    canStand:(px,py)=>walk.canStand(px,py)&&!occupied(px,py),
    position:()=>({x,y,face}),
    readDebug:()=>debug,
-   talk:action
+   talk:action,
+   entrances:map.interiors.map(({building,room,x,thresholdY})=>({building,room,x,thresholdY})),
+   room:()=>interior.currentRoom,
+   indoorPosition:()=>interior.position(),
+   shopActive:()=>interior.shopActive,
+   trial:()=>interior.trial,
+   enterRoom:room=>{
+     const site=map.interiors.find(item=>item.room===room);
+     return Boolean(site)&&enterRoom(site);
+   },
+   exitRoom:()=>{if(!interior.active)return false;returnOutside(interior.leave());return true;}
  };
  requestAnimationFrame(frame);
 }

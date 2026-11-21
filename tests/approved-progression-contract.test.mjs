@@ -71,5 +71,5 @@ test('Shiomachi demo does not counterfeit T2 or mutate the battle item catalog',
  assert.match(doc,/潮待村/);
  assert.match(doc,/T2.*配置未確定/);
  assert.match(doc,/128両案は撤回/);
- assert.match(doc,/個別装備/);
+ assert.match(doc,/個別販売/);
 });

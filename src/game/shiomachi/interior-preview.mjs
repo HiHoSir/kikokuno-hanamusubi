@@ -70,7 +70,9 @@ export function createShiomachiInteriorPreview({ctx,images,viewport,clearInput,s
    if(!site||!['inn','armory','teahouse'].includes(site.room))return false;
    shopActive=true;selected=0;clearInput();
    title.textContent=site.name+'（試用・セーブには反映しません）';
-   message.textContent='何をいたしましょう？';
+   message.textContent=site.room==='armory'
+     ?'性能・価格は未承認の仮表示です。正式な装備としては使えません。'
+     :'何をいたしましょう？';
    shopPanel.panel.hidden=false;
    refreshShop();
    return true;

@@ -102,7 +102,8 @@ export const SHIOMACHI_MAP=Object.freeze({
  id:'shiomachi-village',name:'潮待村（試作）',tileSize:SHIOMACHI_TILE,
  width:SHIOMACHI_WIDTH,height:SHIOMACHI_HEIGHT,tiles:SHIOMACHI_TILES,
  shore:SHIOMACHI_SHORE,pier:SHIOMACHI_PIER,entry:SHIOMACHI_ENTRY,
- exit:SHIOMACHI_EXIT,objects:Object.freeze([...SHIOMACHI_BUILDINGS,...SHIOMACHI_PROPS]),
+ exit:SHIOMACHI_EXIT,interiors:SHIOMACHI_INTERIORS,
+ objects:Object.freeze([...SHIOMACHI_BUILDINGS,...SHIOMACHI_PROPS]),
  residents:SHIOMACHI_NPCS
 });
 export function shiomachiTileAt(x,y,map=SHIOMACHI_MAP){

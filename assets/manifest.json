@@ -2567,6 +2567,28 @@
         "source": "five distinct original shrine object illustrations, cropped and palette reduced; Tengai Makyou ZERO used only as structural reference"
       },
       "approvalNote": "Provisional in-game adoption on 2026-11-20 after user accepted the new art/depth as tolerable and requested main integration; further visual polish is not yet approved. Preview continues to allow legacy comparison."
+    },
+    {
+      "id": "shiomachi-wooden-pier-128x360",
+      "type": "object",
+      "path": "assets/shiomachi/objects/wooden-pier-128x360.png",
+      "status": "approved",
+      "usage": "shiomachi-village-review-only",
+      "dimensions": {
+        "width": 128,
+        "height": 360
+      },
+      "footAnchor": [
+        64,
+        360
+      ],
+      "gitBlobSha": "b99b7434e8166d9017a9591944eac59a05930218",
+      "origin": {
+        "kind": "original-generated-pixel-art",
+        "source": "Previously generated railing-free wooden fishing pier; source image 和風漁港の木造桟橋ピクセルアート.png; background extracted to transparency, reduced to native pixel art and indexed colors"
+      },
+      "description": "One-piece open-sided pier sprite on the animated sea, with walkable deck and separate fixture colliders, not repeated bridge tiles",
+      "approvalNote": "Registered for technical preview; actual iPhone visual approval remains pending."
     }
   ],
   "designReferences": [

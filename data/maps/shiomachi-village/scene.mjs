@@ -1,6 +1,6 @@
 // 潮待村 (draft): an independent, walkable coastal settlement review.
 // Not registered as a field destination; it never alters the existing cove.
-// Layout positions are WORLD PIXELS. Only ground/coast/pier reuse 32px tiles.
+// Layout positions are WORLD PIXELS. Only ground and coast reuse 32px tiles; the pier is a native standalone sprite.
 import {COVE_SHORE} from '../sea-cove/scene.mjs';
 
 export const SHIOMACHI_TILE=32;
@@ -58,9 +58,21 @@ export const SHIOMACHI_NPCS=Object.freeze([
    ])})
 ]);
 export const SHIOMACHI_PIER=Object.freeze({
- // A short north-facing wooden pier. It is passable, but not a boat transition.
- left:20,right:22,top:5,bottom:11
+ // Native 128x360 transparent dock, north tip in the sea and south end on shore.
+ // The posts have no rails; the open side remains ready for a future moored boat.
+ // Width is the walkable deck, *not* a 32px constraint on the sprite.
+ left:20,right:22,top:3,bottom:13,
+ image:Object.freeze({x:688,footY:448,width:128,height:360}),
+ fixtures:Object.freeze([
+  Object.freeze({id:'dock-bucket',x:653,y:147,radius:13}),
+  Object.freeze({id:'dock-net',x:638,y:231,radius:9}),
+  Object.freeze({id:'dock-basket',x:729,y:329,radius:12}),
+  Object.freeze({id:'dock-barrels',x:725,y:413,radius:15})
+ ])
 });
+export function shiomachiPierFixtureCollision(x,y,radius=7,map=SHIOMACHI_MAP){
+ return map.pier.fixtures.some(o=>Math.hypot(x-o.x,y-o.y)<o.radius+radius);
+}
 export const SHIOMACHI_ENTRY=Object.freeze({x:674,y:1637,face:1});
 export const SHIOMACHI_EXIT=Object.freeze({
   left:610,right:742,top:1680,bottom:SHIOMACHI_HEIGHT*SHIOMACHI_TILE

@@ -54,6 +54,10 @@ try{
  assert.deepEqual(qa.bounds,[42,54]);
  assert.equal(qa.renderer.buildings,4);
  assert.equal(qa.renderer.nativeObjectCount,12);
+ assert.deepEqual(qa.renderer.pierSprite,[128,360],
+   'the transparent generated sprite must be loaded at its native size');
+ assert.equal(qa.renderer.pierWalkableCells,33,
+   'the wood pier remains traversable in the real collision map');
  assert.equal(qa.residents.length,4);
  assert.equal(qa.renderer.waveFrames,8);
  assert.ok(qa.renderer.coastTiles>50);
@@ -91,6 +95,14 @@ try{
  await page.screenshot({path:'artifacts/shiomachi-village-start.png'});
  await page.locator('.review-tools summary').click();
  await page.locator('[data-review-spot="shore"]').click();
+ const dockReachable=await page.evaluate(()=>{
+   const qa=window.__SHIOMACHI_QA;
+   return {end:qa.canStand(688,130),mid:qa.canStand(688,240),
+     land:qa.canStand(688,440),water:qa.canStand(601,130),
+     basketBlocked:qa.canStand(653,147)};
+ });
+ assert.deepEqual(dockReachable,{end:true,mid:true,land:true,water:false,basketBlocked:false},
+   'deck navigation is clear, outer sea blocked, built-in deck props solid');
  await page.waitForTimeout(320);
  const first=await page.locator('#scene').screenshot();
  await page.waitForTimeout(470);

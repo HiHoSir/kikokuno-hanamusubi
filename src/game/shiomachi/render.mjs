@@ -62,13 +62,14 @@ export function createShiomachiRenderer(ctx,art,map=SHIOMACHI_MAP){
        cell.x*TILE,cell.y*TILE,TILE,TILE);
    }
    ctx.drawImage(roads,0,0);
-   const pier=map.pier;
-   for(let y=pier.top;y<=pier.bottom;y++)for(let x=pier.left;x<=pier.right;x++){
-     // The existing 32px plank chip creates the pier deck, no generated dock art.
-     const atlasX=(x===pier.left?0:x===pier.right?64:32);
-     const atlasY=32;
-     ctx.drawImage(art.pier,atlasX,atlasY,TILE,TILE,x*TILE,y*TILE,TILE,TILE);
-   }
+   // This is the actual approved-generation-derived transparent dock sprite,
+   // not a bridge texture repeated into an implausible pier. Native world size;
+   // never apply independent scaling to the dock or the nearby characters.
+   const dock=map.pier.image;
+   ctx.drawImage(art.pierNative,
+     Math.round(dock.x-dock.width/2),
+     Math.round(dock.footY-dock.height));
+   // Correct painter order: player/NPC feet on the deck stay in front of it.
    const actors=[
      ...sprites.map(o=>({...o,type:'object'})),
      ...residents.map(o=>({...o,type:'npc',bitmap:art[o.sprite]})),
@@ -90,6 +91,16 @@ export function createShiomachiRenderer(ctx,art,map=SHIOMACHI_MAP){
      drawCharacter(ctx,obj);
    }
    if(debug){
+     const p=map.pier;
+     ctx.strokeStyle='#79efff';
+     ctx.lineWidth=2;
+     ctx.strokeRect(p.left*TILE,p.top*TILE,
+       (p.right-p.left+1)*TILE,(p.bottom-p.top+1)*TILE);
+     for(const fixture of p.fixtures){
+       ctx.beginPath();
+       ctx.arc(fixture.x,fixture.y,fixture.radius+7,0,Math.PI*2);
+       ctx.stroke();
+     }
      ctx.lineWidth=3;
      for(const o of map.objects){
        ctx.strokeStyle=o.kind==='building'?'#ef7ea7':'#e8d382';
@@ -110,7 +121,9 @@ export function createShiomachiRenderer(ctx,art,map=SHIOMACHI_MAP){
  };
  render.qa=Object.freeze({waveFrames:8,coastTiles:surf.entries.length,
    buildings:sprites.filter(o=>o.kind==='building').length,
-   nativeObjectCount:sprites.length,zoomRule:'shared non-field 0.5, fixed',
+   nativeObjectCount:sprites.length,pierSprite:[art.pierNative.naturalWidth,art.pierNative.naturalHeight],
+   pierWalkableCells:(map.pier.right-map.pier.left+1)*(map.pier.bottom-map.pier.top+1),
+   zoomRule:'shared non-field 0.5, fixed',
    ocean:'approved cove shoreline tiles + animated 8-frame surf'});
  return render;
 }

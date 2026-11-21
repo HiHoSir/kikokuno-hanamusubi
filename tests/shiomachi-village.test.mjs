@@ -6,8 +6,8 @@ import {SHORE_Y} from '../data/maps/shoreline-study/scene.mjs';
 import {
  SHIOMACHI_MAP,SHIOMACHI_WIDTH,SHIOMACHI_HEIGHT,SHIOMACHI_TILE,
  SHIOMACHI_SHORE,SHIOMACHI_BUILDINGS,SHIOMACHI_PROPS,SHIOMACHI_NPCS,
- SHIOMACHI_REVIEW_SPOTS,shiomachiWalkableCell,shiomachiIsExit,
- shiomachiCollision
+ SHIOMACHI_REVIEW_SPOTS,SHIOMACHI_PIER,shiomachiWalkableCell,shiomachiIsExit,
+ shiomachiCollision,shiomachiPierFixtureCollision
 } from '../data/maps/shiomachi-village/scene.mjs';
 import {roadCell} from '../src/game/shiomachi/render.mjs';
 import {residentInFront} from '../src/game/village/residents.mjs';
@@ -133,6 +133,36 @@ test('walkable south entrance, open main street, pier and dialogue approaches',(
  }
 });
 
+test('the user-generated pier is a native transparent sprite, no fake bridge-tile loop',()=>{
+ const pier=SHIOMACHI_PIER,art='assets/shiomachi/objects/wooden-pier-128x360.png';
+ assert.deepEqual(dimensions(art),[128,360]);
+ const png=readFileSync(art);
+ assert.deepEqual([...png.subarray(0,8)],[137,80,78,71,13,10,26,10]);
+ assert.deepEqual([pier.left,pier.right,pier.top,pier.bottom],[20,22,3,13]);
+ assert.deepEqual(pier.image,{x:688,footY:448,width:128,height:360});
+ assert.ok(pier.image.x-pier.image.width/2>=pier.left*32-16);
+ assert.equal(pier.image.footY,(pier.bottom+1)*32);
+ // The deck is reachable through sea tiles, open-sided for future boarding.
+ for(const y of [3,4,5,6,7,8,9,10,11,12,13]){
+   assert.equal(shiomachiWalkableCell(21,y),true,'walkable pier center '+y);
+   assert.equal(shiomachiWalkableCell(19,y),y<SHIOMACHI_SHORE[19]?false:true,
+     'deep water beside dock stays unwalkable');
+ }
+ assert.ok(shiomachiPierFixtureCollision(653,147,7));
+ assert.ok(shiomachiPierFixtureCollision(725,413,7));
+ assert.equal(shiomachiPierFixtureCollision(688,240,7),false,
+   'clear central walkway from village to the open tip');
+ const rendering=read('src/game/shiomachi/render.mjs');
+ const walk=read('src/game/shiomachi/walk.mjs');
+ assert.ok(rendering.includes('ctx.drawImage(art.pierNative'),
+   'the renderer must draw the generated one-piece dock art');
+ assert.ok(!rendering.includes('atlasX=')&&!rendering.includes('art.pier,atlasX'),
+   'remove repeated bridge tiles');
+ assert.ok(walk.includes("pierNative:'assets/shiomachi/objects/wooden-pier-128x360.png'"));
+ assert.ok(walk.includes('shiomachiPierFixtureCollision(x,y,7,map)'));
+ assert.ok(!walk.includes('auto-bridge.png'));
+});
+
 test('review UI is landscape only, same 0.5 zoom, no purchases or save writes',()=>{
  assert.equal(DEFAULT_CAMERA_ZOOM,0.5);
  const html=read('previews/shiomachi-village/index.html');
@@ -163,6 +193,6 @@ test('review UI is landscape only, same 0.5 zoom, no purchases or save writes',(
  assert.match(render,/prepareCoveSurf\(map,landscape.shoreMask\)/);
  assert.match(render,/tideFrame\(time\)/);
  assert.match(render,/drawCharacter\(ctx,obj\)/);
- assert.match(render,/ctx\.drawImage\(art\.pier/);
+ assert.match(render,/ctx\.drawImage\(art\.pierNative/);
  assert.ok(existsSync('docs/FOUR_VILLAGES_EQUIPMENT_PLAN.md'));
 });

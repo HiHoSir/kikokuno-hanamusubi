@@ -154,11 +154,13 @@ test('the user-generated pier is a native transparent sprite, no fake bridge-til
    'clear central walkway from village to the open tip');
  const rendering=read('src/game/shiomachi/render.mjs');
  const walk=read('src/game/shiomachi/walk.mjs');
- assert.match(rendering,/ctx\\.drawImage\\(art\\.pierNative/);
- assert.doesNotMatch(rendering,/atlasX=|art\\.pier,atlasX/);
- assert.match(walk,/pierNative:'assets\\/shiomachi\\/objects\\/wooden-pier-128x360\\.png'/);
- assert.match(walk,/shiomachiPierFixtureCollision\\(x,y,7,map\\)/);
- assert.doesNotMatch(walk,/auto-bridge\\.png/);
+ assert.ok(rendering.includes('ctx.drawImage(art.pierNative'),
+   'the renderer must draw the generated one-piece dock art');
+ assert.ok(!rendering.includes('atlasX=')&&!rendering.includes('art.pier,atlasX'),
+   'remove repeated bridge tiles');
+ assert.ok(walk.includes("pierNative:'assets/shiomachi/objects/wooden-pier-128x360.png'"));
+ assert.ok(walk.includes('shiomachiPierFixtureCollision(x,y,7,map)'));
+ assert.ok(!walk.includes('auto-bridge.png'));
 });
 
 test('review UI is landscape only, same 0.5 zoom, no purchases or save writes',()=>{

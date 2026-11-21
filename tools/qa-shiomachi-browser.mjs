@@ -53,6 +53,7 @@ try{
  assert.equal(qa.zoom,0.5);
  assert.deepEqual(qa.bounds,[42,54]);
  assert.equal(qa.renderer.buildings,4);
+ assert.equal(qa.renderer.visibleSigns,3,'inn, armory and teahouse share the native sign images');
  assert.equal(qa.renderer.nativeObjectCount,12);
  assert.deepEqual(qa.renderer.pierSprite,[128,360],
    'the transparent generated sprite must be loaded at its native size');
@@ -135,6 +136,48 @@ try{
  const after=await page.evaluate(()=>window.__SHIOMACHI_QA.position().y);
  assert.ok(after<before-25,'the real hero walks up from the southern entrance');
  await page.screenshot({path:'artifacts/shiomachi-village-walk.png'});
+ // Three mandatory interiors use the exact canonical game-room graphics and
+ // preserve the outdoor controller and the real game save during visits.
+ for(const [room,choice] of [['armory','wakizashi'],['inn','sleep'],['teahouse','onigiri']]){
+   if(!await page.locator('.review-tools').evaluate(node=>node.open))
+     await page.locator('.review-tools summary').click();
+   await page.locator('[data-review-room="'+room+'"]').click();
+   await page.waitForFunction(expected=>window.__SHIOMACHI_QA.room()===expected,room);
+   assert.equal(await page.locator('#scene').getAttribute('data-room'),room);
+   assert.equal(await page.locator('#load').isHidden(),true);
+   await page.screenshot({path:'artifacts/shiomachi-village-'+room+'.png'});
+   // Talk to the real armory shop clerk using A, not a fabricated menu.
+   if(room==='armory'){
+     await page.keyboard.down('ArrowUp');
+     await page.waitForTimeout(215);
+     await page.keyboard.up('ArrowUp');
+     await page.locator('#action-a').click();
+     assert.equal(await page.locator('#speaker').textContent(),'兵具屋の店番');
+     assert.equal(await page.locator('#dialogue').isHidden(),false);
+     await page.locator('#action-a').click(); // Reveal the rest of the line
+     await page.locator('#action-a').click(); // Complete the line, open shop
+   }else await page.evaluate(()=>window.__SHIOMACHI_QA.openService());
+   assert.equal(await page.locator('#shop-panel').isHidden(),false,room+' service opens');
+   const goldBefore=await page.evaluate(()=>window.__SHIOMACHI_QA.trial().gold);
+   await page.locator('#shop-options [data-shop-item="'+choice+'"]').click();
+   assert.ok((await page.locator('#shop-message').textContent()).length>3);
+   const afterPurchase=await page.evaluate(()=>window.__SHIOMACHI_QA.trial());
+   assert.ok(afterPurchase.gold<goldBefore,room+' uses pure preview-only purchase rule');
+   if(room==='inn'){
+     assert.equal(afterPurchase.hp,afterPurchase.maxhp);
+     assert.equal(afterPurchase.mp,afterPurchase.maxmp);
+   }
+   await page.screenshot({path:'artifacts/shiomachi-village-'+room+'-shop.png'});
+   await page.locator('#shop-options [data-shop-item="exit"]').click();
+   assert.equal(await page.locator('#shop-panel').isHidden(),true);
+   // Walk south through the canonical room doorway to the correct exterior,
+   // without page navigation or resetting the animated shore/camera.
+   await page.keyboard.down('ArrowDown');
+   await page.waitForTimeout(740);
+   await page.keyboard.up('ArrowDown');
+   await page.waitForFunction(()=>window.__SHIOMACHI_QA.room()===null);
+   assert.equal(await page.locator('#scene').getAttribute('data-mode'),'exterior');
+ }
  const persisted=await page.evaluate(()=>[localStorage.length,sessionStorage.length]);
  assert.deepEqual(persisted,[qa.localCount,qa.sessionCount],
    'preview must never touch the real game save or story');

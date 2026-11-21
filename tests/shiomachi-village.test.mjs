@@ -146,14 +146,14 @@ test('review UI is landscape only, same 0.5 zoom, no purchases or save writes',(
  assert.match(html,/id="action-b"/);
  assert.match(html,/id="pad" class="controls"/,
    'review must use the same full-screen controller host as production');
- assert.match(html,/src\\/game\\/ui\\/controls\\.css/,
+ assert.ok(html.includes('src/game/ui/controls.css'),
    'shared controller stylesheet is the one source of layout truth');
  for(const id of ['up','down','left','right'])
    assert.match(html,new RegExp('id="'+id+'" type="button" data-dir="'+id+'"'));
  assert.match(html,/<details class="review-tools"/,
    'debug shortcuts must stay folded by default');
- assert.doesNotMatch(html,/\\.dpad\\s*\\{|grid-template-columns:repeat\\(3,44px\\)|width:min\\(100%,980px\\)/,
-   'no second set of independent gamepad or main layout rules');
+ for(const oldLayout of ['.dpad{','grid-template-columns:repeat(3,44px)','width:min(100%,980px)'])
+   assert.ok(!html.includes(oldLayout),'custom controller layout must be absent: '+oldLayout);
  assert.match(walk,/const \[nx,ny\]=walk\.move/);
  assert.match(walk,/bindDialogue\(clearInput\)/);
  assert.match(walk,/requestAnimationFrame\(frame\)/);

@@ -1,0 +1,40 @@
+name: Shiomachi village browser QA
+on:
+  pull_request:
+    paths:
+      - 'data/maps/shiomachi-village/**'
+      - 'src/game/shiomachi/**'
+      - 'previews/shiomachi-village/index.html'
+      - 'tools/qa-shiomachi-browser.mjs'
+      - '.github/workflows/shiomachi-village-qa.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'data/maps/shiomachi-village/**'
+      - 'src/game/shiomachi/**'
+      - 'previews/shiomachi-village/index.html'
+      - 'tools/qa-shiomachi-browser.mjs'
+      - '.github/workflows/shiomachi-village-qa.yml'
+  workflow_dispatch:
+jobs:
+  shiomachi-chromium:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated browser testing
+        run: |
+          npm install --no-save playwright@1.62.1
+          npx playwright install --with-deps chromium
+      - name: Check the real walkable village scene in Chromium
+        run: node tools/qa-shiomachi-browser.mjs
+      - name: Save screenshots for iPhone landscape visual review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: shiomachi-village-chromium-screenshots
+          path: artifacts/shiomachi-village-*.png
+          if-no-files-found: warn

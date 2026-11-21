@@ -96,6 +96,9 @@ export const SHIOMACHI_REVIEW_SPOTS=Object.freeze({
  shore:Object.freeze({x:675,y:465,face:1}),
  buildings:Object.freeze({x:655,y:1115,face:1}),
  worksite:Object.freeze({x:775,y:760,face:1}),
+ innDoor:Object.freeze({x:280,y:1068,face:1}),
+ armoryDoor:Object.freeze({x:1060,y:1068,face:1}),
+ teahouseDoor:Object.freeze({x:252,y:1604,face:1}),
  south:Object.freeze({...SHIOMACHI_ENTRY})
 });
 export const SHIOMACHI_MAP=Object.freeze({

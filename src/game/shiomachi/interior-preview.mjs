@@ -23,9 +23,10 @@ export function createShiomachiInteriorPreview({ctx,images,viewport,clearInput,s
  const reduce=matchMedia('(prefers-reduced-motion: reduce)');
  let site=null,room=null,plan=null,walking=null,floor=null,hero=null;
  let lastRoom=null,shopActive=false,selected=0;
- // Trial inventory starts with resources so all three services can be tested.
- // This object is NEVER written into a real save.
- let trial=normalizePlayer({...DEFAULT_PLAYER,gold:250,hp:7,mp:3});
+ // An illustrative ten-win (8 ryo each) QA wallet, NOT a claim that ten
+ // encounters occur between the villages. No save data is read or written.
+ // This budget must exercise one coastal weapon, a stay and food in one run.
+ let trial=normalizePlayer({...DEFAULT_PLAYER,gold:80,hp:7,mp:3});
  let ownedShiomachi={}; // Preview-only inventory; never persisted or added to the original catalog.
  function shopEntries(){
    if(!site)return [];

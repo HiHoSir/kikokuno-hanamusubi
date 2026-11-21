@@ -141,7 +141,12 @@ try{
  for(const [room,choice] of [['armory','wakizashi'],['inn','sleep'],['teahouse','onigiri']]){
    if(!await page.locator('.review-tools').evaluate(node=>node.open))
      await page.locator('.review-tools summary').click();
-   await page.locator('[data-review-room="'+room+'"]').click();
+   const doorway={armory:'armoryDoor',inn:'innDoor',teahouse:'teahouseDoor'}[room];
+   await page.locator('[data-review-spot="'+doorway+'"]').click();
+   assert.equal(await page.evaluate(()=>window.__SHIOMACHI_QA.room()),null);
+   await page.keyboard.down('ArrowUp');
+   await page.waitForTimeout(310);
+   await page.keyboard.up('ArrowUp');
    await page.waitForFunction(expected=>window.__SHIOMACHI_QA.room()===expected,room);
    assert.equal(await page.locator('#scene').getAttribute('data-room'),room);
    assert.equal(await page.locator('#load').isHidden(),true);

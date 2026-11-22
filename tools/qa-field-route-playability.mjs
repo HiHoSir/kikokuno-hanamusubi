@@ -34,11 +34,38 @@ try{
    if(res.status()>=400&&res.url().startsWith('http://127.0.0.1:'))
      errors.push(res.status()+' '+res.url());
  });
- await page.goto('http://127.0.0.1:'+server.address().port+'/src/field/',
-   {waitUntil:'domcontentloaded'});
- await page.waitForFunction(()=>Boolean(window.YK_WORLD?.mapData?.travelReachable)&&
-   document.querySelector('#load')?.hidden===true,null,{timeout:60000});
- report=await page.evaluate(async()=>{
+ const origin='http://127.0.0.1:'+server.address().port;
+ // Use the same real parent game shell as the established production QA:
+ // the standalone /src/field/ URL is not a supported game entry point.
+ await page.goto(origin+'/',{waitUntil:'domcontentloaded'});
+ await page.evaluate(()=>{
+   sessionStorage.setItem('kikokuno-hanamusubi-next-entry',JSON.stringify({
+     route:'/src/game/',expiresAt:Date.now()+120000
+   }));
+ });
+ await page.goto(origin+'/src/game/',{waitUntil:'domcontentloaded'});
+ await page.waitForFunction(()=>Boolean(window.KIKOKU_GAME?.navigate),
+   null,{timeout:20000});
+ await page.evaluate(()=>window.KIKOKU_GAME.navigate(
+   new URL('/src/field/?from=village',location.href).href));
+ try{
+   await page.waitForFunction(()=>{
+     const f=document.querySelector('iframe')?.contentWindow;
+     return Boolean(f?.YK_WORLD?.mapData?.travelReachable)&&
+       f?.document?.querySelector('#load')?.hidden===true;
+   },null,{timeout:30000});
+ }catch(error){
+   const details=await page.evaluate(()=>({
+     shell:location.href,iframe:document.querySelector('iframe')?.src,
+     message:document.querySelector('iframe')?.contentDocument?.querySelector('#load')?.textContent,
+     errors:window.__FIELD_ERRORS??[]
+   }));
+   throw Error('Field did not load inside the parent shell: '+JSON.stringify(details)+
+     ' ('+error.message+')');
+ }
+ const frame=page.frames().find(f=>f.url().includes('/src/field/'));
+ if(!frame)throw Error('The approved field iframe is missing');
+ report=await frame.evaluate(async()=>{
    const w=window.YK_WORLD,transitions=window.YK_AREA_TRANSITIONS;
    const [{villageArrival,placeArrival,fieldStep},{traceFieldRoute,replayMovementPath,battleIntervalEnvelope}]=
      await Promise.all([

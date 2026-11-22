@@ -226,35 +226,32 @@ try{
           await page.screenshot({path:'artifacts/village-shop-'+label+'-'+room+'.png',fullPage:true});
           const purchased=await page.evaluate(room=>{
             const d=document.querySelector('iframe').contentDocument;
-            const id=room==='teahouse'?'onigiri':'starter-gear';
+            const id=room==='teahouse'?'onigiri':'wakizashi';
             d.querySelector('[data-shop-item="'+id+'"]').click();
             const player=JSON.parse(localStorage.getItem('kikokuno-hanamusubi-battle-player'));
             d.getElementById('action-b').click();
-            return {room,gold:player.gold,foods:player.foods,ownsArmoryGear:player.ownsArmoryGear,equipmentTier:player.equipmentTier,
-              closed:d.getElementById('shop-panel').hidden};
+            return {gold:player.gold,foods:player.foods,equipmentInventory:player.equipmentInventory,
+              weapon:player.equipment.weapon,closed:d.getElementById('shop-panel').hidden};
           },room);
-          if(!purchased.closed||purchased.gold!==(room==='teahouse'?242:50)||
-            (room==='teahouse'?purchased.foods?.onigiri!==1:(purchased.equipmentTier!=='T0'||!purchased.ownsArmoryGear))){
+          const expectedPurchase=room==='teahouse'
+            ?purchased.gold===242&&purchased.foods.onigiri===1
+            :purchased.gold===210&&purchased.equipmentInventory.wakizashi===1&&purchased.weapon==='starter-weapon';
+          if(!purchased.closed||!expectedPurchase){
             issues.push(label+' '+building+' purchase persistence failed: '+JSON.stringify(purchased));
           }
           if(room==='armory'){
             await page.locator('#field-menu-toggle').tap();
-            await page.locator('[data-menu-dir="down"]').tap();
-            await page.locator('[data-menu-dir="right"]').tap();
-            const a=page.locator('#field-menu-action-a');
-            const b=page.locator('#field-menu-action-b');
-            await a.tap();
-            await a.tap();
-            const preview=await page.locator('#field-menu-detail').innerText();
-            if(!preview.includes('攻撃 9 → 29')||!preview.includes('守備 6 → 20'))
+            await page.locator('[data-menu-command="equipment"]').tap();
+            await page.locator('[data-equipment-slot="weapon"]').tap();
+            const preview=await page.locator('.equipment-stat-preview').innerText();
+            if(!preview.includes('攻撃 9 → 13')||!preview.includes('守備 6 → 6'))
               issues.push('armory equipment preview: '+preview);
             await page.screenshot({path:'artifacts/field-menu-equipment.png'});
-            await a.tap();
+            await page.locator('[data-equipment-id="wakizashi"]').tap();
             const equipped=await page.evaluate(()=>JSON.parse(localStorage.getItem('kikokuno-hanamusubi-battle-player')));
-            if(equipped.equipmentTier!=='T1'||equipped.attack!==29||equipped.defense!==20)
+            if(equipped.equipment.weapon!=='wakizashi'||equipped.attack!==13||equipped.defense!==6)
               issues.push('armory manual equip did not update combat stats');
-            await b.tap();
-            await b.tap();
+            await page.locator('#field-menu-toggle').tap();
           }
         }
         await page.evaluate(()=>{

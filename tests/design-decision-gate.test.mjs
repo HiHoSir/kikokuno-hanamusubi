@@ -2,11 +2,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {
-  impactedScopes,validateDecisionRecord,checkDesignChanges
+  impactedScopes,validateDecisionRecord,checkDesignChanges,parseGitNameStatus
 } from '../tools/guard-design-changes.mjs';
 
-const record=(kind='user-approved',scopes=['balance','equipment'])=>({
+const record=(kind='user-approved',scopes=['balance','equipment'],affectedFiles)=>({
   schemaVersion:1,id:'2026-11-22-consistent-source-review',kind,scopes,
+  ...(affectedFiles?{affectedFiles}:{}),
   readBeforeEditing:[
     'docs/BALANCE_PROGRESSION_CONTRACT.md original values read',
     'docs/FOUR_VILLAGES_EQUIPMENT_PLAN.md was also consulted'
@@ -24,7 +25,9 @@ const record=(kind='user-approved',scopes=['balance','equipment'])=>({
   }
 });
 const path='docs/decisions/changes/2026-11-22-consistent-source-review.json';
-const evaluate=(files,doc)=>checkDesignChanges(files,p=>p===path?JSON.stringify(doc):'{}');
+const evaluate=(files,doc)=>checkDesignChanges(files,p=>p===path
+  ?JSON.stringify({...doc,affectedFiles:doc.affectedFiles??files.filter(x=>x!==path)})
+  :'{}');
 
 test('the change gate covers concrete battle, gear, field and original design documents',()=>{
   assert.deepEqual(impactedScopes(['data/characters/hizuki-status.json']),['balance']);
@@ -99,6 +102,48 @@ test('record file id, schema and corrupt JSON fail closed; cosmetic-only changes
   wrong.schemaVersion=2;
   assert.match(validateDecisionRecord(wrong,['balance'],{hasGameplay:true}).join(' '),/schemaVersion/);
   assert.match(checkDesignChanges(['src/game/battle/rules.mjs',path],()=>'{ bad json').errors.join(' '),/cannot read\/parse/);
+});
+
+
+test('deleted or renamed design files stay protected (Git NUL-delimited statuses)',()=>{
+ const nul='\\0';
+ const statuses=['M','src/game/battle/rules.mjs',
+   'D','data/characters/hizuki-status.json',
+   'R100','docs/BATTLE_BALANCE.md','docs/moved-balance.md',
+   'A','src/game/shiomachi/render.mjs',''].join(nul);
+ const paths=parseGitNameStatus(statuses);
+ assert.deepEqual(paths,[
+   'src/game/battle/rules.mjs',
+   'data/characters/hizuki-status.json',
+   'docs/BATTLE_BALANCE.md','docs/moved-balance.md',
+   'src/game/shiomachi/render.mjs']);
+ const missing=checkDesignChanges(paths,()=>{throw Error('No record exists')});
+ assert.deepEqual(missing.scopes,['balance']);
+ assert.ok(missing.errors.length,'deleting an approved balance source must not be invisible');
+ assert.throws(()=>parseGitNameStatus('R100\\0docs/BATTLE_BALANCE.md\\0'),/Missing destination/);
+});
+
+test('decision record must name EVERY protected path in the PR (not a generic old receipt)',()=>{
+ const changed=['src/game/battle/rules.mjs','data/maps/shiomachi-village/armory.mjs',path];
+ const wrong=record('user-approved',['balance','equipment'],
+   ['src/game/battle/rules.mjs']);
+ assert.match(evaluate(changed,wrong).errors.join(' '),
+   /affectedFiles does not cover changed protected path: data\\/maps\\/shiomachi-village\\/armory.mjs/);
+ wrong.affectedFiles=[];
+ assert.match(evaluate(changed,wrong).errors.join(' '),
+   /affectedFiles must list the exact protected paths/);
+ const good=record('user-approved',['balance','equipment'],
+   ['src/game/battle/rules.mjs','data/maps/shiomachi-village/armory.mjs']);
+ assert.deepEqual(evaluate(changed,good).errors,[]);
+});
+
+test('each impacted domain must cite its existing original design sources',()=>{
+ const changed=['src/field/world.js',path];
+ const unaudited=record('user-approved',['progression'],['src/field/world.js']);
+ assert.match(evaluate(changed,unaudited).errors.join(' '),
+   /readBeforeEditing must cite a relevant original source for progression/);
+ unaudited.readBeforeEditing.push('docs/MAP_ENEMY_EQUIPMENT_RECONCILIATION.md checked before editing');
+ assert.deepEqual(evaluate(changed,unaudited).errors,[]);
 });
 
 test('the source documents explain this incident and manual verification limits',()=>{

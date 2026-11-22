@@ -1,0 +1,144 @@
+// Live shell smoke test: cove-side field grass -> Shiomachi -> same field cell.
+// Uses real UI keydown/field movement, not direct scene loading or preview routes.
+import {chromium} from 'playwright';
+import assert from 'node:assert/strict';
+import {createServer} from 'node:http';
+import {readFile,mkdir} from 'node:fs/promises';
+import {resolve,relative,extname} from 'node:path';
+
+const root=resolve('.');
+const mime={'.html':'text/html;charset=utf-8','.mjs':'text/javascript;charset=utf-8',
+ '.js':'text/javascript;charset=utf-8','.css':'text/css;charset=utf-8',
+ '.json':'application/json','.png':'image/png','.webp':'image/webp',
+ '.jpg':'image/jpeg','.ogg':'audio/ogg','.woff2':'font/woff2'};
+const server=createServer(async(req,res)=>{
+ try{
+  const url=new URL(req.url,'http://localhost');
+  const path=resolve(root,'.'+(url.pathname.endsWith('/')?url.pathname+'index.html':url.pathname));
+  if(relative(root,path).startsWith('..')){res.writeHead(403);res.end();return;}
+  const data=await readFile(path);
+  res.writeHead(200,{'Content-Type':mime[extname(path)]||'application/octet-stream',
+    'Cache-Control':'no-store'});res.end(data);
+ }catch{res.writeHead(404);res.end('Not Found');}
+});
+await new Promise(done=>server.listen(0,'127.0.0.1',done));
+await mkdir('artifacts',{recursive:true});
+const origin='http://127.0.0.1:'+server.address().port;
+let browser,page;
+try{
+ browser=await chromium.launch({headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+ page=await browser.newPage({viewport:{width:874,height:402},deviceScaleFactor:2});
+ page.setDefaultTimeout(45000);
+ const failures=[];
+ page.on('pageerror',e=>failures.push('JS '+e.message));
+ page.on('response',r=>{
+  if(r.status()>=400&&r.url().startsWith(origin))failures.push('HTTP '+r.status()+' '+r.url());
+ });
+ await page.goto(origin+'/',{waitUntil:'domcontentloaded'});
+ await page.evaluate(()=>{
+  sessionStorage.setItem('kikokuno-hanamusubi-next-entry',JSON.stringify({
+   route:'/src/game/',expiresAt:Date.now()+120000}));
+ });
+ await page.goto(origin+'/src/game/',{waitUntil:'domcontentloaded'});
+ await page.waitForFunction(()=>Boolean(window.KIKOKU_GAME?.navigate));
+ // QA-only starting checkpoint. It is known walkable grass WEST of (53,51)
+ // and must not become a fabricated permanent game spawn.
+ await page.evaluate(()=>{
+  const [x,y]=[52*32+16,51*32+16];
+  sessionStorage.setItem('kikokuno-hanamusubi-restore-position',JSON.stringify({
+   scene:'field',position:{x,y,row:2}}));
+  window.KIKOKU_GAME.navigate(new URL('/src/field/?from=cove',location.href).href);
+ });
+ await page.waitForFunction(()=>{
+  const f=document.querySelector('iframe')?.contentWindow;
+  return Boolean(f?.YK_WORLD&&f.document?.querySelector('#load')?.hidden===true&&
+    f.document.querySelector('#scene')?.dataset.x==='52');
+ });
+ const field=page.frames().find(f=>f.url().includes('/src/field/'));
+ assert.ok(field,'authorized field must be in the persistent game shell');
+ const before=await field.evaluate(()=>{
+  const w=window.YK_WORLD,t=window.YK_AREA_TRANSITIONS;
+  const a=[52*32+16,51*32+16],b=[53*32+16,51*32+16];
+  return {cove:w.places.cove.point,shiomachi:w.places.shiomachi.point,
+   surface:w.tileAt(...b),walkable:w.canMove(...a,...b),
+   contact:t.contact(w,...b),priorContact:t.contact(w,...a)};
+ });
+ assert.equal(before.contact,'shiomachi');
+ assert.equal(before.priorContact,null);
+ assert.equal(before.surface,'grass');
+ assert.equal(before.walkable,true);
+ await field.evaluate(()=>window.dispatchEvent(new KeyboardEvent('keydown',
+  {key:'ArrowRight',bubbles:true})));
+ await page.waitForFunction(()=>{
+  const f=document.querySelector('iframe')?.contentWindow;
+  return Boolean(f?.__SHIOMACHI_QA?.ready&&
+   f.location.pathname==='/src/game/shiomachi/');
+ });
+ const embedded=page.frames().find(f=>f.url().includes('/src/game/shiomachi/'));
+ assert.ok(embedded,'official village is a valid embedded route');
+ const found=await embedded.evaluate(()=>({
+  previewOnly:window.__SHIOMACHI_QA.previewOnly,
+  state:window.__SHIOMACHI_QA.position(),
+  loadHidden:document.querySelector('#load').hidden,
+  reviewMenu:document.querySelector('.review-tools')?.hidden??true,
+  signs:window.__SHIOMACHI_QA.renderer.visibleSigns,
+  objects:window.__SHIOMACHI_QA.renderer.buildings,
+  shopText:document.querySelector('#shop-panel')?.getAttribute('aria-label'),
+  scrollWidth:document.documentElement.scrollWidth,screenWidth:innerWidth,
+  snapshot:window.KIKOKU_SAVE_SNAPSHOT?.()
+ }));
+ assert.equal(found.previewOnly,false);
+ assert.equal(found.loadHidden,true);
+ assert.equal(found.reviewMenu,true);
+ assert.equal(found.objects,4);
+ assert.equal(found.signs,3);
+ assert.equal(found.snapshot.scene,'shiomachi');
+ assert.ok(found.scrollWidth<=found.screenWidth+1);
+ await page.screenshot({path:'artifacts/shiomachi-field-connected.png'});
+ const save=await page.evaluate(()=>window.KIKOKU_GAME.manualSave());
+ assert.equal(save.accepted,true);
+ assert.equal(save.save.location.scene,'shiomachi');
+ const demo=await embedded.evaluate(()=>{
+  const qa=window.__SHIOMACHI_QA;
+  if(!qa.enterRoom('armory')||!qa.openService())return {entered:false};
+  const first=document.querySelector('[data-shop-item="shiomachi-tide-blade"]');
+  first?.click();
+  const item=qa.trial().shiomachiGear['shiomachi-tide-blade'];
+  const note=document.querySelector('#shop-title')?.textContent;
+  qa.exitRoom();
+  return {entered:true,item,note};
+ });
+ assert.equal(demo.entered,true);
+ assert.equal(demo.item,1);
+ assert.match(demo.note,/試用・セーブには反映しません/);
+ const persisted=await page.evaluate(()=>{
+  const r=JSON.parse(localStorage.getItem('kikokuno-hanamusubi-manual-save'));
+  const hero=JSON.parse(localStorage.getItem('kikokuno-hanamusubi-battle-player')||'null');
+  return {manualScene:r.location.scene,
+    gameHasDemoGear:Boolean(hero?.equipmentInventory?.['shiomachi-tide-blade']),
+    gameGold:hero?.gold??0};
+ });
+ assert.deepEqual(persisted,{manualScene:'shiomachi',gameHasDemoGear:false,gameGold:0});
+ await embedded.evaluate(()=>window.dispatchEvent(new KeyboardEvent('keydown',
+  {key:'ArrowDown',bubbles:true})));
+ await page.waitForFunction(()=>{
+  const f=document.querySelector('iframe')?.contentWindow;
+  return Boolean(f?.YK_WORLD&&f.location.pathname==='/src/field/'&&
+   new URL(f.location.href).searchParams.get('from')==='shiomachi'&&
+   f.document.querySelector('#load')?.hidden===true);
+ },null,{timeout:45000});
+ const after=await page.frames().find(f=>f.url().includes('/src/field/')).evaluate(()=>{
+  const scene=document.querySelector('#scene');
+  return {x:Number(scene.dataset.x),y:Number(scene.dataset.y),
+   contact:window.YK_AREA_TRANSITIONS.contact(window.YK_WORLD,
+      Number(scene.dataset.x)*32+16,Number(scene.dataset.y)*32+16)};
+ });
+ assert.deepEqual(after,{x:52,y:51,contact:null});
+ assert.deepEqual(failures,[]);
+ console.log('SHIOMACHI_FIELD_ROUNDTRIP '+JSON.stringify({before,found,demo,persisted,
+   returned:after,errors:failures}));
+}finally{
+ if(page)await page.close();
+ if(browser)await browser.close();
+ await new Promise(done=>server.close(done));
+}

@@ -106,7 +106,7 @@ test('record file id, schema and corrupt JSON fail closed; cosmetic-only changes
 
 
 test('deleted or renamed design files stay protected (Git NUL-delimited statuses)',()=>{
- const nul='\\0';
+ const nul='\0';
  const statuses=['M','src/game/battle/rules.mjs',
    'D','data/characters/hizuki-status.json',
    'R100','docs/BATTLE_BALANCE.md','docs/moved-balance.md',
@@ -120,7 +120,7 @@ test('deleted or renamed design files stay protected (Git NUL-delimited statuses
  const missing=checkDesignChanges(paths,()=>{throw Error('No record exists')});
  assert.deepEqual(missing.scopes,['balance']);
  assert.ok(missing.errors.length,'deleting an approved balance source must not be invisible');
- assert.throws(()=>parseGitNameStatus('R100\\0docs/BATTLE_BALANCE.md\\0'),/Missing destination/);
+ assert.throws(()=>parseGitNameStatus('R100\0docs/BATTLE_BALANCE.md\0'),/Missing destination/);
 });
 
 test('decision record must name EVERY protected path in the PR (not a generic old receipt)',()=>{
@@ -128,7 +128,7 @@ test('decision record must name EVERY protected path in the PR (not a generic ol
  const wrong=record('user-approved',['balance','equipment'],
    ['src/game/battle/rules.mjs']);
  assert.match(evaluate(changed,wrong).errors.join(' '),
-   /affectedFiles does not cover changed protected path: data\\/maps\\/shiomachi-village\\/armory.mjs/);
+   /affectedFiles does not cover changed protected path: data\/maps\/shiomachi-village\/armory\.mjs/);
  wrong.affectedFiles=[];
  assert.match(evaluate(changed,wrong).errors.join(' '),
    /affectedFiles must list the exact protected paths/);

@@ -1,4 +1,5 @@
-import { HIZUKI_WALK_SPEED, makeWalk, touchedEntrance, crossesSouthExit, villageArrivalFacing } from './movement.mjs?v=village-speed-288-exit-facing-1';
+import { HIZUKI_WALK_SPEED, makeWalk, touchedEntrance, villageArrivalFacing } from './movement.mjs?v=village-speed-288-exit-facing-1-map-edge-1';
+import { drawVillageExitLabel, drawVillageFence, makeVillageFence, VILLAGE_FENCE_ART } from './boundary.mjs';
 import { villageRooms } from '../interiors/rooms.mjs';
 import { pixelViewport, DEFAULT_CAMERA_ZOOM, canopyOpacity, riverRipples, paintRiverRipples } from './render.mjs?v=nonfield-world-scale-1';
 import { advanceResident, drawCharacter, makeResident, residentInFront, RESIDENT_RADIUS } from './residents.mjs';
@@ -68,7 +69,10 @@ async function start() {
     return response.json();
   }));
   const [worldX,worldY,width,height] = data.bounds;
-  const [tiles,collision,hizuki,decor] = await Promise.all([data.terrain.atlas,'collision.png','hizuki.png','ground-decor.png'].map(name=>image(name)));
+  const [tiles,collision,hizuki,decor,fenceArt] = await Promise.all([
+    ...[data.terrain.atlas,'collision.png','hizuki.png','ground-decor.png'].map(name=>image(name)),
+    image('village-fence','../../../'+VILLAGE_FENCE_ART),
+  ]);
   const residents = await Promise.all(residentConfigs.map(async config=>({
     ...makeResident(config), bitmap:await image(config.asset,'../../../'+config.asset),
   })));
@@ -82,7 +86,7 @@ async function start() {
     return {id,x,y,hintX:x,hintY:y-76};
   });
   const entrances=data.markers.filter(marker=>marker.entrance && Object.hasOwn(villageRooms,marker.id));
-  const fieldExit=data.markers.find(marker=>marker.southExit);
+  const fieldExit=data.markers.find(marker=>marker.id==='field-exit');
   const paths = new Set(data.sprites.flatMap(p => [p.file,p.eave,p.sway].filter(Boolean)));
   const art = new Map(await Promise.all([...paths].map(async name => [name,await image(name)])));
   const canopyFiles=new Set(data.sprites.filter(s=>s.vegetation && s.vegetation!=='shrub').map(s=>s.file));
@@ -161,9 +165,29 @@ async function start() {
   overlayContext.drawImage(collision,0,0);
   const rgba = overlayContext.getImageData(0,0,width,height);
   const blocked = new Uint8Array(width*height);
+  // Remove the old solid frame from the collision PNG. Extend adjacent terrain
+  // into that strip so water and scenery remain solid where they reach the edge.
+  const frameWidth=20;
+  for(let y=0;y<height;y++){
+    const sourceRow=Math.max(frameWidth,Math.min(y,height-frameWidth-1))*width;
+    for(let x=0;x<width;x++){
+      const sourceX=Math.max(frameWidth,Math.min(x,width-frameWidth-1));
+      blocked[y*width+x]=rgba.data[(sourceRow+sourceX)*4]>127;
+    }
+  }
+  const lastColumn=width/32-1,lastRow=height/32-1;
+  const northBank=Math.floor(riverTop/32),southBank=Math.floor(riverBottom/32);
+  const [gapLeft,,gapWidth]=fieldExit.southExit;
+  const firstGapTile=Math.floor(gapLeft/32),afterGapTile=Math.ceil((gapLeft+gapWidth)/32);
+  const fence=makeVillageFence([
+    [0,0,lastColumn,0],
+    [0,0,0,northBank],[lastColumn,0,lastColumn,northBank],
+    [0,southBank,0,lastRow],[lastColumn,southBank,lastColumn,lastRow],
+    [0,lastRow,firstGapTile-1,lastRow],[afterGapTile,lastRow,lastColumn,lastRow],
+  ],blocked,width);
+  const scenery=[...data.sprites,...fence].sort((a,b)=>a.depth-b.depth);
   for(let i=0;i<blocked.length;i++){
     const p=i*4;
-    blocked[i]=rgba.data[p]>127;
     rgba.data[p]=236;
     rgba.data[p+1]=75;
     rgba.data[p+2]=81;
@@ -183,7 +207,7 @@ async function start() {
   const occupied = (px,py)=>residents.some(npc=>Math.hypot(px-npc.x,py-npc.y)<contactRadius);
   const heroOccupied = (px,py)=>Math.hypot(px-x,py-y)<contactRadius;
   const resumed=consumeRestorePosition('village');
-  if(!returningFromBuilding && resumed && walk.canStand(resumed.x,resumed.y)&&!occupied(resumed.x,resumed.y)){
+  if(!returningFromBuilding && resumed && walk.canStand(resumed.x,resumed.y,true)&&!occupied(resumed.x,resumed.y)){
     x=resumed.x;y=resumed.y;face=villageArrivalFacing(focus,entrances,resumed.face??1);
   }
 
@@ -232,11 +256,15 @@ async function start() {
     }
     const characters=[{bitmap:hizuki,x,y,face,distance,moving},...residents].sort((a,b)=>a.y-b.y);
     let drawn=0;
-    for(const sprite of data.sprites){
+    for(const sprite of scenery){
       while(drawn<characters.length && characters[drawn].y<sprite.depth){
         drawCharacter(context,characters[drawn++],data.hero.frame,data.hero.feet);
       }
       const [sx,sy]=sprite.point;
+      if(sprite.mask!==undefined){
+        if(sx<right&&sx+32>left&&sy<bottom&&sy+32>top)drawVillageFence(context,fenceArt,sprite);
+        continue;
+      }
       const bitmap=art.get(sprite.file);
       if(sx<right && sx+bitmap.width>left && sy<bottom && sy+bitmap.height>top){
         context.globalAlpha=canopyOpacity(sprite,x,y,canopies.get(sprite.file));
@@ -247,6 +275,7 @@ async function start() {
     while(drawn<characters.length) drawCharacter(context,characters[drawn++],data.hero.frame,data.hero.feet);
     const eave = houses.find(house => rectangleContains(house.eaveZone,x,y));
     if(eave) context.drawImage(art.get(eave.eave),...eave.eaveRect,...eave.eavePoint,eave.eaveRect[2],eave.eaveRect[3]);
+    if(bottom>height-56)drawVillageExitLabel(context,fieldExit.point[0],height-36);
     // Discoverable objects are marked only nearby, and only until collected.
     if(!dialogue.active) for(const find of finds){
       if(shouldShowFindHint({x,y},find,collectedFinds))
@@ -273,8 +302,8 @@ async function start() {
       const [dx,dy,row]=directions[direction];
       face=row;
       const step=HIZUKI_WALK_SPEED*elapsed/1000;
-      const [nx,ny]=walk.move(x,y,dx*step,dy*step,occupied);
-      if(crossesSouthExit(fieldExit,x,y,nx,ny)){
+      const [nx,ny,leftMap]=walk.move(x,y,dx*step,dy*step,occupied,true);
+      if(leftMap){
         clearInput();
         window.KIKOKU_ROUTE.go('../../field/?from=village');
         return;

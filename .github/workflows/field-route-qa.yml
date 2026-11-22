@@ -51,4 +51,5 @@ jobs:
           path: |
             artifacts/field-route-playability.json
             artifacts/shiomachi-field-connected.png
+            artifacts/hozuki-south-exit.png
           if-no-files-found: warn

@@ -9,9 +9,10 @@
 | --- | --- | --- | --- |
 | **B式v2・T0〜T6** | **確定。T1攻+20／守+14、T2攻+42／守+30、以降も原本維持** | `data/characters/hizuki-status.json`、`docs/BALANCE_PROGRESSION_CONTRACT.md`、`tests/approved-progression-contract.test.mjs` | 新品の値を村の距離で独断調整しない。部位別配分・二重適用を検証 |
 | **初回必要心** | **実装済み：段1→2は32**（一般式とは初回だけ別）。上限99、ラスボス想定40 | `src/game/battle/rules.mjs`、`docs/BATTLE_BALANCE.md` | `hizuki-status.json` の一般式欄に初回例外の注記がなく、表記差を監査中。原本値を無断変更しない |
-| **鬼灯村の個別装備** | **販売実装済み：4部位・合計攻+4／守+7**。T1確定値との**不一致が未解決** | `src/game/battle/rules.mjs`、`tests/approved-progression-contract.test.mjs` | 承認済み個別販売を勝手に書き換えない。T1との合算規則を明示的に整理 |
+| **鬼灯村の個別装備** | **販売実装済み：4部位・合計攻+4／守+7**。T1確定値との**不一致が未解決** | `src/game/battle/rules.mjs`、`tests/approved-progression-contract.test.mjs`、[現行装備台帳](../EQUIPMENT_CURRENT_PLAYABLE.md) | 承認済み個別販売を勝手に書き換えない。T1との合算規則を明示的に整理 |
 | **4村体制** | **ユーザー決定：鬼灯村を含め合計4村**。3つの新村の名前・フィールド座標は試作・未承認 | `docs/FOUR_VILLAGES_EQUIPMENT_PLAN.md`、[PR #64](https://github.com/HiHoSir/kikokuno-hanamusubi/pull/64) | 村を増やすためにティア数を変更しない |
 | **潮待村プレビュー** | **独立プレビュー稼働**。兵具屋・宿・茶店と民家の室内接続は実装済み。**本編フィールド未接続** | `data/maps/shiomachi-village/scene.mjs`、`src/game/shiomachi/`、[PR #68](https://github.com/HiHoSir/kikokuno-hanamusubi/pull/68) | マップ・室内の動作検査と、本編のシナリオ/旧セーブの影響を確認 |
+| **既存地域の装備入手状況** | **鬼灯村＝本編販売4点、天妖の社／海の入り江＝装備入手なし、潮待村＝プレビューのみ**。商品定義を動的に参照する閲覧用ページを追加 | [現行装備台帳](../EQUIPMENT_CURRENT_PLAYABLE.md)、`src/game/equipment/current-availability.mjs`、`previews/equipment-catalog/` | 地名やティアとショップ実装を混同せず、装備の追加前に必ず台帳と原案を照合 |
 | **潮待村の装備** | **デモ専用・未承認**。正式な装着・セーブ・戦闘反映なし。128両案は撤回済み | `data/maps/shiomachi-village/armory.mjs`、[PR #72](https://github.com/HiHoSir/kikokuno-hanamusubi/pull/72) | 原案の地域別到達段・敵・ティア数値との整合性が確認できるまで値を確定しない |
 | **装備ティアの入手場所** | **未確定**。天妖の社後T1／入り江T2などは11月15日の**当初配置仮説**。潮待村=T2は承認されていない | `docs/MAP_ENEMY_EQUIPMENT_RECONCILIATION.md`、`docs/BALANCE_PROGRESSION_CONTRACT.md` | 実際の到達段・洞窟経路・地域敵の進行を先に評価 |
 | **序盤の敵** | **実装済み：野の小鬼・化け狸・鬼火**。最初の道路区間に出現帯を設定。9〜13歩間隔 | `src/game/battle/rules.mjs`、`src/field/walk.mjs`、`tests/map-progression-audit.test.mjs` | 海・森・滝・祠の仮の敵を実装済みとみなさない |

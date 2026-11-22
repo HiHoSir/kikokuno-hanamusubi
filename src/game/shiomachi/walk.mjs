@@ -9,8 +9,12 @@ import {bindDialogue} from '../village/dialogue.mjs';
 import {pixelViewport,DEFAULT_CAMERA_ZOOM} from '../village/render.mjs';
 import {createShiomachiRenderer} from './render.mjs';
 import {createShiomachiInteriorPreview} from './interior-preview.mjs?v=approved-balance-contract-20261122-1';
+import {consumeRestorePosition} from '../save/save-game.mjs?v=save-slots-1';
 
-// Dedicated preview, not a game destination. No storage, story or save writes.
+// Preview and real game share the SAME village map, art and interior code.
+// Demo shop balances remain trial-only; placing the village does not approve
+// their prices or add them to real saved inventory/equipment.
+const previewMode=location.pathname.includes('/previews/');
 const scene=document.querySelector('#scene');
 const load=document.querySelector('#load');
 const objective=document.querySelector('#objective');
@@ -106,11 +110,24 @@ async function start(){
  const occupied=(x,y)=>shiomachiCollision(map.objects,x,y,7)||
    shiomachiPierFixtureCollision(x,y,7,map)||
    residents.some(n=>Math.hypot(n.x-x,n.y-y)<27);
- const initial=map.entry;
+ const restored=previewMode?null:consumeRestorePosition('shiomachi');
+ const validRestore=restored&&walk.canStand(restored.x,restored.y)&&
+   !occupied(restored.x,restored.y)&&!shiomachiIsExit(restored.x,restored.y);
+ const initial=validRestore?{
+   x:restored.x,y:restored.y,face:restored.face??map.entry.face
+ }:map.entry;
  if(!walk.canStand(initial.x,initial.y)||occupied(initial.x,initial.y))
    throw Error('潮待村の開始位置が通れません');
  let x=initial.x,y=initial.y,face=initial.face,distance=0,moving=false;
- let last=0,lastFrame=-1,debug=false;
+ let last=0,lastFrame=-1,debug=false,menuPaused=false;
+ const exitToField=()=>{
+   if(previewMode)return false;
+   clearInput();
+   window.KIKOKU_ROUTE.go(new URL('../../field/?from=shiomachi',import.meta.url));
+   return true;
+ };
+ addEventListener('game-menu-open',()=>{menuPaused=true;clearInput()});
+ addEventListener('game-menu-close',()=>{menuPaused=false});
  const viewport={step:1,bufferWidth:1,bufferHeight:1};
  const resize=()=>{
    const parent=scene.parentElement;
@@ -137,7 +154,8 @@ async function start(){
    clearInput();moving=false;
    const entered=interior.enter(site);
    if(entered){
-     document.querySelector('.review-tools').open=false;
+     const reviewTools=document.querySelector('.review-tools');
+     if(reviewTools)reviewTools.open=false;
      scene.dataset.room=site.room;
      scene.dataset.mode='interior';
      lastFrame=-1;
@@ -175,7 +193,7 @@ async function start(){
    const dt=last?Math.max(0,Math.min(now-last,40)):0;last=now;
    moving=false;
    const dir=[...input.values()].at(-1);
-   if(!dialogue.active&&!interior.shopActive&&dir){
+   if(!menuPaused&&!dialogue.active&&!interior.shopActive&&dir){
      const [dx,dy,heading]=directions[dir];
      if(interior.active){
        const departed=interior.advance(dt,dir);
@@ -191,6 +209,9 @@ async function start(){
          distance+=Math.hypot(nx-x,ny-y);
          moving=Math.abs(nx-x)+Math.abs(ny-y)>0.01;
          x=nx;y=ny;
+         // The same SOUTH EXIT is the preview boundary and the real route
+         // back to the field. Never intercept it while inside an interior.
+         if(shiomachiIsExit(x,y)&&exitToField())return;
        }
      }
    }
@@ -200,8 +221,9 @@ async function start(){
    }else{
      dialogue.update(residentInFront(x,y,face,residents),x,y);
      objective.textContent=shiomachiIsExit(x,y)
-       ?'南口（プレビュー用の境界）。まだフィールドには接続していません。'
-       :'潮待村・試作：兵具屋／宿／茶店の入口から室内へ';
+       ?(previewMode?'南口（プレビュー用の境界）。フィールドへは移動しません。':'南口：フィールドへ戻ります。')
+       :(previewMode?'潮待村・試作：兵具屋／宿／茶店の入口から室内へ':
+          '潮待村：南口からフィールドへ／兵具屋の品は現在試用のみ');
    }
    render(now);
    const pos=interior.active?interior.position():{x,y};
@@ -227,7 +249,7 @@ async function start(){
    if(interior.shopActive)interior.closeShop();
    else if(dialogue.active)dialogue.advance();
  });
- document.querySelector('#collision-toggle').addEventListener('click',e=>{
+ document.querySelector('#collision-toggle')?.addEventListener('click',e=>{
    debug=!debug;e.currentTarget.setAttribute('aria-pressed',String(debug));
    render(performance.now(),true);
  });
@@ -284,8 +306,13 @@ async function start(){
  resize();new ResizeObserver(resize).observe(scene.parentElement);
  render(performance.now(),true);
  load.hidden=true;
+ if(!previewMode){
+   window.KIKOKU_SAVE_SNAPSHOT=()=>({scene:'shiomachi',
+     position:{x,y,face}});
+   window.parent?.KIKOKU_GAME?.autosave?.(window);
+ }
  window.__SHIOMACHI_QA={
-   previewOnly:true,scene:'shiomachi-village',cameraZoom:DEFAULT_CAMERA_ZOOM,
+   previewOnly:previewMode,scene:'shiomachi-village',cameraZoom:DEFAULT_CAMERA_ZOOM,
    ready:true,renderer:renderer.qa,
    bounds:[map.width,map.height],spawn:{...initial},
    objectNames:map.objects.map(o=>o.id),

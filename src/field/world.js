@@ -3,17 +3,22 @@
 window.YK_WORLD=(()=>{
  const tileSize=32,size=2560,viewSize=640,revision=120;
  const geography=window.YK_FIELD_TERRAIN.referenceComposition;
+ // Additional authored first-game settlement: separate from the existing
+ // sea-cove landmark and the historical route/terrain tiles. Land cell 53,51.
+ const SHIOMACHI_FIELD_CELL=Object.freeze([53,51]);
  const center=([x,y])=>[x*32+16,y*32+16];
  const descriptions={
   village:['鬼灯村','南の半島から林と花の道を抜け、天妖の社へ。'],
   shrine:['天妖の社','西の山裾から川沿いを東へ進み、海の入り江へ。'],
   cove:['海の入り江','川を渡り、北東の忘れの森へ。'],
+  shiomachi:['潮待村','入り江の東、海風の吹く浜の集落。'],
   forest:['忘れの森','森の北の山裾を辿り、龍神の滝へ。'],
   waterfall:['龍神の滝','山脈の南、湖畔の道を西へ進み月見の湯へ。'],
   hotspring:['月見の湯','北の森から山の参道へ進み、九尾の祠へ。'],
   fox:['九尾の祠','北の山に囲まれた旅路の終点。']
  };
- const places=Object.fromEntries(Object.entries(geography.places).map(([id,cell])=>[id,{point:center(cell),name:descriptions[id][0],note:descriptions[id][1]}]));
+ const places=Object.fromEntries(Object.entries({...geography.places,
+  shiomachi:SHIOMACHI_FIELD_CELL}).map(([id,cell])=>[id,{point:center(cell),name:descriptions[id][0],note:descriptions[id][1]}]));
  const start=center([37,71]),hub=start;
  // Roads are navigation metadata only. The historical wilderness has no
  // constructed road surface: use existing grass tiles instead.
@@ -31,6 +36,9 @@ window.YK_WORLD=(()=>{
  };
  mapData.landmarkContactTiles=Object.fromEntries(Object.entries(geography.landmarkContactTiles||{})
   .map(([name,cells])=>[name,cells.map(c=>c.slice())]));
+ // Keep the coastal settlement on the authored grass, without repainting
+ // coastline, roads, cliffs or replacing the still-playable sea cove.
+ mapData.landmarkContactTiles.shiomachi=[SHIOMACHI_FIELD_CELL.slice()];
  mapData.decorations=geography.decorations.map(o=>{
   const contactTiles=o.contactTiles.map(c=>c.slice());
   // Entrance footprints are walkable: transition happens only after the hero overlaps them.
@@ -39,6 +47,10 @@ window.YK_WORLD=(()=>{
   const occupiedTiles=o.occupiedTiles.filter(([x,y])=>!entrance||!contactTiles.some(([cx,cy])=>cx===x&&cy===y)).map(c=>c.slice());
   return {...o,contactTiles,occupiedTiles};
  });
+ mapData.decorations.push({kind:'newHouse',x:SHIOMACHI_FIELD_CELL[0]*32,
+  y:SHIOMACHI_FIELD_CELL[1]*32,width:32,height:32,
+  foot:(SHIOMACHI_FIELD_CELL[1]+1)*32,contactTiles:[SHIOMACHI_FIELD_CELL.slice()],
+  occupiedTiles:[],walkThrough:true,destination:'shiomachi'});
  const roads=geography.roads.map(r=>r.map(center));
  // Keep routes for directions, elevation corridors and save compatibility,
  // but never rasterize the old dirt-road overlay on the outdoor field.

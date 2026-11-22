@@ -29,10 +29,12 @@ export function buildMapProgressionAudit(){
   const firstRouteOnly=battle.includes('const road=world?.roads?.[0];') &&
     battle.includes("if(closest>32*4)return 'village-outskirts';");
   if(!firstRouteOnly)throw Error('Region encounter routing changed; audit every region');
+  const sharedLandmarkEntrances=walk.includes("['shrine','cove','shiomachi'].includes(destination)")&&
+    walk.includes('enterFieldPlace(destination,completed)');
   const linked={
     village:walk.includes("destination==='village'"),
-    shrine:walk.includes("destination==='shrine'"),
-    cove:walk.includes("destination==='cove'")
+    shrine:walk.includes("destination==='shrine'")||sharedLandmarkEntrances,
+    cove:walk.includes("destination==='cove'")||sharedLandmarkEntrances
   };
   const legs=orderedPlaces.slice(1).map((id,i)=>{
     const prev=orderedPlaces[i],points=reference.roads[i];

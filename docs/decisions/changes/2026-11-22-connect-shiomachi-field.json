@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-11-22-connect-shiomachi-field",
+  "kind": "user-approved",
+  "scopes": [
+    "progression",
+    "equipment"
+  ],
+  "affectedFiles": [
+    "src/field/world.js",
+    "src/field/walk.mjs",
+    "docs/FOUR_VILLAGES_EQUIPMENT_PLAN.md"
+  ],
+  "readBeforeEditing": [
+    "docs/MAP_ENEMY_EQUIPMENT_RECONCILIATION.md：旧11月15日ルートと実歩数43/33を確認",
+    "data/maps/field/terrain.js：現行80x80とセル(49,50)入り江・河川配置を確認",
+    "docs/FOUR_VILLAGES_EQUIPMENT_PLAN.md：4村体制と潮待村の未承認兵具の区別を確認",
+    "docs/BALANCE_PROGRESSION_CONTRACT.md：T0-T6確定補正を読み、今回の変更に含めないと確認",
+    "src/field/world.js / src/field/walk.mjs / src/field/area-transitions.js：接触と帰還方式を確認",
+    "src/game/navigation/game-shell.mjs / src/game/save/save-game.mjs：BGM・手動自動保存方式を確認",
+    "src/game/shiomachi/walk.mjs / data/maps/shiomachi-village/scene.mjs：既存マップ・南口の仕組みを確認"
+  ],
+  "previousDesign": "潮待村は42x54マップ・NPCと室内を備える独立プレビュー。フィールドの入り江は(49,50)でプレイ可能、潮待村の位置は未登録。メインの村→社43歩、社→入り江33歩が確認済み。潮待村の兵具はすべて未承認の試用データ。",
+  "intendedDifference": "ユーザーの明示指示は既存の潮待村をフィールドに配置すること。今回、入り江を残し、隣接する東側草地のセル(53,51)を試行配置の入口に選び、接触で同じ村の本編画面へ移動できるようにする。南口で元の安全なフィールド位置へ戻る。共通シェル・セーブに正式な村場面を登録。これは新たなティア・ショップ値を承認する決定ではない。",
+  "impactAnalysis": "フィールドの通行可能な草地セル(53,51)へ既存32px家のフィールドマーカーを1点追加。元の海の入り江(49,50)、既存道・高さ・水域・当たり判定は維持。場所から戻ると直前の安全セルへ復帰。既存手動自動セーブに新しいシーン名を認識させるが旧スロットも互換。潮待村の試用店舗は独立した仮所持金のままで、実所持金・装備・戦闘への反映はない。",
+  "preservedBoundaries": "正本はHiHoSir/kikokuno-hanamusubi第一作。T0-T6の確定値、鬼灯村の個別4装備、敵配置・報酬・経験値、旧フィールドルート43/33歩とカメラ投影、海の入り江、潮平イベント・貝殻、潮待村の原寸家/NPC/桟橋はすべて変更しない。休憩所/ダンジョンを挟まず、村の追加でT2段階を無断設定しない。プレビュー用の品はデモのまま。",
+  "verification": "Repository guardとnpm testで旧バランス・ルート・プレビューを回帰検査。実通行QAで村→社43歩、社→入り江33歩、入り江→潮待村を計測。Chromium親シェルで実際の一歩を動かして村入場→装備デモの非保存→村内手動セーブ→南口退出→元のセルへの帰還を再生し、スクリーンショット保存。iPhone Safari検査はユーザーのPages確認後。",
+  "userEvidence": {
+    "status": "explicit-user-instruction",
+    "date": "2026-11-22",
+    "quote": "とりあえずさっき作った村をフィールドに配置しよう",
+    "source": "この会話の2026-11-22の最新のユーザーメッセージ。先に潮待村の制作とフィールド未接続を確認した続き"
+  }
+}

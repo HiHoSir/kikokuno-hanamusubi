@@ -15,6 +15,7 @@ test('one top-level game document hosts all production areas',()=>{
   assert.match(shellSource,/src\/field\//);
   assert.match(shellSource,/src\/game\/tenyo\//);
   assert.ok(shellSource.includes("src/game/cove/"),'production cove route is in the game shell');
+  assert.ok(shellSource.includes("src/game/shiomachi/"),'new village uses the same parent shell');
   assert.match(shellSource,/src\/game\/battle\//);
   assert.match(shellSource,/new URL\('src\/game\/village\/',root\)/);
   assert.match(boot,/const shared=parentGame\?\.audio/);
@@ -31,6 +32,7 @@ test('BGM ownership is persistent and a door to the interior does not restart vi
   assert.equal(map.get('src/game/interiors/'),'village');
   assert.equal(map.get('src/field/'),'field');
   assert.equal(map.get('src/game/tenyo/'),'prologue');
+  assert.equal(map.get('src/game/shiomachi/'),'field','the field and new village share the same BGM without restarting');
   assert.equal(map.get('src/game/battle/'),'battle');
 });
 test('game shell navigation is delegated and validates scene and frame identity',()=>{

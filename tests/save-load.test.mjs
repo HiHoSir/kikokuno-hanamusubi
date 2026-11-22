@@ -199,3 +199,27 @@ test('manual/auto saves restore gathered cove shells and money without double cr
  assert.equal(readPlayer(storage).shells.onBeach.length,0);
  assert.equal(readPlayer(storage).shells.bag[shell.kind],0);
 });
+
+test('Shiomachi live scene is a valid manual/autosave location without changing equipment',()=>{
+ const storage=makeStorage(),session=makeStorage();
+ savePlayer({...DEFAULT_PLAYER,gold:55,equipmentTier:'T0'},storage);
+ const location={scene:'shiomachi',position:{x:674,y:1637,face:1}};
+ const manual=saveManualGame(location,storage);
+ assert.equal(manual.accepted,true);
+ assert.equal(manual.save.location.scene,'shiomachi');
+ assert.equal(manualSaveLabel(readManualGame(storage)),'潮待村　1段　55両');
+ const route=routeForSavedGame(readManualGame(storage),
+   'https://example.test/kikokuno-hanamusubi/');
+ assert.equal(route.pathname,'/kikokuno-hanamusubi/src/game/shiomachi/');
+ const resumed=restoreSavedGame('manual',storage,session);
+ assert.equal(resumed.accepted,true);
+ assert.deepEqual(consumeRestorePosition('shiomachi',session),{x:674,y:1637,face:1});
+ assert.equal(readPlayer(storage).gold,55);
+ assert.equal(readPlayer(storage).equipmentTier,'T0');
+ assert.equal(saveAutoGame(location,storage).accepted,true);
+ assert.equal(readAutoGame(storage).location.scene,'shiomachi');
+ // A restored field position is not accidentally consumed by the village.
+ session.setItem(RESTORE_POSITION_KEY,JSON.stringify({scene:'field',position:{x:1728,y:1648,row:1}}));
+ assert.equal(consumeRestorePosition('shiomachi',session),null);
+ assert.deepEqual(consumeRestorePosition('field',session),{x:1728,y:1648,row:1});
+});

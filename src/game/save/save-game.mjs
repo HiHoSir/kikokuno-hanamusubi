@@ -8,10 +8,12 @@ export const MANUAL_SAVE_KEY='kikokuno-hanamusubi-manual-save';
 export const AUTO_SAVE_KEY='kikokuno-hanamusubi-auto-save';
 export const RESTORE_POSITION_KEY='kikokuno-hanamusubi-restore-position';
 const FIELD_PLACE_RETURN_KEY='kikokuno-hanamusubi-field-return';
-const SCENES=Object.freeze({village:'鬼灯村',interiors:'室内',field:'花霞野',tenyo:'天妖の社',cove:'海の入り江'});
+const SCENES=Object.freeze({village:'鬼灯村',interiors:'室内',field:'花霞野',
+  tenyo:'天妖の社',cove:'海の入り江',shiomachi:'潮待村'});
 const ROUTES=Object.freeze({
   village:'src/game/village/',interiors:'src/game/interiors/',
-  field:'src/field/',tenyo:'src/game/tenyo/',cove:'src/game/cove/'
+  field:'src/field/',tenyo:'src/game/tenyo/',cove:'src/game/cove/',
+  shiomachi:'src/game/shiomachi/'
 });
 const own=(object,key)=>Object.prototype.hasOwnProperty.call(object,key);
 function normalizeLocation(source){

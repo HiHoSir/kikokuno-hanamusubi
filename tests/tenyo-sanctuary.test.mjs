@@ -122,7 +122,8 @@ test('the production game loads original water render, common controller and fie
   assert.ok(code.includes('shrineExitReached'));
   assert.ok(code.includes('../../field/?from=shrine'));
   assert.ok(field.includes('../game/tenyo/'));
-  assert.ok(field.includes('shrineReturnPosition'));
+  assert.ok(field.includes('placeReturnPosition(from)'),
+    'shared return position logic preserves the sanctuary and sea cove returns');
   assert.ok(village.includes("advanceStoryStage('shrine')"));
   for(const path of ['src/game/tenyo/walk.mjs','src/game/story/chapter-one.mjs',
     'src/field/walk.mjs','src/game/village/walk.mjs']){

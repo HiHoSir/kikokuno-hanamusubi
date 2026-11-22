@@ -72,10 +72,11 @@ try{
        import('/src/field/runtime.mjs'),
        import('/tools/field-route-pathfinder.mjs')
      ]);
-   const begin=villageArrival(),shrineStart=placeArrival('shrine');
+   const begin=villageArrival(),shrineStart=placeArrival('shrine'),coveStart=placeArrival('cove');
    const routes=[
      {from:'village',to:'shrine',entry:begin,metadata:w.roads[0]},
-     {from:'shrine',to:'cove',entry:shrineStart,metadata:w.roads[1]}
+     {from:'shrine',to:'cove',entry:shrineStart,metadata:w.roads[1]},
+     {from:'cove',to:'shiomachi',entry:coveStart,metadata:null}
    ];
    const records=routes.map(({from,to,entry,metadata})=>{
      const result=traceFieldRoute({
@@ -87,8 +88,8 @@ try{
      }):{success:false,reason:result.reason};
      return {
        from,to,entry:entry.map(px=>Math.floor(px/w.tileSize)),
-       authoredMetadataSteps:metadata.slice(1).reduce((sum,p,i)=>
-         sum+(Math.abs(p[0]-metadata[i][0])+Math.abs(p[1]-metadata[i][1]))/w.tileSize,0),
+       authoredMetadataSteps:metadata?metadata.slice(1).reduce((sum,p,i)=>
+         sum+(Math.abs(p[0]-metadata[i][0])+Math.abs(p[1]-metadata[i][1]))/w.tileSize,0):null,
        reachable:result.reachable,actualWalkSteps:result.steps,
        reachedContactCell:result.toCell,visited:result.visited,
        blockedMoves:result.blockedMoves,
@@ -104,9 +105,10 @@ try{
      mapSize:[w.mapData[0].length,w.mapData.length],
      start:begin.map(px=>Math.floor(px/w.tileSize)),
      shrineExit:shrineStart.map(px=>Math.floor(px/w.tileSize)),
+     coveExit:coveStart.map(px=>Math.floor(px/w.tileSize)),
      routes:records,
      restStopsAreOnlyMetadata:w.restStops.map(({id,name,cell})=>({id,name,cell})),
-     liveTransitions:['village','shrine','cove'],
+     liveTransitions:['village','shrine','cove','shiomachi'],
      note:'Paths use live world.canMove/fieldStep. They are shortest walkable paths, not user exploration or guaranteed battle counts.'
    };
  });
@@ -118,7 +120,7 @@ try{
    browserErrors:errors};
  console.log('FIELD_REAL_WALK_AUDIT '+JSON.stringify(summary));
  assert.deepEqual(report.mapSize,[80,80]);
- assert.deepEqual(report.liveTransitions,['village','shrine','cove']);
+ assert.deepEqual(report.liveTransitions,['village','shrine','cove','shiomachi']);
  assert.deepEqual(errors,[],'production field assets/scripts must load');
  // Confirmed with live collisions on Nov 22. A future map adjustment must
  // explicitly review and update these documented progression measurements.
@@ -126,8 +128,14 @@ try{
  for(const item of report.routes){
    assert.ok(item.reachable,
      item.from+' -> '+item.to+' must have an actual collision-safe, cardinal route');
-   assert.equal(item.actualWalkSteps,recordedWalkDistances[item.to],
-     'walk distance changed from documented Nov 22 baseline: '+item.from+' -> '+item.to);
+   if(Object.hasOwn(recordedWalkDistances,item.to))
+     assert.equal(item.actualWalkSteps,recordedWalkDistances[item.to],
+       'walk distance changed from documented Nov 22 baseline: '+item.from+' -> '+item.to);
+   if(item.to==='shiomachi'){
+     assert.ok(item.actualWalkSteps<=16,'new coastal village must remain a short walk from cove');
+     assert.deepEqual(item.reachedContactCell,[53,51],
+       'landmark contact must be in intended 53,51 grass cell');
+   }
    assert.ok(item.actualWalkSteps>0);
    assert.ok(item.replay.success,
      'actual fieldStep must accept every path edge '+item.from+' -> '+item.to+

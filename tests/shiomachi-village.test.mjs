@@ -192,8 +192,13 @@ test('review UI is landscape only, shared 0.5 zoom, local demo commerce without 
  assert.match(walk,/const \[nx,ny\]=walk\.move/);
  assert.match(walk,/bindDialogue\(clearInput,ended=>/);
  assert.match(walk,/requestAnimationFrame\(frame\)/);
- assert.match(walk,/previewOnly:true/);
- assert.doesNotMatch(walk,/savePlayer|saveGame|localStorage|sessionStorage|advanceStoryStage|KIKOKU_ROUTE\.go/);
+ assert.match(walk,/previewOnly:previewMode/);
+ assert.match(walk,/const previewMode=location\.pathname\.includes\('\/previews\/'\)/);
+ assert.match(walk,/if\(previewMode\)return false;/);
+ assert.match(walk,/if\(!previewMode\)\{/);
+ assert.match(walk,/KIKOKU_ROUTE\.go\(new URL\('\.\.\/\.\.\/field\/\?from=shiomachi'/);
+ assert.doesNotMatch(walk,/savePlayer\(|localStorage|advanceStoryStage\(/,
+   'trial commerce must never write into the player inventory or chapter state');
  assert.match(render,/prepareCoveArt\(map,art\)/);
  assert.match(render,/prepareCoveSurf\(map,landscape.shoreMask\)/);
  assert.match(render,/tideFrame\(time\)/);

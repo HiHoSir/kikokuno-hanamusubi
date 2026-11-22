@@ -63,7 +63,7 @@ test('the shrine and sea cove have NO gameplay equipment pickup or armory',()=>{
 
 test('Shiomachi equipment is restricted to the standalone preview, never equip/save',()=>{
  const area=existingEquipmentAt('shiomachi-village');
- assert.equal(area.gameplayConnected,false);
+ assert.equal(area.gameplayConnected,true,'the village map is now connected; only its gear remains trial-only');
  assert.equal(area.availability,'preview-only');
  assert.deepEqual(area.items.map(x=>x.id),SHIOMACHI_ARMORY_STOCK.map(x=>x.id));
  assert.deepEqual(area.items.map(x=>x.name),[

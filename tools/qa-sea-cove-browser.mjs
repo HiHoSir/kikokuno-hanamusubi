@@ -5,6 +5,7 @@ import {chromium} from 'playwright';
 import {createServer} from 'node:http';
 import {readFile,mkdir} from 'node:fs/promises';
 import {resolve,relative,extname} from 'node:path';
+import {hizukiWalkDistance} from '../src/game/village/movement.mjs';
 
 const root=resolve('.');
 const mime={'.html':'text/html;charset=utf-8','.mjs':'text/javascript;charset=utf-8',
@@ -168,7 +169,8 @@ try{
    const child=document.querySelector('#game-scene').contentWindow;
    child.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowUp',bubbles:true,cancelable:true}));
  });
- await page.waitForTimeout(380);
+ await page.waitForFunction(()=>document.querySelector('#game-scene')
+   .contentWindow.KIKOKU_SAVE_SNAPSHOT().position.y<=376);
  await page.evaluate(()=>{
    const child=document.querySelector('#game-scene').contentWindow;
    child.dispatchEvent(new KeyboardEvent('keyup',{key:'ArrowUp',bubbles:true,cancelable:true}));
@@ -184,7 +186,8 @@ try{
    const child=document.querySelector('#game-scene').contentWindow;
    child.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowLeft',bubbles:true,cancelable:true}));
  });
- await page.waitForTimeout(300);
+ await page.waitForFunction(()=>document.querySelector('#game-scene')
+   .contentWindow.KIKOKU_SAVE_SNAPSHOT().position.x<=307);
  await page.evaluate(()=>{
    const child=document.querySelector('#game-scene').contentWindow;
    child.dispatchEvent(new KeyboardEvent('keyup',{key:'ArrowLeft',bubbles:true,cancelable:true}));
@@ -339,29 +342,24 @@ try{
  await review.waitForTimeout(600);
  const reviewAfter=await review.screenshot({path:'artifacts/sea-cove-pages-review-wave.png'});
  assert.ok(!before.equals(reviewAfter),'Pages preview shows genuinely moving sea');
- await review.evaluate(()=>window.dispatchEvent(new KeyboardEvent('keydown',
-   {key:'ArrowUp',bubbles:true,cancelable:true})));
- await review.waitForTimeout(420);
- await review.evaluate(()=>window.dispatchEvent(new KeyboardEvent('keyup',
-   {key:'ArrowUp',bubbles:true,cancelable:true})));
- const reviewMoved=await review.evaluate(()=>window.KIKOKU_SAVE_SNAPSHOT().position);
- assert.ok(reviewMoved.y<reviewInitial.y,'Pages preview allows real walking');
- // Move in the actual public review, not a fabricated screenshot:
- // east across the extended coast then south to the working beach.
- const held=async(key,ms)=>{
+ // Move in the public review from the entry along the coast to the worksite.
+ const held=async(key,distance)=>{
    await review.evaluate(k=>window.dispatchEvent(new KeyboardEvent('keydown',
      {key:k,bubbles:true,cancelable:true})),key);
-   await review.waitForTimeout(ms);
+   await review.waitForTimeout(distance/hizukiWalkDistance(1));
    await review.evaluate(k=>window.dispatchEvent(new KeyboardEvent('keyup',
      {key:k,bubbles:true,cancelable:true})),key);
  };
+ await held('ArrowUp',63);
+ const reviewMoved=await review.evaluate(()=>window.KIKOKU_SAVE_SNAPSHOT().position);
+ assert.ok(reviewMoved.y<reviewInitial.y,'Pages preview allows real walking');
  // Walk south of the newly sized headland rock, then east above the
  // house roof, then south through the real house/net worksite corridor.
  // This uses player input only: it is not a teleport or a fake camera QA.
- await held('ArrowRight',3000);
- await held('ArrowDown',1400);
- await held('ArrowRight',900);
- await held('ArrowDown',2000);
+ await held('ArrowRight',450);
+ await held('ArrowDown',210);
+ await held('ArrowRight',135);
+ await held('ArrowDown',300);
  const hamletView=await review.evaluate(()=>window.KIKOKU_SAVE_SNAPSHOT().position);
  assert.ok(hamletView.x>700&&hamletView.y>700,
    'real on-screen movement reaches expanded fishing worksite');

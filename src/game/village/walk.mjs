@@ -1,4 +1,4 @@
-import { HIZUKI_WALK_SPEED, makeWalk, touchedEntrance, villageArrivalFacing } from './movement.mjs?v=village-speed-288-exit-facing-1-map-edge-1';
+import { hizukiWalkDistance, makeWalk, touchedEntrance, villageArrivalFacing } from './movement.mjs?v=shared-walk-1';
 import { drawVillageFence, makeVillageFence, VILLAGE_FENCE_ART, VILLAGE_GATE_POST_ART } from './boundary.mjs?v=gate-posts-1';
 import { villageRooms } from '../interiors/rooms.mjs';
 import { pixelViewport, DEFAULT_CAMERA_ZOOM, canopyOpacity, riverRipples, paintRiverRipples } from './render.mjs?v=nonfield-world-scale-1';
@@ -301,7 +301,7 @@ async function start() {
     if(direction && !dialogue.active){
       const [dx,dy,row]=directions[direction];
       face=row;
-      const step=HIZUKI_WALK_SPEED*elapsed/1000;
+      const step=hizukiWalkDistance(elapsed);
       const [nx,ny,leftMap]=walk.move(x,y,dx*step,dy*step,occupied,true);
       if(leftMap){
         clearInput();

@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-11-23-unify-hizuki-walking",
+  "kind": "user-approved",
+  "scopes": ["equipment"],
+  "affectedFiles": ["src/game/shiomachi/interior-preview.mjs"],
+  "readBeforeEditing": [
+    "docs/VILLAGE_MAP_WORKFLOW.md：屋外・屋内の歩行と歩行コマ、衝突判定を確認",
+    "docs/TENYO_SHRINE.md：天妖の社の連続歩行と表示倍率を確認",
+    "docs/BALANCE_PROGRESSION_CONTRACT.md：潮待村の試用商取引と本編データの境界を確認"
+  ],
+  "previousDesign": "鬼灯村と潮待村の屋外、室内、入り江、天妖の社で緋月の歩行速度や画面上の歩行コマの間隔が異なっていた。",
+  "intendedDifference": "鬼灯村を基準に通常の画面上の歩行速度を毎秒144 CSS pxに、歩行コマの間隔を実移動7 CSS pxに揃える。",
+  "impactAnalysis": "潮待村の店内は共通の歩行距離計算に切り替わる。天妖の社は通常の表示倍率に合わせた距離で移動する。",
+  "preservedBoundaries": "フィールドの通常1マス256ms、NPCの速度、地形と衝突判定、商品・所持金・会話・装備やセーブの挙動を維持する。",
+  "verification": "npm test と関連するChromium検査で、共通の速度・歩行コマ、潮待村の店番、入り江の貝殻と出口、天妖の社の操作や衝突を確認する。",
+  "userEvidence": {
+    "status": "explicit-user-instruction",
+    "date": "2026-11-23",
+    "quote": "マップによって歩行スピードなどが違う気がするので基本は統一できる？",
+    "source": "本会話の2026-11-23のユーザーメッセージ"
+  }
+}

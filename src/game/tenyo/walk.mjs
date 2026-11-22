@@ -1,7 +1,8 @@
 // Production Tenyo sanctuary. The approved 28x25 water map, original renderer,
 // sprites, and collision are shared; only game input/story wiring is local.
 import {bindDialogue} from '../village/dialogue.mjs';
-import {residentInFront} from '../village/residents.mjs';
+import {residentInFront,walkFrame} from '../village/residents.mjs?v=shared-walk-1';
+import {hizukiWalkDistance} from '../village/movement.mjs?v=shared-walk-1';
 import {readStoryStage,advanceStoryStage,objectiveForStage} from '../story/chapter-one.mjs';
 import {consumeRestorePosition} from '../save/save-game.mjs?v=save-slots-1';
 import {WORLD_ACTOR_FRAME} from '../ui/world-scale.mjs';
@@ -19,7 +20,6 @@ const keys={ArrowDown:'down',ArrowUp:'up',ArrowRight:'right',ArrowLeft:'left',s:
 const facing=['d','u','r','l'];
 const input=new Map();
 const VIEWPORT_EDGE=768;
-const WALK_PX_PER_MS=32/156; // preserve prior travel speed, not its grid step
 const TENYO_APPROVED_CAMERA=1;
 // On the selected wide-angle + legacy-person proportions, recompose the
 // hero's visual painting around its unchanged foot. This is NOT camera zoom.
@@ -258,7 +258,7 @@ async function start(){
     const [dx,dy,face,dir]=directions[direction];
     state.face=face;state.dir=dir;
     const result=shrineAdvance(collider,state.x,state.y,dx,dy,
-      elapsedMs*WALK_PX_PER_MS);
+      hizukiWalkDistance(elapsedMs,TENYO_APPROVED_CAMERA));
     state.x=result.x;state.y=result.y;
     state.moving=result.traveled>0;
     state.distance+=result.traveled;
@@ -270,7 +270,7 @@ async function start(){
     // the rendering boundary; movement has no 32px/8px snapping.
     const x=state.x/map.tileSize-.5,y=state.y/map.tileSize-.5;
     return {x,y,dir:state.dir,
-      frame:state.moving?[0,1,0,2][Math.floor(state.distance/14)%4]:0};
+      frame:walkFrame(state.distance,state.moving,TENYO_APPROVED_CAMERA)};
   }
   function resize(){
     const {clientWidth,clientHeight}=scene.parentElement;
@@ -392,7 +392,7 @@ async function start(){
   function frame(now){
     // Continuous movement follows elapsed time and stops at world-pixel
     // shapes, with swept foot-circle checks to avoid crossing thin walls.
-    const elapsed=lastMotionTime?Math.min(48,Math.max(0,now-lastMotionTime)):16;
+    const elapsed=lastMotionTime?Math.min(40,Math.max(0,now-lastMotionTime)):0;
     lastMotionTime=now;
     state.moving=false;
     if(!dialogue.active){

@@ -1,8 +1,11 @@
-// Authored village pace, in world pixels per second. The 14px step cycle
-// in residents.mjs follows actual movement distance rather than clock time.
+import {WORLD_SCENE_ZOOM} from '../ui/world-scale.mjs';
+
+// Hozuki's pace at the standard scene zoom, in world pixels per second.
 export const HIZUKI_WALK_SPEED = 288;
-// Interiors retain their previously approved pace; this request adjusts the village only.
-export const HIZUKI_INTERIOR_WALK_SPEED = 176;
+
+export function hizukiWalkDistance(elapsedMs,sceneZoom=WORLD_SCENE_ZOOM){
+  return HIZUKI_WALK_SPEED*WORLD_SCENE_ZOOM*elapsedMs/(1000*sceneZoom);
+}
 
 // When exiting a building, the hero should face the camera (south, row 0).
 // Other arrivals, including saved-game restores, keep their previous facing.

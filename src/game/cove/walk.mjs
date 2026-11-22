@@ -1,5 +1,5 @@
 import {COVE_MAP,walkableCell,coveExitFenceSegments} from '../../../data/maps/sea-cove/scene.mjs?v=cove-south-gate-1';
-import {makeWalk} from '../village/movement.mjs?v=map-edge-1';
+import {makeWalk,hizukiWalkDistance} from '../village/movement.mjs?v=shared-walk-1';
 import {makeVillageFence,VILLAGE_FENCE_ART,VILLAGE_GATE_POST_ART} from '../village/boundary.mjs?v=gate-posts-1';
 import {residentInFront} from '../village/residents.mjs';
 import {bindDialogue} from '../village/dialogue.mjs';
@@ -219,7 +219,7 @@ async function start(){
    if(!menuPaused&&!dialogue.active&&direction){
      const [dx,dy,row]=directions[direction];
      face=row;
-     const step=150*dt/1000;
+     const step=hizukiWalkDistance(dt);
      const [nx,ny,leftMap]=walk.move(x,y,dx*step,dy*step,occupied,true);
      if(leftMap&&!previewMode){leave();return;}
      moving=Math.hypot(nx-x,ny-y)>.01;

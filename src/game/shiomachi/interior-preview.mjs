@@ -4,7 +4,7 @@ import {rooms,prepareInterior} from '../interiors/rooms.mjs';
 import {paintRoom,paintPartition,paintContactShadow} from '../interiors/room-art.mjs';
 import {drawFurnitureLife} from '../interiors/life-effects.mjs';
 import {drawCharacter,residentInFront} from '../village/residents.mjs';
-import {makeWalk,HIZUKI_INTERIOR_WALK_SPEED} from '../village/movement.mjs';
+import {makeWalk,hizukiWalkDistance} from '../village/movement.mjs?v=shared-walk-1';
 import {normalizePlayer,DEFAULT_PLAYER,FOOD_ITEMS,purchaseFood} from '../battle/rules.mjs';
 import {SHIOMACHI_ARMORY_STOCK,purchaseShiomachiArmory} from '../../../data/maps/shiomachi-village/armory.mjs?v=approved-balance-contract-20261122';
 
@@ -171,7 +171,7 @@ export function createShiomachiInteriorPreview({ctx,images,viewport,clearInput,s
      const directions={up:[0,-1,1],down:[0,1,0],left:[-1,0,3],right:[1,0,2]};
      const [dx,dy,face]=directions[dir];
      hero.face=face;
-     const step=HIZUKI_INTERIOR_WALK_SPEED*dt/1000;
+     const step=hizukiWalkDistance(dt);
      const [nx,ny]=walking.move(hero.x,hero.y,dx*step,dy*step);
      hero.distance+=Math.hypot(nx-hero.x,ny-hero.y);
      hero.moving=Math.abs(nx-hero.x)+Math.abs(ny-hero.y)>0.01;

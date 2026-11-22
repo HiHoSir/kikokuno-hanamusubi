@@ -1,20 +1,22 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {HIZUKI_WALK_SPEED,HIZUKI_INTERIOR_WALK_SPEED,makeWalk,touchedEntrance} from '../src/game/village/movement.mjs';
+import {hizukiWalkDistance,makeWalk,touchedEntrance} from '../src/game/village/movement.mjs';
+import {WORLD_SCENE_ZOOM} from '../src/game/ui/world-scale.mjs';
 import {makeVillageFence} from '../src/game/village/boundary.mjs';
-import {drawCharacter} from '../src/game/village/residents.mjs';
+import {drawCharacter,walkFrame} from '../src/game/village/residents.mjs';
 
-test('village moves about 64% faster, indoor pace stays unchanged and field has independent movement',()=>{
-  assert.equal(HIZUKI_WALK_SPEED,288);
-  assert.equal(HIZUKI_INTERIOR_WALK_SPEED,176);
-  const village=readFileSync('src/game/village/walk.mjs','utf8');
-  const interior=readFileSync('src/game/interiors/walk.mjs','utf8');
-  const html=readFileSync('src/game/village/index.html','utf8');
-  assert.match(village,/HIZUKI_WALK_SPEED\*elapsed\/1000/);
-  assert.match(interior,/HIZUKI_INTERIOR_WALK_SPEED\*elapsed\/1000/);
-  assert.match(html,/village-speed-288/);
-  assert.match(village,/movement\.mjs\?v=village-speed-288/);
+test('villages, rooms, cove and shrine use the same walking pace at their gameplay zoom',()=>{
+  assert.equal(hizukiWalkDistance(1000)*WORLD_SCENE_ZOOM,144);
+  assert.equal(hizukiWalkDistance(1000,1),144);
+  assert.equal(hizukiWalkDistance(250),72);
+  for(const path of ['village/walk','interiors/walk','shiomachi/walk','shiomachi/interior-preview','cove/walk']){
+    const scene=readFileSync('src/game/'+path+'.mjs','utf8');
+    assert.match(scene,/hizukiWalkDistance\((elapsed|dt)\)/,path);
+  }
+  const shrine=readFileSync('src/game/tenyo/walk.mjs','utf8');
+  assert.match(shrine,/hizukiWalkDistance\(elapsedMs,TENYO_APPROVED_CAMERA\)/);
+  assert.match(shrine,/walkFrame\(state.distance,state.moving,TENYO_APPROVED_CAMERA\)/);
 });
 
 test('walking animation strides are tied to real distance instead of elapsed time',()=>{
@@ -30,8 +32,8 @@ test('walking animation strides are tied to real distance instead of elapsed tim
   drawCharacter(ctx,sprite);
   assert.deepEqual(recorded.map(args=>args[1]),[80,0,160,0]);
   assert.deepEqual(recorded.map(args=>args.slice(5)),Array.from({length:4},()=>[260,214,80,112]));
-  // Higher velocity reaches the next frame earlier, with the same 14-pixel stride.
-  assert.ok((14/HIZUKI_WALK_SPEED*1000)<(14/176*1000));
+  assert.deepEqual([0,7,14,21].map(distance=>walkFrame(distance,true,1)),[1,0,2,0]);
+  assert.equal(walkFrame(14,false,1),0);
 });
 
 test('increased speed still checks collisions at subpixel-sized intervals',()=>{
@@ -39,7 +41,7 @@ test('increased speed still checks collisions at subpixel-sized intervals',()=>{
   for(let y=0;y<height;y++)for(let x=60;x<width;x++)blocked[y*width+x]=1;
   const walk=makeWalk(width,height,blocked,8);
   let [x,y]=[40,50];
-  const distancePerFrame=HIZUKI_WALK_SPEED*40/1000;
+  const distancePerFrame=hizukiWalkDistance(40);
   for(let i=0;i<8;i++)[x,y]=walk.move(x,y,distancePerFrame,0);
   assert.ok(x<=52.1&&x>50,'collision stops against wall even at faster pace');
   assert.equal(y,50);
@@ -51,7 +53,7 @@ test('increased speed still checks collisions at subpixel-sized intervals',()=>{
 
 test('a fast step still triggers contact with an interior door',()=>{
   const marker={entrance:[100,60,40,20]};
-  const speedStep=HIZUKI_WALK_SPEED*40/1000;
+  const speedStep=hizukiWalkDistance(40);
   const doors=touchedEntrance([marker],120,85,120,85-speedStep,8);
   assert.equal(doors,marker);
 });

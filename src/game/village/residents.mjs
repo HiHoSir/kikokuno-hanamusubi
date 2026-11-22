@@ -1,11 +1,15 @@
-import {WORLD_ACTOR_FRAME,WORLD_ACTOR_FOOT} from '../ui/world-scale.mjs';
+import {WORLD_ACTOR_FRAME,WORLD_ACTOR_FOOT,WORLD_SCENE_ZOOM} from '../ui/world-scale.mjs';
 
 const facingVectors = [[0,1],[0,-1],[1,0],[-1,0]];
 const stride = [1,0,2,0];
 export const RESIDENT_RADIUS = 11;
 
+export function walkFrame(distance,moving,sceneZoom=WORLD_SCENE_ZOOM){
+  return moving ? stride[Math.floor(distance*sceneZoom/(14*WORLD_SCENE_ZOOM))%stride.length] : 0;
+}
+
 export function drawCharacter(context,{bitmap,x,y,face,distance,moving},[width,height]=WORLD_ACTOR_FRAME,[footX,footY]=WORLD_ACTOR_FOOT) {
-  const column=moving ? stride[Math.floor(distance/14)%stride.length] : 0;
+  const column=walkFrame(distance,moving);
   context.drawImage(bitmap,width*column,height*face,width,height,
     Math.round(x-footX),Math.round(y-footY),width,height);
 }

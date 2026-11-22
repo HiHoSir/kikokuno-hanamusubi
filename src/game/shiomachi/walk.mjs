@@ -3,13 +3,13 @@ import {
  shiomachiCollision,shiomachiPierFixtureCollision,
  shiomachiTouchedInterior
 } from '../../../data/maps/shiomachi-village/scene.mjs?v=boundary-fence-1';
-import {makeWalk,HIZUKI_WALK_SPEED} from '../village/movement.mjs?v=map-edge-1';
+import {makeWalk,hizukiWalkDistance} from '../village/movement.mjs?v=shared-walk-1';
 import {makeVillageFence,VILLAGE_FENCE_ART,VILLAGE_GATE_POST_ART} from '../village/boundary.mjs?v=gate-posts-1';
 import {advanceResident,makeResident,RESIDENT_RADIUS,residentInFront} from '../village/residents.mjs';
 import {bindDialogue} from '../village/dialogue.mjs';
 import {pixelViewport,DEFAULT_CAMERA_ZOOM} from '../village/render.mjs';
 import {createShiomachiRenderer} from './render.mjs?v=gate-posts-1';
-import {createShiomachiInteriorPreview} from './interior-preview.mjs?v=shop-clerk-1';
+import {createShiomachiInteriorPreview} from './interior-preview.mjs?v=shop-clerk-1-shared-walk-1';
 import {consumeRestorePosition} from '../save/save-game.mjs?v=save-slots-1';
 
 // Preview and real game share the SAME village map, art and interior code.
@@ -218,7 +218,7 @@ async function start(){
        else moving=Boolean(interior.actor?.moving);
      }else{
        face=heading;
-       const delta=HIZUKI_WALK_SPEED*dt/1000;
+       const delta=hizukiWalkDistance(dt);
        const [nx,ny,leftMap]=walk.move(x,y,dx*delta,dy*delta,occupied,true);
        if(leftMap&&exitToField())return;
        const site=shiomachiTouchedInterior(x,y,nx,ny,heading);

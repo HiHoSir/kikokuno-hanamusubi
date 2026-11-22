@@ -12,7 +12,8 @@ const SCENES=Object.freeze({village:'鬼灯村',interiors:'室内',field:'花霞
   tenyo:'天妖の社',cove:'海の入り江',shiomachi:'潮待村'});
 const ROUTES=Object.freeze({
   village:'src/game/village/',interiors:'src/game/interiors/',
-  field:'src/field/',tenyo:'src/game/tenyo/',cove:'src/game/cove/'
+  field:'src/field/',tenyo:'src/game/tenyo/',cove:'src/game/cove/',
+  shiomachi:'src/game/shiomachi/'
 });
 const own=(object,key)=>Object.prototype.hasOwnProperty.call(object,key);
 function normalizeLocation(source){

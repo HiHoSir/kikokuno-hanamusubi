@@ -3,6 +3,10 @@ on:
   pull_request:
     paths:
       - 'src/field/**'
+      - 'src/game/shiomachi/**'
+      - 'src/game/navigation/**'
+      - 'src/game/save/save-game.mjs'
+      - 'tools/qa-shiomachi-field-roundtrip.mjs'
       - 'data/maps/field/terrain.js'
       - 'tools/field-route-pathfinder.mjs'
       - 'tools/qa-field-route-playability.mjs'
@@ -12,6 +16,10 @@ on:
     branches: [main]
     paths:
       - 'src/field/**'
+      - 'src/game/shiomachi/**'
+      - 'src/game/navigation/**'
+      - 'src/game/save/save-game.mjs'
+      - 'tools/qa-shiomachi-field-roundtrip.mjs'
       - 'data/maps/field/terrain.js'
       - 'tools/field-route-pathfinder.mjs'
       - 'tools/qa-field-route-playability.mjs'
@@ -33,10 +41,14 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Trace real village to shrine to cove movement
         run: node tools/qa-field-route-playability.mjs
+      - name: Verify real field-to-village-to-field route and save
+        run: node tools/qa-shiomachi-field-roundtrip.mjs
       - name: Upload concrete walkability audit
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: field-real-walk-route-audit
-          path: artifacts/field-route-playability.json
+          path: |
+            artifacts/field-route-playability.json
+            artifacts/shiomachi-field-connected.png
           if-no-files-found: warn

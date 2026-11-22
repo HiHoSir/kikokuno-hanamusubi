@@ -30,9 +30,12 @@ const nativeRocks=SCENERY.map(rock=>{
 });
 export const COVE_MAP=Object.freeze({
  id:'sea-cove',name:'海の入り江',tileSize:COVE_TILE_SIZE,
- width:COVE_WIDTH,height:COVE_HEIGHT,tiles,
+ width:COVE_WIDTH,height:COVE_HEIGHT,tiles,shore:COVE_SHORE,
  entry:Object.freeze({x:10*32+16,y:13*32+16,face:1}),
- exit:Object.freeze({row:COVE_HEIGHT-1,columns:Object.freeze([9,10,11])}),
+ exit:Object.freeze({
+  row:COVE_HEIGHT-1,columns:Object.freeze([9,10,11]),
+  trailStart:13,trailLeadIn:Object.freeze([[10,14],[9,13],[9,12]])
+ }),
  fisher:Object.freeze({id:'ushiohei',name:'潮平',x:16*32+16,y:12*32+16,face:3}),
  // Keep NPC life on the sand, but never paint unrelated forests over the
  // approved beach. The three rocks await separate visual approval.
@@ -82,4 +85,16 @@ export function walkablePoint(x,y,map=COVE_MAP){
 }
 export function isSouthExit(x,y,map=COVE_MAP){
  return y===map.exit.row&&map.exit.columns.includes(x);
+}
+export function coveExitTrailCell(x,y,map=COVE_MAP){
+ const {row,columns,trailStart,trailLeadIn}=map.exit;
+ if(y<trailStart||y>row)return false;
+ const lead=trailLeadIn[y-trailStart];
+ return lead?x>=lead[0]&&x<=lead[1]:columns.includes(x);
+}
+export function coveExitFenceSegments(map=COVE_MAP){
+ const {row,columns}=map.exit;
+ const west=1,east=map.width-2;
+ return [[west,map.shore[west],west,row],[east,map.shore[east],east,row],
+  [west,row,columns[0]-1,row],[columns.at(-1)+1,row,east,row]];
 }

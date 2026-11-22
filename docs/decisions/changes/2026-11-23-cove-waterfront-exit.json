@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-11-23-cove-waterfront-exit",
+  "kind": "user-approved",
+  "scopes": ["progression"],
+  "affectedFiles": ["data/maps/field/terrain.js", "docs/MAP_ENEMY_EQUIPMENT_RECONCILIATION.md"],
+  "readBeforeEditing": [
+    "data/maps/field/terrain.js：入り江の従来の目印・接触セルと南岸の砂浜を確認",
+    "docs/MAP_ENEMY_EQUIPMENT_RECONCILIATION.md：実通行判定と道路メタデータの別々の歩数を確認",
+    "docs/SEA_COVE.md：潮平・家・採集地点・入口と帰還方法の現行仕様を確認",
+    "src/field/area-transitions.js と src/field/walk.mjs：入場と帰還位置の判定を確認",
+    "docs/BALANCE_PROGRESSION_CONTRACT.md：戦闘・装備の確定値を改定しない範囲を確認"
+  ],
+  "previousDesign": "海の入り江のフィールド目印と接触セルが内陸にあり、シーン内では砂浜の南端に出口だと分かる道や柵の切れ目がなかった。鬼灯村と潮待村の南口には常設の文字案内があった。",
+  "intendedDifference": "海の入り江の目印と接触セルを南岸の砂浜 (49,53) に並べる。浜では潮平の近くから踏み道を南へつなぎ、柵と木の門柱の切れ目から出られるようにする。鬼灯村と潮待村を含め、出口の常設文字案内を外す。",
+  "impactAnalysis": "社から入り江への実歩数は33歩から37歩になる。入り江から潮待村は引き続き5歩。既存の道路メタデータを砂浜までつなぐ。",
+  "preservedBoundaries": "浜の海岸線、波、潮平の配置と物語、資産サイズ、フィールド地形、戦闘、装備、貝殻の採集と保存の仕様を維持する。",
+  "verification": "フィールドから入り江へ歩いて入り、浜の柵で止まり、踏み道の開口部を抜けると実際の手前セルへ戻るところをChromiumで確認する。フィールドの目印と浜の出口を実描画で確認する。",
+  "userEvidence": {
+    "status": "explicit-user-instruction",
+    "date": "2026-11-23",
+    "quote": "次、潮平がいる箇所もフィールドへの出口が分かりづらいのでなんとかして。あと文字出しておくのはダサいのでやめて\nフィールド上のオブジェクトも海に面してなくて不自然なので改善して",
+    "source": "本会話の2026-11-23の連続するユーザーメッセージ"
+  }
+}

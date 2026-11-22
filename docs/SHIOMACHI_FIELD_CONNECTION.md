@@ -8,7 +8,7 @@
 | --- | --- |
 | 追加する地点 | 潮待村（鬼灯村とは別の集落、現行2村目） |
 | フィールド入口 | **セル (53,51)**（草地・32px格子） |
-| 既存海の入り江 | セル (49,50)。現状どおり残す。 |
+| 海の入り江 | フィールド南岸の砂浜セル (49,53) |
 | 表現 | 鬼灯村と共通のフィールド用 `assets/field/objects/village.png` を原寸64×32pxで表示 |
 | 村本体 | `data/maps/shiomachi-village/scene.mjs`、`src/game/shiomachi/` の**既存の42×54マップ**を原寸・同じカメラ倍率で利用 |
 | 出入り | フィールドの接触セル(53,51)に入ると `src/game/shiomachi/`。村の南口から `src/field/?from=shiomachi` に戻る |
@@ -22,12 +22,12 @@
 - 村の北の海岸線・既存建物4棟・NPC4名・宿／兵具屋／茶店と網職人の家・室内への歩行入場は**同じ実装を共用**する。既存プレビュー `previews/shiomachi-village/` も引き続き検査可能で、新規のレビューHTMLを増やさない。
 - **潮待村の兵具屋4点は未承認の試用品のまま**。現時点では、村の本編に入っても画面上「試用・セーブには反映しません」と明示し、所持金・装備・キャラ保存へは反映しない。新しい正式T1/T2装備を勝手に作らない。
 - 海の入り江のシナリオ潮平・貝殻・釣り道具・鬼灯村兵具屋を変更しない。休憩所や洞窟は未実装のまま。
-- 場所 (53,51) は実歩行とフィールド内の相対位置をもとにした**今回の試行配置**。移動距離・見た目はiPhone Safariの実機確認後に再評価できる。既存のメインルートの村→社43歩・社→入り江33歩を維持する。
+- 潮待村はセル (53,51)。入り江のフィールド復帰地点から最短5歩。
 
 ## 検査
 
 - `node --test tests/shiomachi-village.test.mjs tests/save-load.test.mjs tests/entry-routing.test.mjs tests/game-shell.test.mjs`：プレビュー維持、正規ゲーム許可ルート、保存と復帰
-- `node tools/qa-field-route-playability.mjs`：実当たり判定を使い、既存の43歩/33歩および入り江→新しい村入口の通行を検査
+- `node tools/qa-field-route-playability.mjs`：実当たり判定で鬼灯村→社43歩、社→入り江37歩、入り江→潮待村5歩の経路を検査
 - `node tools/qa-shiomachi-field-roundtrip.mjs`：本編の親画面で現実の移動入力を使って**フィールドから入る→家・NPCが読み込まれる→村内で保存→南口から出る→安全な元位置へ戻る**。デモ兵具が実セーブに混入しないことも確認
 - `.github/workflows/field-route-qa.yml` のGitHub Actionsに結果とスクリーンショットを保存。**Chromium検査とiPhone Safari実機承認は別**。
 

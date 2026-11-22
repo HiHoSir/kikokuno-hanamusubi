@@ -122,15 +122,15 @@ try{
  assert.deepEqual(report.mapSize,[80,80]);
  assert.deepEqual(report.liveTransitions,['village','shrine','cove','shiomachi']);
  assert.deepEqual(errors,[],'production field assets/scripts must load');
- // Confirmed with live collisions on Nov 22. A future map adjustment must
- // explicitly review and update these documented progression measurements.
- const recordedWalkDistances={shrine:43,cove:33};
+ // Live collision checks include the cove's new waterfront entrance.
+ const recordedWalkDistances={shrine:43,cove:37};
  for(const item of report.routes){
    assert.ok(item.reachable,
      item.from+' -> '+item.to+' must have an actual collision-safe, cardinal route');
    if(Object.hasOwn(recordedWalkDistances,item.to))
      assert.equal(item.actualWalkSteps,recordedWalkDistances[item.to],
-       'walk distance changed from documented Nov 22 baseline: '+item.from+' -> '+item.to);
+       'walk distance changed from the documented route: '+item.from+' -> '+item.to);
+   if(item.to==='cove')assert.deepEqual(item.reachedContactCell,[49,53]);
    if(item.to==='shiomachi'){
      assert.ok(item.actualWalkSteps<=16,'new coastal village must remain a short walk from cove');
      assert.deepEqual(item.reachedContactCell,[53,51],

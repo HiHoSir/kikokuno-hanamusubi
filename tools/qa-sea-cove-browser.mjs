@@ -45,7 +45,26 @@ try{
    const before=rules.savePlayer({...rules.DEFAULT_PLAYER,completedBattles:4,wins:3});
    rules.savePlayer({...before,completedBattles:5});
  });
- await page.evaluate(()=>window.KIKOKU_GAME.navigate(new URL('./cove/',location.href)));
+ await page.evaluate(()=>{
+   sessionStorage.setItem('kikokuno-hanamusubi-restore-position',JSON.stringify({
+     scene:'field',position:{x:49*32+16,y:52*32+16,row:0}
+   }));
+   window.KIKOKU_GAME.navigate(new URL('/src/field/?from=village',location.href));
+ });
+ const fieldAt=async(x,y)=>page.waitForFunction(({x,y})=>{
+   const child=document.querySelector('#game-scene')?.contentWindow;
+   if(child?.location.pathname!=='/src/field/'||!child.document.querySelector('#load')?.hidden)
+     return false;
+   const scene=child.document.querySelector('#scene');
+   return Number(scene.dataset.x)===x&&Number(scene.dataset.y)===y;
+ },{x,y});
+ const moveSouth=async(type)=>page.evaluate(type=>{
+   const child=document.querySelector('#game-scene').contentWindow;
+   child.dispatchEvent(new KeyboardEvent(type,{key:'ArrowDown',bubbles:true}));
+ },type);
+ await fieldAt(49,52);
+ await page.screenshot({path:'artifacts/sea-cove-waterfront-marker.png'});
+ await moveSouth('keydown');
  await page.waitForFunction(()=>{
    const child=document.querySelector('#game-scene')?.contentWindow;
    try{
@@ -190,6 +209,34 @@ try{
  });
  assert.equal(Object.values(persisted.bag).reduce((a,b)=>a+b,0),1);
  await page.screenshot({path:'artifacts/sea-cove-shell-picked.png'});
+ const coveAt=async(x,y)=>{
+   await page.evaluate(({x,y})=>{
+     sessionStorage.setItem('kikokuno-hanamusubi-restore-position',JSON.stringify({
+       scene:'cove',position:{x,y,face:0}
+     }));
+     window.KIKOKU_GAME.navigate(new URL('./cove/?qa-south='+x,location.href));
+   },{x,y});
+   await page.waitForFunction(({x,y})=>{
+     const child=document.querySelector('#game-scene')?.contentWindow;
+     const snapshot=child?.KIKOKU_SAVE_SNAPSHOT?.();
+     return snapshot?.scene==='cove'&&snapshot.position.x===x&&snapshot.position.y===y;
+   },{x,y});
+ };
+ await coveAt(448,1340);
+ await moveSouth('keydown');
+ await page.waitForFunction(()=>document.querySelector('#game-scene')
+   .contentWindow.KIKOKU_SAVE_SNAPSHOT().position.y>1374);
+ await page.waitForTimeout(350);
+ await moveSouth('keyup');
+ const stopped=await page.evaluate(()=>document.querySelector('#game-scene')
+   .contentWindow.KIKOKU_SAVE_SNAPSHOT());
+ assert.equal(stopped.scene,'cove');
+ assert.ok(stopped.position.y<1392,'south fence stops movement away from the opening');
+ await coveAt(336,1296);
+ await page.screenshot({path:'artifacts/sea-cove-south-exit.png'});
+ await moveSouth('keydown');
+ await fieldAt(49,52);
+ assert.match(page.frames().find(frame=>frame.url().includes('/src/field/')).url(),/from=cove/);
  assert.deepEqual(errors,[],'no runtime JS exceptions or missing local assets');
  // Verify the public Pages review with the *same* real production renderer.
  // Opening and walking the review must not alter the user's saved game.
@@ -320,6 +367,10 @@ try{
    'real on-screen movement reaches expanded fishing worksite');
  assert.ok(hamletView.x<950,'worksite route should use the central house/net corridor');
  await review.screenshot({path:'artifacts/sea-cove-hamlet-worksite.png'});
+ await review.locator('[data-review-spot="south"]').click();
+ assert.equal(await review.locator('.village-hud').isVisible(),false,
+   'the exit view has no persistent text overlay');
+ await review.locator('.viewport').screenshot({path:'artifacts/sea-cove-preview-south-exit.png'});
  // On a real iPhone the art cannot be judged from a test log. Ensure the
  // public review has touch-friendly rock/worksite shortcuts and real movement.
  await review.locator('[data-review-spot="rocks"]').click();

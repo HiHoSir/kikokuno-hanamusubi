@@ -1,14 +1,14 @@
 import {
  SHIOMACHI_MAP,SHIOMACHI_REVIEW_SPOTS,shiomachiWalkableCell,
- shiomachiCollision,shiomachiIsExit,shiomachiPierFixtureCollision,
+ shiomachiCollision,shiomachiPierFixtureCollision,
  shiomachiTouchedInterior
 } from '../../../data/maps/shiomachi-village/scene.mjs?v=boundary-fence-1';
 import {makeWalk,HIZUKI_WALK_SPEED} from '../village/movement.mjs?v=map-edge-1';
-import {makeVillageFence,VILLAGE_FENCE_ART} from '../village/boundary.mjs';
+import {makeVillageFence,VILLAGE_FENCE_ART,VILLAGE_GATE_POST_ART} from '../village/boundary.mjs?v=gate-posts-1';
 import {advanceResident,makeResident,RESIDENT_RADIUS,residentInFront} from '../village/residents.mjs';
 import {bindDialogue} from '../village/dialogue.mjs';
 import {pixelViewport,DEFAULT_CAMERA_ZOOM} from '../village/render.mjs';
-import {createShiomachiRenderer} from './render.mjs?v=boundary-fence-1';
+import {createShiomachiRenderer} from './render.mjs?v=gate-posts-1';
 import {createShiomachiInteriorPreview} from './interior-preview.mjs?v=shop-clerk-1';
 import {consumeRestorePosition} from '../save/save-game.mjs?v=save-slots-1';
 
@@ -18,7 +18,6 @@ import {consumeRestorePosition} from '../save/save-game.mjs?v=save-slots-1';
 const previewMode=location.pathname.includes('/previews/');
 const scene=document.querySelector('#scene');
 const load=document.querySelector('#load');
-const objective=document.querySelector('#objective');
 const buttons=[...document.querySelectorAll('[data-dir]')];
 const directions=Object.freeze({
  up:[0,-1,1],down:[0,1,0],left:[-1,0,3],right:[1,0,2]
@@ -48,6 +47,7 @@ const sources=Object.freeze({
  water:'assets/field/effects/water-motion.png',
  pathSoil:'assets/village/scene/path-soil.png',
  fence:VILLAGE_FENCE_ART,
+ gatePost:VILLAGE_GATE_POST_ART,
  pierNative:'assets/shiomachi/objects/wooden-pier-128x360.png',
  coastMask:'assets/field/terrain/atlas/coast-mask-32.png',
  coastSand0:'assets/field/terrain/atlas/coast-sand-0-32.png',
@@ -232,7 +232,6 @@ async function start(){
    }
    if(interior.active){
      interior.updateDialogue(dialogue);
-     objective.textContent=interior.site.name+'（室内）　南口から外へ／Aで会話';
    }else{
      for(const npc of residents){
        if(menuPaused||dialogue.active){
@@ -245,10 +244,6 @@ async function start(){
          residents.some(other=>other!==npc&&Math.hypot(px-other.x,py-other.y)<2*RESIDENT_RADIUS));
      }
      dialogue.update(residentInFront(x,y,face,residents),x,y);
-     objective.textContent=shiomachiIsExit(x,y)
-       ?(previewMode?'南口（プレビュー用の境界）。フィールドへは移動しません。':'南口：フィールドへ戻ります。')
-       :(previewMode?'潮待村・試作：兵具屋／宿／茶店の入口から室内へ':
-          '潮待村：南口からフィールドへ／兵具屋の品は現在試用のみ');
    }
    render(now);
    const pos=interior.active?interior.position():{x,y};

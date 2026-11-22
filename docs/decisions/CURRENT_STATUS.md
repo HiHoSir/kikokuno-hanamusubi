@@ -16,7 +16,7 @@
 | **潮待村の装備** | **村への出入りは本編対応、兵具販売はデモ専用・未承認**。正式な装着・セーブ・戦闘反映なし。128両案は撤回済み | `data/maps/shiomachi-village/armory.mjs`、[PR #72](https://github.com/HiHoSir/kikokuno-hanamusubi/pull/72) | 原案の地域別到達段・敵・ティア数値との整合性が確認できるまで値を確定しない |
 | **装備ティアの入手場所** | **未確定**。天妖の社後T1／入り江T2などは11月15日の**当初配置仮説**。潮待村=T2は承認されていない | `docs/MAP_ENEMY_EQUIPMENT_RECONCILIATION.md`、`docs/BALANCE_PROGRESSION_CONTRACT.md` | 実際の到達段・洞窟経路・地域敵の進行を先に評価 |
 | **序盤の敵** | **実装済み：野の小鬼・化け狸・鬼火**。最初の道路区間に出現帯を設定。9〜13歩間隔 | `src/game/battle/rules.mjs`、`src/field/walk.mjs`、`tests/map-progression-audit.test.mjs` | 海・森・滝・祠の仮の敵を実装済みとみなさない |
-| **フィールド道順** | **80×80、32pxグリッド**。道路メタデータは42／42／30／20／60／30マス。実通行判定の最短経路は**鬼灯村→天妖の社43歩／社→入り江33歩**で、11月15日の旧検討と一致。残り区間は未計測 | `data/maps/field/terrain.js`、`tools/audit-map-progression.mjs`、`tools/qa-field-route-playability.mjs`、`docs/MAP_ENEMY_EQUIPMENT_RECONCILIATION.md` | 今後のマップ変更で歩数・遭遇数の変化をブラウザ再測定。実戦回数は未検証 |
+| **フィールド道順** | **80×80、32pxグリッド**。道路メタデータは42／45／33／20／60／30マス。実通行判定の最短経路は**鬼灯村→天妖の社43歩／社→入り江37歩／入り江→潮待村5歩**。入り江の入口は南岸の砂浜 (49,53) | `data/maps/field/terrain.js`、`tools/audit-map-progression.mjs`、`tools/qa-field-route-playability.mjs`、`docs/MAP_ENEMY_EQUIPMENT_RECONCILIATION.md` | 今後のマップ変更で歩数・遭遇数の変化をブラウザ再測定。実戦回数は未検証 |
 | **休憩所・行商人** | **未実装**。フィールドに地点データがあっても入店・販売はできない | `data/maps/field/terrain.js`、`src/field/walk.mjs` | 存在しない中間装備更新地点を作った前提でバランス変更しない |
 | **山越え必須洞窟** | **ユーザーが了承したマップ設計方針／本編接続は未実装** | `docs/MAP_ENEMY_EQUIPMENT_RECONCILIATION.md`、現在の `src/field/world.js` | 北への探索経路、入口位置、歩行テストを実装する際に原案と照合 |
 

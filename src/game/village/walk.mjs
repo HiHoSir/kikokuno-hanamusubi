@@ -1,5 +1,5 @@
 import { HIZUKI_WALK_SPEED, makeWalk, touchedEntrance, villageArrivalFacing } from './movement.mjs?v=village-speed-288-exit-facing-1-map-edge-1';
-import { drawVillageExitLabel, drawVillageFence, makeVillageFence, VILLAGE_FENCE_ART } from './boundary.mjs';
+import { drawVillageFence, makeVillageFence, VILLAGE_FENCE_ART, VILLAGE_GATE_POST_ART } from './boundary.mjs?v=gate-posts-1';
 import { villageRooms } from '../interiors/rooms.mjs';
 import { pixelViewport, DEFAULT_CAMERA_ZOOM, canopyOpacity, riverRipples, paintRiverRipples } from './render.mjs?v=nonfield-world-scale-1';
 import { advanceResident, drawCharacter, makeResident, residentInFront, RESIDENT_RADIUS } from './residents.mjs';
@@ -69,9 +69,10 @@ async function start() {
     return response.json();
   }));
   const [worldX,worldY,width,height] = data.bounds;
-  const [tiles,collision,hizuki,decor,fenceArt] = await Promise.all([
+  const [tiles,collision,hizuki,decor,fenceArt,gateArt] = await Promise.all([
     ...[data.terrain.atlas,'collision.png','hizuki.png','ground-decor.png'].map(name=>image(name)),
     image('village-fence','../../../'+VILLAGE_FENCE_ART),
+    image('village-gate-post','../../../'+VILLAGE_GATE_POST_ART),
   ]);
   const residents = await Promise.all(residentConfigs.map(async config=>({
     ...makeResident(config), bitmap:await image(config.asset,'../../../'+config.asset),
@@ -262,7 +263,7 @@ async function start() {
       }
       const [sx,sy]=sprite.point;
       if(sprite.mask!==undefined){
-        if(sx<right&&sx+32>left&&sy<bottom&&sy+32>top)drawVillageFence(context,fenceArt,sprite);
+        if(sx<right&&sx+32>left&&sy-10<bottom&&sy+32>top)drawVillageFence(context,fenceArt,gateArt,sprite);
         continue;
       }
       const bitmap=art.get(sprite.file);
@@ -275,7 +276,6 @@ async function start() {
     while(drawn<characters.length) drawCharacter(context,characters[drawn++],data.hero.frame,data.hero.feet);
     const eave = houses.find(house => rectangleContains(house.eaveZone,x,y));
     if(eave) context.drawImage(art.get(eave.eave),...eave.eaveRect,...eave.eavePoint,eave.eaveRect[2],eave.eaveRect[3]);
-    if(bottom>height-56)drawVillageExitLabel(context,fieldExit.point[0],height-36);
     // Discoverable objects are marked only nearby, and only until collected.
     if(!dialogue.active) for(const find of finds){
       if(shouldShowFindHint({x,y},find,collectedFinds))

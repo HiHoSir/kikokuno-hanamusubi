@@ -22,11 +22,6 @@
 #load{position:absolute;z-index:40;inset:0;display:grid;place-items:center;
  margin:0;padding:16px;background:#284d4b;text-align:center;font-size:14px}
 #load[hidden]{display:none}
-.village-hud{position:absolute;z-index:4;left:max(8px,env(safe-area-inset-left));
- max-width:min(42%,270px);padding:7px 10px;border:1px solid #81785c;
- border-radius:5px;background:rgba(18,25,20,.83);font-size:12px;
- line-height:1.4;pointer-events:none}
-.village-hud #objective{margin:0}
 .review-tools{position:absolute;z-index:15;top:max(8px,calc(env(safe-area-inset-top) + 8px));
  right:max(8px,env(safe-area-inset-right));max-width:min(51%,300px);
  color:#f4ebd4;font-size:12px}
@@ -75,9 +70,6 @@
 <body>
 <main data-bgm="field">
 <section class="viewport" aria-label="潮待村">
-  <div class="village-hud">
-    <p id="objective" aria-live="polite">潮待村を読み込んでいます。</p>
-  </div>
   <canvas id="scene" aria-label="潮待村のゲーム画面"></canvas>
   <p id="load" role="status">潮待村の地形と建物を読み込んでいます……</p>
   <button id="talk" type="button" hidden>話す</button>
@@ -108,6 +100,6 @@
 </section>
 </main>
 <div class="rotate" role="status">ゲームはiPhoneを横向きにしてください。</div>
-<script type="module" src="./walk.mjs?v=boundary-fence-1"></script>
+<script type="module" src="./walk.mjs?v=boundary-fence-1-gate-posts-1"></script>
 </body>
 </html>

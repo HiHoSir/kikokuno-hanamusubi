@@ -7,7 +7,7 @@ import {COVE_SHELL_SITES,validateCoveShellSites} from '../data/maps/sea-cove/she
 import {SHELL_ART_SIZE} from '../src/game/items/shell-art.mjs';
 import {
  COVE_MAP,COVE_WIDTH,COVE_HEIGHT,COVE_SHORE,COVE_SAND_DEPTH,COVE_TILE_SIZE,
- tileAt,walkableCell,walkablePoint,isSouthExit
+ tileAt,walkableCell,walkablePoint,isSouthExit,coveExitTrailCell,coveExitFenceSegments
 } from '../data/maps/sea-cove/scene.mjs';
 import {coastMask,coveCameraStart} from '../src/game/cove/render.mjs';
 import {WORLD_SCENE_ZOOM} from '../src/game/ui/world-scale.mjs';
@@ -128,6 +128,13 @@ test('approved 30-column coast is preserved exactly while its connected wave chi
 test('approved sand reaches the south exit without a grass strip; fisher remains reachable',()=>{
  assert.ok(COVE_SAND_DEPTH.every(n=>n>=35));
  assert.ok(COVE_MAP.exit.columns.every(x=>tileAt(x,COVE_MAP.exit.row)==='s'));
+ const {row,columns,trailStart}=COVE_MAP.exit;
+ assert.deepEqual(Array.from({length:COVE_WIDTH},(_,x)=>x)
+   .filter(x=>coveExitTrailCell(x,row)),columns);
+ for(let y=trailStart;y<=row;y++)assert.equal(coveExitTrailCell(10,y),true);
+ for(const [left,top,right,bottom] of coveExitFenceSegments()){
+   if(top===row&&bottom===row)assert.ok(columns.every(x=>x<left||x>right));
+ }
  const entry=[Math.floor(COVE_MAP.entry.x/32),Math.floor(COVE_MAP.entry.y/32)];
  const fisher=[Math.floor(COVE_MAP.fisher.x/32),Math.floor(COVE_MAP.fisher.y/32)];
  assert.ok(bfs(entry,p=>Math.abs(p[0]-fisher[0])+Math.abs(p[1]-fisher[1])===1));
@@ -366,7 +373,7 @@ test('field landmark and shell/game routes remain part of the real game shell',(
  assert.match(walker,/KIKOKU_ROUTE\.go\(/);
  assert.match(walker,/consumeRestorePosition\('cove'\)/);
  assert.match(walker,/KIKOKU_SAVE_SNAPSHOT/);
- assert.match(walker,/isSouthExit/);
+ assert.match(walker,/leftMap&&!previewMode/);
  assert.doesNotMatch(walker,/location\.assign\(/);
 });
 test('Ushiohei dialogue and in-cove save persist without changing story semantics',()=>{

@@ -50,7 +50,8 @@
 **既存の確定設計を先に読み、未決定事項をAIが決めたことにしない。** 2026-11-22の重大なレビュー漏れは `docs/incidents/2026-11-22-design-override.md` に経緯と原因を記録した。
 
 - 攻守・段成長・敵・報酬・装備品の性能／価格・入手時期・村へのティア割当・フィールド経路を変更する前に、必ず `docs/BALANCE_PROGRESSION_CONTRACT.md`、`docs/BATTLE_BALANCE.md`、`docs/FOUR_VILLAGES_EQUIPMENT_PLAN.md`、`docs/MAP_ENEMY_EQUIPMENT_RECONCILIATION.md`、`data/characters/hizuki-status.json`、関係する実装コードを読む。
-- **確定／後日ユーザーが承認／アシスタントによる提案／独立プレビュー用の仮値／未実装**を区別してから作業する。 関係する現行状態の入口は `docs/decisions/CURRENT_STATUS.md`。そこから必ず元の正本・コードへたどる。前の承認を覆すときは、それを明示したユーザーの指示が必要。承認されていない数値や施設・入手場所を補完しない。
+- **確定／後日ユーザーが承認／アシスタントによる提案／独立プレビュー用の仮値／未実装**を区別してから作業する。 関係する現行状態の入口は `docs/decisions/CURRENT_STATUS.md`。そこから必ず元の正本・コードへたどる。
+- **装備品の実際の購入・装着・保存範囲**は `docs/EQUIPMENT_CURRENT_PLAYABLE.md` と `src/game/equipment/current-availability.mjs` を確認する。鬼灯村の兵具屋と潮待村プレビューを混同せず、社・入り江に勝手に装備拾得や店舗を追加しない。前の承認を覆すときは、それを明示したユーザーの指示が必要。承認されていない数値や施設・入手場所を補完しない。
 - **室内接続、商品ラインナップの差別化、続けて、バランス検査**は、それだけで数値の新規決定・変更の承認にはならない。村間距離と所持金だけを根拠に確定T0〜T6や仮の店の商品を勝手に弱体化・強化しない。
 - **仕様／店舗／地形／遭遇の保護対象を編集・削除・改名するPRは、同じPRで `docs/decisions/changes/YYYY-MM-DD-*.json` を新規作成または更新する。`affectedFiles` に変更した保護対象パス（改名前・削除前も含む）を正確に列挙する。** 既存の仕様・今回の変更・影響・保護する原則・検査・ユーザー指示の原文を記載する。原文や出典が不明なら、仕様変更せず不足情報として扱う。詳しくは `docs/decisions/README.md`。
 - `.github/workflows/repository-guard.yml` はPR時に `tools/guard-design-changes.mjs` を実行し、変更根拠の**記録漏れ**を検出する。ただし自動検査はユーザーが実際に承認したことまでは確認できない。AIが存在しない承認発言を作ることを厳禁とする。承認の実在は別途レビューで照合する。

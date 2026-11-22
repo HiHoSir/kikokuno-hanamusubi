@@ -28,6 +28,11 @@ const protectedGroups=Object.freeze({
   ]
 });
 const gameplayPath=/^(?:data\/characters\/hizuki-status\.json|src\/game\/battle\/rules\.mjs|data\/maps\/[^/]+\/armory\.mjs|src\/game\/shiomachi\/interior-preview\.mjs|data\/maps\/field\/terrain\.js|src\/field\/(?:world\.js|walk\.mjs))$/;
+const requiredSources=Object.freeze({
+ balance:['data/characters/hizuki-status.json','docs/BALANCE_PROGRESSION_CONTRACT.md','docs/BATTLE_BALANCE.md'],
+ equipment:['docs/FOUR_VILLAGES_EQUIPMENT_PLAN.md','src/game/battle/rules.mjs','docs/BALANCE_PROGRESSION_CONTRACT.md'],
+ progression:['docs/MAP_ENEMY_EQUIPMENT_RECONCILIATION.md','data/maps/field/terrain.js']
+});
 
 export function impactedScopes(paths){
  return Object.keys(protectedGroups).filter(scope=>
@@ -40,7 +45,7 @@ function validNonempty(value){
 function presentList(value){
  return Array.isArray(value)&&value.length>0&&value.every(validNonempty);
 }
-export function validateDecisionRecord(record,requiredScopes,{hasGameplay=false}={}){
+export function validateDecisionRecord(record,requiredScopes,{hasGameplay=false,protectedFiles=[]}={}){
  const errors=[];
  if(!record||typeof record!=='object'||Array.isArray(record))
    return ['record must be a JSON object'];
@@ -55,6 +60,18 @@ export function validateDecisionRecord(record,requiredScopes,{hasGameplay=false}
    if(!validNonempty(record[field]))errors.push(field+' must explain the concrete change');
  }
  if(!presentList(record.readBeforeEditing))errors.push('readBeforeEditing must list checked design sources');
+ else for(const scope of requiredScopes){
+   if(!record.readBeforeEditing.some(entry=>
+     requiredSources[scope]?.some(file=>entry.includes(file))))
+     errors.push('readBeforeEditing must cite a relevant original source for '+scope);
+ }
+ if(!Array.isArray(record.affectedFiles)||!record.affectedFiles.length||
+    !record.affectedFiles.every(path=>typeof path==='string'&&path.length>0))
+   errors.push('affectedFiles must list the exact protected paths in this PR');
+ else for(const path of protectedFiles){
+   if(!record.affectedFiles.includes(path))
+     errors.push('affectedFiles does not cover changed protected path: '+path);
+ }
  if(!record.userEvidence||!validNonempty(record.userEvidence.source))
    errors.push('userEvidence.source must identify the original evidence');
  if(hasGameplay){
@@ -77,7 +94,9 @@ export function validateDecisionRecord(record,requiredScopes,{hasGameplay=false}
 export function checkDesignChanges(changedFiles,readRecord){
  const scopes=impactedScopes(changedFiles);
  if(!scopes.length)return {scopes,errors:[]};
- const hasGameplay=changedFiles.some(path=>gameplayPath.test(path));
+ const protectedFiles=[...new Set(changedFiles.filter(path=>
+   Object.values(protectedGroups).some(rules=>rules.some(re=>re.test(path)))))];
+ const hasGameplay=protectedFiles.some(path=>gameplayPath.test(path));
  const records=changedFiles.filter(path=>decisionFile.test(path));
  const errors=[];
  if(!records.length){
@@ -88,7 +107,7 @@ export function checkDesignChanges(changedFiles,readRecord){
  for(const path of records){
    try{
      const record=JSON.parse(readRecord(path));
-     const failures=validateDecisionRecord(record,scopes,{hasGameplay});
+     const failures=validateDecisionRecord(record,scopes,{hasGameplay,protectedFiles});
      const id=path.slice(CHANGE_RECORD_PREFIX.length,-5);
      if(record.id!==id)failures.push('id must equal the filename');
      if(failures.length)errors.push(...failures.map(x=>path+': '+x));
@@ -99,16 +118,41 @@ export function checkDesignChanges(changedFiles,readRecord){
  return {scopes,errors};
 }
 
+// Git's -z form puts the status, original path, and (for copies/renames)
+// destination path in separate NUL-delimited fields. Include BOTH rename
+// endpoints and DELETIONS; an old design source disappearing is still a change.
+export function parseGitNameStatus(output){
+ if(!output)return [];
+ const parts=output.split('\0'),paths=[];
+ for(let i=0;i<parts.length;){
+   const status=parts[i++];
+   if(!status)continue;
+   if(!/^[ACDMRTUXB][0-9]*$/.test(status))
+     throw Error('Unexpected git diff status: '+status);
+   const oldPath=parts[i++];
+   if(!oldPath)throw Error('Missing path for git diff status '+status);
+   paths.push(oldPath);
+   if(/^[RC]/.test(status)){
+     const destination=parts[i++];
+     if(!destination)throw Error('Missing destination for rename/copy '+oldPath);
+     paths.push(destination);
+   }
+ }
+ return [...new Set(paths)];
+}
+
 export function listChangedFiles(base){
- const output=execFileSync('git',['diff','--name-only','--diff-filter=ACMR',base,'HEAD'],
+ if(typeof base!=='string'||!base.trim())throw Error('Missing PR merge-base SHA');
+ const output=execFileSync('git',['diff','--name-status','-z',base,'HEAD'],
    {encoding:'utf8'});
- return output.trim()?output.trim().split('\n').filter(Boolean):[];
+ return parseGitNameStatus(output);
 }
 
 if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){
  const base=process.argv[2];
  if(!base){
-   console.log('Design change gate: no comparison base (use only on PR); skipping diff verification.');
+   console.error('Design change gate requires a PR base SHA; refusing to report success without a diff.');
+   process.exitCode=1;
  }else{
    try{
      const paths=listChangedFiles(base);

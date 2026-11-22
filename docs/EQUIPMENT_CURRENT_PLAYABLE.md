@@ -5,7 +5,7 @@
 - ゲームで使う定義：`src/game/battle/rules.mjs` の `STARTER_EQUIPMENT`、`EQUIPMENT_ITEMS`、`ARMORY_STOCK`、`STATUS_V2`
 - 潮待村の試用品：`data/maps/shiomachi-village/armory.mjs` の `SHIOMACHI_ARMORY_STOCK`
 - **双方から都度参照する台帳**：`src/game/equipment/current-availability.mjs`。数値・名前をここへ重複転記して別マスタにしない。
-- iPhone用の**閲覧だけ**のページ：`previews/equipment-catalog/`。購入・装着・本編セーブの変更は発生しない。
+- iPhoneから閲覧する場合は**このMarkdown台帳をGitHubで表示**する。新しい検査用HTMLページは増やさない。ゲーム本体の購入・装着・セーブの変更は発生しない。
 
 ## 1. いま本編で入手・装着できる兵具
 
@@ -68,6 +68,6 @@ T0〜T6の合計補正値は確定事項。**場所／時期／個別品への�
 1. **実際の行程を優先**：鬼灯村→天妖の社43歩、社→海の入り江33歩の実通行検証は完了。今の短い経路に、実在しない行商人やダンジョンを挟まない。
 2. **装備一式ではなく各枠で検討**：武器・胴・頭・足の購入／装着システムは継続。戦闘・入手タイミング・マップに合った性能配分を、**確定T0〜T6を変えず**設計する。
 3. **未決の値を勝手に確定しない**：鬼灯村T1の差分、潮待村の正式性能・価格・入手時期、以降の地域敵・宝箱は、具体的な承認が得られるまで正式仕様にしない。
-4. **本編の動作を壊さない**：`tests/current-equipment-availability.test.mjs` で初期装備／実販売4点／本編未接続の試用4点／セーブ正規化／装備結果／既存ティア合算を回帰検査。iPhone点検ページも**表示専用**に固定する。
+4. **本編の動作を壊さない**：`tests/current-equipment-availability.test.mjs` で初期装備／実販売4点／本編未接続の試用4点／セーブ正規化／装備結果／既存ティア合算を回帰検査。GitHubのこの資料が現行装備一覧の閲覧先となる。
 
 関連： [確定B式v2仕様](BALANCE_PROGRESSION_CONTRACT.md)、[マップ・敵・入手時期の復元](MAP_ENEMY_EQUIPMENT_RECONCILIATION.md)、[4村構想](FOUR_VILLAGES_EQUIPMENT_PLAN.md)、[現行承認状態](decisions/CURRENT_STATUS.md)。

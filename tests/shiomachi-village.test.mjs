@@ -10,7 +10,7 @@ import {
  shiomachiCollision,shiomachiPierFixtureCollision
 } from '../data/maps/shiomachi-village/scene.mjs';
 import {roadCell} from '../src/game/shiomachi/render.mjs';
-import {residentInFront} from '../src/game/village/residents.mjs';
+import {makeResident,RESIDENT_RADIUS,residentInFront} from '../src/game/village/residents.mjs';
 import {DEFAULT_CAMERA_ZOOM} from '../src/game/village/render.mjs';
 import {rooms,prepareInterior} from '../src/game/interiors/rooms.mjs';
 import {SHIOMACHI_INN_PRICE,previewInnStay} from '../src/game/shiomachi/interior-preview.mjs';
@@ -104,7 +104,8 @@ test('the small fishing village uses native roof and gear dimensions with no sce
 });
 
 test('walkable south entrance, open main street, pier and dialogue approaches',()=>{
- const {entry,residents,pier,objects}=SHIOMACHI_MAP;
+ const {entry,pier,objects}=SHIOMACHI_MAP;
+ const residents=SHIOMACHI_NPCS.map(makeResident);
  const from=[Math.floor(entry.x/32),Math.floor(entry.y/32)];
  assert.equal(blocked(...from),false);
  assert.equal(shiomachiIsExit(entry.x,entry.y),false);
@@ -138,6 +139,30 @@ test('walkable south entrance, open main street, pier and dialogue approaches',(
  }
 });
 
+test('outdoor NPC patrols keep their full footprints clear of the sea, scenery and doors',()=>{
+ for(const {id,route,speed,sprite} of SHIOMACHI_NPCS){
+   assert.ok(route.length>1&&speed>0,id);
+   assert.notEqual(sprite,'shop-clerk',id);
+   for(const [[x,y],[tx,ty]] of route.map((point,i)=>[point,route[(i+1)%route.length]])){
+     assert.ok((x===tx)!==(y===ty),id+' route segment is cardinal');
+     const length=Math.abs(tx-x)+Math.abs(ty-y);
+     for(let step=0;step<=length;step++){
+       const px=x+Math.sign(tx-x)*step,py=y+Math.sign(ty-y)*step;
+       for(const dx of [-RESIDENT_RADIUS,RESIDENT_RADIUS]){
+         for(const dy of [-RESIDENT_RADIUS,RESIDENT_RADIUS]){
+           assert.ok(shiomachiWalkableCell(Math.floor((px+dx)/32),Math.floor((py+dy)/32)),id);
+         }
+       }
+       assert.ok(!shiomachiCollision(SHIOMACHI_MAP.objects,px,py,RESIDENT_RADIUS),id);
+       assert.ok(!shiomachiPierFixtureCollision(px,py,RESIDENT_RADIUS),id);
+       assert.ok(!shiomachiIsExit(px,py),id);
+       assert.ok(SHIOMACHI_INTERIORS.every(site=>
+         Math.abs(px-site.x)>50 || py<site.thresholdY-27 || py>site.returnY+27),id);
+     }
+   }
+ }
+});
+
 test('the user-generated pier is a native transparent sprite, no fake bridge-tile loop',()=>{
  const pier=SHIOMACHI_PIER,art='assets/shiomachi/objects/wooden-pier-128x360.png';
  assert.deepEqual(dimensions(art),[128,360]);
@@ -164,7 +189,7 @@ test('the user-generated pier is a native transparent sprite, no fake bridge-til
  assert.ok(!rendering.includes('atlasX=')&&!rendering.includes('art.pier,atlasX'),
    'remove repeated bridge tiles');
  assert.ok(walk.includes("pierNative:'assets/shiomachi/objects/wooden-pier-128x360.png'"));
- assert.ok(walk.includes('shiomachiPierFixtureCollision(x,y,7,map)'));
+ assert.ok(walk.includes('shiomachiPierFixtureCollision(x,y,radius,map)'));
  assert.ok(!walk.includes('auto-bridge.png'));
 });
 
@@ -190,7 +215,7 @@ test('review UI is landscape only, shared 0.5 zoom, local demo commerce without 
  for(const oldLayout of ['.dpad{','grid-template-columns:repeat(3,44px)','width:min(100%,980px)'])
    assert.ok(!html.includes(oldLayout),'custom controller layout must be absent: '+oldLayout);
  assert.match(walk,/const \[nx,ny\]=walk\.move/);
- assert.match(walk,/bindDialogue\(clearInput,ended=>/);
+ assert.match(walk,/bindDialogue\(/);
  assert.match(walk,/requestAnimationFrame\(frame\)/);
  assert.match(walk,/previewOnly:previewMode/);
  assert.match(walk,/const previewMode=location\.pathname\.includes\('\/previews\/'\)/);
@@ -239,6 +264,10 @@ test('three mandatory interiors and the craft home use the approved shared room 
    assert.ok(room,site.room);
    const plan=prepareInterior(room);
    assert.ok(plan.resident?.name);
+   if(site.sign){
+     assert.equal(plan.resident.asset,'shop-clerk');
+     assert.ok(plan.resident.y<plan.resident.talkPoint[1],site.room+' clerk stands behind the counter');
+   }else assert.equal(plan.resident.asset,'elder');
    assert.ok(plan.spawn.length===2&&plan.exitY>plan.spawn[1]);
  }
  for(const [sprite,path] of [

@@ -2,13 +2,13 @@ import {
  SHIOMACHI_MAP,SHIOMACHI_REVIEW_SPOTS,shiomachiWalkableCell,
  shiomachiCollision,shiomachiIsExit,shiomachiPierFixtureCollision,
  shiomachiTouchedInterior
-} from '../../../data/maps/shiomachi-village/scene.mjs';
+} from '../../../data/maps/shiomachi-village/scene.mjs?v=npc-walk-1';
 import {makeWalk,HIZUKI_WALK_SPEED} from '../village/movement.mjs';
-import {residentInFront} from '../village/residents.mjs';
+import {advanceResident,makeResident,RESIDENT_RADIUS,residentInFront} from '../village/residents.mjs';
 import {bindDialogue} from '../village/dialogue.mjs';
 import {pixelViewport,DEFAULT_CAMERA_ZOOM} from '../village/render.mjs';
 import {createShiomachiRenderer} from './render.mjs';
-import {createShiomachiInteriorPreview} from './interior-preview.mjs?v=approved-balance-contract-20261122-1';
+import {createShiomachiInteriorPreview} from './interior-preview.mjs?v=shop-clerk-1';
 import {consumeRestorePosition} from '../save/save-game.mjs?v=save-slots-1';
 
 // Preview and real game share the SAME village map, art and interior code.
@@ -29,7 +29,8 @@ const sources=Object.freeze({
  elder:'assets/characters/npc/elder-walk-4dir-80x112.png',
  fisher:'assets/characters/npc/ushiohei-walk-4dir-80x112.png',
  osumi:'assets/characters/npc/osumi-walk-4dir-80x112.png',
- clerk:'assets/characters/npc/shop-clerk-walk-4dir-80x112.png',
+ villager:'assets/characters/npc/villager-walk-4dir-80x112.png',
+ 'shop-clerk':'assets/characters/npc/shop-clerk-walk-4dir-80x112.png',
  furniture:'assets/village/interiors/furniture.png',
  signInn:'assets/village/scene/sign-inn.png',
  signArmory:'assets/village/scene/sign-armory.png',
@@ -106,16 +107,25 @@ async function start(){
    }
  }
  const walk=makeWalk(pixelWidth,pixelHeight,collision,7);
- const residents=map.residents.map(npc=>({...npc,distance:0,moving:false}));
- const occupied=(x,y)=>shiomachiCollision(map.objects,x,y,7)||
-   shiomachiPierFixtureCollision(x,y,7,map)||
-   residents.some(n=>Math.hypot(n.x-x,n.y-y)<27);
+ const residentWalk=makeWalk(pixelWidth,pixelHeight,collision,RESIDENT_RADIUS);
+ const sceneryOccupied=(x,y,radius)=>shiomachiCollision(map.objects,x,y,radius)||
+   shiomachiPierFixtureCollision(x,y,radius,map);
+ const heroResidentClearance=27;
  const restored=previewMode?null:consumeRestorePosition('shiomachi');
  const validRestore=restored&&walk.canStand(restored.x,restored.y)&&
-   !occupied(restored.x,restored.y)&&!shiomachiIsExit(restored.x,restored.y);
+   !sceneryOccupied(restored.x,restored.y,7)&&!shiomachiIsExit(restored.x,restored.y);
  const initial=validRestore?{
    x:restored.x,y:restored.y,face:restored.face??map.entry.face
  }:map.entry;
+ // A checkpoint can be on an NPC's original spot while that NPC is out walking.
+ const residents=map.residents.map(config=>{
+   const index=config.route.findIndex(([px,py])=>
+     Math.hypot(px-initial.x,py-initial.y)>=heroResidentClearance);
+   const route=index>0?[...config.route.slice(index),...config.route.slice(0,index)]:config.route;
+   return makeResident({...config,route});
+ });
+ const occupied=(x,y)=>sceneryOccupied(x,y,7)||
+   residents.some(n=>Math.hypot(n.x-x,n.y-y)<heroResidentClearance);
  if(!walk.canStand(initial.x,initial.y)||occupied(initial.x,initial.y))
    throw Error('潮待村の開始位置が通れません');
  let x=initial.x,y=initial.y,face=initial.face,distance=0,moving=false;
@@ -146,7 +156,11 @@ async function start(){
  const interior=createShiomachiInteriorPreview({
    ctx:scene.getContext('2d',{alpha:false}),images,viewport,clearInput,shopPanel
  });
- const dialogue=bindDialogue(clearInput,ended=>{
+ const dialogue=bindDialogue(()=>{
+   clearInput();
+   for(const npc of residents)npc.moving=false;
+   lastFrame=-1;
+ },ended=>{
    if(interior.active&&ended===interior.resident())interior.openShop();
  });
  const enterRoom=site=>{
@@ -183,7 +197,7 @@ async function start(){
  };
  const render=(now,force=false)=>{
    const t=Math.floor(now/140);
-   if(force||moving||t!==lastFrame){
+   if(force||moving||(!interior.active&&residents.some(npc=>npc.moving))||t!==lastFrame){
      if(interior.active)interior.draw(now,debug);
      else renderer({x,y,face,distance,moving},residents,now,viewport,debug);
      lastFrame=t;
@@ -219,6 +233,16 @@ async function start(){
      interior.updateDialogue(dialogue);
      objective.textContent=interior.site.name+'（室内）　南口から外へ／Aで会話';
    }else{
+     for(const npc of residents){
+       if(menuPaused||dialogue.active){
+         npc.moving=false;
+         continue;
+       }
+       advanceResident(npc,dt,residentWalk,(px,py)=>
+         sceneryOccupied(px,py,RESIDENT_RADIUS)||
+         Math.hypot(px-x,py-y)<heroResidentClearance||
+         residents.some(other=>other!==npc&&Math.hypot(px-other.x,py-other.y)<2*RESIDENT_RADIUS));
+     }
      dialogue.update(residentInFront(x,y,face,residents),x,y);
      objective.textContent=shiomachiIsExit(x,y)
        ?(previewMode?'南口（プレビュー用の境界）。フィールドへは移動しません。':'南口：フィールドへ戻ります。')
@@ -317,6 +341,7 @@ async function start(){
    bounds:[map.width,map.height],spawn:{...initial},
    objectNames:map.objects.map(o=>o.id),
    residentNames:residents.map(r=>r.name),
+   residents:()=>residents.map(({id,x,y,face,moving,distance})=>({id,x,y,face,moving,distance})),
    canStand:(px,py)=>walk.canStand(px,py)&&!occupied(px,py),
    position:()=>({x,y,face}),
    readDebug:()=>debug,
@@ -324,6 +349,12 @@ async function start(){
    entrances:map.interiors.map(({building,room,x,thresholdY})=>({building,room,x,thresholdY})),
    room:()=>interior.currentRoom,
    indoorPosition:()=>interior.position(),
+   indoorResident:()=>{
+     const npc=interior.resident();
+     if(!npc)return null;
+     const {name,x,y,talkPoint,bitmap}=npc;
+     return {name,x,y,talkPoint,image:new URL(bitmap.src).pathname};
+   },
    shopActive:()=>interior.shopActive,
    openService:()=>interior.openShop(),
    trial:()=>interior.trial,

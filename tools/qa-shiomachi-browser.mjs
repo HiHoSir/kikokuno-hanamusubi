@@ -60,6 +60,8 @@ try{
  assert.equal(qa.renderer.pierWalkableCells,33,
    'the wood pier remains traversable in the real collision map');
  assert.equal(qa.residents.length,4);
+ await page.waitForFunction(()=>window.__SHIOMACHI_QA.residents()
+   .every(npc=>npc.distance>28));
  assert.equal(qa.renderer.waveFrames,8);
  assert.ok(qa.renderer.coastTiles>50);
  assert.ok(qa.loadHidden);
@@ -112,13 +114,21 @@ try{
  assert.notEqual(hash(first),hash(second),'the actual shoreline needs to animate');
  await page.screenshot({path:'artifacts/shiomachi-village-shore.png'});
  await page.locator('[data-review-spot="worksite"]').click();
+ await page.waitForFunction(()=>window.__SHIOMACHI_QA.residents()
+   .some(npc=>npc.id==='net-mender'&&Math.abs(npc.x-775)<16));
  await page.locator('#action-a').click();
  assert.equal(await page.locator('#speaker').textContent(),'網直しの漁師');
  assert.equal(await page.locator('#dialogue').isHidden(),false);
+ const paused=await page.evaluate(()=>window.__SHIOMACHI_QA.residents());
+ await page.waitForTimeout(250);
+ assert.deepEqual(await page.evaluate(()=>window.__SHIOMACHI_QA.residents()),paused);
+ assert.ok(paused.every(npc=>!npc.moving),'all outdoor NPCs wait during dialogue');
  await page.screenshot({path:'artifacts/shiomachi-village-talk.png'});
  for(let i=0;i<4;i++)await page.locator('#action-a').click();
  assert.equal(await page.locator('#dialogue').isHidden(),true);
  await page.locator('[data-review-spot="buildings"]').click();
+ await page.waitForFunction(()=>window.__SHIOMACHI_QA.residents()
+   .some(npc=>npc.id==='tide-elder'&&npc.y>=1056));
  await page.locator('#action-a').click();
  assert.equal(await page.locator('#speaker').textContent(),'村の古老');
  await page.screenshot({path:'artifacts/shiomachi-village-houses.png'});
@@ -151,17 +161,23 @@ try{
    assert.equal(await page.locator('#scene').getAttribute('data-room'),room);
    assert.equal(await page.locator('#load').isHidden(),true);
    await page.screenshot({path:'artifacts/shiomachi-village-'+room+'.png'});
-   // Talk to the real armory shop clerk using A, not a fabricated menu.
-   if(room==='armory'){
-     await page.keyboard.down('ArrowUp');
-     await page.waitForTimeout(215);
-     await page.keyboard.up('ArrowUp');
-     await page.locator('#action-a').click();
-     assert.equal(await page.locator('#speaker').textContent(),'兵具屋の店番');
-     assert.equal(await page.locator('#dialogue').isHidden(),false);
-     await page.locator('#action-a').click(); // Reveal the rest of the line
-     await page.locator('#action-a').click(); // Complete the line, open shop
-   }else await page.evaluate(()=>window.__SHIOMACHI_QA.openService());
+   const clerk=await page.evaluate(()=>window.__SHIOMACHI_QA.indoorResident());
+   assert.match(clerk.image,/\/assets\/characters\/npc\/shop-clerk-walk-4dir-80x112\.png$/);
+   assert.ok(clerk.y<clerk.talkPoint[1],room+' clerk is behind the counter');
+   const walkTo=async(key,axis,target,sign)=>{
+     await page.keyboard.down(key);
+     try{
+       await page.waitForFunction(({axis,target,sign})=>
+         sign*(window.__SHIOMACHI_QA.indoorPosition()[axis]-target)>=0,{axis,target,sign});
+     }finally{await page.keyboard.up(key);}
+   };
+   if(room==='inn')await walkTo('ArrowLeft','x',clerk.x+5,-1);
+   // Face the counter from the customer side and finish the real clerk dialogue.
+   await walkTo('ArrowUp','y',clerk.talkPoint[1]+42,-1);
+   await page.locator('#action-a').click();
+   assert.equal(await page.locator('#speaker').textContent(),clerk.name);
+   await page.locator('#action-a').click();
+   await page.locator('#action-a').click();
    assert.equal(await page.locator('#shop-panel').isHidden(),false,room+' service opens');
    if(room==='armory'){
      const labels=await page.locator('#shop-options [data-shop-item]').allTextContents();
@@ -192,12 +208,16 @@ try{
    await page.screenshot({path:'artifacts/shiomachi-village-'+room+'-shop.png'});
    await page.locator('#shop-options [data-shop-item="exit"]').click();
    assert.equal(await page.locator('#shop-panel').isHidden(),true);
+   if(room==='inn'){
+     await walkTo('ArrowDown','y',596,1);
+     await walkTo('ArrowRight','x',410,1);
+   }
    // Walk south through the canonical room doorway to the correct exterior,
    // without page navigation or resetting the animated shore/camera.
    await page.keyboard.down('ArrowDown');
-   await page.waitForTimeout(740);
-   await page.keyboard.up('ArrowDown');
-   await page.waitForFunction(()=>window.__SHIOMACHI_QA.room()===null);
+   try{
+     await page.waitForFunction(()=>window.__SHIOMACHI_QA.room()===null);
+   }finally{await page.keyboard.up('ArrowDown');}
    assert.equal(await page.locator('#scene').getAttribute('data-mode'),'exterior');
  }
  const persisted=await page.evaluate(()=>[localStorage.length,sessionStorage.length]);

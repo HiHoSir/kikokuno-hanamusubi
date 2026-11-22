@@ -3,9 +3,8 @@
 window.YK_WORLD=(()=>{
  const tileSize=32,size=2560,viewSize=640,revision=120;
  const geography=window.YK_FIELD_TERRAIN.referenceComposition;
- // Additional authored first-game settlement: separate from the existing
- // sea-cove landmark and the historical route/terrain tiles. Land cell 53,51.
- const SHIOMACHI_FIELD_CELL=Object.freeze([53,51]);
+ // Field entrance cells for villages added after Hozuki.
+ const additionalVillages={shiomachi:[53,51]};
  const center=([x,y])=>[x*32+16,y*32+16];
  const descriptions={
   village:['鬼灯村','南の半島から林と花の道を抜け、天妖の社へ。'],
@@ -17,8 +16,8 @@ window.YK_WORLD=(()=>{
   hotspring:['月見の湯','北の森から山の参道へ進み、九尾の祠へ。'],
   fox:['九尾の祠','北の山に囲まれた旅路の終点。']
  };
- const places=Object.fromEntries(Object.entries({...geography.places,
-  shiomachi:SHIOMACHI_FIELD_CELL}).map(([id,cell])=>[id,{point:center(cell),name:descriptions[id][0],note:descriptions[id][1]}]));
+ const places=Object.fromEntries(Object.entries({...geography.places,...additionalVillages})
+  .map(([id,cell])=>[id,{point:center(cell),name:descriptions[id][0],note:descriptions[id][1]}]));
  const start=center([37,71]),hub=start;
  // Roads are navigation metadata only. The historical wilderness has no
  // constructed road surface: use existing grass tiles instead.
@@ -36,9 +35,6 @@ window.YK_WORLD=(()=>{
  };
  mapData.landmarkContactTiles=Object.fromEntries(Object.entries(geography.landmarkContactTiles||{})
   .map(([name,cells])=>[name,cells.map(c=>c.slice())]));
- // Keep the coastal settlement on the authored grass, without repainting
- // coastline, roads, cliffs or replacing the still-playable sea cove.
- mapData.landmarkContactTiles.shiomachi=[SHIOMACHI_FIELD_CELL.slice()];
  mapData.decorations=geography.decorations.map(o=>{
   const contactTiles=o.contactTiles.map(c=>c.slice());
   // Entrance footprints are walkable: transition happens only after the hero overlaps them.
@@ -47,10 +43,14 @@ window.YK_WORLD=(()=>{
   const occupiedTiles=o.occupiedTiles.filter(([x,y])=>!entrance||!contactTiles.some(([cx,cy])=>cx===x&&cy===y)).map(c=>c.slice());
   return {...o,contactTiles,occupiedTiles};
  });
- mapData.decorations.push({kind:'newHouse',x:SHIOMACHI_FIELD_CELL[0]*32,
-  y:SHIOMACHI_FIELD_CELL[1]*32,width:32,height:32,
-  foot:(SHIOMACHI_FIELD_CELL[1]+1)*32,contactTiles:[SHIOMACHI_FIELD_CELL.slice()],
-  occupiedTiles:[],walkThrough:true,destination:'shiomachi'});
+ // Hozuki's field art is shared by all villages. Each entrance remains authored.
+ const {kind,width,height}=geography.decorations.find(o=>o.destination==='village');
+ for(const [destination,[tx,ty]] of Object.entries(additionalVillages)){
+  const contactTiles=[[tx,ty]];
+  mapData.landmarkContactTiles[destination]=contactTiles;
+  mapData.decorations.push({kind,x:tx*tileSize,y:ty*tileSize,width,height,
+   foot:(ty+1)*tileSize,contactTiles,occupiedTiles:[],walkThrough:true,destination});
+ }
  const roads=geography.roads.map(r=>r.map(center));
  // Keep routes for directions, elevation corridors and save compatibility,
  // but never rasterize the old dirt-road overlay on the outdoor field.

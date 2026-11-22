@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-11-23-shared-field-village-art",
+  "kind": "user-approved",
+  "scopes": ["progression"],
+  "affectedFiles": ["src/field/world.js"],
+  "readBeforeEditing": [
+    "data/maps/field/terrain.js：鬼灯村の描画素材と潮待村周辺の草地の配置を確認",
+    "docs/SHIOMACHI_FIELD_CONNECTION.md：現行の潮待村の入口と帰還仕様を確認",
+    "assets/manifest.json：フィールド用村素材の採用状態を確認",
+    "src/field/area-transitions.js：接触は描画寸法から独立したセル判定であることを確認"
+  ],
+  "previousDesign": "鬼灯村はフィールドで原寸64×32pxの村素材を表示していた。潮待村は草地セル(53,51)に原寸32×32pxの民家素材を置いていた。",
+  "intendedDifference": "潮待村と今後追加する村に、鬼灯村のフィールド用村素材と原寸を共用する。",
+  "impactAnalysis": "潮待村の入口セルから東へ1セル分、絵の幅が広がる。広がる先も草地で、入口セルと衝突データは従来の座標を使う。",
+  "preservedBoundaries": "村内の地図、海の入り江、フィールド地形、村の入口と帰還位置、戦闘および装備を従来の仕様に保つ。",
+  "verification": "Chromiumで潮待村のフィールド描画と鬼灯村の素材・寸法の一致、元の入村位置とフィールドへの復帰を確認する。",
+  "userEvidence": {
+    "status": "explicit-user-instruction",
+    "date": "2026-11-23",
+    "quote": "鬼灯村のグラフィックは汎用的なものなのでこれから村を作る際のフィールド導線は同じグラフィックつかって",
+    "source": "本会話の2026-11-23のユーザーメッセージ"
+  }
+}

@@ -120,9 +120,14 @@ try{
  assert.deepEqual(report.mapSize,[80,80]);
  assert.deepEqual(report.liveTransitions,['village','shrine','cove']);
  assert.deepEqual(errors,[],'production field assets/scripts must load');
+ // Confirmed with live collisions on Nov 22. A future map adjustment must
+ // explicitly review and update these documented progression measurements.
+ const recordedWalkDistances={shrine:43,cove:33};
  for(const item of report.routes){
    assert.ok(item.reachable,
      item.from+' -> '+item.to+' must have an actual collision-safe, cardinal route');
+   assert.equal(item.actualWalkSteps,recordedWalkDistances[item.to],
+     'walk distance changed from documented Nov 22 baseline: '+item.from+' -> '+item.to);
    assert.ok(item.actualWalkSteps>0);
    assert.ok(item.replay.success,
      'actual fieldStep must accept every path edge '+item.from+' -> '+item.to+

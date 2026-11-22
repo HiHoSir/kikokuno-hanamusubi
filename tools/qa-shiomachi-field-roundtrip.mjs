@@ -146,6 +146,52 @@ try{
  });
  assert.deepEqual(persisted,{manualScene:'shiomachi',gameHasDemoGear:false,gameGold:0});
 
+ // Place the hero on ordinary ground near each fence, then hold an actual
+ // movement input far enough to cross the map edge if the fence were absent.
+ const villageAt=async(scene,x,y)=>{
+  const path='/src/game/'+scene+'/';
+  await page.evaluate(({scene,x,y,path})=>{
+   sessionStorage.setItem('kikokuno-hanamusubi-restore-position',JSON.stringify({
+    scene,position:{x,y,face:0}}));
+   window.KIKOKU_GAME.navigate(new URL(path+'?qa-boundary='+x,location.href).href);
+  },{scene,x,y,path});
+  await page.waitForFunction(({path,x,y})=>{
+   const f=document.querySelector('iframe')?.contentWindow;
+   if(f?.location.pathname!==path||!f.document.querySelector('#load')?.hidden)return false;
+   const position=f.KIKOKU_SAVE_SNAPSHOT?.()?.position;
+   return position?.x===x&&position.y===y;
+  },{path,x,y});
+  return page.frames().find(f=>new URL(f.url()).pathname===path);
+ };
+ const towardSouth=(frame,type)=>frame.evaluate(type=>
+  window.dispatchEvent(new KeyboardEvent(type,{key:'ArrowDown',bubbles:true})),type);
+ for(const [scene,x,y,fenceLine] of [
+  ['shiomachi',536,1660,1712],['village',1008,2160,2224]
+ ]){
+  const village=await villageAt(scene,x,y);
+  await towardSouth(village,'keydown');
+  await village.waitForFunction(line=>window.KIKOKU_SAVE_SNAPSHOT().position.y>line-20,fenceLine);
+  await page.waitForTimeout(400);
+  await towardSouth(village,'keyup');
+  const stopped=await village.evaluate(()=>window.KIKOKU_SAVE_SNAPSHOT().position);
+  assert.ok(stopped.y<fenceLine,scene+' fence stops the hero before leaving the map');
+  assert.equal(stopped.x,x);
+ }
+ const hozuki=await villageAt('village',1140,2172);
+ await page.screenshot({path:'artifacts/hozuki-south-exit.png'});
+ await towardSouth(hozuki,'keydown');
+ await page.waitForFunction(()=>{
+  const f=document.querySelector('iframe')?.contentWindow;
+  return f?.location.pathname==='/src/field/'&&
+   new URL(f.location.href).searchParams.get('from')==='village'&&
+   f.document.querySelector('#load')?.hidden===true;
+ });
+ const hozukiField=page.frames().find(f=>f.url().includes('/src/field/'));
+ assert.equal(await hozukiField.evaluate(()=>{
+  const {x,y}=document.querySelector('#scene').dataset;
+  return window.YK_AREA_TRANSITIONS.contact(window.YK_WORLD,Number(x)*32+16,Number(y)*32+16);
+ }),null,'Hozuki field arrival does not immediately re-enter the village');
+
  assert.deepEqual(failures,[]);
  console.log('SHIOMACHI_FIELD_ROUNDTRIP '+JSON.stringify({before,found,demo,persisted,
    returned:after,errors:failures}));

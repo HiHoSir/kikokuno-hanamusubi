@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {HIZUKI_WALK_SPEED,HIZUKI_INTERIOR_WALK_SPEED,makeWalk,touchedEntrance,crossesSouthExit} from '../src/game/village/movement.mjs';
+import {HIZUKI_WALK_SPEED,HIZUKI_INTERIOR_WALK_SPEED,makeWalk,touchedEntrance} from '../src/game/village/movement.mjs';
+import {makeVillageFence} from '../src/game/village/boundary.mjs';
 import {drawCharacter} from '../src/game/village/residents.mjs';
 
 test('village moves about 64% faster, indoor pace stays unchanged and field has independent movement',()=>{
@@ -48,12 +49,25 @@ test('increased speed still checks collisions at subpixel-sized intervals',()=>{
   assert.ok(limited<45,'NPC collision should not be skipped during a single frame');
 });
 
-test('a fast step still triggers door contact and south-field exit thresholds',()=>{
+test('a fast step still triggers contact with an interior door',()=>{
   const marker={entrance:[100,60,40,20]};
   const speedStep=HIZUKI_WALK_SPEED*40/1000;
   const doors=touchedEntrance([marker],120,85,120,85-speedStep,8);
   assert.equal(doors,marker);
-  const exit={southExit:[100,90,40]};
-  assert.equal(crossesSouthExit(exit,120,85,120,85+speedStep),true);
-  assert.equal(crossesSouthExit(exit,145,85,145,85+speedStep),false);
+});
+
+test('a village can exit at any clear map edge; fences, water and indoor bounds stop movement',()=>{
+  const width=128,height=96,blocked=new Uint8Array(width*height);
+  makeVillageFence([[0,2,1,2]],blocked,width);
+  for(let y=0;y<20;y++)blocked.fill(1,y*width,y*width+width);
+  const walk=makeWalk(width,height,blocked,8);
+  assert.equal(walk.move(100,84,0,8,null,true)[2],undefined,'inside map');
+  assert.equal(walk.move(100,88,0,10,null,true)[2],true,'south opening');
+  assert.equal(walk.move(8,48,-10,0,null,true)[2],true,'unfenced west edge');
+  assert.equal(walk.move(120,48,10,0,null,true)[2],true,'unfenced east edge');
+  assert.equal(walk.move(24,63,0,40,null,true)[2],undefined,'wooden fence');
+  assert.equal(walk.move(100,32,0,-40,null,true)[2],undefined,'water');
+  assert.equal(walk.move(100,84,0,30)[2],undefined,'ordinary movement remains bounded');
+  assert.equal(walk.canStand(100,95,true),true,'a save near the dry edge is valid');
+  assert.equal(walk.canStand(100,96,true),false,'a save beyond the map is invalid');
 });

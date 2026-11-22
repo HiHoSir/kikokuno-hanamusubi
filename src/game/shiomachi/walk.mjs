@@ -2,12 +2,13 @@ import {
  SHIOMACHI_MAP,SHIOMACHI_REVIEW_SPOTS,shiomachiWalkableCell,
  shiomachiCollision,shiomachiIsExit,shiomachiPierFixtureCollision,
  shiomachiTouchedInterior
-} from '../../../data/maps/shiomachi-village/scene.mjs?v=npc-walk-1';
-import {makeWalk,HIZUKI_WALK_SPEED} from '../village/movement.mjs';
+} from '../../../data/maps/shiomachi-village/scene.mjs?v=boundary-fence-1';
+import {makeWalk,HIZUKI_WALK_SPEED} from '../village/movement.mjs?v=map-edge-1';
+import {makeVillageFence,VILLAGE_FENCE_ART} from '../village/boundary.mjs';
 import {advanceResident,makeResident,RESIDENT_RADIUS,residentInFront} from '../village/residents.mjs';
 import {bindDialogue} from '../village/dialogue.mjs';
 import {pixelViewport,DEFAULT_CAMERA_ZOOM} from '../village/render.mjs';
-import {createShiomachiRenderer} from './render.mjs';
+import {createShiomachiRenderer} from './render.mjs?v=boundary-fence-1';
 import {createShiomachiInteriorPreview} from './interior-preview.mjs?v=shop-clerk-1';
 import {consumeRestorePosition} from '../save/save-game.mjs?v=save-slots-1';
 
@@ -46,6 +47,7 @@ const sources=Object.freeze({
  crate:'assets/sea-cove/objects/fish-crate-92x70.png',
  water:'assets/field/effects/water-motion.png',
  pathSoil:'assets/village/scene/path-soil.png',
+ fence:VILLAGE_FENCE_ART,
  pierNative:'assets/shiomachi/objects/wooden-pier-128x360.png',
  coastMask:'assets/field/terrain/atlas/coast-mask-32.png',
  coastSand0:'assets/field/terrain/atlas/coast-sand-0-32.png',
@@ -106,14 +108,15 @@ async function start(){
      collision.fill(1,start,start+map.tileSize);
    }
  }
+ const fence=makeVillageFence(map.boundaryFence,collision,pixelWidth);
  const walk=makeWalk(pixelWidth,pixelHeight,collision,7);
  const residentWalk=makeWalk(pixelWidth,pixelHeight,collision,RESIDENT_RADIUS);
  const sceneryOccupied=(x,y,radius)=>shiomachiCollision(map.objects,x,y,radius)||
    shiomachiPierFixtureCollision(x,y,radius,map);
  const heroResidentClearance=27;
  const restored=previewMode?null:consumeRestorePosition('shiomachi');
- const validRestore=restored&&walk.canStand(restored.x,restored.y)&&
-   !sceneryOccupied(restored.x,restored.y,7)&&!shiomachiIsExit(restored.x,restored.y);
+ const validRestore=restored&&walk.canStand(restored.x,restored.y,true)&&
+   !sceneryOccupied(restored.x,restored.y,7);
  const initial=validRestore?{
    x:restored.x,y:restored.y,face:restored.face??map.entry.face
  }:map.entry;
@@ -126,7 +129,7 @@ async function start(){
  });
  const occupied=(x,y)=>sceneryOccupied(x,y,7)||
    residents.some(n=>Math.hypot(n.x-x,n.y-y)<heroResidentClearance);
- if(!walk.canStand(initial.x,initial.y)||occupied(initial.x,initial.y))
+ if(!walk.canStand(initial.x,initial.y,true)||occupied(initial.x,initial.y))
    throw Error('潮待村の開始位置が通れません');
  let x=initial.x,y=initial.y,face=initial.face,distance=0,moving=false;
  let last=0,lastFrame=-1,debug=false,menuPaused=false;
@@ -147,7 +150,7 @@ async function start(){
    viewport.step=size.step;viewport.bufferWidth=size.width;viewport.bufferHeight=size.height;
    lastFrame=-1;
  };
- const renderer=createShiomachiRenderer(scene.getContext('2d',{alpha:false}),images,map);
+ const renderer=createShiomachiRenderer(scene.getContext('2d',{alpha:false}),images,map,fence);
  const shopPanel={
    panel:document.querySelector('#shop-panel'),title:document.querySelector('#shop-title'),
    wallet:document.querySelector('#shop-wallet'),
@@ -216,16 +219,14 @@ async function start(){
      }else{
        face=heading;
        const delta=HIZUKI_WALK_SPEED*dt/1000;
-       const [nx,ny]=walk.move(x,y,dx*delta,dy*delta,occupied);
+       const [nx,ny,leftMap]=walk.move(x,y,dx*delta,dy*delta,occupied,true);
+       if(leftMap&&exitToField())return;
        const site=shiomachiTouchedInterior(x,y,nx,ny,heading);
        if(site)enterRoom(site);
        else{
          distance+=Math.hypot(nx-x,ny-y);
          moving=Math.abs(nx-x)+Math.abs(ny-y)>0.01;
          x=nx;y=ny;
-         // The same SOUTH EXIT is the preview boundary and the real route
-         // back to the field. Never intercept it while inside an interior.
-         if(shiomachiIsExit(x,y)&&exitToField())return;
        }
      }
    }
@@ -342,7 +343,7 @@ async function start(){
    objectNames:map.objects.map(o=>o.id),
    residentNames:residents.map(r=>r.name),
    residents:()=>residents.map(({id,x,y,face,moving,distance})=>({id,x,y,face,moving,distance})),
-   canStand:(px,py)=>walk.canStand(px,py)&&!occupied(px,py),
+   canStand:(px,py)=>walk.canStand(px,py,true)&&!occupied(px,py),
    position:()=>({x,y,face}),
    readDebug:()=>debug,
    talk:action,

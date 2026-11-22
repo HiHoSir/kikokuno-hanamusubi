@@ -94,7 +94,7 @@ export function shiomachiPierFixtureCollision(x,y,radius=7,map=SHIOMACHI_MAP){
 }
 export const SHIOMACHI_ENTRY=Object.freeze({x:674,y:1637,face:1});
 export const SHIOMACHI_EXIT=Object.freeze({
-  left:610,right:742,top:1680,bottom:SHIOMACHI_HEIGHT*SHIOMACHI_TILE
+ left:608,right:736,top:1680,bottom:SHIOMACHI_HEIGHT*SHIOMACHI_TILE
 });
 export const SHIOMACHI_REVIEW_SPOTS=Object.freeze({
  shore:Object.freeze({x:675,y:465,face:1}),
@@ -111,13 +111,15 @@ export const SHIOMACHI_MAP=Object.freeze({
  shore:SHIOMACHI_SHORE,pier:SHIOMACHI_PIER,entry:SHIOMACHI_ENTRY,
  exit:SHIOMACHI_EXIT,interiors:SHIOMACHI_INTERIORS,
  objects:Object.freeze([...SHIOMACHI_BUILDINGS,...SHIOMACHI_PROPS]),
- residents:SHIOMACHI_NPCS
+ residents:SHIOMACHI_NPCS,
+ boundaryFence:[[0,SHIOMACHI_SHORE[0],0,53],[41,SHIOMACHI_SHORE[41],41,53],
+   [0,53,18,53],[23,53,41,53]]
 });
 export function shiomachiTileAt(x,y,map=SHIOMACHI_MAP){
  return map.tiles[y]?.[x]??'~';
 }
 export function shiomachiWalkableCell(x,y,map=SHIOMACHI_MAP){
- if(!Number.isInteger(x)||!Number.isInteger(y)||x<=0||x>=map.width-1||y<=0||y>=map.height-1)return false;
+ if(!Number.isInteger(x)||!Number.isInteger(y)||x<0||x>=map.width||y<0||y>=map.height)return false;
  const {left,right,top,bottom}=map.pier;
  if(x>=left&&x<=right&&y>=top&&y<=bottom)return true;
  return shiomachiTileAt(x,y,map)==='s';

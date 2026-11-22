@@ -16,11 +16,6 @@ export function touchedEntrance(markers,x,y,nx,ny,radius) {
     nx>=left && nx<left+width && y>=top+height && ny>=top && ny-radius<=top+height);
 }
 
-export function crossesSouthExit(marker, x, y, nx, ny) {
-  const [left, threshold, width] = marker.southExit;
-  return x === nx && nx >= left && nx < left + width && y < threshold && ny >= threshold;
-}
-
 export function makeWalk(width, height, blocked, radius) {
   const samples = [];
   for (let y = -radius; y <= radius; y++) {
@@ -29,19 +24,29 @@ export function makeWalk(width, height, blocked, radius) {
     }
   }
 
-  function canStand(x,y) {
+  const inside=(x,y)=>x>=0&&x<width&&y>=0&&y<height;
+
+  function clearFootprint(x,y,allowMapEdge) {
     const ix = Math.floor(x), iy = Math.floor(y);
-    if (ix-radius < 0 || iy-radius < 0 || ix+radius >= width || iy+radius >= height) return false;
-    return samples.every(([dx,dy]) => !blocked[(iy+dy)*width+ix+dx]);
+    if (ix-radius>=0&&iy-radius>=0&&ix+radius<width&&iy+radius<height)
+      return samples.every(([dx,dy])=>!blocked[(iy+dy)*width+ix+dx]);
+    return allowMapEdge&&samples.every(([dx,dy])=>
+      !inside(ix+dx,iy+dy)||!blocked[(iy+dy)*width+ix+dx]);
   }
 
-  function move(x,y,dx,dy,occupied) {
+  function canStand(x,y,allowMapEdge=false) {
+    return inside(x,y)&&clearFootprint(x,y,allowMapEdge);
+  }
+
+  function move(x,y,dx,dy,occupied,allowMapExit=false) {
     const steps = Math.max(1,Math.ceil(Math.hypot(dx,dy)));
     const sx = dx/steps, sy = dy/steps;
     for (let i=0; i<steps; i++) {
-      if (!canStand(x+sx,y+sy) || occupied?.(x+sx,y+sy)) break;
-      x += sx;
-      y += sy;
+      const nx=x+sx,ny=y+sy;
+      if (!clearFootprint(nx,ny,allowMapExit)||occupied?.(nx,ny)) break;
+      if (allowMapExit&&!inside(nx,ny)) return [x,y,true];
+      x=nx;
+      y=ny;
     }
     return [x,y];
   }

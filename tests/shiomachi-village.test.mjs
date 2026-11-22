@@ -214,7 +214,7 @@ test('review UI is landscape only, shared 0.5 zoom, local demo commerce without 
    'debug shortcuts must stay folded by default');
  for(const oldLayout of ['.dpad{','grid-template-columns:repeat(3,44px)','width:min(100%,980px)'])
    assert.ok(!html.includes(oldLayout),'custom controller layout must be absent: '+oldLayout);
- assert.match(walk,/const \[nx,ny\]=walk\.move/);
+ assert.match(walk,/const \[nx,ny,leftMap\]=walk\.move/);
  assert.match(walk,/bindDialogue\(/);
  assert.match(walk,/requestAnimationFrame\(frame\)/);
  assert.match(walk,/previewOnly:previewMode/);

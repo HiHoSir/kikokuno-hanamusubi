@@ -1,7 +1,8 @@
 import {prepareCoveArt,prepareCoveSurf,coveCameraStart} from '../cove/render.mjs';
 import {drawCharacter} from '../village/residents.mjs';
 import {tideFrame} from '../terrain/surf.mjs';
-import {SHIOMACHI_MAP,SHIOMACHI_TILE,shiomachiTileAt} from '../../../data/maps/shiomachi-village/scene.mjs';
+import {SHIOMACHI_MAP,SHIOMACHI_TILE,shiomachiTileAt} from '../../../data/maps/shiomachi-village/scene.mjs?v=boundary-fence-1';
+import {drawVillageExitLabel,drawVillageFence} from '../village/boundary.mjs';
 
 const TILE=SHIOMACHI_TILE;
 function surface(width,height){
@@ -29,11 +30,12 @@ function staticRoads(map,art){
  }
  return canvas;
 }
-export function createShiomachiRenderer(ctx,art,map=SHIOMACHI_MAP){
+export function createShiomachiRenderer(ctx,art,map,fence){
  const landscape=prepareCoveArt(map,art);
  const surf=prepareCoveSurf(map,landscape.shoreMask);
  const roads=staticRoads(map,art);
  const sprites=map.objects.map(o=>({...o,image:art[o.sprite]}));
+ const fenceSprites=fence.map(segment=>({...segment,type:'fence',y:segment.depth}));
  // Canonical village sign PNGs, retained at their original 96x120 size.
  // Place them over their corresponding façades and depth-sort with buildings.
  const signs=map.interiors.map(site=>({
@@ -82,11 +84,17 @@ export function createShiomachiRenderer(ctx,art,map=SHIOMACHI_MAP){
    // Correct painter order: player/NPC feet on the deck stay in front of it.
    const actors=[
      ...sprites.map(o=>({...o,type:'object'})),
+     ...fenceSprites,
      ...signs,
      ...residents.map(o=>({...o,type:'npc',bitmap:art[o.sprite]})),
      {...player,type:'hero',bitmap:art.hero}
    ].sort((a,b)=>a.y-b.y||((a.type==='hero'?1:0)-(b.type==='hero'?1:0)));
    for(const obj of actors){
+     if(obj.type==='fence'){
+       const [x,y]=obj.point;
+       if(x<cx+viewW&&x+TILE>cx&&y<cy+viewH&&y+TILE>cy)drawVillageFence(ctx,art.fence,obj);
+       continue;
+     }
      if(obj.type==='object'){
        if(!obj.image)continue;
        ctx.drawImage(obj.image,Math.round(obj.x-obj.image.naturalWidth/2),
@@ -101,6 +109,8 @@ export function createShiomachiRenderer(ctx,art,map=SHIOMACHI_MAP){
      ctx.restore();
      drawCharacter(ctx,obj);
    }
+   if(cy+viewH>map.exit.bottom-56)
+     drawVillageExitLabel(ctx,(map.exit.left+map.exit.right)/2,map.exit.bottom-36);
    if(debug){
      const p=map.pier;
      ctx.strokeStyle='#79efff';

@@ -110,7 +110,7 @@ test('the source documents explain this incident and manual verification limits'
   assert.match(agents,/続けて/);
   assert.match(incident,/PR #64/);
   assert.match(incident,/PR #71/);
-  assert.match(incident,/記録/);
+  assert.match(incident,/existing recorded decisions disregarded/);
   assert.match(policy,/cannot independently verify|cannot verify|It CANNOT|cannot verify/i);
   assert.match(workflow,/guard-design-changes\.mjs/);
   assert.match(workflow,/fetch-depth: 0/);

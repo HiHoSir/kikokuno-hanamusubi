@@ -8,7 +8,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - run: npm test
+      - name: Design decision gate (PR)
+        if: github.event_name == 'pull_request'
+        env:
+          DESIGN_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: node tools/guard-design-changes.mjs "$DESIGN_BASE_SHA"
+      - name: Repository checks and tests
+        run: npm test

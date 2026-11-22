@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-11-22-correct-real-field-route-distances",
+  "kind": "documentation-correction",
+  "scopes": [
+    "progression"
+  ],
+  "affectedFiles": [
+    "docs/MAP_ENEMY_EQUIPMENT_RECONCILIATION.md"
+  ],
+  "readBeforeEditing": [
+    "docs/MAP_ENEMY_EQUIPMENT_RECONCILIATION.md のPR #73以前の歩行距離・11月15日設計を照合",
+    "data/maps/field/terrain.js の referenceComposition.roads とその42/42マス",
+    "src/field/world.js の world.canMove と標識接触の実装",
+    "src/field/runtime.mjs の fieldStep/villageArrival/placeArrival"
+  ],
+  "previousDesign": "道路メタデータ42/42マスを実際の歩数と混同して『以前の43/33歩とは一致しない』と記録していた。ユーザーによる11月15日の実走検討は43歩と33歩だった。",
+  "intendedDifference": "本番フィールドを親ゲームシェル内でChrome起動し、正規の村帰還位置→天妖の社の接触まで43歩、社帰還位置→入り江接触まで33歩で、両者ともfieldStep再生成功と追記。道路メタデータ42/42を別欄で保持。未接続区間は未計測と明記する。",
+  "impactAnalysis": "T0〜T6の確定値、遭遇頻度、獲得両、敵ステータスや店の商品は変更しない。既存のマップに対する説明の正確性だけを改善。以前の進行設計を再参照できるが、戦闘数や到達段、潮待村装備段階の確定を意味しない。",
+  "preservedBoundaries": "地形・通行判定・本編セーブ・BGM・ゲーム画面・ルート構成・T0〜T6・鬼灯村と潮待村の仮販売値は不変。休憩所と必須洞窟を実装済み扱いしない。",
+  "verification": "GitHub Actions browser route QA run 45018604118で43/33歩の実通行とfieldStep再生成功を確認。npm testとPR/マージ後フィールドQAで同条件を継続検証し、JSON経路レポートをアップロード。",
+  "userEvidence": {
+    "status": "documentation-only",
+    "source": "2026-11-15のマップ歩数の検討履歴・PR #73に保存した報告、および2026-11-22の実ブラウザ検査 https://github.com/HiHoSir/kikokuno-hanamusubi/actions/runs/45018604118"
+  }
+}

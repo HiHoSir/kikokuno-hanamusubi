@@ -54,7 +54,11 @@ export function createShiomachiRenderer(ctx,art,map=SHIOMACHI_MAP){
    ctx.fillRect(0,0,bufferWidth,bufferHeight);
    ctx.setTransform(step,0,0,step,shiftX,shiftY);
    const waveFrame=Math.floor(time/360)%2;
-   for(let y=0;y<height;y++)for(let x=0;x<width;x++){
+   const firstX=Math.max(0,Math.floor(cx/TILE));
+   const firstY=Math.max(0,Math.floor(cy/TILE));
+   const lastX=Math.min(width,Math.ceil((cx+viewW)/TILE));
+   const lastY=Math.min(height,Math.ceil((cy+viewH)/TILE));
+   for(let y=firstY;y<lastY;y++)for(let x=firstX;x<lastX;x++){
      if(shiomachiTileAt(x,y,map)!=='~'&&Math.abs(y-map.shore[x])>1)continue;
      ctx.drawImage(art.water,waveFrame*64+(x&1)*TILE,(y&1)*TILE,TILE,TILE,
        x*TILE,y*TILE,TILE,TILE);

@@ -51,22 +51,26 @@ export const SHIOMACHI_PROPS=Object.freeze([
   prop('south-basket','basket',490,1517,80,74,34)
 ]);
 export const SHIOMACHI_NPCS=Object.freeze([
- Object.freeze({id:'tide-elder',name:'村の古老',sprite:'elder',x:678,y:1058,face:0,
+ Object.freeze({id:'tide-elder',name:'村の古老',sprite:'elder',
+   route:[[678,1058],[678,984]],speed:35,face:0,
    lines:Object.freeze([
      '村の古老「ここは潮待村。潮の上げ下げを見ながら、網を直して暮らしておる。」',
      '村の古老「鬼灯村の鐘も、この浜まで聞こえていたんじゃが……。近ごろは妙に静かじゃ。」'
    ])}),
- Object.freeze({id:'net-mender',name:'網直しの漁師',sprite:'fisher',x:795,y:725,face:3,
+ Object.freeze({id:'net-mender',name:'網直しの漁師',sprite:'fisher',
+   route:[[795,725],[719,725]],speed:48,face:3,
    lines:Object.freeze([
      '網直しの漁師「穴のあいた網は、潮が変わる前に繕っておくんだ。」',
      '網直しの漁師「入り江の潮平？　あいつも海に詳しい男だよ。浜の外れにいるはずさ。」'
    ])}),
- Object.freeze({id:'shore-girl',name:'浜の娘',sprite:'osumi',x:682,y:1327,face:0,
+ Object.freeze({id:'shore-girl',name:'浜の娘',sprite:'osumi',
+   route:[[682,1327],[762,1327],[762,1383],[682,1383]],speed:62,face:0,
    lines:Object.freeze([
      '浜の娘「浜で拾ったきれいな小石を並べてるの。波が来るたびに並びが変わるんだ。」',
      '浜の娘「旅をするなら気をつけてね。海の音が大きい日は、足元を見て歩いて。」'
    ])}),
- Object.freeze({id:'fish-seller',name:'魚売り',sprite:'clerk',x:630,y:1534,face:0,
+ Object.freeze({id:'fish-seller',name:'魚売り',sprite:'villager',
+   route:[[630,1534],[550,1534]],speed:46,face:0,
    lines:Object.freeze([
      '魚売り「今朝の魚はよく太ってるよ。港の舟が戻ると、いつも賑やかになるんだ。」',
      '魚売り「今日は店じまいの支度中さ。品物を売るのはまた今度にしよう。」'

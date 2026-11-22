@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-11-23-shiomachi-npcs",
+  "kind": "user-approved",
+  "scopes": ["equipment"],
+  "affectedFiles": ["src/game/shiomachi/interior-preview.mjs"],
+  "readBeforeEditing": [
+    "docs/VILLAGE_MAP_WORKFLOW.md：共通店番、カウンター越しの会話、屋外NPCの歩行規則を確認",
+    "src/game/interiors/rooms.mjs：既存の各店舗の店番アセット、家具の接地、会話地点を確認",
+    "docs/BALANCE_PROGRESSION_CONTRACT.md：潮待村の試用商取引と本編データの境界を確認",
+    "docs/FOUR_VILLAGES_EQUIPMENT_PLAN.md：潮待村の既存店舗と村内の建物対応を確認"
+  ],
+  "previousDesign": "潮待村の屋外4人は固定座標に立ち、屋外の魚売りが共通店番の絵を使っていた。屋内は共有間取りの店番を使用するが、描画は役柄から画像への一律フォールバックに依存していた。",
+  "intendedDifference": "屋外4人が近くを巡回する。屋外の魚売りは村人の素材を使う。宿・兵具屋・茶店の店番は共有間取りで指定された共通素材を読み、潮待村の各施設名で会話する。",
+  "impactAnalysis": "屋外NPCは既存の方向別歩行処理と現地の地形・足元判定を使う。カウンターと客側の会話地点は共用の室内配置に従う。",
+  "preservedBoundaries": "店の品揃え、試用の価格・宿代・所持金と本編セーブの境界、戦闘バランスは従来の仕様を維持する。",
+  "verification": "npm test と潮待村のChromium検査で巡回、会話中の停止、共通店番の画像と3施設の会話からのサービス開始を確認する。",
+  "userEvidence": {
+    "status": "explicit-user-instruction",
+    "date": "2026-11-23",
+    "quote": "潮待村のNPCも歩行させてね。\nあと商店の店員ルールが多分無視されてるので直してー",
+    "source": "本会話の2026-11-23のユーザーメッセージ"
+  }
+}

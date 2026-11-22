@@ -105,7 +105,8 @@ export function createShiomachiInteriorPreview({ctx,images,viewport,clearInput,s
    site=nextSite;
    room=rooms[site.room];
    plan=prepareInterior(room);
-   plan.resident.bitmap=images[plan.resident.asset==='elder'?'elder':'clerk'];
+   if(plan.resident.counter)plan.resident.name=site.name+'の店番';
+   plan.resident.bitmap=images[plan.resident.asset];
    walking=makeWalk(room.width,room.height,plan.blocked,8);
    hero={x:plan.spawn[0],y:plan.spawn[1],face:1,distance:0,moving:false};
    if(!walking.canStand(hero.x,hero.y))

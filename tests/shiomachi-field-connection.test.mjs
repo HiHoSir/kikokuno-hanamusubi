@@ -16,9 +16,14 @@ const preview=read('previews/shiomachi-village/index.html');
 
 test('coastal field marker is on free grass by the cove, not a replaced location',()=>{
  assert.equal(terrain.tiles[51][53],'grass');
- assert.deepEqual(terrain.referenceComposition.places.cove,[49,50]);
+ assert.deepEqual(terrain.referenceComposition.places.cove,[49,53]);
+ const cove=terrain.referenceComposition.decorations.find(o=>o.destination==='cove');
+ assert.deepEqual(cove.contactTiles,[[49,53]]);
+ assert.deepEqual([cove.x,cove.y],[49*32,53*32]);
+ assert.equal(terrain.tiles[53][49],'sand');
+ assert.equal(terrain.tiles[54][49],'river','the cove marker faces the water');
  assert.deepEqual(terrain.referenceComposition.places.village,[37,70]);
- assert.deepEqual(terrain.referenceComposition.roads[1].at(-1),[49,50]);
+ assert.deepEqual(terrain.referenceComposition.roads[1].at(-1),[49,53]);
  assert.ok(!terrain.referenceComposition.places.shiomachi,
    'new village is a separate authored world marker, not a replacement cove');
  const elevation={prepare(){},refreshCollision(){}};

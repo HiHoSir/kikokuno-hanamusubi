@@ -9,7 +9,7 @@ test('map-based progression audit tracks current authored 80x80 route and actual
  assert.deepEqual([audit.map.width,audit.map.height,audit.map.tileSize],[80,80,32]);
  assert.deepEqual(audit.map.locations.map(p=>p.id),
    ['village','shrine','cove','forest','waterfall','hotspring','fox']);
- assert.deepEqual(audit.map.legs.map(p=>p.metadataSteps),[42,42,30,20,60,30]);
+ assert.deepEqual(audit.map.legs.map(p=>p.metadataSteps),[42,45,33,20,60,30]);
  assert.deepEqual(audit.map.legs.map(p=>p.liveBothEnds),
    [true,true,false,false,false,false]);
  assert.deepEqual(audit.map.liveTransitionDestinations,['village','shrine','cove']);

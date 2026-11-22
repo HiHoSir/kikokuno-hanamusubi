@@ -1,13 +1,14 @@
-import {COVE_MAP,tileAt,walkableCell,isSouthExit} from '../../../data/maps/sea-cove/scene.mjs?v=cove-rock-variants-1';
-import {makeWalk} from '../village/movement.mjs';
+import {COVE_MAP,walkableCell,coveExitFenceSegments} from '../../../data/maps/sea-cove/scene.mjs?v=cove-south-gate-1';
+import {makeWalk} from '../village/movement.mjs?v=map-edge-1';
+import {makeVillageFence,VILLAGE_FENCE_ART,VILLAGE_GATE_POST_ART} from '../village/boundary.mjs?v=gate-posts-1';
 import {residentInFront} from '../village/residents.mjs';
 import {bindDialogue} from '../village/dialogue.mjs';
 import {pixelViewport,DEFAULT_CAMERA_ZOOM} from '../village/render.mjs?v=nonfield-world-scale-1';
-import {readStoryStage,advanceStoryStage,objectiveForStage} from '../story/chapter-one.mjs';
+import {readStoryStage,advanceStoryStage} from '../story/chapter-one.mjs';
 import {consumeRestorePosition} from '../save/save-game.mjs?v=save-slots-1';
-import {createCoveRenderer} from './render.mjs?v=cove-rock-variants-1';
+import {createCoveRenderer} from './render.mjs?v=cove-south-gate-1';
 import {readPlayer,savePlayer} from '../battle/rules.mjs';
-import {SHELL_KINDS,shellBagCount} from '../items/shells.mjs';
+import {SHELL_KINDS} from '../items/shells.mjs';
 import {
  coveVisibleShells,nearestCoveShell,collectCoveShell,validateCoveShellSites
 } from '../../../data/maps/sea-cove/shells.mjs';
@@ -21,12 +22,14 @@ const previewMode=location.pathname.endsWith('/previews/sea-cove-review/')&&
 const previewSpots=Object.freeze({
  shore:Object.freeze({x:336,y:432,face:1}),
  rocks:Object.freeze({x:710,y:460,face:3}),
- worksite:Object.freeze({x:884,y:805,face:0})
+ worksite:Object.freeze({x:884,y:805,face:0}),
+ south:Object.freeze({x:COVE_MAP.entry.x,y:COVE_MAP.height*COVE_MAP.tileSize-112,face:0})
 });
 const scene=document.querySelector('#scene');
 const load=document.querySelector('#load');
-const objective=document.querySelector('#objective');
+const shellNotice=document.querySelector('#shell-notice');
 const shellHint=document.querySelector('#shell-hint');
+const shellHud=shellHint.parentElement;
 const buttons=[...document.querySelectorAll('[data-dir]')];
 const directions={up:[0,-1,1],down:[0,1,0],left:[-1,0,3],right:[1,0,2]};
 const keys={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',
@@ -47,6 +50,9 @@ const scenery={
  netRack:'assets/sea-cove/objects/net-drying-rack-232x176.png',
  netBundle:'assets/sea-cove/objects/net-bundle-146x88.png',
  ropeCoil:'assets/sea-cove/objects/rope-coil-88x62.png',
+ pathSoil:'assets/village/scene/path-soil.png',
+ fence:VILLAGE_FENCE_ART,
+ gatePost:VILLAGE_GATE_POST_ART,
  water:'assets/field/effects/water-motion.png',
  coastMask:'assets/field/terrain/atlas/coast-mask-32.png',
  // Exact accepted shoreline-study atlas set: one connected coast chip from
@@ -137,11 +143,13 @@ async function start(){
  const {width,height,tileSize,fisher:site,entry}=COVE_MAP;
  const blocked=Uint8Array.from({length:width*height},(_,i)=>
    walkableCell(i%width,Math.floor(i/width))?0:1);
- const walk=makeWalk(width*tileSize,height*tileSize,Uint8Array.from(
+ const collision=Uint8Array.from(
    {length:width*height*tileSize*tileSize},
    (_,i)=>blocked[Math.floor(i/(width*tileSize*tileSize))*width+
      Math.floor(i%(width*tileSize)/tileSize)]
- ),7);
+ );
+ const fence=makeVillageFence(coveExitFenceSegments(COVE_MAP),collision,width*tileSize);
+ const walk=makeWalk(width*tileSize,height*tileSize,collision,7);
  // Native-sized objects remain separate from sand/grass tiles.
  const fishermen={...site,bitmap:images.fisher,distance:0,moving:false,
    lines:linesForFisher(readStoryStage())};
@@ -163,7 +171,7 @@ async function start(){
    Math.hypot(px-fishermen.x,py-fishermen.y)<24||
    blockedByProp(px,py);
  const restored=previewMode?null:consumeRestorePosition('cove');
- const usable=restored&&walk.canStand(restored.x,restored.y)&&!occupied(restored.x,restored.y);
+ const usable=restored&&walk.canStand(restored.x,restored.y,true)&&!occupied(restored.x,restored.y);
  let x=usable?restored.x:entry.x,y=usable?restored.y:entry.y;
  let face=usable?(restored.face??entry.face):entry.face;
  if(previewMode){
@@ -174,27 +182,21 @@ async function start(){
   }
  }
  let elapsedMs=0,lastFrame=0,distance=0,menuPaused=false,lastRenderedFrame=-1;
- const renderer=createCoveRenderer(scene.getContext('2d',{alpha:false}),images);
+ let noticeUntil=0;
+ const renderer=createCoveRenderer(scene.getContext('2d',{alpha:false}),images,fence);
  const dialogue=bindDialogue(clearInputs,ended=>{
    if(!previewMode&&ended.id==='ushiohei'&&readStoryStage()==='cove'){
      advanceStoryStage('forest');
-     objective.textContent=objectiveForStage(readStoryStage());
      fishermen.lines=linesForFisher(readStoryStage());
    }
  });
- const refreshObjective=()=>{
-   const stage=readStoryStage();
-   objective.textContent=stage==='cove'?'浜辺にいる潮平を探そう':objectiveForStage(stage);
- };
- function refreshShellHint(){
-   const nearest=nearestCoveShell(heroInventory,x,y);
-   const bag=shellBagCount(heroInventory.shells.bag);
-   const next=nearest?
-     SHELL_KINDS[nearest.kind].name+'を拾う：A':
-     '貝殻 '+bag+'個所持／浜辺 '+shells.length+'個（戦闘5回で補充）';
+ function refreshShellHint(now=performance.now()){
+   if(now>=noticeUntil&&shellNotice.textContent)shellNotice.textContent='';
+   const nearest=dialogue.active?null:nearestCoveShell(heroInventory,x,y);
+   const next=nearest?SHELL_KINDS[nearest.kind].name+'を拾う：A':'';
    if(shellHint.textContent!==next)shellHint.textContent=next;
+   shellHud.hidden=!next&&!shellNotice.textContent;
  }
- refreshObjective();
  // Non-field world scenes have ONE scale: village, rooms, sanctuary and cove.
  // Camera movement follows the player but never changes the CSS pixel/world
  // pixel ratio. Houses, net racks and heroes stay proportionally identical.
@@ -207,7 +209,6 @@ async function start(){
  };
  const leave=()=>{
    clearInputs();
-   if(previewMode){location.reload();return;}
    window.KIKOKU_ROUTE.go(new URL('../../field/?from=cove',import.meta.url));
  };
  const frame=now=>{
@@ -219,17 +220,15 @@ async function start(){
      const [dx,dy,row]=directions[direction];
      face=row;
      const step=150*dt/1000;
-     const [nx,ny]=walk.move(x,y,dx*step,dy*step,occupied);
+     const [nx,ny,leftMap]=walk.move(x,y,dx*step,dy*step,occupied,true);
+     if(leftMap&&!previewMode){leave();return;}
      moving=Math.hypot(nx-x,ny-y)>.01;
      distance+=Math.hypot(nx-x,ny-y);
      x=nx;y=ny;
-     if(isSouthExit(Math.floor(x/tileSize),Math.floor(y/tileSize))){
-       leave();return;
-     }
    }
    fishermen.lines=linesForFisher(readStoryStage());
    dialogue.update(residentInFront(x,y,face,[fishermen]),x,y);
-   refreshShellHint();
+   refreshShellHint(now);
    const tick=Math.floor(now/180);
    if(!menuPaused&&(moving||tick!==lastRenderedFrame)){
      renderer({x,y,face,distance,moving},fishermen,now,viewport,shells);
@@ -251,7 +250,8 @@ async function start(){
      if(result.accepted){
        heroInventory=previewMode?result.player:savePlayer(result.player);
        shells=coveVisibleShells(heroInventory);
-       objective.textContent=result.message;
+       shellNotice.textContent=result.message;
+       noticeUntil=performance.now()+1800;
        if(!previewMode)window.parent?.KIKOKU_GAME?.autosave?.(window);
        lastRenderedFrame=-1;
        refreshShellHint();

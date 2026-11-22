@@ -2,7 +2,7 @@ import {prepareCoveArt,prepareCoveSurf,coveCameraStart} from '../cove/render.mjs
 import {drawCharacter} from '../village/residents.mjs';
 import {tideFrame} from '../terrain/surf.mjs';
 import {SHIOMACHI_MAP,SHIOMACHI_TILE,shiomachiTileAt} from '../../../data/maps/shiomachi-village/scene.mjs?v=boundary-fence-1';
-import {drawVillageExitLabel,drawVillageFence} from '../village/boundary.mjs';
+import {drawVillageFence} from '../village/boundary.mjs?v=gate-posts-1';
 
 const TILE=SHIOMACHI_TILE;
 function surface(width,height){
@@ -92,7 +92,8 @@ export function createShiomachiRenderer(ctx,art,map,fence){
    for(const obj of actors){
      if(obj.type==='fence'){
        const [x,y]=obj.point;
-       if(x<cx+viewW&&x+TILE>cx&&y<cy+viewH&&y+TILE>cy)drawVillageFence(ctx,art.fence,obj);
+       if(x<cx+viewW&&x+TILE>cx&&y-10<cy+viewH&&y+TILE>cy)
+         drawVillageFence(ctx,art.fence,art.gatePost,obj);
        continue;
      }
      if(obj.type==='object'){
@@ -109,8 +110,6 @@ export function createShiomachiRenderer(ctx,art,map,fence){
      ctx.restore();
      drawCharacter(ctx,obj);
    }
-   if(cy+viewH>map.exit.bottom-56)
-     drawVillageExitLabel(ctx,(map.exit.left+map.exit.right)/2,map.exit.bottom-36);
    if(debug){
      const p=map.pier;
      ctx.strokeStyle='#79efff';

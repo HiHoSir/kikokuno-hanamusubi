@@ -1,5 +1,12 @@
 name: Field browser visual QA
 on:
+  pull_request:
+    paths:
+      - 'src/field/**'
+      - 'data/maps/field/terrain.js'
+      - 'previews/field-exploration/index.html'
+      - 'tools/qa-field-exploration-pages.mjs'
+      - '.github/workflows/field-visual-qa.yml'
   push:
     branches: [main]
     paths:

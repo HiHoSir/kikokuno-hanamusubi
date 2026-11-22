@@ -1,5 +1,6 @@
-import {COVE_MAP,COVE_SHORE,tileAt} from '../../../data/maps/sea-cove/scene.mjs?v=cove-rock-variants-1';
+import {COVE_MAP,COVE_SHORE,tileAt,coveExitTrailCell} from '../../../data/maps/sea-cove/scene.mjs?v=cove-south-gate-1';
 import {drawCharacter} from '../village/residents.mjs';
+import {drawVillageFence} from '../village/boundary.mjs?v=gate-posts-1';
 import {createShellAtlas,SHELL_ART_SIZE} from '../items/shell-art.mjs';
 import {TIDE_FRAMES,tideFrame,surfSample} from '../terrain/surf.mjs';
 
@@ -151,12 +152,22 @@ export function coveCameraStart(worldSpan,viewSpan,desiredStart){
  if(worldSpan<=viewSpan)return (worldSpan-viewSpan)/2;
  return Math.max(0,Math.min(worldSpan-viewSpan,desiredStart));
 }
-export function createCoveRenderer(ctx,art,map=COVE_MAP){
+export function createCoveRenderer(ctx,art,fence,map=COVE_MAP){
  const staticArt=prepareCoveArt(map,art);
+ const ground=staticArt.ground.getContext('2d');
+ const soil=art.pathSoil;
+ for(let y=map.exit.trailStart;y<=map.exit.row;y++){
+   for(let x=0;x<map.width;x++){
+     if(!coveExitTrailCell(x,y,map))continue;
+     const px=x*TILE,py=y*TILE;
+     ground.drawImage(soil,px%soil.naturalWidth,py%soil.naturalHeight,TILE,TILE,px,py,TILE,TILE);
+   }
+ }
  const surf=prepareCoveSurf(map,staticArt.shoreMask);
  const shellArt=createShellAtlas();
  const shellTypes=Object.fromEntries(shellArt.ids.map((kind,index)=>[kind,index]));
  const {width,height}=map;
+ const fenceSprites=fence.map(segment=>({...segment,type:'fence',y:segment.depth}));
  const sprites=map.objects.map(object=>({
    ...object,
    x:object.footPosition?object.x:object.x*TILE+TILE/2,
@@ -193,11 +204,18 @@ export function createCoveRenderer(ctx,art,map=COVE_MAP){
    }
    const actors=[
      ...sprites.map(s=>({type:'sprite',...s})),
+     ...fenceSprites,
      ...shells.map(shell=>({type:'shell',...shell})),
      {type:'npc',y:fisher.y,x:fisher.x,bitmap:art.fisher,face:fisher.face,distance:0,moving:false},
      {type:'hero',y:player.y,x:player.x,bitmap:art.hero,face:player.face,distance:player.distance,moving:player.moving}
    ].sort((a,b)=>a.y-b.y||(a.type==='hero'?1:-1));
    for(const actor of actors){
+     if(actor.type==='fence'){
+       const [x,y]=actor.point;
+       if(x<cameraX+viewW&&x+TILE>cameraX&&y-10<cameraY+viewH&&y+TILE>cameraY)
+         drawVillageFence(ctx,art.fence,art.gatePost,actor);
+       continue;
+     }
      if(actor.type==='sprite'){
        ctx.drawImage(actor.image,
          Math.round(actor.x-actor.image.naturalWidth/2),

@@ -46,8 +46,8 @@ export const EXISTING_EQUIPMENT_LOCATIONS=Object.freeze([
     enteredFrom:'field',gameplayConnected:true,
     note:'貝殻は拾って売れるが装備品ではない。兵具の販売・拾得はない。'}),
   Object.freeze({id:'shiomachi-village',name:'潮待村（単独プレビュー）',
-    availability:'preview-only',enteredFrom:'independent-preview',
-    gameplayConnected:false,
+    availability:'preview-only',enteredFrom:'field-and-independent-preview',
+    gameplayConnected:true,
     note:'4点は未承認の試用品。本編への持ち込み・装着・セーブ反映なし。'})
 ]);
 

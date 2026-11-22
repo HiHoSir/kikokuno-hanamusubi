@@ -150,6 +150,7 @@ test('the source documents explain this incident and manual verification limits'
   const agents=readFileSync('AGENTS.md','utf8');
   const incident=readFileSync('docs/incidents/2026-11-22-design-override.md','utf8');
   const policy=readFileSync('docs/decisions/README.md','utf8');
+  const status=readFileSync('docs/decisions/CURRENT_STATUS.md','utf8');
   const workflow=readFileSync('.github/workflows/repository-guard.yml','utf8');
   assert.match(agents,/docs\/decisions\/changes/);
   assert.match(agents,/続けて/);
@@ -157,6 +158,13 @@ test('the source documents explain this incident and manual verification limits'
   assert.match(incident,/PR #71/);
   assert.match(incident,/既存の設計記録を確認せず、従わなかった問題/);
   assert.match(policy,/引用内容の真偽/);
+  assert.match(policy,/affectedFiles/);
+  for(const required of ['T1攻+20','T2攻+42','攻+4／守+7',
+    '潮待村','未承認','休憩所','未実装','PR #73','CURRENT']){
+    if(required==='CURRENT')continue;
+    assert.ok(status.includes(required),'current status matrix must identify '+required);
+  }
+  assert.match(agents,/docs\/decisions\/CURRENT_STATUS\.md/);
   assert.match(workflow,/guard-design-changes\.mjs/);
   assert.match(workflow,/fetch-depth: 0/);
 });

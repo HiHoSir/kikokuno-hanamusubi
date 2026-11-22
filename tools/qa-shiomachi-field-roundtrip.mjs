@@ -98,7 +98,33 @@ try{
  const save=await page.evaluate(()=>window.KIKOKU_GAME.manualSave());
  assert.equal(save.accepted,true);
  assert.equal(save.save.location.scene,'shiomachi');
- const demo=await embedded.evaluate(()=>{
+ await embedded.evaluate(()=>window.dispatchEvent(new KeyboardEvent('keydown',
+  {key:'ArrowDown',bubbles:true})));
+ await page.waitForFunction(()=>{
+  const f=document.querySelector('iframe')?.contentWindow;
+  return Boolean(f?.YK_WORLD&&f.location.pathname==='/src/field/'&&
+   new URL(f.location.href).searchParams.get('from')==='shiomachi'&&
+   f.document.querySelector('#load')?.hidden===true);
+ },null,{timeout:45000});
+ const after=await page.frames().find(f=>f.url().includes('/src/field/')).evaluate(()=>{
+  const scene=document.querySelector('#scene');
+  return {x:Number(scene.dataset.x),y:Number(scene.dataset.y),
+   contact:window.YK_AREA_TRANSITIONS.contact(window.YK_WORLD,
+      Number(scene.dataset.x)*32+16,Number(scene.dataset.y)*32+16)};
+ });
+ assert.deepEqual(after,{x:52,y:51,contact:null});
+ // Check demo goods AFTER completing the main roundtrip, so the shop's
+ // deliberately non-warping doorway does not move our south-exit test spawn.
+ const returnedField=page.frames().find(f=>f.url().includes('/src/field/'));
+ await returnedField.evaluate(()=>window.dispatchEvent(new KeyboardEvent('keydown',
+  {key:'ArrowRight',bubbles:true})));
+ await page.waitForFunction(()=>{
+   const f=document.querySelector('iframe')?.contentWindow;
+   return Boolean(f?.__SHIOMACHI_QA?.ready&&
+     f.location.pathname==='/src/game/shiomachi/');
+ });
+ const villageAgain=page.frames().find(f=>f.url().includes('/src/game/shiomachi/'));
+ const demo=await villageAgain.evaluate(()=>{
   const qa=window.__SHIOMACHI_QA;
   if(!qa.enterRoom('armory')||!qa.openService())return {entered:false};
   const first=document.querySelector('[data-shop-item="shiomachi-tide-blade"]');
@@ -119,21 +145,7 @@ try{
     gameGold:hero?.gold??0};
  });
  assert.deepEqual(persisted,{manualScene:'shiomachi',gameHasDemoGear:false,gameGold:0});
- await embedded.evaluate(()=>window.dispatchEvent(new KeyboardEvent('keydown',
-  {key:'ArrowDown',bubbles:true})));
- await page.waitForFunction(()=>{
-  const f=document.querySelector('iframe')?.contentWindow;
-  return Boolean(f?.YK_WORLD&&f.location.pathname==='/src/field/'&&
-   new URL(f.location.href).searchParams.get('from')==='shiomachi'&&
-   f.document.querySelector('#load')?.hidden===true);
- },null,{timeout:45000});
- const after=await page.frames().find(f=>f.url().includes('/src/field/')).evaluate(()=>{
-  const scene=document.querySelector('#scene');
-  return {x:Number(scene.dataset.x),y:Number(scene.dataset.y),
-   contact:window.YK_AREA_TRANSITIONS.contact(window.YK_WORLD,
-      Number(scene.dataset.x)*32+16,Number(scene.dataset.y)*32+16)};
- });
- assert.deepEqual(after,{x:52,y:51,contact:null});
+
  assert.deepEqual(failures,[]);
  console.log('SHIOMACHI_FIELD_ROUNDTRIP '+JSON.stringify({before,found,demo,persisted,
    returned:after,errors:failures}));

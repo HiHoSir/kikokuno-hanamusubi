@@ -1,0 +1,42 @@
+name: Field walkability and progression route QA
+on:
+  pull_request:
+    paths:
+      - 'src/field/**'
+      - 'data/maps/field/terrain.js'
+      - 'tools/field-route-pathfinder.mjs'
+      - 'tools/qa-field-route-playability.mjs'
+      - 'tests/field-route-pathfinder.test.mjs'
+      - '.github/workflows/field-route-qa.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'src/field/**'
+      - 'data/maps/field/terrain.js'
+      - 'tools/field-route-pathfinder.mjs'
+      - 'tools/qa-field-route-playability.mjs'
+      - 'tests/field-route-pathfinder.test.mjs'
+      - '.github/workflows/field-route-qa.yml'
+  workflow_dispatch:
+jobs:
+  real-field-walk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated Chromium dependency
+        run: |
+          npm install --no-save playwright@1.62.1
+          npx playwright install --with-deps chromium
+      - name: Trace real village to shrine to cove movement
+        run: node tools/qa-field-route-playability.mjs
+      - name: Upload concrete walkability audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: field-real-walk-route-audit
+          path: artifacts/field-route-playability.json
+          if-no-files-found: warn

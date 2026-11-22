@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<script src="../navigation/entry.js" data-entry="game"></script>
+<!-- Official embedded village scene. Preview-specific buttons are omitted. -->
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="鬼哭の花結び">
+<meta name="theme-color" content="#142c38">
+<title>潮待村｜鬼哭の花結び</title>
+<style>
+/* All gameplay controls, full-screen layout and dialog spacing are supplied
+   by the same shared styles used by 鬼灯村 and 海の入り江. Do not recreate
+   main, .controls, .dpad, #pad, or .round here. */
+:root{color-scheme:dark;background:#142c38;color:#f7efdb;font:16px system-ui,sans-serif}
+*{box-sizing:border-box}
+.viewport{position:relative;background:#28678e}
+#scene{position:absolute;inset:0;width:100%;height:100%;display:block;
+ image-rendering:pixelated;touch-action:none}
+#load{position:absolute;z-index:40;inset:0;display:grid;place-items:center;
+ margin:0;padding:16px;background:#284d4b;text-align:center;font-size:14px}
+#load[hidden]{display:none}
+.village-hud{position:absolute;z-index:4;left:max(8px,env(safe-area-inset-left));
+ max-width:min(42%,270px);padding:7px 10px;border:1px solid #81785c;
+ border-radius:5px;background:rgba(18,25,20,.83);font-size:12px;
+ line-height:1.4;pointer-events:none}
+.village-hud #objective{margin:0}
+.review-tools{position:absolute;z-index:15;top:max(8px,calc(env(safe-area-inset-top) + 8px));
+ right:max(8px,env(safe-area-inset-right));max-width:min(51%,300px);
+ color:#f4ebd4;font-size:12px}
+.review-tools summary{display:block;float:right;list-style:none;
+ padding:5px 10px;border:1px solid #8e917d;border-radius:6px;
+ background:rgba(20,45,52,.9);cursor:pointer;touch-action:manipulation}
+.review-tools summary::-webkit-details-marker{display:none}
+.review-tools summary::marker{content:""}
+.review-tools[open] summary{background:#4f634d}
+.review-tools nav{clear:both;display:flex;flex-wrap:wrap;justify-content:flex-end;
+ gap:4px;padding-top:5px}
+.review-tools button{min-height:30px;padding:4px 8px;border:1px solid #8e917d;
+ border-radius:5px;background:rgba(20,45,52,.95);color:#fff5de;
+ font:12px "DotGothic16",system-ui,sans-serif;touch-action:manipulation}
+.review-tools button[aria-pressed=true]{background:#d8bb78;color:#17263a}
+/* Same room/shop visuals as the existing village interiors, with controls
+   supplied by the global controls.css rather than a new gamepad. */
+#shop-panel{position:absolute;z-index:26;left:17%;right:17%;top:max(6px,env(safe-area-inset-top));
+ max-height:calc(100dvh - 16px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+ overflow:auto;overscroll-behavior:contain;padding:8px 14px;
+ border:3px double #d6b881;border-radius:7px;background:#122438f5;
+ color:#fff4df;font-family:"DotGothic16",sans-serif;touch-action:pan-y;
+ box-shadow:0 10px 24px #000a}
+#shop-panel[hidden]{display:none!important}
+#shop-panel h2{margin:0 0 4px;font-size:17px;color:#eed59b}
+#shop-wallet,#shop-message{font-size:13px;margin:4px 0 7px}
+#shop-options{display:grid;gap:4px}
+#shop-options button{min-height:36px;text-align:left;padding:5px 8px;
+ border:1px solid #8f8c79;border-radius:4px;background:#29453e;color:#fff6dd;
+ font:13px "DotGothic16",sans-serif;touch-action:manipulation}
+#shop-options button.selected{border-color:#f4d482;background:#675435}
+@media(max-width:550px){#shop-panel{left:12%;right:12%}}
+.rotate{display:none}
+@media(orientation:portrait){
+ .rotate{position:fixed;z-index:100;inset:0;display:grid;place-items:center;
+ color:#f6e8c8;background:#152733;text-align:center;padding:25px}
+}
+</style>
+<link rel="stylesheet" href="../../../src/game/village/dialogue.css?v=dotgothic16">
+<link rel="stylesheet" href="../../../src/game/ui/controls.css?v=dotgothic16">
+<script type="module" src="../../../src/game/ui/selection-guard.mjs"></script>
+<script src="../../../src/field/assets.js"></script>
+<script src="../../../src/field/landscape.js"></script>
+<script src="../../../src/field/autotile.js"></script>
+</head>
+<body>
+<main data-bgm="field">
+<section class="viewport" aria-label="潮待村">
+  <div class="village-hud">
+    <p id="objective" aria-live="polite">潮待村を読み込んでいます。</p>
+  </div>
+  <canvas id="scene" aria-label="潮待村のゲーム画面"></canvas>
+  <p id="load" role="status">潮待村の地形と建物を読み込んでいます……</p>
+  <button id="talk" type="button" hidden>話す</button>
+  <section id="dialogue" aria-labelledby="speaker" hidden>
+    <div class="dialog-window" role="dialog" aria-modal="false">
+      <strong id="speaker"></strong>
+      <p id="line"></p>
+      <button id="next" type="button" aria-label="次のセリフへ">▼</button>
+    </div>
+  </section>
+  <section id="shop-panel" aria-label="潮待村の試用店メニュー" hidden>
+    <h2 id="shop-title">品書き</h2>
+    <p id="shop-wallet">所持金</p>
+    <div id="shop-options"></div>
+    <p id="shop-message" aria-live="polite"></p>
+  </section>
+</section>
+<!-- Keep the exact shared controller structure used by the village, cove and sanctuary. -->
+<section id="pad" class="controls" aria-label="ゲーム操作">
+  <div class="dpad" aria-label="十字キー・4方向移動" role="group">
+    <button id="up" type="button" data-dir="up" aria-label="上">▲</button>
+    <button id="left" type="button" data-dir="left" aria-label="左">◀</button>
+    <button id="right" type="button" data-dir="right" aria-label="右">▶</button>
+    <button id="down" type="button" data-dir="down" aria-label="下">▼</button>
+  </div>
+  <button id="action-b" class="round sub" type="button" aria-label="B 戻る">B<small>戻る</small></button>
+  <button id="action-a" class="round main" type="button" aria-label="A 決定・話す">A<small>決定</small></button>
+</section>
+</main>
+<div class="rotate" role="status">ゲームはiPhoneを横向きにしてください。</div>
+<script type="module" src="./walk.mjs?v=shiomachi-field-20261122-1"></script>
+</body>
+</html>

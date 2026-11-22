@@ -50,6 +50,7 @@ jobs:
           name: field-real-walk-route-audit
           path: |
             artifacts/field-route-playability.json
+            artifacts/shiomachi-field-village-marker.png
             artifacts/shiomachi-field-connected.png
             artifacts/hozuki-south-exit.png
           if-no-files-found: warn

@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
+import {runInNewContext} from 'node:vm';
 import {SHIOMACHI_MAP,shiomachiIsExit} from '../data/maps/shiomachi-village/scene.mjs';
 import {SHIOMACHI_ARMORY_STOCK} from '../data/maps/shiomachi-village/armory.mjs';
 import {EQUIPMENT_ITEMS,STATUS_V2} from '../src/game/battle/rules.mjs';
@@ -18,12 +19,21 @@ test('coastal field marker is on free grass by the cove, not a replaced location
  assert.deepEqual(terrain.referenceComposition.places.cove,[49,50]);
  assert.deepEqual(terrain.referenceComposition.places.village,[37,70]);
  assert.deepEqual(terrain.referenceComposition.roads[1].at(-1),[49,50]);
- assert.ok(field.includes('SHIOMACHI_FIELD_CELL=Object.freeze([53,51])'));
- assert.ok(field.includes('landmarkContactTiles.shiomachi=[SHIOMACHI_FIELD_CELL.slice()]'));
- assert.ok(field.includes("destination:'shiomachi'"));
- assert.ok(field.includes("kind:'newHouse'"),'existing 32px field marker art reused');
  assert.ok(!terrain.referenceComposition.places.shiomachi,
    'new village is a separate authored world marker, not a replacement cove');
+ const elevation={prepare(){},refreshCollision(){}};
+ const window={YK_FIELD_TERRAIN:terrain,YK_FIELD_ELEVATION:elevation};
+ runInNewContext(field,{window,YK_FIELD_ELEVATION:elevation});
+ const {decorations,landmarkContactTiles}=window.YK_WORLD.mapData;
+ const hozuki=decorations.find(item=>item.destination==='village');
+ const shiomachi=decorations.find(item=>item.destination==='shiomachi');
+ assert.equal(shiomachi.kind,hozuki.kind);
+ assert.deepEqual([shiomachi.width,shiomachi.height],[hozuki.width,hozuki.height]);
+ assert.deepEqual([shiomachi.x,shiomachi.y,shiomachi.foot],[53*32,51*32,52*32]);
+ assert.equal(terrain.tiles[51][54],'grass','the second art cell also sits on land');
+ assert.deepEqual(structuredClone(landmarkContactTiles.shiomachi),[[53,51]]);
+ assert.deepEqual(structuredClone(shiomachi.contactTiles),[[53,51]]);
+ assert.equal(shiomachi.occupiedTiles.length,0);
 });
 
 test('official village is protected by shell admission, uses original native-sized map and a real south exit',()=>{

@@ -59,14 +59,24 @@ try{
  const before=await field.evaluate(()=>{
   const w=window.YK_WORLD,t=window.YK_AREA_TRANSITIONS;
   const a=[52*32+16,51*32+16],b=[53*32+16,51*32+16];
+  const villageArt=Object.fromEntries(['village','shiomachi'].map(id=>{
+   const {kind,width,height}=w.mapData.decorations.find(o=>o.destination===id);
+   return [id,{asset:window.YK_FIELD_ASSETS.landscape[kind],width,height}];
+  }));
   return {cove:w.places.cove.point,shiomachi:w.places.shiomachi.point,
    surface:w.tileAt(...b),walkable:w.canMove(...a,...b),
-   contact:t.contact(w,...b),priorContact:t.contact(w,...a)};
+   contact:t.contact(w,...b),priorContact:t.contact(w,...a),
+   adjacentContact:t.contact(w,54*32+16,51*32+16),villageArt};
  });
  assert.equal(before.contact,'shiomachi');
  assert.equal(before.priorContact,null);
  assert.equal(before.surface,'grass');
  assert.equal(before.walkable,true);
+ assert.equal(before.adjacentContact,null,'only the existing cell opens the village');
+ assert.deepEqual(before.villageArt.shiomachi,before.villageArt.village);
+ assert.deepEqual(before.villageArt.shiomachi,{
+  asset:'assets/field/objects/village.png',width:64,height:32});
+ await page.screenshot({path:'artifacts/shiomachi-field-village-marker.png'});
  await field.evaluate(()=>window.dispatchEvent(new KeyboardEvent('keydown',
   {key:'ArrowRight',bubbles:true})));
  await page.waitForFunction(()=>{

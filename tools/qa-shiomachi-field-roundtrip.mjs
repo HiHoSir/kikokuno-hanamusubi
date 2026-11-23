@@ -245,10 +245,14 @@ try{
   await page.waitForFunction(({x,y})=>{
    const f=document.querySelector('#game-scene')?.contentWindow;
    const p=f?.KIKOKU_SAVE_SNAPSHOT?.();
-   return p?.scene==='field'&&p.position.x===x*32+16&&p.position.y===y*32+16;
+   return f?.location.pathname==='/src/field/'&&
+    new URL(f.location.href).searchParams.get('qa-entrance')===String(x)&&
+    p?.scene==='field'&&p.position.x===x*32+16&&p.position.y===y*32+16;
   },{x,y});
-  const field=page.frames().find(f=>f.url().includes('/src/field/'));
-  await field.evaluate(()=>window.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowUp',bubbles:true})));
+  await page.evaluate(()=>{
+   const field=document.querySelector('#game-scene').contentWindow;
+   field.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowUp',bubbles:true}));
+  });
   await page.waitForFunction(destination=>{
    const f=document.querySelector('#game-scene')?.contentWindow;
    return f?.KIKOKU_SAVE_SNAPSHOT?.()?.scene===destination;

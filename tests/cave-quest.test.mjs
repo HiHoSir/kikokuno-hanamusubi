@@ -1,19 +1,28 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {CAVE_FLOORS,CAVE_TILE,CAVE_BOSS_ID,caveCellOpen} from '../data/maps/cave/floors.mjs';
+import {CAVE_FLOORS,CAVE_TILE,CAVE_BOSS_ID,caveCellOpen,caveCellCenter,caveFeatureBlocks,caveStairAt} from '../data/maps/cave/floors.mjs';
 import {DEFAULT_PLAYER,createBattle,normalizePlayer,readPlayer,savePlayer} from '../src/game/battle/rules.mjs';
 import {saveManualGame,restoreSavedGame} from '../src/game/save/save-game.mjs';
 
 test('all three cave floors have walkable routes between their portals',()=>{
  for(const [floor,layout] of CAVE_FLOORS.entries()){
-   assert.ok(layout.grid.every(row=>row.length===20));
+   assert.ok(layout.grid.every(row=>row.length===layout.grid[0].length));
    const cells=[layout.entry],visited=new Set(cells.map(cell=>cell.join(',')));
    for(const [x,y] of cells)for(const [dx,dy] of [[0,1],[0,-1],[1,0],[-1,0]]){
      const cell=[x+dx,y+dy],key=cell.join(',');
      if(caveCellOpen(floor,...cell)&&!visited.has(key)){visited.add(key);cells.push(cell);}
    }
+   for(const feature of [layout.up,layout.down].filter(Boolean)){
+     const position=caveCellCenter(feature.approach);
+     assert.equal(caveStairAt(floor,...position),feature);
+     assert.ok(layout.features.every(part=>!caveFeatureBlocks(part,...position)));
+     const solid=feature.origin.map(value=>(value+1)*CAVE_TILE);
+     assert.equal(caveFeatureBlocks(feature,...solid),true);
+     assert.equal(caveStairAt(floor,...solid),undefined);
+   }
    for(const key of ['exit','up','down','boss']){
-     if(layout[key])assert.ok(visited.has(layout[key].join(',')),key+' on B'+(floor+1));
+     const cell=layout[key]?.approach??layout[key];
+     if(cell)assert.ok(visited.has(cell.join(',')),key+' on B'+(floor+1));
    }
  }
 });

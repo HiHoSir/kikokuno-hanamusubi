@@ -275,8 +275,7 @@ try{
   },destination);
  }
 
- // Main-game gate and boss. Use stored checkpoints to place the hero
- // before each interaction, then verify the real input and scene routes.
+ // Use field checkpoints, then walk all three cave maps with real input.
  const snapshotAt=async(scene,position,path)=>{
   await page.evaluate(({scene,position,path})=>{
    sessionStorage.setItem('kikokuno-hanamusubi-restore-position',JSON.stringify({scene,position}));
@@ -291,7 +290,6 @@ try{
   return page.frames().find(frame=>frame.url().endsWith(path));
  };
  const fieldCheckpoint=(x,y,row,tag)=>snapshotAt('field',{x:x*32+16,y:y*32+16,row},'/src/field/?qa-cave='+tag);
- const caveCheckpoint=(floor,x,y)=>snapshotAt('cave',{x:x*48+24,y:y*48+24,face:1,floor},'/src/game/cave/?qa-floor='+floor);
  const nearRock=await fieldCheckpoint(48,44,1,'locked');
  await nearRock.locator('#action-a').click();
  assert.match(await nearRock.locator('#field-notice').textContent(),/砕く道具/);
@@ -304,22 +302,52 @@ try{
   const f=document.querySelector('#game-scene')?.contentWindow;
   return f?.KIKOKU_SAVE_SNAPSHOT?.()?.scene==='cave'&&f.document.querySelector('#load').hidden;
  });
- const first=await caveCheckpoint(0,12,11);
+ const cave=page.frameLocator('#game-scene');
+ const caveButton=cave.locator('#action-a');
+ const caveFloor=number=>cave.locator('#scene[data-floor="'+number+'"]').waitFor();
+ const walkCave=async waypoints=>{
+  const frame=page.frames().find(frame=>frame.url().includes('/src/game/cave/'));
+  for(const [col,row] of waypoints){
+   const target=[col*48+24,row*48+24];
+   const reached=await frame.evaluate(target=>new Promise(resolve=>{
+    const {position}=window.KIKOKU_SAVE_SNAPSHOT();
+    const values=[position.x,position.y];
+    const axis=Math.abs(values[0]-target[0])>12?0:1;
+    if(Math.abs(values[axis]-target[axis])<=5){resolve(true);return;}
+    const sign=Math.sign(target[axis]-values[axis]);
+    const key=axis===0?(sign>0?'ArrowRight':'ArrowLeft'):(sign>0?'ArrowDown':'ArrowUp');
+    const deadline=performance.now()+5500;
+    window.dispatchEvent(new KeyboardEvent('keydown',{key}));
+    function check(now){
+     const {position}=window.KIKOKU_SAVE_SNAPSHOT();
+     const current=axis===0?position.x:position.y;
+     const arrived=sign*(target[axis]-current)<=5;
+     if(arrived||now>deadline){
+      window.dispatchEvent(new KeyboardEvent('keyup',{key}));
+      resolve(arrived?true:position);
+     }else requestAnimationFrame(check);
+    }
+    requestAnimationFrame(check);
+   }),target);
+   assert.equal(reached,true,'cave route blocked before '+[col,row]+': '+JSON.stringify(reached));
+  }
+ };
+ await walkCave([[9,12],[12,12],[12,11]]);
  await page.screenshot({path:'artifacts/cave-first-floor.png'});
- await first.locator('#action-a').click();
- await first.locator('#scene[data-floor="2"]').waitFor();
+ await caveButton.click();
+ await caveFloor(2);
+ await walkCave([[6,18],[6,14],[20,14],[20,8],[24,8]]);
  await page.screenshot({path:'artifacts/cave-second-floor.png'});
- const second=await caveCheckpoint(1,16,6);
- await second.locator('#action-a').click();
- await second.locator('#scene[data-floor="3"]').waitFor();
- await page.screenshot({path:'artifacts/cave-deepest-floor.png'});
+ await caveButton.click();
+ await caveFloor(3);
 
  await page.evaluate(async()=>{
   const {readPlayer,savePlayer}=await import('./battle/rules.mjs');
   savePlayer({...readPlayer(),lv:5,hp:58});
  });
- const deepest=await caveCheckpoint(2,9,6);
- await deepest.locator('#action-a').click();
+ await walkCave([[17,18],[17,16],[19,16],[19,14],[15,14],[15,8],[11,8],[11,7]]);
+ await page.screenshot({path:'artifacts/cave-deepest-floor.png'});
+ await caveButton.click();
  const battle=page.frameLocator('#game-scene');
  await battle.locator('#encounter[hidden]').waitFor({state:'attached'});
  assert.equal(await battle.locator('#enemy-label').textContent(),'岩守の鬼');
@@ -335,6 +363,18 @@ try{
  await page.waitForFunction(()=>document.querySelector('#game-scene')?.contentWindow
    ?.KIKOKU_SAVE_SNAPSHOT?.()?.position.floor===2);
  assert.equal((await player()).caveQuest.rockBreaker,true);
+
+ await caveButton.click();
+ await caveFloor(2);
+ await walkCave([[20,8],[20,14],[6,14],[6,18],[7,18]]);
+ await caveButton.click();
+ await caveFloor(1);
+ await walkCave([[12,12],[9,12],[9,13]]);
+ await page.frames().find(frame=>frame.url().includes('/src/game/cave/')).evaluate(()=>{
+  window.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowDown'}));
+ });
+ await page.waitForFunction(()=>document.querySelector('#game-scene')?.contentWindow
+   ?.KIKOKU_SAVE_SNAPSHOT?.()?.scene==='field');
 
  const unlock=await fieldCheckpoint(48,44,1,'unlock');
  await unlock.locator('#action-a').click();

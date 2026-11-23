@@ -1,11 +1,11 @@
 // First-game one-hero B-formula v2 rules. Pure game logic: no DOM, timers, or assets.
 // Approved base/growth/T0–T6 values must match data/characters/hizuki-status.json.
 import {VILLAGE_FINDS} from '../../../data/maps/hozuki-village/finds.mjs';
-import {CAVE_FINDS} from '../../../data/maps/cave/finds.mjs';
+import {CAVE_FINDS} from '../../../data/maps/cave/finds.mjs?v=guardian-1';
 import {normalizeCoveShells} from '../../../data/maps/sea-cove/shells.mjs';
 import {SHIOMACHI_ARMORY_STOCK} from '../../../data/maps/shiomachi-village/armory.mjs?v=shiomachi-gear-1';
 
-import {CAVE_BOSS_ID} from '../../../data/maps/cave/floors.mjs';
+import {CAVE_BOSS_ID} from '../../../data/maps/cave/floors.mjs?v=guardian-1';
 
 export const PLAYER_KEY='kikokuno-hanamusubi-battle-player';
 const FINDS={...VILLAGE_FINDS,...CAVE_FINDS};
@@ -92,7 +92,7 @@ export const ENEMIES=Object.freeze({
   // Initial field only. These are provisional first-area numbers, not the planned late regions.
   'field-oni':Object.freeze({id:'field-oni',name:'野の小鬼',asset:'assets/enemies/field-oni.png',hp:12,attack:7,defense:2,xp:8,gold:8}),
   // Scripted chamber guardian. This encounter never enters the field pool.
-  [CAVE_BOSS_ID]:Object.freeze({id:CAVE_BOSS_ID,name:'岩守の鬼',asset:'assets/enemies/field-oni.png',hp:24,attack:7,defense:2,xp:16,gold:16}),
+  [CAVE_BOSS_ID]:Object.freeze({id:CAVE_BOSS_ID,name:'岩守の鬼',asset:'assets/enemies/cave-guardian.png',hp:68,attack:18,defense:4,xp:16,gold:16}),
   'tanuki':Object.freeze({id:'tanuki',name:'化け狸',asset:'assets/enemies/tanuki.png',hp:6,attack:6,defense:2,xp:4,gold:4}),
   'onibi':Object.freeze({id:'onibi',name:'鬼火',asset:'assets/enemies/onibi.png',hp:16,attack:8,defense:2,xp:9,gold:8})
 });
@@ -173,6 +173,10 @@ export function collectFind(player,id){
   const site=FINDS[id];
   if(hero.foundItems.includes(id)){
     return {accepted:false,player:hero,message:site.building?'もう何も入っていない。':'もう何も見つからない。'};
+  }
+  if(site.message){
+    hero.foundItems.push(id);
+    return {accepted:true,player:hero,message:site.message};
   }
   let name;
   if(site.gold){
@@ -297,10 +301,15 @@ export function createBattle(enemyId='field-oni',player=DEFAULT_PLAYER,random=Ma
   }
   function enemyActions(guarding){
     for(const enemy of alive()){
-      const raw=physicalDamage(enemy.attack,hero.defense,random);
+      const hammer=enemy.id===CAVE_BOSS_ID&&state.turn%3===2;
+      if(enemy.id===CAVE_BOSS_ID&&state.turn%3===1){
+        event('岩守の鬼は大槌を高く掲げた。次の一撃に備えろ！','warning');
+        continue;
+      }
+      const raw=physicalDamage(enemy.attack+(hammer?12:0),hero.defense,random);
       const damage=guarding?Math.max(1,Math.floor(raw/2)):raw;
       hero.hp=Math.max(0,hero.hp-damage);
-      event(enemy.name+'の攻撃！ 緋月は'+damage+'の傷を負った。','hit');
+      event(enemy.name+(hammer?'の岩砕き！ ':'の攻撃！ ')+'緋月は'+damage+'の傷を負った。','hit');
       if(hero.hp===0){
         // Money is deducted once, at defeat; it is not restored on town return.
         const lost=Math.floor(hero.gold*.25);hero.gold-=lost;

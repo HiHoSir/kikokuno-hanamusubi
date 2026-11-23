@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {CAVE_FLOORS,CAVE_TILE,CAVE_BOSS_ID,caveCellOpen,caveCellCenter,caveFeatureBlocks,caveStairAt,caveEncounterTerrain} from '../data/maps/cave/floors.mjs';
+import {CAVE_FLOORS,CAVE_TILE,CAVE_BOSS_ID,caveCellOpen,caveCellCenter,caveFeatureBlocks,caveStairAt,caveEncounterTerrain,caveLayout} from '../data/maps/cave/floors.mjs';
 import {DEFAULT_PLAYER,createBattle,collectFind,normalizePlayer,readPlayer,savePlayer} from '../src/game/battle/rules.mjs';
 import {saveManualGame,restoreSavedGame} from '../src/game/save/save-game.mjs';
 
@@ -40,15 +40,38 @@ test('the lower passage has encounters, and caches use the saved one-time pickup
  }
 });
 
+test('the cave shortcut opens only after the second seal has been recorded',()=>{
+ assert.equal(caveLayout(1,[]).grid[7][14],'#');
+ assert.equal(caveLayout(1,['cave-white-seal']).grid[7][14],'#');
+ const opened=caveLayout(1,['cave-white-seal','cave-black-seal']);
+ assert.equal(opened.grid[7].slice(8,21),'.............');
+ assert.equal(opened.features.at(-1).id,'cave-sealed-passage');
+});
+
+test('the guardian telegraphs the heavy strike and guarding reduces it',()=>{
+ const hero={...DEFAULT_PLAYER,lv:3,hp:42};
+ const attack=createBattle(CAVE_BOSS_ID,hero,()=>0.5);
+ const guard=createBattle(CAVE_BOSS_ID,hero,()=>0.5);
+ const opening=attack.act('attack');
+ guard.act('attack');
+ assert.match(opening.events.at(-1).text,/大槌を高く掲げた/);
+ assert.equal(attack.state.hero.hp,42);
+ const result=attack.act('attack');
+ guard.act('guard');
+ assert.match(result.events.at(-1).text,/岩砕き/);
+ assert.ok(guard.state.hero.hp>attack.state.hero.hp);
+});
+
 test('the guardian grants the tool only on victory; both gate flags survive a cave save',()=>{
  const escaped=createBattle(CAVE_BOSS_ID,DEFAULT_PLAYER,()=>0);
  assert.equal(escaped.act('flee').outcome,'escape');
  assert.equal(escaped.state.hero.caveQuest.rockBreaker,false);
  const lost=createBattle(CAVE_BOSS_ID,{...DEFAULT_PLAYER,hp:1},()=>0.5);
+ lost.act('guard');
  assert.equal(lost.act('guard').outcome,'defeat');
  assert.equal(lost.state.hero.caveQuest.rockBreaker,false);
  const fight=createBattle(CAVE_BOSS_ID,{...DEFAULT_PLAYER,lv:5,hp:58},()=>0.5);
- for(let turn=0;turn<10&&!fight.state.outcome;turn++)fight.act('attack');
+ for(const command of ['bloom','guard','bloom','bloom'])fight.act(command);
  assert.equal(fight.state.outcome,'victory');
  const hero=fight.state.hero;
  assert.deepEqual(hero.caveQuest,{rockBreaker:true,bridgeCleared:false});

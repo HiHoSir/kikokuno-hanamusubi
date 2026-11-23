@@ -383,7 +383,10 @@ try{
   const {readPlayer,savePlayer}=await import('./battle/rules.mjs');
   savePlayer({...readPlayer(),lv:5,hp:58});
  });
- await walkCave([[9,4],[8,4],[8,3]]);
+ await walkCave([[9,5],[10,5],[10,4]]);
+ await caveButton.click();
+ assert.match(await cave.locator('#notice').textContent(),/白を沈めよ/);
+ await walkCave([[8,4],[8,3]]);
  await takeCaveCache('cave-entry-shelf','薬草');
  await walkCave([[8,6],[18,6],[18,7],[21,7]]);
  await page.screenshot({path:'artifacts/cave-first-floor.png'});
@@ -405,16 +408,38 @@ try{
  await walkCave([[9,11],[11,11],[11,7]]);
  await page.screenshot({path:'artifacts/cave-deepest-floor.png'});
  await caveButton.click();
+ await cave.locator('#dialogue').waitFor({state:'visible'});
+ assert.equal(await cave.locator('#speaker').textContent(),'岩守の鬼');
+ const revealed=await cave.locator('#dialogue').evaluate(panel=>{
+  const next=panel.querySelector('#next');
+  const line=panel.querySelector('#line');
+  const lines=[];
+  for(let i=0;i<3;i++){
+   if(!next.classList.contains('hasNextLine')&&!next.classList.contains('hasLastLine'))next.click();
+   lines.push(line.textContent);
+   if(i<2)next.click();
+  }
+  return lines;
+ });
+ assert.match(revealed.join(' '),/槌.*潮待村.*受け止める覚悟/);
+ await cave.locator('#next').click();
  const battle=page.frameLocator('#game-scene');
  await battle.locator('#encounter[hidden]').waitFor({state:'attached'});
  assert.equal(await battle.locator('#enemy-label').textContent(),'岩守の鬼');
- for(let turn=0;turn<8&&!await battle.locator('[data-command="return"]').count();turn++){
-  await battle.locator('[data-command="attack"]').click();
+ const bossAct=async command=>{
+  if(command==='bloom')await battle.locator('[data-command="magic"]').click();
+  await battle.locator('[data-command="'+command+'"]').click();
   await page.waitForFunction(()=>{
    const doc=document.querySelector('#game-scene')?.contentDocument;
    return Boolean(doc?.querySelector('[data-command="attack"]:not(:disabled),[data-command="return"]'));
   });
- }
+ };
+ await bossAct('bloom');
+ assert.match(await battle.locator('#battle-message').textContent(),/大槌を高く掲げた/);
+ await bossAct('guard');
+ assert.match(await battle.locator('#battle-message').textContent(),/岩砕き/);
+ await bossAct('bloom');
+ await bossAct('bloom');
  assert.match(await battle.locator('#battle-message').textContent(),/岩砕きの槌/);
  await battle.locator('[data-command="return"]').click();
  await page.waitForFunction(()=>document.querySelector('#game-scene')?.contentWindow
@@ -426,7 +451,18 @@ try{
  // Enter the cache's facing direction after approaching from the east.
  await walkCave([[9,4],[9,3]]);
  await takeCaveCache('cave-upper-passage','団子');
- await walkCave([[6,3],[6,18],[7,18]]);
+ await walkCave([[11,3],[11,3.3],[11,3]]);
+ await caveButton.click();
+ assert.match(await cave.locator('#notice').textContent(),/白い石が沈んだ/);
+ await walkCave([[6,3],[6,13],[12,13],[12,14]]);
+ await caveButton.click();
+ assert.match(await cave.locator('#notice').textContent(),/抜け道が開いた/);
+ await walkCave([[8,14],[8,7],[15,7]]);
+ // Turn north next to the newly revealed alcove without colliding with the cache.
+ await walkCave([[15,6.55]]);
+ await takeCaveCache('cave-sealed-passage','団子');
+ await walkCave([[15,7],[8,7],[6,7],[6,18],[7,18]]);
+
  await climbWithPad(1);
  await walkCave([[18,7],[18,6],[9,6],[9,13]]);
  assert.ok(caveEncounters>=1);

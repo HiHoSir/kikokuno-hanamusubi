@@ -1,4 +1,4 @@
-import {CAVE_TILE as T} from '../../../data/maps/cave/floors.mjs';
+import {CAVE_TILE as T} from '../../../data/maps/cave/floors.mjs?v=guardian-1';
 
 // Independent stair geometry from the November 11 cave prototype.
 export function drawStairwell(c,x,y,layer){

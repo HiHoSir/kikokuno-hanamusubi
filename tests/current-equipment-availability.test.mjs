@@ -8,8 +8,9 @@ import {
 } from '../src/game/equipment/current-availability.mjs';
 import {
   DEFAULT_PLAYER,normalizePlayer,levelStats,ARMORY_STOCK,EQUIPMENT_ITEMS,
-  EQUIPMENT_SLOTS,STARTER_EQUIPMENT,purchaseArmory,changeEquipment
+  EQUIPMENT_SLOTS,STARTER_EQUIPMENT,purchaseArmory,changeEquipment,createBattle,readPlayer,savePlayer
 } from '../src/game/battle/rules.mjs';
+import {saveManualGame,restoreSavedGame} from '../src/game/save/save-game.mjs';
 import {SHIOMACHI_ARMORY_STOCK} from '../data/maps/shiomachi-village/armory.mjs';
 
 test('equipment catalog is from the one correct first-game repository and defines actual locations',()=>{
@@ -24,10 +25,11 @@ test('equipment catalog is from the one correct first-game repository and define
  assert.equal(existingEquipmentAt('unknown-town'),null);
 });
 
-test('starting gear and Hozuki armory are the ONLY playable equippable items',()=>{
+test('playable equipment includes starter gear and both village shops',()=>{
  const playable=EXISTING_EQUIPMENT_CATALOG.filter(x=>x.battleEquippable);
  assert.deepEqual(playable.map(x=>x.id),[
-   'starter-weapon','starter-body','wakizashi','padded-body','headband','tabi'
+   'starter-weapon','starter-body','wakizashi','padded-body','headband','tabi',
+   ...SHIOMACHI_ARMORY_STOCK.map(item=>item.id)
  ]);
  const initial=existingEquipmentAt('start');
  assert.deepEqual(initial.items.map(x=>x.id),Object.values(STARTER_EQUIPMENT).filter(Boolean));
@@ -61,22 +63,21 @@ test('the shrine and sea cove have NO gameplay equipment pickup or armory',()=>{
  assert.ok(!readFileSync('data/maps/hozuki-village/finds.mjs','utf8').includes('equipment'));
 });
 
-test('Shiomachi equipment is restricted to the standalone preview, never equip/save',()=>{
+test('Shiomachi equipment is sold in the story at twice the same-slot Hozuki prices',()=>{
  const area=existingEquipmentAt('shiomachi-village');
- assert.equal(area.gameplayConnected,true,'the village map is now connected; only its gear remains trial-only');
- assert.equal(area.availability,'preview-only');
+ assert.equal(area.gameplayConnected,true);
+ assert.equal(area.availability,'in-game');
  assert.deepEqual(area.items.map(x=>x.id),SHIOMACHI_ARMORY_STOCK.map(x=>x.id));
  assert.deepEqual(area.items.map(x=>x.name),[
    '潮切りの太刀','潮革の胴当て','波除けの鉢金','磯歩きの脚絆']);
  for(const row of area.items){
-   assert.equal(row.battleEquippable,false);
-   assert.equal(row.savedInventory,false);
-   assert.equal(EQUIPMENT_ITEMS[row.id],undefined);
-   assert.equal(row.action,'trial-purchase');
+   assert.equal(row.battleEquippable,true);
+   assert.equal(row.savedInventory,true);
+   assert.equal(row.action,'purchase');
+   assert.equal(row.price,2*ARMORY_STOCK.find(x=>x.slot===row.slot).price);
  }
- // Preserve the actual current prototype values without endorsing them.
  assert.deepEqual(area.items.map(x=>[x.price,x.attack,x.defense]),
-   [[160,12,0],[120,0,10],[80,0,5],[60,0,4]]);
+   [[80,12,0],[64,0,10],[40,0,5],[24,0,4]]);
  assert.equal(EXISTING_EQUIPMENT_CATALOG.length,10);
  assert.equal(new Set(EXISTING_EQUIPMENT_CATALOG.map(x=>x.id)).size,10);
 });
@@ -121,4 +122,35 @@ test('existing purchase + equipment flow uses real items without invented tier u
  assert.equal(restored.defense,hero.defense);
  assert.equal(restored.gold,96);
  assert.equal(purchaseArmory(hero,'shiomachi-tide-blade').accepted,false);
+});
+
+
+test('purchased coastal gear survives manual saves and updates battle stats per slot',()=>{
+ const values=new Map(),restoreValues=new Map();
+ const adapter=map=>({getItem:key=>map.get(key)??null,setItem:(key,value)=>map.set(key,value),removeItem:key=>map.delete(key)});
+ const storage=adapter(values),session=adapter(restoreValues);
+ let hero=normalizePlayer({...DEFAULT_PLAYER,gold:208});
+ const originalTier=hero.equipmentTier;
+ for(const item of SHIOMACHI_ARMORY_STOCK){
+   const bought=purchaseArmory(hero,item.id,SHIOMACHI_ARMORY_STOCK);
+   assert.equal(bought.accepted,true);
+   const equipped=changeEquipment(bought.player,item.slot,item.id);
+   assert.equal(equipped.accepted,true);
+   hero=equipped.player;
+ }
+ assert.equal(hero.gold,0);
+ savePlayer(hero,storage);
+ assert.equal(saveManualGame({scene:'shiomachi',position:{x:536,y:1660,face:0}},storage).accepted,true);
+ savePlayer(DEFAULT_PLAYER,storage);
+ assert.equal(restoreSavedGame('manual',storage,session).accepted,true);
+ const restored=readPlayer(storage);
+ assert.deepEqual(restored.equipment,hero.equipment);
+ assert.deepEqual(restored.equipmentInventory,hero.equipmentInventory);
+ assert.equal(restored.equipmentTier,originalTier);
+ const battle=createBattle('field-oni',restored,()=>0.5);
+ assert.equal(battle.state.hero.attack,DEFAULT_PLAYER.attack+12);
+ assert.equal(battle.state.hero.defense,DEFAULT_PLAYER.defense+19);
+
+ const legacy=normalizePlayer({...DEFAULT_PLAYER,equipmentTier:'T1'});
+ for(const item of SHIOMACHI_ARMORY_STOCK)assert.equal(legacy.equipmentInventory[item.id],0);
 });

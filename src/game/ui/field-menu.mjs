@@ -1,13 +1,13 @@
 // Single parent-owned landscape command menu; neither scene iframe nor BGM is replaced.
 // The on-screen D-pad/A/B is menu-local. Scene controls cannot receive input behind it.
 import {
-  ARMORY_STOCK, EQUIPMENT_ITEMS, EQUIPMENT_SLOTS, carriedConsumables,
+  EQUIPMENT_ITEMS, EQUIPMENT_SLOTS, carriedConsumables,
   changeEquipment, equipmentPreview, nextLevelXp, readPlayer, savePlayer,
   useExplorationResource
-} from '../battle/rules.mjs?v=equipment-4slots-2-cove-shells-1';
+} from '../battle/rules.mjs?v=equipment-4slots-2-cove-shells-1-shiomachi-gear-1';
 import {SHELL_KINDS} from '../items/shells.mjs';
 import {readStoryStage} from '../story/chapter-one.mjs';
-import {readManualGame,readAutoGame,manualSaveLabel} from '../save/save-game.mjs?v=save-slots-1';
+import {readManualGame,readAutoGame,manualSaveLabel} from '../save/save-game.mjs?v=save-slots-1-shiomachi-gear-1';
 
 const frame=document.querySelector('#game-scene');
 const opener=document.querySelector('#field-menu-toggle');
@@ -202,8 +202,8 @@ function renderDetails(hero,id){
         label:shell.name+' ×'+count,caption:'茶店で1個'+shell.value+'両で売れる'
       });
     }
-    for(const item of ARMORY_STOCK){
-      if(!hero.equipmentInventory[item.id]||hero.equipment[item.slot]===item.id)continue;
+    for(const item of Object.values(EQUIPMENT_ITEMS)){
+      if(item.price===null||!hero.equipmentInventory[item.id]||hero.equipment[item.slot]===item.id)continue;
       rows.push({
         label:item.name,open:()=>openCommand(entries.findIndex(([key])=>key==='equipment'),item)
       });

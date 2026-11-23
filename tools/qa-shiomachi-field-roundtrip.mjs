@@ -93,7 +93,6 @@ try{
   reviewMenu:document.querySelector('.review-tools')?.hidden??true,
   signs:window.__SHIOMACHI_QA.renderer.visibleSigns,
   objects:window.__SHIOMACHI_QA.renderer.buildings,
-  shopText:document.querySelector('#shop-panel')?.getAttribute('aria-label'),
   scrollWidth:document.documentElement.scrollWidth,screenWidth:innerWidth,
   snapshot:window.KIKOKU_SAVE_SNAPSHOT?.()
  }));
@@ -123,8 +122,11 @@ try{
       Number(scene.dataset.x)*32+16,Number(scene.dataset.y)*32+16)};
  });
  assert.deepEqual(after,{x:52,y:51,contact:null});
- // Check demo goods AFTER completing the main roundtrip, so the shop's
- // deliberately non-warping doorway does not move our south-exit test spawn.
+ // Verify the armory after the roundtrip so the shop test cannot move our exit spawn.
+ await page.evaluate(async()=>{
+   const {DEFAULT_PLAYER,savePlayer}=await import('./battle/rules.mjs');
+   savePlayer({...DEFAULT_PLAYER,gold:208});
+ });
  const returnedField=page.frames().find(f=>f.url().includes('/src/field/'));
  await returnedField.evaluate(()=>window.dispatchEvent(new KeyboardEvent('keydown',
   {key:'ArrowRight',bubbles:true})));
@@ -134,27 +136,56 @@ try{
      f.location.pathname==='/src/game/shiomachi/');
  });
  const villageAgain=page.frames().find(f=>f.url().includes('/src/game/shiomachi/'));
- const demo=await villageAgain.evaluate(()=>{
-  const qa=window.__SHIOMACHI_QA;
-  if(!qa.enterRoom('armory')||!qa.openService())return {entered:false};
-  const first=document.querySelector('[data-shop-item="shiomachi-tide-blade"]');
-  first?.click();
-  const item=qa.trial().shiomachiGear['shiomachi-tide-blade'];
-  const note=document.querySelector('#shop-title')?.textContent;
-  qa.exitRoom();
-  return {entered:true,item,note};
- });
- assert.equal(demo.entered,true);
- assert.equal(demo.item,1);
- assert.match(demo.note,/試用・セーブには反映しません/);
- const persisted=await page.evaluate(()=>{
-  const r=JSON.parse(localStorage.getItem('kikokuno-hanamusubi-manual-save'));
-  const hero=JSON.parse(localStorage.getItem('kikokuno-hanamusubi-battle-player')||'null');
-  return {manualScene:r.location.scene,
-    gameHasDemoGear:Boolean(hero?.equipmentInventory?.['shiomachi-tide-blade']),
-    gameGold:hero?.gold??0};
- });
- assert.deepEqual(persisted,{manualScene:'shiomachi',gameHasDemoGear:false,gameGold:0});
+ assert.equal(await villageAgain.evaluate(()=>window.__SHIOMACHI_QA.enterRoom('armory')),true);
+ const clerk=await villageAgain.evaluate(()=>window.__SHIOMACHI_QA.indoorResident());
+ const walkUp=type=>villageAgain.evaluate(type=>
+   window.dispatchEvent(new KeyboardEvent(type,{key:'ArrowUp',bubbles:true})),type);
+ await walkUp('keydown');
+ await villageAgain.waitForFunction(y=>window.__SHIOMACHI_QA.indoorPosition()?.y<=y,clerk.talkPoint[1]+42);
+ await walkUp('keyup');
+ await villageAgain.locator('#action-a').click();
+ await villageAgain.locator('#next.hasLastLine').click();
+ await villageAgain.locator('#shop-panel').waitFor({state:'visible'});
+ assert.match(await villageAgain.locator('#shop-wallet').textContent(),/^所持金 208両$/);
+ const prices=await villageAgain.locator('#shop-options button').allTextContents();
+ assert.deepEqual(prices.slice(0,4).map(text=>Number(text.match(/(\d+)両/)[1])),[80,64,40,24]);
+ const blade=villageAgain.locator('[data-shop-item="shiomachi-tide-blade"]');
+ await blade.click();
+ assert.match(await villageAgain.locator('#shop-message').textContent(),/装備/);
+ await blade.click();
+ assert.match(await villageAgain.locator('#shop-message').textContent(),/もう持っています/);
+ assert.match(await villageAgain.locator('#shop-wallet').textContent(),/^所持金 128両$/);
+ await villageAgain.locator('[data-shop-item="shiomachi-tide-armor"]').click();
+ await villageAgain.locator('#action-b').click();
+ const player=()=>page.evaluate(()=>JSON.parse(localStorage.getItem('kikokuno-hanamusubi-battle-player')));
+ const purchased=await player();
+ assert.equal(purchased.gold,64);
+ assert.equal(purchased.equipmentInventory['shiomachi-tide-blade'],1);
+ assert.equal(purchased.equipmentInventory['shiomachi-tide-armor'],1);
+ assert.equal(purchased.equipment.weapon,'starter-weapon');
+ assert.equal(purchased.equipment.body,'starter-body');
+ assert.equal(await villageAgain.evaluate(()=>window.__SHIOMACHI_QA.trial().gold),250);
+
+ await page.locator('#field-menu-toggle').click();
+ await page.locator('[data-menu-command="items"]').click();
+ await page.locator('#field-menu-detail button').filter({hasText:'潮切りの太刀'}).click();
+ assert.match(await page.locator('.equipment-stat-preview').innerText(),/攻撃 9 → 21/);
+ await page.locator('#field-menu-action-a').click();
+ await page.locator('[data-equipment-slot="body"]').click();
+ assert.match(await page.locator('.equipment-stat-preview').innerText(),/守備 6 → 16/);
+ await page.locator('#field-menu-action-a').click();
+ const savedGear=await page.evaluate(()=>window.KIKOKU_GAME.manualSave());
+ assert.equal(savedGear.accepted,true);
+ assert.equal(savedGear.save.location.scene,'shiomachi');
+ const equipped=savedGear.save.player;
+ assert.equal(equipped.equipmentTier,'T0');
+ assert.equal(equipped.attack,21);
+ assert.equal(equipped.defense,16);
+ assert.equal(equipped.equipment.weapon,'shiomachi-tide-blade');
+ assert.equal(equipped.equipment.body,'shiomachi-tide-armor');
+ assert.deepEqual((await player()).equipment,equipped.equipment);
+ await page.locator('#field-menu-toggle').click();
+ await villageAgain.evaluate(()=>window.__SHIOMACHI_QA.exitRoom());
 
  // Place the hero on ordinary ground near each fence, then hold an actual
  // movement input far enough to cross the map edge if the fence were absent.
@@ -203,7 +234,7 @@ try{
  }),null,'Hozuki field arrival does not immediately re-enter the village');
 
  assert.deepEqual(failures,[]);
- console.log('SHIOMACHI_FIELD_ROUNDTRIP '+JSON.stringify({before,found,demo,persisted,
+ console.log('SHIOMACHI_FIELD_ROUNDTRIP '+JSON.stringify({before,found,purchasedGold:purchased.gold,equipped:equipped.equipment,
    returned:after,errors:failures}));
 }finally{
  if(page)await page.close();

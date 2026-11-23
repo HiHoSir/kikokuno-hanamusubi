@@ -16,7 +16,7 @@ import {rooms,prepareInterior} from '../src/game/interiors/rooms.mjs';
 import {SHIOMACHI_INN_PRICE,previewInnStay} from '../src/game/shiomachi/interior-preview.mjs';
 import {DEFAULT_PLAYER,normalizePlayer,ARMORY_STOCK,FOOD_ITEMS,purchaseArmory,purchaseFood} from '../src/game/battle/rules.mjs';
 import {SHIOMACHI_INTERIORS,shiomachiTouchedInterior} from '../data/maps/shiomachi-village/scene.mjs';
-import {SHIOMACHI_ARMORY_STOCK,purchaseShiomachiArmory,shiomachiStockComparison} from '../data/maps/shiomachi-village/armory.mjs';
+import {SHIOMACHI_ARMORY_STOCK} from '../data/maps/shiomachi-village/armory.mjs';
 
 const read=path=>readFileSync(path,'utf8');
 const dimensions=path=>{
@@ -302,10 +302,10 @@ test('shop/inn preview uses actual purchase rules on volatile player data',()=>{
  assert.match(source,/prepareInterior\(room\)/);
  assert.match(source,/paintRoom\(fctx,room\)/);
  assert.match(source,/drawFurnitureLife\(ctx,obj/);
- assert.match(source,/purchaseShiomachiArmory\(trial,ownedShiomachi,picked\.id\)/);
- assert.doesNotMatch(source,/purchaseArmory\(trial/);
+ assert.match(source,/purchaseArmory\(live\?readPlayer\(\):trial,picked\.id,SHIOMACHI_ARMORY_STOCK\)/);
+ assert.match(source,/if\(live\)savePlayer\(result\.player\);/);
  assert.match(source,/purchaseFood\(trial/);
- assert.doesNotMatch(source,/localStorage|sessionStorage|savePlayer|saveGame|KIKOKU_ROUTE\.go/);
+ assert.doesNotMatch(source,/localStorage|sessionStorage|saveGame|KIKOKU_ROUTE\.go/);
  assert.match(runtime,/shiomachiTouchedInterior\(x,y,nx,ny,heading\)/);
  assert.match(runtime,/interior\.advance\(dt,dir\)/);
  assert.match(runtime,/returnOutside\(departed\)/);
@@ -325,49 +325,34 @@ test('Shiomachi has its own four stronger pieces; Hozuki original stock stays un
  assert.deepEqual(coastal.map(x=>x.slot),['weapon','body','head','feet']);
  assert.deepEqual(coastal.map(x=>x.name),
    ['潮切りの太刀','潮革の胴当て','波除けの鉢金','磯歩きの脚絆']);
- assert.deepEqual(coastal.map(x=>x.price),[160,120,80,60]);
+ assert.deepEqual(coastal.map(x=>x.price),[80,64,40,24]);
  assert.deepEqual(coastal.map(x=>[x.attack,x.defense]),[[12,0],[0,10],[0,5],[0,4]]);
  assert.equal(new Set(coastal.map(x=>x.id)).size,4);
  assert.equal(new Set([...classic,...coastal].map(x=>x.id)).size,8,'no collisions between shops');
- assert.ok(shiomachiStockComparison().every(x=>x.priceDifference>0&&
-   (x.attackDifference>0||x.defenseDifference>0)));
- assert.equal(coastal.reduce((sum,x)=>sum+x.price,0),420,
-   'one complete new-village set costs 420 provisional ryo, not the old shop sum');
+ for(const item of coastal){
+   assert.equal(item.price,2*classic.find(x=>x.slot===item.slot).price);
+ }
+ assert.equal(coastal.reduce((sum,x)=>sum+x.price,0),208);
 });
 
-test('coastal shop purchases are pure, unique and never mutate real inventory',()=>{
- const hero=normalizePlayer({...DEFAULT_PLAYER,gold:250});
+test('coastal shop transactions check stock, funds, and prior purchases',()=>{
+ const hero=normalizePlayer({...DEFAULT_PLAYER,gold:100});
  const original=structuredClone(hero);
- const fresh={};
- const first=purchaseShiomachiArmory(hero,fresh,SHIOMACHI_ARMORY_STOCK[0].id);
+ const buy=(player,id)=>purchaseArmory(player,id,SHIOMACHI_ARMORY_STOCK);
+ const first=buy(hero,'shiomachi-tide-blade');
  assert.equal(first.accepted,true);
- assert.equal(first.player.gold,90);
- assert.equal(first.owned['shiomachi-tide-blade'],1);
- assert.deepEqual(hero,original,'preview transaction must never mutate the original player');
- assert.deepEqual(fresh,{},'preview ownership is a separate immutable snapshot');
- assert.equal(first.player.equipmentInventory.wakizashi,0,
-   'do not sneak new coastal equipment into Hozuki item catalog');
- const repeated=purchaseShiomachiArmory(first.player,first.owned,'shiomachi-tide-blade');
+ assert.equal(first.player.gold,20);
+ assert.equal(first.player.equipmentInventory['shiomachi-tide-blade'],1);
+ assert.equal(first.player.equipment.weapon,'starter-weapon');
+ assert.deepEqual(hero,original);
+
+ const repeated=buy(first.player,'shiomachi-tide-blade');
  assert.equal(repeated.accepted,false);
- assert.equal(repeated.player.gold,90);
+ assert.equal(repeated.player.gold,20);
  assert.match(repeated.message,/もう持っています/);
- const insufficient=purchaseShiomachiArmory(first.player,first.owned,'shiomachi-tide-armor');
+
+ const insufficient=buy(first.player,'shiomachi-tide-armor');
  assert.equal(insufficient.accepted,false);
- assert.equal(insufficient.player.gold,90);
- const missing=purchaseShiomachiArmory(hero,fresh,'wakizashi');
- assert.equal(missing.accepted,false,'Hozuki item ID is invalid at Shiomachi');
- const all=SHIOMACHI_ARMORY_STOCK.reduce((acc,item)=>{
-   const next=purchaseShiomachiArmory(acc.player,acc.owned,item.id);
-   assert.equal(next.accepted,true,item.id);
-   return next;
- },{player:normalizePlayer({...DEFAULT_PLAYER,gold:500}),owned:{}});
- assert.equal(all.player.gold,80);
- assert.equal(Object.keys(all.owned).length,4);
- const sellout=purchaseShiomachiArmory(normalizePlayer({...DEFAULT_PLAYER,gold:0}),{},'shiomachi-tide-blade');
- assert.equal(sellout.accepted,false);
- const preview=read('src/game/shiomachi/interior-preview.mjs');
- assert.ok(preview.includes("import {SHIOMACHI_ARMORY_STOCK,purchaseShiomachiArmory}"));
- assert.ok(preview.includes("...SHIOMACHI_ARMORY_STOCK.map"));
- assert.ok(preview.includes("ownedShiomachi[entry.id]"));
- assert.doesNotMatch(preview,/localStorage|sessionStorage|savePlayer|saveGame|KIKOKU_ROUTE\.go/);
+ assert.equal(insufficient.player.gold,20);
+ assert.equal(buy(hero,'wakizashi').accepted,false);
 });

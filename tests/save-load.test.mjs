@@ -117,7 +117,7 @@ test('save write failures do not destroy the other slot or invent a checkpoint',
 });
 test('title continue opens distinct selectable manual and automatic checkpoints',()=>{
  const title=readFileSync('src/title/title.js','utf8');
- const source=title.replace(/^import \{[\s\S]*?\} from '\.\.\/game\/save\/save-game\.mjs\?v=save-slots-1';\s*/,'')
+ const source=title.replace(/^import \{[\s\S]*?\} from '\.\.\/game\/save\/save-game\.mjs\?v=save-slots-1[^']*';\s*/,'')
   .replaceAll('import.meta.url',JSON.stringify('https://example.test/kikokuno-hanamusubi/src/title/title.js'));
  assert.ok(!source.includes('import {'),'title VM script retained an import');
  function node(tag='div'){

@@ -1,12 +1,12 @@
-// Shiomachi review interiors reuse the canonical village room geometry/art.
-// Everything here is volatile preview state: no storage, saves or field routes.
+// Shiomachi interiors share the village room art. The armory uses the saved
+// player in the main game, and the standalone review uses its own wallet.
 import {rooms,prepareInterior} from '../interiors/rooms.mjs';
 import {paintRoom,paintPartition,paintContactShadow} from '../interiors/room-art.mjs';
 import {drawFurnitureLife} from '../interiors/life-effects.mjs';
 import {drawCharacter,residentInFront} from '../village/residents.mjs';
 import {makeWalk,hizukiWalkDistance} from '../village/movement.mjs?v=shared-walk-1';
-import {normalizePlayer,DEFAULT_PLAYER,FOOD_ITEMS,purchaseFood} from '../battle/rules.mjs';
-import {SHIOMACHI_ARMORY_STOCK,purchaseShiomachiArmory} from '../../../data/maps/shiomachi-village/armory.mjs?v=approved-balance-contract-20261122';
+import {normalizePlayer,DEFAULT_PLAYER,FOOD_ITEMS,purchaseFood,purchaseArmory,readPlayer,savePlayer} from '../battle/rules.mjs?v=equipment-4slots-2-cove-shells-1-shiomachi-gear-1';
+import {SHIOMACHI_ARMORY_STOCK} from '../../../data/maps/shiomachi-village/armory.mjs?v=shiomachi-gear-1';
 
 export const SHIOMACHI_INN_PRICE=20; // preview-only proposed price, not game economy canon
 export function previewInnStay(hero,price=SHIOMACHI_INN_PRICE){
@@ -17,7 +17,7 @@ export function previewInnStay(hero,price=SHIOMACHI_INN_PRICE){
  return {accepted:true,player:next,message:'ごゆっくり。体力と術力が回復しました。'};
 }
 
-export function createShiomachiInteriorPreview({ctx,images,viewport,clearInput,shopPanel}){
+export function createShiomachiInteriorPreview({ctx,images,viewport,clearInput,shopPanel,previewMode=true}){
  const furniture=images.furniture;
  const {title,wallet,options,message}=shopPanel;
  const reduce=matchMedia('(prefers-reduced-motion: reduce)');
@@ -26,7 +26,7 @@ export function createShiomachiInteriorPreview({ctx,images,viewport,clearInput,s
  // Trial inventory starts with resources so all three services can be tested.
  // This object is NEVER written into a real save.
  let trial=normalizePlayer({...DEFAULT_PLAYER,gold:250,hp:7,mp:3});
- let ownedShiomachi={}; // Preview-only inventory; never persisted or added to the original catalog.
+ const isLiveArmory=()=>!previewMode&&site?.room==='armory';
  function shopEntries(){
    if(!site)return [];
    if(site.room==='inn')return [
@@ -43,16 +43,17 @@ export function createShiomachiInteriorPreview({ctx,images,viewport,clearInput,s
    return [];
  }
  function refreshShop(){
-   wallet.textContent='試用所持金 '+trial.gold+'両　体力 '+trial.hp+'/'+trial.maxhp+
-     '　術力 '+trial.mp+'/'+trial.maxmp;
+   const player=isLiveArmory()?readPlayer():trial;
+   wallet.textContent=isLiveArmory()?'所持金 '+player.gold+'両':
+     '試用所持金 '+player.gold+'両　体力 '+player.hp+'/'+player.maxhp+'　術力 '+player.mp+'/'+player.maxmp;
    options.replaceChildren();
    for(const [i,entry] of shopEntries().entries()){
      const btn=document.createElement('button');
      btn.type='button';
      btn.dataset.shopItem=entry.id;
      btn.textContent=entry.label;
-     if(entry.id in trial.foods)btn.textContent+='　所持'+trial.foods[entry.id];
-     if(trial.equipmentInventory?.[entry.id]||ownedShiomachi[entry.id])btn.textContent+='　購入済';
+     if(entry.id in player.foods)btn.textContent+='　所持'+player.foods[entry.id];
+     if(player.equipmentInventory[entry.id])btn.textContent+='　購入済';
      btn.classList.toggle('selected',selected===i);
      btn.addEventListener('click',()=>{
        selected=i;
@@ -69,10 +70,8 @@ export function createShiomachiInteriorPreview({ctx,images,viewport,clearInput,s
  function openShop(){
    if(!site||!['inn','armory','teahouse'].includes(site.room))return false;
    shopActive=true;selected=0;clearInput();
-   title.textContent=site.name+'（試用・セーブには反映しません）';
-   message.textContent=site.room==='armory'
-     ?'性能・価格は未承認の仮表示です。正式な装備としては使えません。'
-     :'何をいたしましょう？';
+   title.textContent=isLiveArmory()?site.name:site.name+'（試用・セーブには反映しません）';
+   message.textContent='何をいたしましょう？';
    shopPanel.panel.hidden=false;
    refreshShop();
    return true;
@@ -82,14 +81,15 @@ export function createShiomachiInteriorPreview({ctx,images,viewport,clearInput,s
    const picked=shopEntries()[selected];
    if(!picked)return false;
    if(picked.id==='exit'){closeShop();return true;}
-   const result=picked.id==='sleep'?previewInnStay(trial)
-     :site.room==='armory'?purchaseShiomachiArmory(trial,ownedShiomachi,picked.id)
-       :purchaseFood(trial,picked.id);
+   const live=isLiveArmory();
+   const result=site.room==='armory'?purchaseArmory(live?readPlayer():trial,picked.id,SHIOMACHI_ARMORY_STOCK)
+     :picked.id==='sleep'?previewInnStay(trial):purchaseFood(trial,picked.id);
    if(result.accepted){
-     trial=result.player;
-     if(result.owned)ownedShiomachi=result.owned;
+     if(live)savePlayer(result.player);
+     else trial=result.player;
    }
    message.textContent=result.message;
+   if(live&&result.accepted)message.textContent+=' メニューの「装備」から装着できます。';
    refreshShop();
    return result.accepted;
  }
@@ -187,7 +187,7 @@ export function createShiomachiInteriorPreview({ctx,images,viewport,clearInput,s
    get active(){return Boolean(site);},get shopActive(){return shopActive;},
    get site(){return site;},get plan(){return plan;},get actor(){return hero;},
    get roomName(){return lastRoom;},get currentRoom(){return site?.room??null;},
-   get trial(){return {...trial,shiomachiGear:{...ownedShiomachi}};},position,
+   get trial(){return trial;},position,
    updateDialogue(dialogue){
      if(!site)return;
      dialogue.update(residentInFront(hero.x,hero.y,hero.face,[plan.resident]),hero.x,hero.y);

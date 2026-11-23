@@ -44,10 +44,10 @@ test('the entrance maze has independent west and east routes and a one-way retur
   }
   return reachable;
  }
- const west=traverse(new Set(['14,14','15,14','16,14','17,14']));
+ const west=traverse(new Set(['12,17','14,17']));
  assert.ok(west.has(portal));
  assert.ok(west.has('6,3'),'the store alcove is accessible');
- const east=traverse(new Set(['4,14','5,14']));
+ const east=traverse(new Set(['8,17']));
  assert.ok(east.has(portal));
  const ledge=floor.features.find(part=>part.kind==='drop');
  assert.ok(east.has(ledge.origin.join(','))&&east.has(ledge.landing.join(',')));

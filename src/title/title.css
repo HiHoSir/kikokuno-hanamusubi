@@ -217,6 +217,8 @@ body {
 }
 .title-load-slot strong{font-size:15px;font-weight:normal}
 .title-load-slot span{color:#d2d9cf;font-size:12px}
+.title-load-slot[data-guardian-rematch]{min-height:44px;padding-block:5px;color:#ffe1ab}
+.title-load:has([data-guardian-rematch]){align-content:start}
 .title-load-slot:disabled{opacity:.5}
 .title-load-slot:not(:disabled):is(:active,:focus-visible){background:#2b4562;outline:2px solid #e3ca90}
 #title-load-message{margin:0;min-height:18px;color:#ffe1ab;font-size:12px}

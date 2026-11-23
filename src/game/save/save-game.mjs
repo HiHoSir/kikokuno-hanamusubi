@@ -1,6 +1,7 @@
 // Two independent checkpoints: a user-written slot and a rotating autosave.
 // Existing live player/story keys remain unchanged.
 // Save data is not uploaded; Safari may erase site storage when website data is cleared.
+import {CAVE_FLOORS,caveCellCenter} from '../../../data/maps/cave/floors.mjs?v=maze-2';
 import {PLAYER_KEY,DEFAULT_PLAYER,normalizePlayer,readPlayer,FIELD_RETURN_KEY,BATTLE_REQUEST_KEY} from '../battle/rules.mjs?v=shiomachi-gear-1-cave-quest-1-finds-1-guardian-1';
 import {CHAPTER_ONE_KEY,CHAPTER_ONE_STAGES,normalizeStage,readStoryStage,
   USHIOHEI_HAMMER_KEY,hasUshioheiCelebratedHammer
@@ -93,19 +94,33 @@ export function routeForSavedGame(save,root){
   if(location.building)url.searchParams.set('building',location.building);
   return url;
 }
-export function restoreSavedGame(slot,storage=globalThis.localStorage,session=globalThis.sessionStorage){
+export function restoreSavedGame(slot,storage=globalThis.localStorage,session=globalThis.sessionStorage,{guardianRematch=false}={}){
   const save=readSavedGame(slot,storage);
   if(!save)return {accepted:false,message:'記録されたデータがありません。'};
   const keys=[PLAYER_KEY,CHAPTER_ONE_KEY,USHIOHEI_HAMMER_KEY];
+  let location=save.location,editedSlot=null;
+  if(guardianRematch){
+    if(!save.player.caveQuest.rockBreaker)return {accepted:false,message:'岩守の鬼を倒した記録がありません。'};
+    editedSlot=slot==='manual'?MANUAL_SAVE_KEY:AUTO_SAVE_KEY;
+    keys.push(editedSlot);
+    // Removing the tool also restores the bridge obstruction and its related conversation.
+    save.player.caveQuest={rockBreaker:false,bridgeCleared:false};
+    save.ushioheiHammerCelebrated=false;
+    const floor=CAVE_FLOORS.findIndex(area=>area.boss);
+    const [col,row]=CAVE_FLOORS[floor].boss;
+    const [x,y]=caveCellCenter([col,row+1]);
+    location={scene:'cave',position:{x,y,floor,face:1}};
+  }
   let previous;
   try{
     previous=keys.map(key=>storage.getItem(key));
     // A one-time position is consumed only by the selected scene on arrival.
-    session.setItem(RESTORE_POSITION_KEY,JSON.stringify(save.location));
+    session.setItem(RESTORE_POSITION_KEY,JSON.stringify(location));
     storage.setItem(PLAYER_KEY,JSON.stringify(save.player));
     storage.setItem(CHAPTER_ONE_KEY,save.story);
     if(save.ushioheiHammerCelebrated)storage.setItem(USHIOHEI_HAMMER_KEY,'1');
     else storage.removeItem(USHIOHEI_HAMMER_KEY);
+    if(editedSlot)storage.setItem(editedSlot,JSON.stringify(save));
     // A prior encounter/return must never hijack the checkpoint's location.
     for(const key of [FIELD_RETURN_KEY,BATTLE_REQUEST_KEY,FIELD_PLACE_RETURN_KEY])
       try{session.removeItem(key)}catch{}

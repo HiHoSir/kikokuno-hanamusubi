@@ -136,6 +136,22 @@ test('save write failures do not destroy the other slot or invent a checkpoint',
  assert.equal(readAutoGame(storage),null);
  assert.equal(restoreSavedGame('auto',storage,session).accepted,false);
 });
+test('a guardian replay clears the selected slot and starts at the guardian',()=>{
+ const storage=makeStorage(),session=makeStorage();
+ const place={scene:'field',position:{x:600,y:800,face:0}};
+ savePlayer({...DEFAULT_PLAYER,gold:187,caveQuest:{rockBreaker:true,bridgeCleared:true}},storage);
+ saveManualGame(place,storage);
+ saveAutoGame(place,storage);
+ const unchanged=storage.getItem(AUTO_SAVE_KEY);
+ assert.equal(restoreSavedGame('manual',storage,session,{guardianRematch:true}).accepted,true);
+ assert.equal(storage.getItem(AUTO_SAVE_KEY),unchanged);
+ assert.deepEqual(readManualGame(storage).location,place);
+ assert.deepEqual(readManualGame(storage).player.caveQuest,{rockBreaker:false,bridgeCleared:false});
+ assert.equal(readPlayer(storage).gold,187);
+ assert.equal(pendingRestoreLocation(session).position.floor,2);
+ assert.equal(restoreSavedGame('manual',storage,session,{guardianRematch:true}).accepted,false);
+});
+
 test('title continue opens distinct selectable manual and automatic checkpoints',()=>{
  const title=readFileSync('src/title/title.js','utf8');
  const source=title.replace(/^import \{[\s\S]*?\} from '\.\.\/game\/save\/save-game\.mjs\?v=save-slots-1[^']*';\s*/,'')

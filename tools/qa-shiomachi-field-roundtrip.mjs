@@ -383,14 +383,15 @@ try{
   const {readPlayer,savePlayer}=await import('./battle/rules.mjs');
   savePlayer({...readPlayer(),lv:5,hp:58});
  });
- await walkCave([[9,16],[4,16],[4,4],[6,4],[6,3]]);
+ await walkCave([[9,17],[5,17],[5,14],[3,14],[3,10],[7,10],[7,7],[4,7],[4,3],[6,3],[6,4],[6,3]]);
  await takeCaveCache('cave-entry-shelf','薬草');
- await walkCave([[4,3],[4,6],[10,6],[10,7],[10,6]]);
+ await walkCave([[4,3],[4,5],[10,5],[10,6],[10,5]]);
  await caveButton.click();
  assert.match(await cave.locator('#notice').textContent(),/白を沈めよ/);
- await walkCave([[12,6],[12,3],[19,3],[19,7],[21,7]]);
+ await walkCave([[12,5],[12,3],[18,3],[18,7],[21,7]]);
  await page.screenshot({path:'artifacts/cave-first-floor.png'});
  await climbWithPad(2);
+ await page.screenshot({path:'artifacts/cave-ascending-stair.png'});
  // Both walking onto the stair and pressing A at its foot work.
  await caveButton.click();
  await caveFloor(1);
@@ -464,7 +465,7 @@ try{
  await walkCave([[15,7],[8,7],[6,7],[6,18],[7,18]]);
 
  await climbWithPad(1);
- await walkCave([[20,7],[20,10],[19,10],[19,11]]);
+ await walkCave([[22,7],[22,11],[19,11],[19,11.2]]);
  const beforeDrop=await cave.locator('#scene').evaluate(()=>window.KIKOKU_SAVE_SNAPSHOT().position);
  await caveButton.click();
  assert.match(await cave.locator('#notice').textContent(),/岩段を飛び降りた/);
@@ -473,7 +474,7 @@ try{
  assert.ok(afterDrop.y>beforeDrop.y+48*3);
  await caveButton.click();
  assert.deepEqual(await cave.locator('#scene').evaluate(()=>window.KIKOKU_SAVE_SNAPSHOT().position),afterDrop);
- await walkCave([[9,15],[9,19]]);
+ await walkCave([[16,16],[16,17],[9,17],[9,19]]);
  assert.ok(caveEncounters>=1);
  await page.frames().find(frame=>frame.url().includes('/src/game/cave/')).evaluate(()=>{
   window.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowDown'}));
@@ -489,6 +490,16 @@ try{
  await reloaded.evaluate(()=>window.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowUp',bubbles:true})));
  await reloaded.waitForFunction(()=>Number(document.querySelector('#scene').dataset.y)<=43);
  assert.deepEqual((await player()).caveQuest,{rockBreaker:true,bridgeCleared:true});
+ // Reopen the title and use the same replay control exposed to players.
+ await page.goto(new URL('/',page.url()).href,{waitUntil:'domcontentloaded'});
+ await page.locator('#title-continue:enabled').click();
+ page.once('dialog',dialog=>dialog.accept());
+ await page.locator('[data-guardian-rematch="auto"]').click();
+ await caveFloor(3);
+ assert.deepEqual((await player()).caveQuest,{rockBreaker:false,bridgeCleared:false});
+ await caveButton.click();
+ await cave.locator('#dialogue:not([hidden])').waitFor();
+ assert.equal(await cave.locator('#speaker').textContent(),'岩守の鬼');
  assert.deepEqual(failures,[]);
  console.log('SHIOMACHI_FIELD_ROUNDTRIP '+JSON.stringify({before,found,purchasedGold:purchased.gold,equipped:equipped.equipment,
    returned:after,errors:failures}));

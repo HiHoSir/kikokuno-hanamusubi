@@ -1,0 +1,22 @@
+{
+ "schemaVersion": 1,
+ "id": "2026-11-24-cave-maze-and-rematch",
+ "kind": "user-approved",
+ "scopes": ["progression"],
+ "affectedFiles": ["docs/MAP_ENEMY_EQUIPMENT_RECONCILIATION.md"],
+ "readBeforeEditing": [
+  "docs/MAP_ENEMY_EQUIPMENT_RECONCILIATION.md の洞窟の進行、既存分岐、封印を参照",
+  "data/maps/field/terrain.js のフィールドと洞窟の境界を維持し、洞窟階の構造のみを更新"
+ ],
+ "previousDesign": "地下1階は大きく二方向に回り込む構造。上りと下りで違う形の階段を使い、入手済みの槌に対応するボスを再戦できなかった。",
+ "intendedDifference": "複数の分岐と行き止まりを持つ迷路、対になる階段、セーブ枠を選ぶ再戦を実装する。",
+ "impactAnalysis": "選択したセーブ枠で槌の所持、橋の開通、潮平の祝福を初期化し、再戦時はボスの手前から始める。",
+ "preservedBoundaries": "洞窟の入口、階段の接続先、既存の敵の数値、装備、フィールドの地形と橋の位置は維持する。",
+ "verification": "地形と進入判定、拾得、各階の階段、再戦へのタイトル操作、スロットの影響を検査する。",
+ "userEvidence": {
+  "status": "explicit-user-instruction",
+  "date": "2026-11-24",
+  "quote": "いや、これは迷路とは言わない。上りと下り階段の見た目があってないのも気になるので色々検査して作り直して。\n検査も大変なのでセーブデータ上の岩砕きの槌の入手フラグも削除してボスともまた戦えるようにして。",
+  "source": "本会話の迷路、階段および検査用の再戦に関する指示。"
+ }
+}

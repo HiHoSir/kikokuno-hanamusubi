@@ -290,7 +290,7 @@ try{
         await move('ArrowUp','y',220);
         const inspectChest=async()=>{
           await interior.locator('#action-a').tap();
-          const close=interior.locator('#next[aria-label="会話を閉じる"]');
+          const close=interior.locator('#next.hasLastLine');
           await close.waitFor({state:'visible',timeout:4000});
           const line=await interior.locator('#line').innerText();
           await close.tap();

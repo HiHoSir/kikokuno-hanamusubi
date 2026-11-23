@@ -106,7 +106,10 @@ async function start() {
     const result=choice.id==='sell-shells'?sellCoveShells(readPlayer()):
       selectedRoom==='teahouse'?purchaseFood(readPlayer(),choice.id):purchaseArmory(readPlayer(),choice.id);
     if(result.accepted)savePlayer(result.player);
-    shopMessage.textContent=result.message;refreshShop();
+    shopMessage.textContent=result.message;
+    if(result.accepted&&selectedRoom==='armory')
+      shopMessage.textContent+=' メニューの「装備」から装着できます。';
+    refreshShop();
     globalThis.KIKOKU_AUDIO?.se?.(result.accepted?'confirm':'cancel');
   }
   const dialogue = bindDialogue(clearInput,ended=>{if(ended===plan.resident)openShop();});

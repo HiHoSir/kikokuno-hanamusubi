@@ -55,7 +55,7 @@ function makeNode(tag='div'){
  };
  return node;
 }
-function createMenu(player){
+function createMenu(player,command='equipment'){
  const storage=new Map();
  const adapter={getItem:k=>storage.get(k)??null,setItem:(k,v)=>storage.set(k,v)};
  rules.savePlayer(player,adapter);
@@ -88,7 +88,7 @@ function createMenu(player){
   readStoryStage:()=> 'chief'};
  runInNewContext(source,context);
  roots['#field-menu-toggle'].click();
- roots['#field-menu-commands'].children.find(x=>x.dataset.menuCommand==='equipment').click();
+ roots['#field-menu-commands'].children.find(x=>x.dataset.menuCommand===command).click();
  return {roots,document,readPlayer:()=>rules.readPlayer(adapter),accept,cancel,
    direction:dir=>backdrop.children.find(x=>x.dataset.menuDir===dir).click()};
 }
@@ -119,6 +119,22 @@ test('four equipment slots and owned gear share one view; a tap equips without a
  assert.equal(detail.querySelectorAll('.equipment-slot-choice').length,4);
  ui.cancel.click(); // slot side -> command menu
  assert.ok(ui.roots['#field-menu-commands'].children.some(x=>x.dataset.menuCommand==='equipment'));
+});
+
+test('a purchased item opens its own equipment slot and is only equipped after confirmation',()=>{
+ const purchase=rules.purchaseArmory({...rules.DEFAULT_PLAYER,gold:100},'headband');
+ assert.equal(purchase.accepted,true);
+ const ui=createMenu(purchase.player,'items'),detail=ui.roots['#field-menu-detail'];
+ detail.querySelectorAll('button:not([disabled])').find(node=>node.textContent==='鉢巻').click();
+ detail.querySelectorAll('button:not([disabled])').find(node=>node.textContent==='装備を開く').click();
+ const gear=detail.querySelectorAll('.equipment-gear-choice').find(node=>node.dataset.equipmentId==='headband');
+ assert.equal(gear.classList.contains('menu-focus'),true);
+ assert.match(detail.querySelector('.equipment-stat-preview').textContent,/守備 6 → 8/);
+ assert.equal(ui.readPlayer().equipment.head,null);
+ ui.accept.click();
+ assert.equal(ui.readPlayer().equipment.head,'headband');
+ assert.equal(ui.readPlayer().defense,8);
+ assert.equal(ui.readPlayer().gold,80);
 });
 
 test('D-pad navigates slots and gear; empty head and feet remain visible and unequipped',()=>{

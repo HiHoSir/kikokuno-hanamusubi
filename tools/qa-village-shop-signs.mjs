@@ -229,20 +229,23 @@ try{
             const id=room==='teahouse'?'onigiri':'wakizashi';
             d.querySelector('[data-shop-item="'+id+'"]').click();
             const player=JSON.parse(localStorage.getItem('kikokuno-hanamusubi-battle-player'));
+            const shopMessage=d.getElementById('shop-message').textContent;
             d.getElementById('action-b').click();
             return {gold:player.gold,foods:player.foods,equipmentInventory:player.equipmentInventory,
-              weapon:player.equipment.weapon,closed:d.getElementById('shop-panel').hidden};
+              weapon:player.equipment.weapon,shopMessage,closed:d.getElementById('shop-panel').hidden};
           },room);
           const expectedPurchase=room==='teahouse'
             ?purchased.gold===242&&purchased.foods.onigiri===1
-            :purchased.gold===210&&purchased.equipmentInventory.wakizashi===1&&purchased.weapon==='starter-weapon';
+            :purchased.gold===210&&purchased.equipmentInventory.wakizashi===1&&
+              purchased.weapon==='starter-weapon'&&purchased.shopMessage.includes('「装備」');
           if(!purchased.closed||!expectedPurchase){
             issues.push(label+' '+building+' purchase persistence failed: '+JSON.stringify(purchased));
           }
           if(room==='armory'){
             await page.locator('#field-menu-toggle').tap();
-            await page.locator('[data-menu-command="equipment"]').tap();
-            await page.locator('[data-equipment-slot="weapon"]').tap();
+            await page.locator('[data-menu-command="items"]').tap();
+            await page.getByRole('button',{name:'脇差',exact:true}).tap();
+            await page.getByRole('button',{name:'装備を開く',exact:true}).tap();
             const preview=await page.locator('.equipment-stat-preview').innerText();
             if(!preview.includes('攻撃 9 → 13')||!preview.includes('守備 6 → 6'))
               issues.push('armory equipment preview: '+preview);

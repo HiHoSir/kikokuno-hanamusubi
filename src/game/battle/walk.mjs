@@ -1,4 +1,6 @@
-import {BATTLE_REQUEST_KEY,ENEMIES,carriedConsumables,createBattle,readPlayer,savePlayer} from './rules.mjs?v=equipment-4slots-2-cove-shells-1-shiomachi-gear-1';
+import {BATTLE_REQUEST_KEY,ENEMIES,carriedConsumables,createBattle,readPlayer,savePlayer} from './rules.mjs?v=equipment-4slots-2-cove-shells-1-shiomachi-gear-1-cave-quest-1';
+import {CAVE_BOSS_ID,CAVE_FLOORS,CAVE_TILE,CAVE_TOOL_NAME} from '../../../data/maps/cave/floors.mjs';
+import {saveAutoGame} from '../save/save-game.mjs?v=save-slots-1-shiomachi-gear-1-cave-quest-1';
 
 const root=new URL('../../../',import.meta.url);
 const el=id=>document.getElementById(id);
@@ -26,6 +28,8 @@ try{
 }catch{}
 const battle=createBattle(request?.enemyId||'field-oni',readPlayer(),Math.random,request?.count||1);
 const {state}=battle;
+const caveBattle=request?.enemyId===CAVE_BOSS_ID;
+if(caveBattle)document.querySelector('main').dataset.battleTerrain='cave';
 const audio=()=>globalThis.KIKOKU_AUDIO;
 let mode='main',selected=0,ready=false,locked=false,targetCommand=null,targetReturn='main';
 const commands={
@@ -64,7 +68,7 @@ function updateEnemies(){
       image.dataset.enemyId=e.id;
       // Approved individual 128px pixel sprites use nearest-neighbor display;
       // other enemy originals remain unchanged, never canvas-downsampled.
-      image.dataset.pixelArt=['tanuki','field-oni','onibi'].includes(e.id)?'true':'false';
+      image.dataset.pixelArt=['tanuki','field-oni','onibi',CAVE_BOSS_ID].includes(e.id)?'true':'false';
       image.alt=e.name;
       const source=new URL(e.asset,root);
       if(e.id==='tanuki')source.searchParams.set('v','77a93691');
@@ -90,7 +94,7 @@ function changeMode(next){mode=next;selected=0;updateMenu();}
 function updateMenu(){
   title.textContent=mode==='targets'?'標的を選ぶ':mode==='magic'?'術を選ぶ':mode==='items'?'道具を選ぶ':
     mode==='result'?(state.outcome==='victory'?'勝利':state.outcome==='escape'?'退却':'敗北'):'緋月の行動';
-  const rows=mode==='targets'?[...state.enemies.flatMap((enemy,i)=>enemy.hp>0?[[enemy.name+' '+(i+1),'target-'+i]]:[]),['もどる','back']]:mode==='items'?[...carriedConsumables(state.hero).map(item=>[item.name+' ×'+item.count,item.kind==='herb'?'herb':'food:'+item.id]),['もどる','back']]:mode==='result'&&state.outcome==='defeat'?[['鬼灯村へ戻る','return']]:commands[mode];
+  const rows=mode==='targets'?[...state.enemies.flatMap((enemy,i)=>enemy.hp>0?[[enemy.name+' '+(i+1),'target-'+i]]:[]),['もどる','back']]:mode==='items'?[...carriedConsumables(state.hero).map(item=>[item.name+' ×'+item.count,item.kind==='herb'?'herb':'food:'+item.id]),['もどる','back']]:mode==='result'&&state.outcome==='defeat'?[['鬼灯村へ戻る','return']]:mode==='result'&&caveBattle?[['洞窟へ戻る','return']]:commands[mode];
   list.replaceChildren();
   for(let i=0;i<rows.length;i++){
     const [label,command]=rows[i];
@@ -107,6 +111,8 @@ function updateMenu(){
 function navigateBack(){
   if(state.outcome==='defeat'){
     window.KIKOKU_ROUTE.go(new URL('../village/?focus=field-exit',import.meta.url));
+  }else if(caveBattle){
+    window.KIKOKU_ROUTE.go(new URL('../cave/?from=guardian',import.meta.url));
   }else{
     window.KIKOKU_ROUTE.go(new URL('../../field/?from=battle',import.meta.url));
   }
@@ -155,6 +161,11 @@ function perform(command){
   setTimeout(()=>{
     updateStatus(); // Enemy defeated: hide only after its impact.
     savePlayer(state.hero);
+    const wonTool=caveBattle&&result.outcome==='victory';
+    if(wonTool){
+      const [x,y]=CAVE_FLOORS[2].entry.map(cell=>(cell+.5)*CAVE_TILE);
+      saveAutoGame({scene:'cave',position:{x,y,floor:2,face:1}});
+    }
     if(result.outcome){
       if(result.outcome==='defeat'){
         state.hero.hp=state.hero.maxhp;
@@ -167,7 +178,7 @@ function perform(command){
       pose('idle');mode='main';
     }
     // Avoid overflowing the message window with all retaliation lines.
-    announce(result.events.at(-1)?.text||'');
+    announce(wonTool?CAVE_TOOL_NAME+'を手に入れた！':result.events.at(-1)?.text||'');
     selected=0;locked=false;updateMenu();
   },receivedHit?(isStrike?1060:680):(isStrike?600:440));
 }

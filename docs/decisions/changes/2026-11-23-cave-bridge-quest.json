@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-11-23-cave-bridge-quest",
+  "kind": "user-approved",
+  "scopes": ["balance", "equipment", "progression"],
+  "affectedFiles": ["docs/MAP_ENEMY_EQUIPMENT_RECONCILIATION.md", "src/field/world.js", "src/field/walk.mjs", "src/game/battle/rules.mjs", "src/game/shiomachi/interior-preview.mjs"],
+  "readBeforeEditing": [
+    "docs/MAP_ENEMY_EQUIPMENT_RECONCILIATION.md：既存の経路、将来の山越え計画と現在の入口を照合",
+    "docs/BALANCE_PROGRESSION_CONTRACT.md と docs/BATTLE_BALANCE.md：既存敵・成長・装備の範囲を確認",
+    "data/maps/field/terrain.js と previews/cave-prototype/index.html：既存の橋・洞窟の原型を確認"
+  ],
+  "previousDesign": "潮待村の先の橋をそのまま渡れた。自然洞窟は独立試作で本編遷移とボスは無かった。",
+  "intendedDifference": "天妖の社西の3階層洞窟で最深部のボスを倒し、得た道具で潮待村方面のフィールド橋の岩を砕く。",
+  "impactAnalysis": "橋の北端を一時的に塞ぎ、洞窟には南側から到達できる。既存敵1種を土台に初回のボスを個別設定する。潮待村の買い物画面はセーブ互換のため参照モジュールの版だけ進める。旧セーブが岩で孤立する位置なら進入側から再開する。",
+  "preservedBoundaries": "既存の地形・通常遭遇・T0〜T6・商取引に手を入れず、洞窟と開通だけを追加する。",
+  "verification": "3階層の通行、ボスの勝敗、手動セーブの復元、橋の東西でなく南北の通行をChromiumと単体テストで確認する。",
+  "userEvidence": {
+    "status": "explicit-user-instruction",
+    "date": "2026-11-23",
+    "quote": "次の作業は、潮待村の橋の先に岩を置いて進めないようにして、天妖の社の西の方にある洞窟の中で、岩を壊すアイテムを入手しないと進めないようにしよう。\n洞窟は作りかけのがあるはずなので、それをベースに全3階層くらいで考えよう。\nで最深部にはボスがいて、倒すと岩を壊す道具が手に入るイメージ。",
+    "source": "本会話の2026-11-23の指示。「フィールドマップの話だよ」で位置を修正し、北端 (48,43) の案に「オッケー。続けて」と回答。"
+  }
+}

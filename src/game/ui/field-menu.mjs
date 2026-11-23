@@ -4,10 +4,10 @@ import {
   EQUIPMENT_ITEMS, EQUIPMENT_SLOTS, carriedConsumables,
   changeEquipment, equipmentPreview, nextLevelXp, readPlayer, savePlayer,
   useExplorationResource
-} from '../battle/rules.mjs?v=equipment-4slots-2-cove-shells-1-shiomachi-gear-1';
+} from '../battle/rules.mjs?v=equipment-4slots-2-cove-shells-1-shiomachi-gear-1-cave-quest-1';
 import {SHELL_KINDS} from '../items/shells.mjs';
 import {readStoryStage} from '../story/chapter-one.mjs';
-import {readManualGame,readAutoGame,manualSaveLabel} from '../save/save-game.mjs?v=save-slots-1-shiomachi-gear-1';
+import {readManualGame,readAutoGame,manualSaveLabel} from '../save/save-game.mjs?v=save-slots-1-shiomachi-gear-1-cave-quest-1';
 
 const frame=document.querySelector('#game-scene');
 const opener=document.querySelector('#field-menu-toggle');
@@ -208,6 +208,7 @@ function renderDetails(hero,id){
         label:item.name,open:()=>openCommand(entries.findIndex(([key])=>key==='equipment'),item)
       });
     }
+    if(hero.caveQuest?.rockBreaker)rows.push({label:'岩砕きの槌',caption:'行く手をふさぐ岩を砕ける。'});
     if(readStoryStage()!=='chief')rows.push({label:'結び札',caption:'里長から預かった札。'});
     if(readStoryStage()==='forest')rows.push({
       label:'潮花の花びら',caption:'潮平が海の入り江で拾った、淡く光る花びら。'

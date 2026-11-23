@@ -32,7 +32,7 @@
 
 再現手段：`node tools/qa-field-route-playability.mjs`（Playwright/Chromium必須）。PRとフィールド変更時の `.github/workflows/field-route-qa.yml` で `artifacts/field-route-playability.json` を出力し、実歩数・最短セル経路・接敵回数の算術範囲を記録する。初回の[Chromium検査結果](https://github.com/HiHoSir/kikokuno-hanamusubi/actions/runs/45018604118)は両経路とも通行可能、ブラウザエラーなし。
 
-現在の `world.js` に通行必須の**洞窟**は目的地登録されておらず、実際の山越えイベント・洞窟マップへの接続も確認できない。
+山越え用の洞窟は計画段階。天妖の社の西にある3階層の洞窟は別の地点で、潮待村方面の橋を開く道具を得る場所として接続する。
 
 現行 `referenceComposition.restStops` の4地点は**地図情報**のみ。現行 `src/field/walk.mjs` には休憩所の入店／行商／購入処理がない。**休憩所でT2装備を入手できるという前提は存在しない**。
 
@@ -88,3 +88,10 @@
 5. **回帰保護**：`node tools/audit-map-progression.mjs` は道路メタデータと敵・経験値の算術監査、`node tools/qa-field-route-playability.mjs` はChromium上で実通行・帰還位置・接触を使う最短経路とfieldStep再生の検査。 `tests/map-progression-audit.test.mjs`、`tests/field-route-pathfinder.test.mjs`、`tests/approved-progression-contract.test.mjs` を併用する。実マップ・道順が変わった場合は設計の原案と再照合し、**ユーザー指示に基づく変更記録と監査表を同じPRで更新**する。
 
 **今回の実施範囲は監査・資料訂正・回帰テストのみ。** 地形・敵のステータス・装備補正・商品価格・フィールド本編の進行を変更していない。
+
+
+## 社西の洞窟と橋の開通（2026-11-23）
+
+- 天妖の社 (20,45) の西、フィールドセル (14,48)・(15,48) に入口を置く。既存の自然洞窟試作の探索レイアウトと部品が地下1階の土台。地下2階は分岐を回れる構造で、地下3階には岩守の鬼が待つ。階段は近くでAを押すと往復できる。
+- 橋の北端 (48,43) に岩を置く。岩がある間も潮待村から社西の洞窟へ戻れる。最深部の戦闘に勝つと「岩砕きの槌」を得る。フィールドで岩の正面に立ちAを押すと砕ける。
+- 槌の所持と橋の開通状態を本編のセーブに保存する。今回のボスは既存の野の小鬼の画像と攻守を使い、体力・報酬を2体分にした調整初版。通常遭遇の編成・ティア・既存敵の数値は従来どおり。

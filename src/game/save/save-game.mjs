@@ -1,7 +1,7 @@
 // Two independent checkpoints: a user-written slot and a rotating autosave.
 // Existing live player/story keys remain unchanged.
 // Save data is not uploaded; Safari may erase site storage when website data is cleared.
-import {PLAYER_KEY,DEFAULT_PLAYER,normalizePlayer,readPlayer,FIELD_RETURN_KEY,BATTLE_REQUEST_KEY} from '../battle/rules.mjs?v=shiomachi-gear-1';
+import {PLAYER_KEY,DEFAULT_PLAYER,normalizePlayer,readPlayer,FIELD_RETURN_KEY,BATTLE_REQUEST_KEY} from '../battle/rules.mjs?v=shiomachi-gear-1-cave-quest-1';
 import {CHAPTER_ONE_KEY,CHAPTER_ONE_STAGES,normalizeStage,readStoryStage} from '../story/chapter-one.mjs';
 
 export const MANUAL_SAVE_KEY='kikokuno-hanamusubi-manual-save';
@@ -9,11 +9,11 @@ export const AUTO_SAVE_KEY='kikokuno-hanamusubi-auto-save';
 export const RESTORE_POSITION_KEY='kikokuno-hanamusubi-restore-position';
 const FIELD_PLACE_RETURN_KEY='kikokuno-hanamusubi-field-return';
 const SCENES=Object.freeze({village:'鬼灯村',interiors:'室内',field:'花霞野',
-  tenyo:'天妖の社',cove:'海の入り江',shiomachi:'潮待村'});
+  tenyo:'天妖の社',cove:'海の入り江',shiomachi:'潮待村',cave:'社西の洞窟'});
 const ROUTES=Object.freeze({
   village:'src/game/village/',interiors:'src/game/interiors/',
   field:'src/field/',tenyo:'src/game/tenyo/',cove:'src/game/cove/',
-  shiomachi:'src/game/shiomachi/'
+  shiomachi:'src/game/shiomachi/',cave:'src/game/cave/'
 });
 const own=(object,key)=>Object.prototype.hasOwnProperty.call(object,key);
 function normalizeLocation(source){
@@ -24,6 +24,10 @@ function normalizeLocation(source){
   const position={x:point.x,y:point.y};
   if(Number.isInteger(point.face)&&point.face>=0&&point.face<=3)position.face=point.face;
   if(Number.isInteger(point.row)&&point.row>=0&&point.row<=3)position.row=point.row;
+  if(source.scene==='cave'){
+    if(!Number.isInteger(point.floor)||point.floor<0||point.floor>2)return null;
+    position.floor=point.floor;
+  }
   if(source.scene==='interiors'){
     const building=source.building;
     // Interior entries come only from the map's fixed authored building IDs.

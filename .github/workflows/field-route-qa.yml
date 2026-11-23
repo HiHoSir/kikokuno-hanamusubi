@@ -4,6 +4,8 @@ on:
     paths:
       - 'src/field/**'
       - 'src/game/shiomachi/**'
+      - 'src/game/cave/**'
+      - 'data/maps/cave/**'
       - 'src/game/navigation/**'
       - 'src/game/save/save-game.mjs'
       - 'tools/qa-shiomachi-field-roundtrip.mjs'
@@ -17,6 +19,8 @@ on:
     paths:
       - 'src/field/**'
       - 'src/game/shiomachi/**'
+      - 'src/game/cave/**'
+      - 'data/maps/cave/**'
       - 'src/game/navigation/**'
       - 'src/game/save/save-game.mjs'
       - 'tools/qa-shiomachi-field-roundtrip.mjs'
@@ -53,4 +57,5 @@ jobs:
             artifacts/shiomachi-field-village-marker.png
             artifacts/shiomachi-field-connected.png
             artifacts/hozuki-south-exit.png
+            artifacts/cave-*.png
           if-no-files-found: warn

@@ -4,6 +4,8 @@ import {VILLAGE_FINDS} from '../../../data/maps/hozuki-village/finds.mjs';
 import {normalizeCoveShells} from '../../../data/maps/sea-cove/shells.mjs';
 import {SHIOMACHI_ARMORY_STOCK} from '../../../data/maps/shiomachi-village/armory.mjs?v=shiomachi-gear-1';
 
+import {CAVE_BOSS_ID} from '../../../data/maps/cave/floors.mjs';
+
 export const PLAYER_KEY='kikokuno-hanamusubi-battle-player';
 export const BATTLE_REQUEST_KEY='kikokuno-hanamusubi-battle-request';
 export const FIELD_RETURN_KEY='kikokuno-hanamusubi-battle-field-return';
@@ -87,6 +89,8 @@ export const HERB=Object.freeze({name:'薬草',heal:26});
 export const ENEMIES=Object.freeze({
   // Initial field only. These are provisional first-area numbers, not the planned late regions.
   'field-oni':Object.freeze({id:'field-oni',name:'野の小鬼',asset:'assets/enemies/field-oni.png',hp:12,attack:7,defense:2,xp:8,gold:8}),
+  // Scripted chamber guardian. This encounter never enters the field pool.
+  [CAVE_BOSS_ID]:Object.freeze({id:CAVE_BOSS_ID,name:'岩守の鬼',asset:'assets/enemies/field-oni.png',hp:24,attack:7,defense:2,xp:16,gold:16}),
   'tanuki':Object.freeze({id:'tanuki',name:'化け狸',asset:'assets/enemies/tanuki.png',hp:6,attack:6,defense:2,xp:4,gold:4}),
   'onibi':Object.freeze({id:'onibi',name:'鬼火',asset:'assets/enemies/onibi.png',hp:16,attack:8,defense:2,xp:9,gold:8})
 });
@@ -135,6 +139,10 @@ export function normalizePlayer(input={}){
     potions:nonNegative(input?.potions,3),
     foods:Object.fromEntries(Object.keys(FOOD_ITEMS).map(id=>[id,clamp(nonNegative(input?.foods?.[id],0),0,99)])),
     wins:nonNegative(input?.wins,0),
+    caveQuest:{
+      rockBreaker:input?.caveQuest?.rockBreaker===true,
+      bridgeCleared:input?.caveQuest?.rockBreaker===true&&input?.caveQuest?.bridgeCleared===true
+    },
     // The same authoritative counter handles both all combat outcomes and
     // replenishing shells at five-fight milestones.
     completedBattles:nonNegative(input?.completedBattles,nonNegative(input?.wins,0)),
@@ -282,6 +290,7 @@ export function createBattle(enemyId='field-oni',player=DEFAULT_PLAYER,random=Ma
       hero.hp=hero.maxhp;hero.mp=hero.maxmp;
       event('緋月は'+hero.lv+'段に上がった！','levelup');
     }
+    if(enemyId===CAVE_BOSS_ID)hero.caveQuest.rockBreaker=true;
     finish('victory');
   }
   function enemyActions(guarding){

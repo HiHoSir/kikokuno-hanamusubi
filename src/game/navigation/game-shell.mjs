@@ -2,7 +2,7 @@
 // Only this parent document owns the BGM player and the sound toggle.
 import {makeAudioEngine} from '../audio/audio.mjs';
 import {pendingRestoreLocation,routeForSavedGame,saveAutoGame,saveManualGame}
-  from '../save/save-game.mjs?v=save-slots-1-shiomachi-gear-1';
+  from '../save/save-game.mjs?v=save-slots-1-shiomachi-gear-1-cave-quest-1';
 
 const root = new URL('../../../', import.meta.url);
 // Scene HTML itself needs a fresh URL, not just the top-level title page.
@@ -19,6 +19,7 @@ const routes = new Map([
   [new URL('src/game/tenyo/', root).pathname, {track:'prologue', label:'天妖の社'}],
   [new URL('src/game/cove/', root).pathname, {track:'field', label:'海の入り江'}],
   [new URL('src/game/shiomachi/', root).pathname, {track:'field', label:'潮待村'}],
+  [new URL('src/game/cave/', root).pathname, {track:'dungeon', label:'社西の洞窟'}],
   [new URL('src/game/battle/', root).pathname, {track:'battle', label:'戦闘'}],
 ]);
 let active = '';

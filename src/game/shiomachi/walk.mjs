@@ -9,7 +9,7 @@ import {advanceResident,makeResident,RESIDENT_RADIUS,residentInFront} from '../v
 import {bindDialogue} from '../village/dialogue.mjs';
 import {pixelViewport,DEFAULT_CAMERA_ZOOM} from '../village/render.mjs';
 import {createShiomachiRenderer} from './render.mjs?v=gate-posts-1-visible-signs-1';
-import {createShiomachiInteriorPreview} from './interior-preview.mjs?v=shop-clerk-1-shared-walk-1-shiomachi-gear-1-shared-shops-1';
+import {createShiomachiInteriorPreview} from './interior-preview.mjs?v=shop-clerk-1-shared-walk-1-shiomachi-gear-1-shared-shops-1-cave-quest-1';
 import {consumeRestorePosition} from '../save/save-game.mjs?v=save-slots-1-shiomachi-gear-1';
 
 // Preview and real game share the SAME village map, art and interior code.

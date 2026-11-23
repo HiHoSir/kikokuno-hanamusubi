@@ -5,10 +5,13 @@ window.YK_WORLD=(()=>{
  const geography=window.YK_FIELD_TERRAIN.referenceComposition;
  // Left cell of each two-cell village marker added after Hozuki.
  const additionalVillages={shiomachi:[53,51]};
+ const caveCells=[[14,48],[15,48]];
+ const bridgeRockCell=[48,43];
  const center=([x,y])=>[x*32+16,y*32+16];
  const descriptions={
   village:['鬼灯村','南の半島から林と花の道を抜け、天妖の社へ。'],
   shrine:['天妖の社','西の山裾から川沿いを東へ進み、海の入り江へ。'],
+  cave:['社西の洞窟','岩の奥から冷たい風が吹いている。'],
   cove:['海の入り江','川を渡り、北東の忘れの森へ。'],
   shiomachi:['潮待村','入り江の東、海風の吹く浜の集落。'],
   forest:['忘れの森','森の北の山裾を辿り、龍神の滝へ。'],
@@ -16,7 +19,7 @@ window.YK_WORLD=(()=>{
   hotspring:['月見の湯','北の森から山の参道へ進み、九尾の祠へ。'],
   fox:['九尾の祠','北の山に囲まれた旅路の終点。']
  };
- const places=Object.fromEntries(Object.entries({...geography.places,...additionalVillages})
+ const places=Object.fromEntries(Object.entries({...geography.places,...additionalVillages,cave:caveCells[0]})
   .map(([id,cell])=>[id,{point:center(cell),name:descriptions[id][0],note:descriptions[id][1]}]));
  const start=center([37,71]),hub=start;
  // Roads are navigation metadata only. The historical wilderness has no
@@ -51,6 +54,17 @@ window.YK_WORLD=(()=>{
   mapData.decorations.push({kind,x:tx*tileSize,y:ty*tileSize,width,height,
    foot:(ty+1)*tileSize,contactTiles,occupiedTiles:[],walkThrough:true,destination});
  }
+ mapData.landmarkContactTiles.cave=caveCells;
+ mapData.decorations.push({kind:'newCaveLarge',x:14*32,y:48*32,width:64,height:32,
+   foot:49*32,contactTiles:caveCells,occupiedTiles:[],walkThrough:true,destination:'cave'});
+ const bridgeRock={id:'bridge-rock',kind:'bridgeRock',x:48*32-14,y:44*32-40,
+   width:60,height:40,foot:44*32,contactTiles:[bridgeRockCell],occupiedTiles:[]};
+ mapData.decorations.push(bridgeRock);
+ function setBridgeRockCleared(cleared){
+  mapData.bridgeRockCleared=cleared;
+  bridgeRock.occupiedTiles=cleared?[]:[bridgeRockCell];
+  YK_FIELD_ELEVATION.refreshCollision(mapData);
+ }
  const roads=geography.roads.map(r=>r.map(center));
  // Keep routes for directions, elevation corridors and save compatibility,
  // but never rasterize the old dirt-road overlay on the outdoor field.
@@ -78,7 +92,8 @@ window.YK_WORLD=(()=>{
    walkThrough:o.walkThrough,biome:'forest',supportHeight:mapData.heights[y][x]
   }));
  });
- YK_FIELD_ELEVATION.refreshCollision(mapData);
+ // Establish the original elevation routes before closing the quest gate.
+ setBridgeRockCleared(false);
  const passable=new Set(['grass','forest','sand','snow','barren','road','bridge']);
  const cellOpen=(x,y)=>x>0&&y>0&&x<79&&y<79&&passable.has(mapData[y]?.[x])&&!mapData.occupiedTiles.has(x+','+y)&&mapData.travelReachable.has(x+','+y)&&YK_ELEVATION.pointWalkable(mapData,x*32+16,y*32+16);
  // Data-only save repair: keep valid positions, otherwise find the nearest
@@ -121,7 +136,7 @@ window.YK_WORLD=(()=>{
   const id=Object.keys(legacy).sort((a,b)=>Math.hypot(point[0]-legacy[a][0],point[1]-legacy[a][1])-Math.hypot(point[0]-legacy[b][0],point[1]-legacy[b][1]))[0];
   return places[id].point.slice();
  }
- return {start,hub,places,roads,restStops,restStopAt,guides,guideRoute,worldObjects,mapData,walkable,canMove,near,revision,tileAt,tileSize,size,viewSize,camera,draw,migratePosition,safePosition};
+ return {start,hub,places,bridgeRockCell,setBridgeRockCleared,roads,restStops,restStopAt,guides,guideRoute,worldObjects,mapData,walkable,canMove,near,revision,tileAt,tileSize,size,viewSize,camera,draw,migratePosition,safePosition};
 })();
 
 

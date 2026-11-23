@@ -166,6 +166,7 @@ export function createFieldTerrainRenderer(map,drawHero,art,hero){
   let player=false;
   for(let i=first;i<objects.length&&objects[i].foot<=maxFoot;i++){
    const o=objects[i];
+   if(o.id==='bridge-rock'&&map.bridgeRockCleared)continue;
    const foot=o.foot;
    if(!player&&playerFoot<=foot){drawPlayer();player=true;}
    const p=landscape.project(o.center,o.projectedFoot,cam,zoom);

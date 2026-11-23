@@ -11,6 +11,7 @@ window.YK_FIELD_ASSETS = (() => {
   waterMotion: 'assets/field/effects/water-motion.png',
   waterfallMotion: 'assets/field/effects/waterfall-motion.png',
   newVillage: 'assets/field/objects/village.png',
+  bridgeRock: 'assets/sea-cove/objects/shore-rock-west-60x40.png',
   newHouse: 'assets/field/objects/house.png',
   newTorii: 'assets/field/objects/torii.png',
   newCaveLarge: 'assets/field/objects/cave-large.png',

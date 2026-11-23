@@ -2,6 +2,86 @@
   "schemaVersion": 1,
   "assets": [
     {
+      "id": "cave-floor-material",
+      "type": "map",
+      "path": "assets/cave/floor-material.png",
+      "status": "approved",
+      "origin": {
+        "kind": "prototype-extracted",
+        "path": "previews/cave-prototype/index.html",
+        "source": "floor_material_0_0"
+      },
+      "usage": "cave-map-part",
+      "dimensions": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "cave-wall-material",
+      "type": "map",
+      "path": "assets/cave/wall-material.png",
+      "status": "approved",
+      "origin": {
+        "kind": "prototype-extracted",
+        "path": "previews/cave-prototype/index.html",
+        "source": "wall_material_0_0"
+      },
+      "usage": "cave-map-part",
+      "dimensions": {
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "id": "cave-stairs-up",
+      "type": "map",
+      "path": "assets/cave/stairs-up.png",
+      "status": "approved",
+      "origin": {
+        "kind": "prototype-extracted",
+        "path": "previews/cave-prototype/index.html",
+        "source": "stairs_upper_transfer_v017"
+      },
+      "usage": "cave-map-part",
+      "dimensions": {
+        "width": 96,
+        "height": 96
+      }
+    },
+    {
+      "id": "cave-stairs-down",
+      "type": "map",
+      "path": "assets/cave/stairs-down.png",
+      "status": "approved",
+      "origin": {
+        "kind": "prototype-extracted",
+        "path": "previews/cave-prototype/index.html",
+        "source": "stairs_down"
+      },
+      "usage": "cave-map-part",
+      "dimensions": {
+        "width": 96,
+        "height": 96
+      }
+    },
+    {
+      "id": "cave-rock-ledge",
+      "type": "map",
+      "path": "assets/cave/rock-ledge.png",
+      "status": "approved",
+      "origin": {
+        "kind": "prototype-extracted",
+        "path": "previews/cave-prototype/index.html",
+        "source": "rock_ledge_span"
+      },
+      "usage": "cave-map-part",
+      "dimensions": {
+        "width": 48,
+        "height": 82
+      }
+    },
+    {
       "id": "opening-movie",
       "type": "other",
       "path": "assets/prologue/opening.mp4",

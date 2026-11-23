@@ -1,0 +1,48 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {CAVE_FLOORS,CAVE_TILE,CAVE_BOSS_ID,caveCellOpen} from '../data/maps/cave/floors.mjs';
+import {DEFAULT_PLAYER,createBattle,normalizePlayer,readPlayer,savePlayer} from '../src/game/battle/rules.mjs';
+import {saveManualGame,restoreSavedGame} from '../src/game/save/save-game.mjs';
+
+test('all three cave floors have walkable routes between their portals',()=>{
+ for(const [floor,layout] of CAVE_FLOORS.entries()){
+   assert.ok(layout.grid.every(row=>row.length===20));
+   const cells=[layout.entry],visited=new Set(cells.map(cell=>cell.join(',')));
+   for(const [x,y] of cells)for(const [dx,dy] of [[0,1],[0,-1],[1,0],[-1,0]]){
+     const cell=[x+dx,y+dy],key=cell.join(',');
+     if(caveCellOpen(floor,...cell)&&!visited.has(key)){visited.add(key);cells.push(cell);}
+   }
+   for(const key of ['exit','up','down','boss']){
+     if(layout[key])assert.ok(visited.has(layout[key].join(',')),key+' on B'+(floor+1));
+   }
+ }
+});
+
+test('the guardian grants the tool only on victory; both gate flags survive a cave save',()=>{
+ const escaped=createBattle(CAVE_BOSS_ID,DEFAULT_PLAYER,()=>0);
+ assert.equal(escaped.act('flee').outcome,'escape');
+ assert.equal(escaped.state.hero.caveQuest.rockBreaker,false);
+ const lost=createBattle(CAVE_BOSS_ID,{...DEFAULT_PLAYER,hp:1},()=>0.5);
+ assert.equal(lost.act('guard').outcome,'defeat');
+ assert.equal(lost.state.hero.caveQuest.rockBreaker,false);
+ const fight=createBattle(CAVE_BOSS_ID,{...DEFAULT_PLAYER,lv:5,hp:58},()=>0.5);
+ for(let turn=0;turn<10&&!fight.state.outcome;turn++)fight.act('attack');
+ assert.equal(fight.state.outcome,'victory');
+ const hero=fight.state.hero;
+ assert.deepEqual(hero.caveQuest,{rockBreaker:true,bridgeCleared:false});
+ assert.equal(normalizePlayer({caveQuest:{bridgeCleared:true}}).caveQuest.bridgeCleared,false);
+
+ const makeStorage=()=>{
+   const memory=new Map();
+   return {getItem:key=>memory.get(key)??null,setItem:(key,value)=>memory.set(key,value),
+     removeItem:key=>memory.delete(key)};
+ };
+ const storage=makeStorage(),session=makeStorage();
+ const [x,y]=CAVE_FLOORS[2].entry.map(cell=>(cell+.5)*CAVE_TILE);
+ const location={scene:'cave',position:{x,y,floor:2,face:1}};
+ savePlayer({...hero,caveQuest:{rockBreaker:true,bridgeCleared:true}},storage);
+ assert.equal(saveManualGame(location,storage).accepted,true);
+ savePlayer(DEFAULT_PLAYER,storage);
+ assert.deepEqual(restoreSavedGame('manual',storage,session).save.location,location);
+ assert.deepEqual(readPlayer(storage).caveQuest,{rockBreaker:true,bridgeCleared:true});
+});

@@ -3,7 +3,7 @@
 window.YK_WORLD=(()=>{
  const tileSize=32,size=2560,viewSize=640,revision=120;
  const geography=window.YK_FIELD_TERRAIN.referenceComposition;
- // Field entrance cells for villages added after Hozuki.
+ // Left cell of each two-cell village marker added after Hozuki.
  const additionalVillages={shiomachi:[53,51]};
  const center=([x,y])=>[x*32+16,y*32+16];
  const descriptions={
@@ -43,10 +43,10 @@ window.YK_WORLD=(()=>{
   const occupiedTiles=o.occupiedTiles.filter(([x,y])=>!entrance||!contactTiles.some(([cx,cy])=>cx===x&&cy===y)).map(c=>c.slice());
   return {...o,contactTiles,occupiedTiles};
  });
- // Hozuki's field art is shared by all villages. Each entrance remains authored.
+ // Each additional village opens across the full width of the shared marker.
  const {kind,width,height}=geography.decorations.find(o=>o.destination==='village');
  for(const [destination,[tx,ty]] of Object.entries(additionalVillages)){
-  const contactTiles=[[tx,ty]];
+  const contactTiles=Array.from({length:width/tileSize},(_,offset)=>[tx+offset,ty]);
   mapData.landmarkContactTiles[destination]=contactTiles;
   mapData.decorations.push({kind,x:tx*tileSize,y:ty*tileSize,width,height,
    foot:(ty+1)*tileSize,contactTiles,occupiedTiles:[],walkThrough:true,destination});

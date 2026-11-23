@@ -1,7 +1,7 @@
 // 海の入り江: the approved shoreline-study is the TERRAIN/SCENERY source.
 // Original approved 30-column coastline remains intact at the NW corner.
 // EAST extension connects wave tiles automatically; SOUTH extension houses the
-// fishing hamlet. All original 30x22 terrain cells and spawn stay intact.
+// fishing hamlet. All original 30x22 terrain cells stay intact. The south gate is the field entrance.
 import {SHORE_Y,SCENERY} from '../shoreline-study/scene.mjs';
 
 export const COVE_TILE_SIZE=32;
@@ -31,7 +31,7 @@ const nativeRocks=SCENERY.map(rock=>{
 export const COVE_MAP=Object.freeze({
  id:'sea-cove',name:'海の入り江',tileSize:COVE_TILE_SIZE,
  width:COVE_WIDTH,height:COVE_HEIGHT,tiles,shore:COVE_SHORE,
- entry:Object.freeze({x:10*32+16,y:13*32+16,face:1}),
+ entry:Object.freeze({x:10*COVE_TILE_SIZE+16,y:(COVE_HEIGHT-2)*COVE_TILE_SIZE+16,face:1}),
  exit:Object.freeze({
   row:COVE_HEIGHT-1,columns:Object.freeze([9,10,11]),
   trailStart:13,trailLeadIn:Object.freeze([[10,14],[9,13],[9,12]])

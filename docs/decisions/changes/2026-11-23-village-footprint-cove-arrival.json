@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-11-23-village-footprint-cove-arrival",
+  "kind": "user-approved",
+  "scopes": ["progression"],
+  "affectedFiles": ["src/field/world.js"],
+  "readBeforeEditing": [
+    "docs/MAP_ENEMY_EQUIPMENT_RECONCILIATION.md：現行のフィールド経路と計測点を確認",
+    "data/maps/field/terrain.js と src/field/world.js：村の描画幅、地表、現在の接触マスを確認",
+    "docs/SEA_COVE.md：海辺のプレビュー、南口とフィールド帰還の規則を確認"
+  ],
+  "previousDesign": "鬼灯村は絵の左右に入場判定があったが、追加の潮待村は村の絵が64px幅でも左の1セルだけが入場判定だった。入り江の本編到着位置も海岸の検査用と共通だった。",
+  "intendedDifference": "追加する村の入場判定に共通の絵が占める左右2マスを使う。海の入り江の本編到着位置は南口の内側に置く。",
+  "impactAnalysis": "潮待村は (53,51) と (54,51) のいずれからも入場する。入り江の既存セーブからは保存座標を優先し、新規入場では南口の内側で北を向く。",
+  "preservedBoundaries": "村の描画位置、周辺地形、出入口の帰還処理、海岸の検査位置、遭遇間隔、戦闘バランスを維持する。",
+  "verification": "地図との接触と通行、Chromiumの村2マスからの入場、南口発着と海岸への歩行を検査する。",
+  "userEvidence": {
+    "status": "explicit-user-instruction",
+    "date": "2026-11-23",
+    "quote": "海の入江のフィールドから入った際の出現地点がおかしい。\nまた、村は描写されてる2マス分を侵入経路にして。",
+    "source": "本会話の2026-11-23のユーザーメッセージ"
+  }
+}

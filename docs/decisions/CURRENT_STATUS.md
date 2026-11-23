@@ -11,7 +11,7 @@
 | **初回必要心** | **実装済み：段1→2は32**（一般式とは初回だけ別）。上限99、ラスボス想定40 | `src/game/battle/rules.mjs`、`docs/BATTLE_BALANCE.md` | `hizuki-status.json` の一般式欄に初回例外の注記がなく、表記差を監査中。原本値を無断変更しない |
 | **鬼灯村の個別装備** | **販売実装済み：4部位・合計攻+4／守+7**。T1確定値との**不一致が未解決** | `src/game/battle/rules.mjs`、`tests/approved-progression-contract.test.mjs`、[現行装備台帳](../EQUIPMENT_CURRENT_PLAYABLE.md) | 承認済み個別販売を勝手に書き換えない。T1との合算規則を明示的に整理 |
 | **4村体制** | **ユーザー決定：鬼灯村を含め合計4村**。3つの新村の名前・フィールド座標は試作・未承認 | `docs/FOUR_VILLAGES_EQUIPMENT_PLAN.md`、[PR #64](https://github.com/HiHoSir/kikokuno-hanamusubi/pull/64) | 村を増やすためにティア数を変更しない |
-| **潮待村フィールド配置** | **本編フィールドの草地セル(53,51)に村の入口を配置**。従来の42×54村マップと4室内を共用し、南口で元のフィールドセルへ帰還。独立プレビューも維持 | [配置と検査](../SHIOMACHI_FIELD_CONNECTION.md)、`src/field/world.js`、`src/field/walk.mjs`、`src/game/shiomachi/walk.mjs` | iPhone Safariで実際の出入り・見た目を確認。現在の位置は試行配置 |
+| **潮待村フィールド配置** | **本編フィールドの村の絵が占めるセル (53,51)・(54,51) から入場**。従来の42×54村マップと4室内を共用し、南口で元のフィールドセルへ帰還。独立プレビューも維持 | [配置と検査](../SHIOMACHI_FIELD_CONNECTION.md)、`src/field/world.js`、`src/field/walk.mjs`、`src/game/shiomachi/walk.mjs` | iPhone Safariで実際の出入り・見た目を確認。現在の位置は試行配置 |
 | **既存地域の装備入手状況** | **鬼灯村・潮待村＝本編販売各4点、天妖の社／海の入り江＝装備入手なし**。ゲーム内定義から集約する台帳モジュールを追加 | [現行装備台帳](../EQUIPMENT_CURRENT_PLAYABLE.md)、`src/game/equipment/current-availability.mjs` | 地名やティアとショップ実装を混同せず、装備の追加前に必ず台帳と原案を照合 |
 | **潮待村の装備** | **本編で4点を購入・装着・保存可能。価格は鬼灯村の各部位の2倍、合計208両。** 全装着で攻+12／守+19 | [現行装備台帳](../EQUIPMENT_CURRENT_PLAYABLE.md)、`data/maps/shiomachi-village/armory.mjs` | 個別販売の進行バランスを実戦で検査 |
 | **装備ティアの入手場所** | **未確定**。天妖の社後T1／入り江T2などは11月15日の**当初配置仮説**。潮待村=T2は承認されていない | `docs/MAP_ENEMY_EQUIPMENT_RECONCILIATION.md`、`docs/BALANCE_PROGRESSION_CONTRACT.md` | 実際の到達段・洞窟経路・地域敵の進行を先に評価 |

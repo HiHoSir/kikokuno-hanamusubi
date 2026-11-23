@@ -66,13 +66,15 @@ try{
   return {cove:w.places.cove.point,shiomachi:w.places.shiomachi.point,
    surface:w.tileAt(...b),walkable:w.canMove(...a,...b),
    contact:t.contact(w,...b),priorContact:t.contact(w,...a),
-   adjacentContact:t.contact(w,54*32+16,51*32+16),villageArt};
+   rightContact:t.contact(w,54*32+16,51*32+16),
+   adjacentContact:t.contact(w,55*32+16,51*32+16),villageArt};
  });
  assert.equal(before.contact,'shiomachi');
  assert.equal(before.priorContact,null);
  assert.equal(before.surface,'grass');
  assert.equal(before.walkable,true);
- assert.equal(before.adjacentContact,null,'only the existing cell opens the village');
+ assert.equal(before.rightContact,'shiomachi','the right half opens the village');
+ assert.equal(before.adjacentContact,null,'the cell beyond the art does not open the village');
  assert.deepEqual(before.villageArt.shiomachi,before.villageArt.village);
  assert.deepEqual(before.villageArt.shiomachi,{
   asset:'assets/field/objects/village.png',width:64,height:32});
@@ -232,6 +234,30 @@ try{
   const {x,y}=document.querySelector('#scene').dataset;
   return window.YK_AREA_TRANSITIONS.contact(window.YK_WORLD,Number(x)*32+16,Number(y)*32+16);
  }),null,'Hozuki field arrival does not immediately re-enter the village');
+
+ // Real movement from just south of each painted entrance tile.
+ for(const [x,y,destination] of [[37,70,'village'],[38,70,'village'],[54,52,'shiomachi']]){
+  await page.evaluate(({x,y})=>{
+   sessionStorage.setItem('kikokuno-hanamusubi-restore-position',JSON.stringify({
+    scene:'field',position:{x:x*32+16,y:y*32+16,row:1}}));
+   window.KIKOKU_GAME.navigate(new URL('/src/field/?qa-entrance='+x,location.href));
+  },{x,y});
+  await page.waitForFunction(({x,y})=>{
+   const f=document.querySelector('#game-scene')?.contentWindow;
+   const p=f?.KIKOKU_SAVE_SNAPSHOT?.();
+   return f?.location.pathname==='/src/field/'&&
+    new URL(f.location.href).searchParams.get('qa-entrance')===String(x)&&
+    p?.scene==='field'&&p.position.x===x*32+16&&p.position.y===y*32+16;
+  },{x,y});
+  await page.evaluate(()=>{
+   const field=document.querySelector('#game-scene').contentWindow;
+   field.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowUp',bubbles:true}));
+  });
+  await page.waitForFunction(destination=>{
+   const f=document.querySelector('#game-scene')?.contentWindow;
+   return f?.KIKOKU_SAVE_SNAPSHOT?.()?.scene===destination;
+  },destination);
+ }
 
  assert.deepEqual(failures,[]);
  console.log('SHIOMACHI_FIELD_ROUNDTRIP '+JSON.stringify({before,found,purchasedGold:purchased.gold,equipped:equipped.equipment,

@@ -464,7 +464,7 @@ try{
  await walkCave([[15,7],[8,7],[6,7],[6,18],[7,18]]);
 
  await climbWithPad(1);
- await walkCave([[19,7],[19,11]]);
+ await walkCave([[20,7],[20,10],[19,10],[19,11]]);
  const beforeDrop=await cave.locator('#scene').evaluate(()=>window.KIKOKU_SAVE_SNAPSHOT().position);
  await caveButton.click();
  assert.match(await cave.locator('#notice').textContent(),/岩段を飛び降りた/);

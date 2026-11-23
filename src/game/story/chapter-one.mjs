@@ -1,7 +1,14 @@
 // Shared chapter-one progression across the village, shrine and future field areas.
 // Keep the legacy localStorage key for existing iPhone saves.
 export const CHAPTER_ONE_KEY='kikokuno-hanamusubi-chapter-one';
+export const USHIOHEI_HAMMER_KEY='kikokuno-hanamusubi-ushiohei-hammer-celebrated';
 export const CHAPTER_ONE_STAGES=Object.freeze(['chief','shrine','cove','forest']);
+export function hasUshioheiCelebratedHammer(storage=globalThis.localStorage){
+  try{return storage?.getItem(USHIOHEI_HAMMER_KEY)==='1';}catch{return false;}
+}
+export function recordUshioheiHammerCelebration(storage=globalThis.localStorage){
+  try{storage?.setItem(USHIOHEI_HAMMER_KEY,'1');}catch{}
+}
 export function normalizeStage(value){
   return CHAPTER_ONE_STAGES.includes(value)?value:'chief';
 }

@@ -209,19 +209,67 @@ try{
  });
  assert.equal(Object.values(persisted.bag).reduce((a,b)=>a+b,0),1);
  await page.screenshot({path:'artifacts/sea-cove-shell-picked.png'});
+ let coveCheckpoint=0;
  const coveAt=async(x,y)=>{
-   await page.evaluate(({x,y})=>{
+   const checkpoint=String(++coveCheckpoint);
+   await page.evaluate(({x,y,checkpoint})=>{
      sessionStorage.setItem('kikokuno-hanamusubi-restore-position',JSON.stringify({
        scene:'cove',position:{x,y,face:0}
      }));
-     window.KIKOKU_GAME.navigate(new URL('./cove/?qa-south='+x,location.href));
-   },{x,y});
-   await page.waitForFunction(({x,y})=>{
+     window.KIKOKU_GAME.navigate(new URL('./cove/?qa-checkpoint='+checkpoint,location.href));
+   },{x,y,checkpoint});
+   await page.waitForFunction(({x,y,checkpoint})=>{
      const child=document.querySelector('#game-scene')?.contentWindow;
+     if(new URLSearchParams(child?.location.search).get('qa-checkpoint')!==checkpoint)return false;
      const snapshot=child?.KIKOKU_SAVE_SNAPSHOT?.();
      return snapshot?.scene==='cove'&&snapshot.position.x===x&&snapshot.position.y===y;
-   },{x,y});
+   },{x,y,checkpoint});
  };
+ const talkToUshiohei=async()=>{
+   const cove=page.frameLocator('#game-scene');
+   await cove.locator('#action-a').click();
+   await cove.locator('#dialogue').waitFor({state:'visible'});
+   return cove.locator('#dialogue').evaluate(dialogue=>{
+     const next=dialogue.querySelector('#next');
+     const line=dialogue.querySelector('#line');
+     const lines=[];
+     for(let index=0;index<12&&!dialogue.hidden;index++){
+       if(!next.classList.contains('hasNextLine')&&!next.classList.contains('hasLastLine'))next.click();
+       lines.push(line.textContent);
+       next.click();
+     }
+     if(!dialogue.hidden)throw new Error('潮平との会話が終わりません');
+     return lines;
+   });
+ };
+ await coveAt(528,352);
+ const earlyLines=await talkToUshiohei();
+ assert.match(earlyLines.join('\n'),/里長さん/);
+ assert.doesNotMatch(earlyLines.join('\n'),/岩砕き/);
+ await page.evaluate(async()=>{
+   const {advanceStoryStage}=await import('./story/chapter-one.mjs');
+   advanceStoryStage('cove');
+ });
+ const storyLines=await talkToUshiohei();
+ assert.match(storyLines.join('\n'),/持っていきな[\s\S]*天妖の社の西[\s\S]*岩砕きの槌[\s\S]*Aで調べる/);
+ const readAuto=()=>page.evaluate(async()=>{
+   const {readAutoGame}=await import('./save/save-game.mjs');
+   return readAutoGame();
+ });
+ assert.equal((await readAuto()).story,'forest');
+ await page.evaluate(async()=>{
+   const {readPlayer,savePlayer}=await import('./battle/rules.mjs');
+   savePlayer({...readPlayer(),caveQuest:{rockBreaker:true}});
+ });
+ await coveAt(528,352);
+ const celebrated=await talkToUshiohei();
+ assert.match(celebrated[0],/岩砕きの槌を手に入れた.*よくやったな/);
+ assert.match(celebrated.join('\n'),/Aで調べる/);
+ assert.equal((await readAuto()).ushioheiHammerCelebrated,true);
+ await coveAt(528,352);
+ const repeated=await talkToUshiohei();
+ assert.doesNotMatch(repeated.join('\n'),/よくやったな/);
+ assert.match(repeated.join('\n'),/Aで調べる/);
  await coveAt(448,1340);
  await moveSouth('keydown');
  await page.waitForFunction(()=>document.querySelector('#game-scene')

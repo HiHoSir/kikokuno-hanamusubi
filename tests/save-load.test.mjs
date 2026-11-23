@@ -4,7 +4,9 @@ import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
 import {DEFAULT_PLAYER,PLAYER_KEY,savePlayer,readPlayer,FIELD_RETURN_KEY,BATTLE_REQUEST_KEY} from '../src/game/battle/rules.mjs';
 import {coveVisibleShells,collectCoveShell,sellCoveShells} from '../data/maps/sea-cove/shells.mjs';
-import {readStoryStage,advanceStoryStage,CHAPTER_ONE_KEY} from '../src/game/story/chapter-one.mjs';
+import {readStoryStage,advanceStoryStage,CHAPTER_ONE_KEY,
+ hasUshioheiCelebratedHammer,recordUshioheiHammerCelebration
+} from '../src/game/story/chapter-one.mjs';
 import {
   AUTO_SAVE_KEY,MANUAL_SAVE_KEY,RESTORE_POSITION_KEY,
   readManualGame,readAutoGame,saveManualGame,saveAutoGame,
@@ -83,6 +85,25 @@ test('new game resets only live state, while retaining both saved slots',()=>{
  assert.equal(session.getItem(FIELD_RETURN_KEY),null);
  assert.equal(session.getItem(BATTLE_REQUEST_KEY),null);
  assert.equal(session.getItem(RESTORE_POSITION_KEY),null);
+});
+test('Ushiohei’s hammer celebration follows the loaded slot and resets on a new game',()=>{
+ const storage=makeStorage(),session=makeStorage();
+ const location={scene:'cove',position:{x:528,y:352,face:0}};
+ advanceStoryStage('forest',storage);
+ savePlayer({...DEFAULT_PLAYER,caveQuest:{rockBreaker:true}},storage);
+ saveManualGame(location,storage);
+ const legacy=JSON.parse(storage.getItem(MANUAL_SAVE_KEY));
+ delete legacy.ushioheiHammerCelebrated;
+ storage.setItem(MANUAL_SAVE_KEY,JSON.stringify(legacy));
+ recordUshioheiHammerCelebration(storage);
+ assert.equal(saveAutoGame(location,storage).save.ushioheiHammerCelebrated,true);
+ assert.equal(restoreSavedGame('manual',storage,session).accepted,true);
+ assert.equal(readPlayer(storage).caveQuest.rockBreaker,true);
+ assert.equal(hasUshioheiCelebratedHammer(storage),false);
+ assert.equal(restoreSavedGame('auto',storage,session).accepted,true);
+ assert.equal(hasUshioheiCelebratedHammer(storage),true);
+ assert.equal(startNewGame(storage,session).accepted,true);
+ assert.equal(hasUshioheiCelebratedHammer(storage),false);
 });
 test('checkpoint routes are restricted and corrupt or absent saves remain unusable',()=>{
  const storage=makeStorage(),session=makeStorage();

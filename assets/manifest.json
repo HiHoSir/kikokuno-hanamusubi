@@ -18,6 +18,22 @@
       }
     },
     {
+      "id": "cave-floor-material-atlas",
+      "type": "map",
+      "path": "assets/cave/floor-material-atlas.png",
+      "status": "approved",
+      "origin": {
+        "kind": "prototype-extracted",
+        "path": "previews/cave-prototype/index.html",
+        "source": "floor_material_0_0 through floor_material_3_3"
+      },
+      "usage": "cave-map-part",
+      "dimensions": {
+        "width": 192,
+        "height": 192
+      }
+    },
+    {
       "id": "cave-wall-material",
       "type": "map",
       "path": "assets/cave/wall-material.png",
@@ -25,12 +41,12 @@
       "origin": {
         "kind": "prototype-extracted",
         "path": "previews/cave-prototype/index.html",
-        "source": "wall_material_0_0"
+        "source": "wall_material_0_0 through wall_material_3_3"
       },
       "usage": "cave-map-part",
       "dimensions": {
-        "width": 48,
-        "height": 48
+        "width": 192,
+        "height": 192
       }
     },
     {
@@ -42,22 +58,6 @@
         "kind": "prototype-extracted",
         "path": "previews/cave-prototype/index.html",
         "source": "stairs_upper_transfer_v017"
-      },
-      "usage": "cave-map-part",
-      "dimensions": {
-        "width": 96,
-        "height": 96
-      }
-    },
-    {
-      "id": "cave-stairs-down",
-      "type": "map",
-      "path": "assets/cave/stairs-down.png",
-      "status": "approved",
-      "origin": {
-        "kind": "prototype-extracted",
-        "path": "previews/cave-prototype/index.html",
-        "source": "stairs_down"
       },
       "usage": "cave-map-part",
       "dimensions": {

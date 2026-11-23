@@ -4,6 +4,8 @@ import {drawCharacter} from '../village/residents.mjs';
 import {WORLD_SCENE_ZOOM} from '../ui/world-scale.mjs';
 import {BATTLE_REQUEST_KEY,readPlayer} from '../battle/rules.mjs?v=cave-quest-1';
 import {consumeRestorePosition} from '../save/save-game.mjs?v=save-slots-1-shiomachi-gear-1-cave-quest-1';
+import {CAVE_DARK,createCaveTerrain,drawCaveRim} from './terrain-art.mjs?v=cave-visual-1';
+import {drawRaisedSteps,drawStairwell} from './stair-art.mjs?v=cave-visual-1';
 
 const root=new URL('../../../',import.meta.url);
 const scene=document.querySelector('#scene'),load=document.querySelector('#load');
@@ -22,14 +24,15 @@ async function image(path){
 }
 
 async function start(){
- const [floorArt,wallArt,stairsUp,stairsDown,ledgeArt,heroArt,bossArt]=await Promise.all([
-  ...['floor-material','wall-material','stairs-up','stairs-down','rock-ledge'].map(id=>image('assets/cave/'+id+'.png')),
+ const [floorArt,wallArt,stairsUp,ledgeArt,heroArt,bossArt]=await Promise.all([
+  ...['floor-material-atlas','wall-material','stairs-up','rock-ledge'].map(id=>image('assets/cave/'+id+'.png?v=cave-visual-1')),
   image('assets/characters/hizuki/walk-4dir-80x112.png'),image('assets/enemies/field-oni.png')
  ]);
  const restored=consumeRestorePosition('cave');
  const inputs=new Map();
  let pending=null,paused=false,leaving=false,timer;
- let floor,layout,walk,background,x,y,face,distance,last=0;
+ let floor,layout,walk,terrain,x,y,face,distance,last=0;
+ const renderedFloors=new Map();
  const hero={bitmap:heroArt};
  const bossDefeated=readPlayer().caveQuest.rockBreaker;
  const clear=()=>{inputs.clear();pending=null;};
@@ -44,39 +47,48 @@ async function start(){
   floor=index;layout=CAVE_FLOORS[floor];
   const width=layout.grid[0].length*tile,height=layout.grid.length*tile;
   const blocked=new Uint8Array(width*height);
-  background=document.createElement('canvas');
-  background.width=width;background.height=height;
-  const paint=background.getContext('2d');
-  for(const [row,line] of layout.grid.entries())for(let col=0;col<line.length;col++){
-   const px=col*tile,py=row*tile;
-   if(caveCellOpen(floor,col,row)){
-    paint.drawImage(floorArt,px,py);
-    if(!caveCellOpen(floor,col,row-1)){
-     const shade=paint.createLinearGradient(0,py,0,py+17);
-     shade.addColorStop(0,'#090d16bf');shade.addColorStop(1,'#090d1600');
-     paint.fillStyle=shade;paint.fillRect(px,py,tile,17);
-    }
-   }else{
-    const faceVisible=caveCellOpen(floor,col,row+1);
-    paint.fillStyle='#0b1018';paint.fillRect(px,py,tile,tile);
-    if(faceVisible)paint.drawImage(wallArt,px,py);
-    for(let line=py;line<py+tile;line++)blocked.fill(1,line*width+px,line*width+px+tile);
+  terrain=renderedFloors.get(index);
+  if(!terrain){
+   terrain=createCaveTerrain(layout,floorArt,wallArt);
+   const paint=terrain.ground.getContext('2d');
+   if(layout.down){
+    const [col,row]=layout.down.map(value=>value-1);
+    drawStairwell(paint,col,row,'back');
+    drawStairwell(paint,col,row,'front');
    }
+   if(floor===0){
+    drawRaisedSteps(paint,8,1,'back');
+    drawRaisedSteps(paint,8,1,'front');
+   }
+   renderedFloors.set(index,terrain);
   }
-  for(const [marker,art] of [[layout.up,stairsUp],[layout.down,stairsDown]]){
-   if(marker){
-    const [mx,my]=center(marker);
-    paint.drawImage(art,mx-art.width/2,my-art.height/2);
-   }
+  for(const [row,line] of layout.grid.entries())for(let col=0;col<line.length;col++){
+   if(caveCellOpen(floor,col,row))continue;
+   const px=col*tile,py=row*tile;
+   for(let line=py;line<py+tile;line++)blocked.fill(1,line*width+px,line*width+px+tile);
   }
   walk=makeWalk(width,height,blocked,8);
-  [x,y]=point&&walk.canStand(point.x,point.y)?[point.x,point.y]:center(cell);
+  [x,y]=point&&walk.canStand(point.x,point.y)&&!occupied(point.x,point.y)?[point.x,point.y]:center(cell);
   face=point?.face??1;distance=0;
   scene.dataset.floor=String(floor+1);
   tell('地下'+(floor+1)+'階');
   window.parent?.KIKOKU_GAME?.autosave?.(window);
  }
  const snapshot=()=>({scene:'cave',position:{x,y,face,floor}});
+ function occupied(px,py){
+  if(layout.down){
+   const [cx,cy]=layout.down.map(value=>value*tile);
+   if(((px-cx)/36)**2+((py-cy)/35)**2<1)return true;
+  }
+  if(layout.up){
+   const [cx,cy]=center(layout.up);
+   if(px>cx-20&&px<cx+40&&py>cy-33&&py<cy+23)return true;
+  }
+  if(floor===0&&Math.abs(px-9*tile)<34&&py>1.25*tile&&py<2.8*tile)return true;
+  if(!layout.boss||bossDefeated)return false;
+  const [bx,by]=center(layout.boss);
+  return Math.hypot(px-bx,py-by)<34;
+ }
  window.KIKOKU_SAVE_SNAPSHOT=snapshot;
  const returning=new URLSearchParams(location.search).get('from')==='guardian';
  const initial=restored?.floor??(returning?2:0);
@@ -106,20 +118,30 @@ async function start(){
   if(scene.width!==width||scene.height!==height){scene.width=width;scene.height=height;}
   if(!width||!height)return;
   const camera=(length,view,point)=>length<view?(length-view)/2:Math.max(0,Math.min(length-view,point-view/2));
-  const cx=camera(background.width,width/scale,x),cy=camera(background.height,height/scale,y-68);
-  ctx.resetTransform();ctx.fillStyle='#0b1018';ctx.fillRect(0,0,width,height);
+  const {ground,rim}=terrain;
+  const cx=camera(ground.width,width/scale,x),cy=camera(ground.height,height/scale,y-68);
+  ctx.resetTransform();ctx.fillStyle=CAVE_DARK;ctx.fillRect(0,0,width,height);
   ctx.imageSmoothingEnabled=false;
   ctx.setTransform(scale,0,0,scale,-Math.round(cx*scale),-Math.round(cy*scale));
-  ctx.drawImage(background,0,0);
+  ctx.drawImage(ground,0,0);
   const [lx,ly]=center(layout.ledge);
   const ledge=()=>ctx.drawImage(ledgeArt,lx-ledgeArt.width/2,ly-ledgeArt.height);
-  if(y>=ly)ledge();
+  const up=layout.up&&center(layout.up);
+  const stairs=()=>ctx.drawImage(stairsUp,up[0]-stairsUp.width/2,up[1]-stairsUp.height/2);
+  if(up&&y>=up[1]+20)stairs();
+  if(floor!==0&&y>=ly)ledge();
   if(layout.boss&&!bossDefeated){
    const [bx,by]=center(layout.boss);
    ctx.drawImage(bossArt,bx-64,by-111);
   }
   drawCharacter(ctx,{...hero,x,y,face,moving,distance});
-  if(y<ly)ledge();
+  drawCaveRim(ctx,rim,x,y);
+  if(up&&y<up[1]+20)stairs();
+  if(floor!==0&&y<ly)ledge();
+  if(layout.down&&y<layout.down[1]*tile+10){
+   const [col,row]=layout.down.map(value=>value-1);
+   drawStairwell(ctx,col,row,'front');
+  }
  }
  function frame(now){
   if(leaving)return;
@@ -130,8 +152,6 @@ async function start(){
   pending=null;
   if(dir&&!paused){
    const [dx,dy,row]=directions[dir],step=hizukiWalkDistance(elapsed);
-   const boss=layout.boss&&!bossDefeated?center(layout.boss):null;
-   const occupied=boss?(px,py)=>Math.hypot(px-boss[0],py-boss[1])<34:null;
    const [nx,ny]=walk.move(x,y,dx*step,dy*step,occupied);
    const travel=Math.hypot(nx-x,ny-y);
    distance+=travel;moving=travel>0;x=nx;y=ny;face=row;

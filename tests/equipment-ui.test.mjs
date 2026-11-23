@@ -126,7 +126,6 @@ test('a purchased item opens its own equipment slot and is only equipped after c
  assert.equal(purchase.accepted,true);
  const ui=createMenu(purchase.player,'items'),detail=ui.roots['#field-menu-detail'];
  detail.querySelectorAll('button:not([disabled])').find(node=>node.textContent==='鉢巻').click();
- detail.querySelectorAll('button:not([disabled])').find(node=>node.textContent==='装備を開く').click();
  const gear=detail.querySelectorAll('.equipment-gear-choice').find(node=>node.dataset.equipmentId==='headband');
  assert.equal(gear.classList.contains('menu-focus'),true);
  assert.match(detail.querySelector('.equipment-stat-preview').textContent,/守備 6 → 8/);

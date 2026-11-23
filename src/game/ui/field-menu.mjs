@@ -109,7 +109,8 @@ function addItem(list,item,index){
   button(list,item.label,()=>{
     detailIndex=index;
     message.textContent='';
-    selectAction(item);
+    if(item.open)item.open();
+    else selectAction(item);
   });
 }
 // The equipment view stays on one screen: slots left, carried gear right.
@@ -204,8 +205,7 @@ function renderDetails(hero,id){
     for(const item of ARMORY_STOCK){
       if(!hero.equipmentInventory[item.id]||hero.equipment[item.slot]===item.id)continue;
       rows.push({
-        label:item.name,caption:EQUIPMENT_SLOTS[item.slot]+'の兵具',action:'装備を開く',
-        run:()=>openCommand(entries.findIndex(([key])=>key==='equipment'),item)
+        label:item.name,open:()=>openCommand(entries.findIndex(([key])=>key==='equipment'),item)
       });
     }
     if(readStoryStage()!=='chief')rows.push({label:'結び札',caption:'里長から預かった札。'});

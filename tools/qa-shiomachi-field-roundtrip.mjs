@@ -305,6 +305,14 @@ try{
  const cave=page.frameLocator('#game-scene');
  const caveButton=cave.locator('#action-a');
  const caveFloor=number=>cave.locator('#scene[data-floor="'+number+'"]').waitFor();
+ const climbWithPad=async floor=>{
+  const pad=await cave.locator('#up').boundingBox();
+  assert.ok(pad,'cave up button must be visible');
+  await page.mouse.move(pad.x+pad.width/2,pad.y+pad.height/2);
+  await page.mouse.down();
+  try{await cave.locator('#scene[data-floor="'+floor+'"]').waitFor({timeout:3500});}
+  finally{await page.mouse.up();}
+ };
  const walkCave=async waypoints=>{
   const frame=page.frames().find(frame=>frame.url().includes('/src/game/cave/'));
   for(const [col,row] of waypoints){
@@ -334,12 +342,14 @@ try{
  };
  await walkCave([[9,12],[12,12],[12,11]]);
  await page.screenshot({path:'artifacts/cave-first-floor.png'});
+ await climbWithPad(2);
+ // Both walking onto the stair and pressing A at its foot work.
  await caveButton.click();
- await caveFloor(2);
+ await caveFloor(1);
+ await climbWithPad(2);
  await walkCave([[6,18],[6,14],[20,14],[20,8],[24,8]]);
  await page.screenshot({path:'artifacts/cave-second-floor.png'});
- await caveButton.click();
- await caveFloor(3);
+ await climbWithPad(3);
 
  await page.evaluate(async()=>{
   const {readPlayer,savePlayer}=await import('./battle/rules.mjs');
@@ -364,11 +374,9 @@ try{
    ?.KIKOKU_SAVE_SNAPSHOT?.()?.position.floor===2);
  assert.equal((await player()).caveQuest.rockBreaker,true);
 
- await caveButton.click();
- await caveFloor(2);
+ await climbWithPad(2);
  await walkCave([[20,8],[20,14],[6,14],[6,18],[7,18]]);
- await caveButton.click();
- await caveFloor(1);
+ await climbWithPad(1);
  await walkCave([[12,12],[9,12],[9,13]]);
  await page.frames().find(frame=>frame.url().includes('/src/game/cave/')).evaluate(()=>{
   window.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowDown'}));

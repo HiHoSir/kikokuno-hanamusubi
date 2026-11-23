@@ -245,12 +245,11 @@ try{
             await page.locator('#field-menu-toggle').tap();
             await page.locator('[data-menu-command="items"]').tap();
             await page.getByRole('button',{name:'脇差',exact:true}).tap();
-            await page.getByRole('button',{name:'装備を開く',exact:true}).tap();
             const preview=await page.locator('.equipment-stat-preview').innerText();
             if(!preview.includes('攻撃 9 → 13')||!preview.includes('守備 6 → 6'))
               issues.push('armory equipment preview: '+preview);
             await page.screenshot({path:'artifacts/field-menu-equipment.png'});
-            await page.locator('[data-equipment-id="wakizashi"]').tap();
+            await page.locator('#field-menu-action-a').tap();
             const equipped=await page.evaluate(()=>JSON.parse(localStorage.getItem('kikokuno-hanamusubi-battle-player')));
             if(equipped.equipment.weapon!=='wakizashi'||equipped.attack!==13||equipped.defense!==6)
               issues.push('armory manual equip did not update combat stats');

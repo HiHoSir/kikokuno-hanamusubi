@@ -43,7 +43,7 @@ function refreshSaveChoices(){
       const restored=restoreSavedGame(slot);
       if(!restored.accepted){loadMessage.textContent=restored.message;refreshSaveChoices();return;}
       const target=new URL('src/game/',document.baseURI);
-      target.searchParams.set('build','save-slots-1-shared-walk-1-owned-gear-1');
+      target.searchParams.set('build','save-slots-1-shared-walk-1-owned-gear-2');
       window.KIKOKU_ROUTE.go(target);
     });
     loadSlots.append(button);

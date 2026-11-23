@@ -1,107 +1,24 @@
-// Shiomachi interiors share the village room art. The armory uses the saved
-// player in the main game, and the standalone review uses its own wallet.
 import {rooms,prepareInterior} from '../interiors/rooms.mjs';
 import {paintRoom,paintPartition,paintContactShadow} from '../interiors/room-art.mjs';
 import {drawFurnitureLife} from '../interiors/life-effects.mjs';
 import {drawCharacter,residentInFront} from '../village/residents.mjs';
 import {makeWalk,hizukiWalkDistance} from '../village/movement.mjs?v=shared-walk-1';
-import {normalizePlayer,DEFAULT_PLAYER,FOOD_ITEMS,purchaseFood,purchaseArmory,readPlayer,savePlayer} from '../battle/rules.mjs?v=equipment-4slots-2-cove-shells-1-shiomachi-gear-1';
+import {normalizePlayer,DEFAULT_PLAYER} from '../battle/rules.mjs?v=equipment-4slots-2-cove-shells-1-shiomachi-gear-1';
 import {SHIOMACHI_ARMORY_STOCK} from '../../../data/maps/shiomachi-village/armory.mjs?v=shiomachi-gear-1';
 
-export const SHIOMACHI_INN_PRICE=20; // preview-only proposed price, not game economy canon
-export function previewInnStay(hero,price=SHIOMACHI_INN_PRICE){
- const player=normalizePlayer(hero);
- if(player.gold<price)return {accepted:false,player,message:'両が足りません。'};
- const next=normalizePlayer({...player,gold:player.gold-price,
-   hp:player.maxhp,mp:player.maxmp});
- return {accepted:true,player:next,message:'ごゆっくり。体力と術力が回復しました。'};
-}
+import {createVillageShop} from '../interiors/shop.mjs?v=shared-shops-1';
 
 export function createShiomachiInteriorPreview({ctx,images,viewport,clearInput,shopPanel,previewMode=true}){
  const furniture=images.furniture;
- const {title,wallet,options,message}=shopPanel;
  const reduce=matchMedia('(prefers-reduced-motion: reduce)');
  let site=null,room=null,plan=null,walking=null,floor=null,hero=null;
- let lastRoom=null,shopActive=false,selected=0;
- // Trial inventory starts with resources so all three services can be tested.
- // This object is NEVER written into a real save.
- let trial=normalizePlayer({...DEFAULT_PLAYER,gold:250,hp:7,mp:3});
- const isLiveArmory=()=>!previewMode&&site?.room==='armory';
- function shopEntries(){
-   if(!site)return [];
-   if(site.room==='inn')return [
-     {id:'sleep',label:'一泊する　'+SHIOMACHI_INN_PRICE+'両（体力・術力を回復）'},
-     {id:'exit',label:'もどる'}];
-   if(site.room==='armory')return [
-     ...SHIOMACHI_ARMORY_STOCK.map(item=>({id:item.id,
-       label:item.name+'　'+item.price+'両（'+(item.attack?'攻撃+':'守備+')+(item.attack||item.defense)+'）'})),
-     {id:'exit',label:'もどる'}];
-   if(site.room==='teahouse')return [
-     ...Object.values(FOOD_ITEMS).map(item=>({id:item.id,
-       label:item.name+'　'+item.price+'両（体力+'+item.heal+'）'})),
-     {id:'exit',label:'もどる'}];
-   return [];
- }
- function refreshShop(){
-   const player=isLiveArmory()?readPlayer():trial;
-   wallet.textContent=isLiveArmory()?'所持金 '+player.gold+'両':
-     '試用所持金 '+player.gold+'両　体力 '+player.hp+'/'+player.maxhp+'　術力 '+player.mp+'/'+player.maxmp;
-   options.replaceChildren();
-   for(const [i,entry] of shopEntries().entries()){
-     const btn=document.createElement('button');
-     btn.type='button';
-     btn.dataset.shopItem=entry.id;
-     btn.textContent=entry.label;
-     if(entry.id in player.foods)btn.textContent+='　所持'+player.foods[entry.id];
-     if(player.equipmentInventory[entry.id])btn.textContent+='　購入済';
-     btn.classList.toggle('selected',selected===i);
-     btn.addEventListener('click',()=>{
-       selected=i;
-       confirmShop();
-     });
-     options.append(btn);
-   }
- }
- function closeShop(){
-   shopActive=false;
-   shopPanel.panel.hidden=true;
-   clearInput();
- }
- function openShop(){
-   if(!site||!['inn','armory','teahouse'].includes(site.room))return false;
-   shopActive=true;selected=0;clearInput();
-   title.textContent=isLiveArmory()?site.name:site.name+'（試用・セーブには反映しません）';
-   message.textContent='何をいたしましょう？';
-   shopPanel.panel.hidden=false;
-   refreshShop();
-   return true;
- }
- function confirmShop(){
-   if(!shopActive)return false;
-   const picked=shopEntries()[selected];
-   if(!picked)return false;
-   if(picked.id==='exit'){closeShop();return true;}
-   const live=isLiveArmory();
-   const result=site.room==='armory'?purchaseArmory(live?readPlayer():trial,picked.id,SHIOMACHI_ARMORY_STOCK)
-     :picked.id==='sleep'?previewInnStay(trial):purchaseFood(trial,picked.id);
-   if(result.accepted){
-     if(live)savePlayer(result.player);
-     else trial=result.player;
-   }
-   message.textContent=result.message;
-   if(live&&result.accepted)message.textContent+=' メニューの「装備」から装着できます。';
-   refreshShop();
-   return result.accepted;
- }
- function choose(direction){
-   if(!shopActive)return;
-   const entries=shopEntries();
-   selected=(selected+(direction==='up'||direction==='left'?-1:1)+entries.length)%entries.length;
-   refreshShop();
- }
+ let lastRoom=null;
+ let trial=normalizePlayer({...DEFAULT_PLAYER,gold:250,hp:7,mp:3,shells:{bag:{white:1}}});
+ const shop=createVillageShop({...shopPanel,clearInput,armoryStock:SHIOMACHI_ARMORY_STOCK,
+   trial:{all:previewMode,read:()=>trial,save:player=>{trial=player;}}});
  function setRoom(nextSite){
    if(!nextSite||!Object.hasOwn(rooms,nextSite.room))return false;
-   closeShop();
+   shop.close();
    site=nextSite;
    room=rooms[site.room];
    plan=prepareInterior(room);
@@ -123,7 +40,7 @@ export function createShiomachiInteriorPreview({ctx,images,viewport,clearInput,s
  function leave(){
    const last=site;
    site=null;room=null;plan=null;walking=null;floor=null;hero=null;
-   closeShop();
+   shop.close();
    return last;
  }
  const camera=(position,visible,size)=>visible>=size?(size-visible)/2:
@@ -165,7 +82,7 @@ export function createShiomachiInteriorPreview({ctx,images,viewport,clearInput,s
    }
  }
  function advance(dt,dir){
-   if(!site||shopActive)return null;
+   if(!site||shop.active)return null;
    hero.moving=false;
    if(dir){
      const directions={up:[0,-1,1],down:[0,1,0],left:[-1,0,3],right:[1,0,2]};
@@ -183,8 +100,10 @@ export function createShiomachiInteriorPreview({ctx,images,viewport,clearInput,s
  const resident=()=>site?plan.resident:null;
  const position=()=>hero?{x:hero.x,y:hero.y,face:hero.face}:null;
  return {
-   enter:setRoom,leave,advance,draw,openShop,closeShop,confirmShop,choose,resident,
-   get active(){return Boolean(site);},get shopActive(){return shopActive;},
+   enter:setRoom,leave,advance,draw,resident,
+   openShop:()=>Boolean(site)&&shop.open(site.room,site.name),
+   closeShop:shop.close,confirmShop:shop.confirm,choose:shop.choose,
+   get active(){return Boolean(site);},get shopActive(){return shop.active;},
    get site(){return site;},get plan(){return plan;},get actor(){return hero;},
    get roomName(){return lastRoom;},get currentRoom(){return site?.room??null;},
    get trial(){return trial;},position,

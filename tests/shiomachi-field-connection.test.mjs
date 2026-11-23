@@ -70,7 +70,9 @@ test('the connected shop uses individual items while approved tier values stay s
   ['T0',0,0],['T1',20,14],['T2',42,30],['T3',64,46],
   ['T4',88,64],['T5',114,84],['T6',140,104]]);
  const interior=read('src/game/shiomachi/interior-preview.mjs');
- assert.match(interior,/試用・セーブには反映しません/);
- assert.match(interior,/if\(live\)savePlayer\(result\.player\)/);
- assert.match(interior,/!previewMode&&site\?\.room==='armory'/);
+ assert.match(interior,/trial:\{all:previewMode/);
+ const shop=read('src/game/interiors/shop.mjs');
+ assert.match(shop,/試用・セーブには反映しません/);
+ assert.match(shop,/else savePlayer\(result\.player\)/);
+ assert.match(read('src/game/interiors/walk.mjs'),/createVillageShop\(/);
 });

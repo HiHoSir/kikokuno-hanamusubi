@@ -34,6 +34,26 @@ try{
    if(res.status()>=400&&res.url().startsWith('http://127.0.0.1:'))
      errors.push('HTTP '+res.status()+' '+res.url());
  });
+ await page.addInitScript(()=>{
+   const draw=CanvasRenderingContext2D.prototype.drawImage;
+   const fill=CanvasRenderingContext2D.prototype.fillRect;
+   CanvasRenderingContext2D.prototype.fillRect=function(x,y,w,h){
+     if(this.canvas.id==='scene'&&x===0&&y===0&&w===this.canvas.width&&h===this.canvas.height)
+       window.__villageDrawOrder.length=0;
+     return fill.call(this,x,y,w,h);
+   };
+   window.__villageDrawOrder=[];
+   CanvasRenderingContext2D.prototype.drawImage=function(img,...args){
+     if(this.canvas.id==='scene'&&args.length===2&&img.src){
+       const name=new URL(img.src).pathname.split('/').at(-1);
+       if(/^(sign-|house-|teahouse)/.test(name)){
+         window.__villageDrawOrder.push([name,...args]);
+         if(window.__villageDrawOrder.length>64)window.__villageDrawOrder.shift();
+       }
+     }
+     return draw.call(this,img,...args);
+   };
+ });
  await page.goto('http://127.0.0.1:'+server.address().port+
    '/previews/shiomachi-village/',{waitUntil:'domcontentloaded'});
  await page.waitForFunction(()=>window.__SHIOMACHI_QA?.ready===true,null,{timeout:45000});
@@ -54,6 +74,12 @@ try{
  assert.deepEqual(qa.bounds,[42,54]);
  assert.equal(qa.renderer.buildings,4);
  assert.equal(qa.renderer.visibleSigns,3,'inn, armory and teahouse share the native sign images');
+ await page.waitForFunction(()=>window.__villageDrawOrder.some(([name])=>name==='sign-teahouse.png'));
+ const draws=await page.evaluate(()=>window.__villageDrawOrder);
+ for(const [name,buildingTop] of [['sign-inn.png',658],['sign-armory.png',642],['sign-teahouse.png',1140]]){
+   const index=draws.findIndex(([asset])=>asset===name);
+   assert.ok(index>0&&draws.slice(0,index).some(([, ,y])=>y===buildingTop),name+' is painted after its facade');
+ }
  assert.equal(qa.renderer.nativeObjectCount,12);
  assert.deepEqual(qa.renderer.pierSprite,[128,360],
    'the transparent generated sprite must be loaded at its native size');
@@ -205,6 +231,14 @@ try{
      const again=await page.evaluate(()=>window.__SHIOMACHI_QA.trial());
      assert.equal(again.gold,secondGold,'duplicate purchase must not charge twice');
      assert.ok((await page.locator('#shop-message').textContent()).includes('もう持っています'));
+   }
+   if(room==='teahouse'){
+     const sell=page.locator('[data-shop-item="sell-shells"]');
+     assert.match(await sell.textContent(),/1個（3両）/);
+     await sell.click();
+     const sold=await page.evaluate(()=>window.__SHIOMACHI_QA.trial());
+     assert.equal(sold.gold,afterPurchase.gold+3);
+     assert.equal(sold.shells.bag.white,0);
    }
    await page.screenshot({path:'artifacts/shiomachi-village-'+room+'-shop.png'});
    await page.locator('#shop-options [data-shop-item="exit"]').click();

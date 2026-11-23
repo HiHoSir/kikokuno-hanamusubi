@@ -127,7 +127,7 @@ try{
  // Verify the armory after the roundtrip so the shop test cannot move our exit spawn.
  await page.evaluate(async()=>{
    const {DEFAULT_PLAYER,savePlayer}=await import('./battle/rules.mjs');
-   savePlayer({...DEFAULT_PLAYER,gold:208});
+   savePlayer({...DEFAULT_PLAYER,gold:208,shells:{bag:{white:2,spiral:1}}});
  });
  const returnedField=page.frames().find(f=>f.url().includes('/src/field/'));
  await returnedField.evaluate(()=>window.dispatchEvent(new KeyboardEvent('keydown',
@@ -138,16 +138,19 @@ try{
      f.location.pathname==='/src/game/shiomachi/');
  });
  const villageAgain=page.frames().find(f=>f.url().includes('/src/game/shiomachi/'));
- assert.equal(await villageAgain.evaluate(()=>window.__SHIOMACHI_QA.enterRoom('armory')),true);
- const clerk=await villageAgain.evaluate(()=>window.__SHIOMACHI_QA.indoorResident());
- const walkUp=type=>villageAgain.evaluate(type=>
-   window.dispatchEvent(new KeyboardEvent(type,{key:'ArrowUp',bubbles:true})),type);
- await walkUp('keydown');
- await villageAgain.waitForFunction(y=>window.__SHIOMACHI_QA.indoorPosition()?.y<=y,clerk.talkPoint[1]+42);
- await walkUp('keyup');
- await villageAgain.locator('#action-a').click();
- await villageAgain.locator('#next.hasLastLine').click();
- await villageAgain.locator('#shop-panel').waitFor({state:'visible'});
+ const openStore=async room=>{
+   assert.equal(await villageAgain.evaluate(room=>window.__SHIOMACHI_QA.enterRoom(room),room),true);
+   const clerk=await villageAgain.evaluate(()=>window.__SHIOMACHI_QA.indoorResident());
+   const walkUp=type=>villageAgain.evaluate(type=>
+     window.dispatchEvent(new KeyboardEvent(type,{key:'ArrowUp',bubbles:true})),type);
+   await walkUp('keydown');
+   await villageAgain.waitForFunction(y=>window.__SHIOMACHI_QA.indoorPosition()?.y<=y,clerk.talkPoint[1]+42);
+   await walkUp('keyup');
+   await villageAgain.locator('#action-a').click();
+   await villageAgain.locator('#next.hasLastLine').click();
+   await villageAgain.locator('#shop-panel').waitFor({state:'visible'});
+ };
+ await openStore('armory');
  assert.match(await villageAgain.locator('#shop-wallet').textContent(),/^所持金 208両$/);
  const prices=await villageAgain.locator('#shop-options button').allTextContents();
  assert.deepEqual(prices.slice(0,4).map(text=>Number(text.match(/(\d+)両/)[1])),[80,64,40,24]);
@@ -187,6 +190,19 @@ try{
  assert.equal(equipped.equipment.body,'shiomachi-tide-armor');
  assert.deepEqual((await player()).equipment,equipped.equipment);
  await page.locator('#field-menu-toggle').click();
+ await villageAgain.evaluate(()=>window.__SHIOMACHI_QA.exitRoom());
+
+ await openStore('teahouse');
+ const sell=villageAgain.locator('[data-shop-item="sell-shells"]');
+ assert.match(await sell.textContent(),/3個（13両）/);
+ await sell.click();
+ assert.equal((await player()).gold,77);
+ assert.deepEqual((await player()).shells.bag,{sakura:0,spiral:0,white:0});
+ await sell.click();
+ assert.equal((await player()).gold,77,'an empty bag cannot be sold twice');
+ await villageAgain.locator('[data-shop-item="onigiri"]').click();
+ assert.equal((await player()).gold,69);
+ assert.equal((await player()).foods.onigiri,1);
  await villageAgain.evaluate(()=>window.__SHIOMACHI_QA.exitRoom());
 
  // Place the hero on ordinary ground near each fence, then hold an actual

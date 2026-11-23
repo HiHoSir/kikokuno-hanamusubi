@@ -128,8 +128,8 @@ test('production cove UI and teahouse sell while retaining village shop layout',
  assert.match(cove,/KIKOKU_SAVE_SNAPSHOT/);
  const hud=readFileSync('src/game/cove/index.html','utf8');
  assert.match(hud,/id="shell-hint"/);
- const interior=readFileSync('src/game/interiors/walk.mjs','utf8');
- assert.match(interior,/sellCoveShells\(readPlayer\(\)\)/);
+ const interior=readFileSync('src/game/interiors/shop.mjs','utf8');
+ assert.match(interior,/sellCoveShells\(hero\)/);
  assert.match(interior,/id:'sell-shells'/);
  assert.match(interior,/savePlayer\(result\.player\)/);
  const items=readFileSync('src/game/ui/field-menu.mjs','utf8');

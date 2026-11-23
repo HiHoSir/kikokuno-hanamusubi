@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-11-23-share-village-shops",
+  "kind": "user-approved",
+  "scopes": ["balance", "equipment"],
+  "affectedFiles": ["docs/BALANCE_PROGRESSION_CONTRACT.md", "src/game/shiomachi/interior-preview.mjs"],
+  "readBeforeEditing": ["docs/BALANCE_PROGRESSION_CONTRACT.md：茶店の試用境界を確認", "docs/EQUIPMENT_CURRENT_PLAYABLE.md：村ごとの兵具の品揃えを確認"],
+  "previousDesign": "両村の店の操作と売買処理は別実装で、潮待村の茶店は試用購入のみだった。潮待村の看板は建物に隠れた。",
+  "intendedDifference": "品揃えを店舗設定で渡し、買い物と貝殻買取を共通化する。本編の潮待村でも実際の所持品と所持金に反映する。",
+  "impactAnalysis": "潮待村の茶店で食品を買い、入り江で拾った貝殻を鬼灯村と同じ単価で売れる。",
+  "preservedBoundaries": "兵具のラインナップと価格、貝殻の単価、独立プレビューと宿の試用の扱いを維持する。",
+  "verification": "Chromiumで看板の描画順、潮待村での貝殻買取と食品購入、残高と再売却の拒否を検査する。",
+  "userEvidence": {
+    "status": "explicit-user-instruction",
+    "date": "2026-11-23",
+    "quote": "潮待村は店の看板がなかったり貝殻の買取に対応してなかったりするのでどうにかして。\n村単位で売買システムも組み直してるように見えるので、ラインナップ以外は共通のシステムにしようよ。",
+    "source": "本会話の2026-11-23のユーザーメッセージ"
+  }
+}

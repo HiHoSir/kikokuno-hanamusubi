@@ -40,7 +40,7 @@ export function createShiomachiRenderer(ctx,art,map,fence){
  // Place them over their corresponding façades and depth-sort with buildings.
  const signs=map.interiors.map(site=>({
    type:'object',id:site.building+'-sign',x:site.x-80,
-   y:site.thresholdY-34,image:art[site.sign]
+   y:site.thresholdY-12,image:art[site.sign]
  })).filter(o=>o.image);
  const {width,height}=map;
  const render=(player,residents,time,viewport,debug=false)=>{

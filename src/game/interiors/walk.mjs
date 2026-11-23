@@ -5,12 +5,11 @@ import {bindDialogue} from '../village/dialogue.mjs?v=field-menu-1';
 import {rooms, resolveInterior, prepareInterior} from './rooms.mjs?v=interior-wall-anchor-1';
 import {paintRoom, paintPartition, paintContactShadow} from './room-art.mjs?v=interior-wall-anchor-1';
 import {drawFurnitureLife} from './life-effects.mjs?v=indoor-life-3-kamado';
-import {FOOD_ITEMS,ARMORY_STOCK,purchaseFood,purchaseArmory,collectFind,readPlayer,savePlayer} from '../battle/rules.mjs?v=equipment-4slots-2-cove-shells-1-shiomachi-gear-1';
+import {collectFind,readPlayer,savePlayer} from '../battle/rules.mjs?v=equipment-4slots-2-cove-shells-1-shiomachi-gear-1';
 import {consumeRestorePosition} from '../save/save-game.mjs?v=save-slots-1-shiomachi-gear-1';
 import {VILLAGE_FINDS} from '../../../data/maps/hozuki-village/finds.mjs';
 import {drawFindHint,shouldShowFindHint} from '../village/find-indicator.mjs?v=nearby-1';
-import {shellBagCount,shellBagValue} from '../items/shells.mjs';
-import {sellCoveShells} from '../../../data/maps/sea-cove/shells.mjs';
+import {createVillageShop} from './shop.mjs?v=shared-shops-1';
 
 const scene = document.querySelector('#scene');
 const context = scene.getContext('2d', {alpha:false});
@@ -56,63 +55,12 @@ async function start() {
   const residentArt = new Map(portraits);
   const collectedFinds = new Set(readPlayer().foundItems);
   let selectedRoom='';
-  let shopActive=false,shopSelected=0;
-  const shopPanel=document.getElementById('shop-panel');
-  const shopTitle=document.getElementById('shop-title');
-  const shopWallet=document.getElementById('shop-wallet');
-  const shopOptions=document.getElementById('shop-options');
-  const shopMessage=document.getElementById('shop-message');
-  function options(){
-    const shells=readPlayer().shells.bag;
-    return selectedRoom==='teahouse'
-      ?[...Object.values(FOOD_ITEMS).map(item=>({id:item.id,label:item.name+'　'+item.price+'両（体力+'+item.heal+'）'})),
-        {id:'sell-shells',label:'貝殻を売る　'+shellBagCount(shells)+'個（'+shellBagValue(shells)+'両）'},
-        {id:'exit',label:'もどる'}]
-      :selectedRoom==='armory'?[...ARMORY_STOCK.map(item=>({id:item.id,label:item.name+'　'+item.price+'両（'+(item.attack?'攻撃+'+item.attack:'守備+'+item.defense)+'）'})),{id:'exit',label:'もどる'}]:[];
-  }
-  function refreshShop(){
-    const hero=readPlayer();
-    shopWallet.textContent='所持金 '+hero.gold+'両';
-    const rows=options();
-    shopOptions.replaceChildren();
-    for(const [i,item] of rows.entries()){
-      const button=document.createElement('button');
-      button.type='button';button.dataset.shopItem=item.id;
-      button.classList.toggle('selected',shopSelected===i);
-      button.textContent=item.label+(hero.foods[item.id]!==undefined?'　所持'+hero.foods[item.id]:hero.equipmentInventory?.[item.id]?'　購入済':'');
-      button.addEventListener('click',()=>{shopSelected=i;confirmShop();});
-      shopOptions.append(button);
-    }
-  }
-  function openShop(){
-    if(selectedRoom!=='teahouse'&&selectedRoom!=='armory')return;
-    shopActive=true;shopSelected=0;clearInput();
-    shopTitle.textContent=selectedRoom==='teahouse'?'茶店の品書き':'兵具屋の品書き';
-    shopMessage.textContent='何をお求めですか？';
-    shopPanel.hidden=false;refreshShop();
-  }
-  function closeShop(){shopActive=false;shopPanel.hidden=true;clearInput();}
-  function moveShop(direction){
-    const length=options().length;
-    if(!length)return;
-    shopSelected=(shopSelected+((direction==='up'||direction==='left')?-1:1)+length)%length;
-    refreshShop();
-  }
-  function confirmShop(){
-    if(!shopActive)return;
-    const choice=options()[shopSelected];
-    if(!choice)return;
-    if(choice.id==='exit'){closeShop();return;}
-    const result=choice.id==='sell-shells'?sellCoveShells(readPlayer()):
-      selectedRoom==='teahouse'?purchaseFood(readPlayer(),choice.id):purchaseArmory(readPlayer(),choice.id);
-    if(result.accepted)savePlayer(result.player);
-    shopMessage.textContent=result.message;
-    if(result.accepted&&selectedRoom==='armory')
-      shopMessage.textContent+=' メニューの「装備」から装着できます。';
-    refreshShop();
-    globalThis.KIKOKU_AUDIO?.se?.(result.accepted?'confirm':'cancel');
-  }
-  const dialogue = bindDialogue(clearInput,ended=>{if(ended===plan.resident)openShop();});
+  const shop=createVillageShop({
+    panel:document.getElementById('shop-panel'),title:document.getElementById('shop-title'),
+    wallet:document.getElementById('shop-wallet'),options:document.getElementById('shop-options'),
+    message:document.getElementById('shop-message'),clearInput
+  });
+  const dialogue = bindDialogue(clearInput,ended=>{if(ended===plan.resident)shop.open(selectedRoom);});
   const params = new URLSearchParams(location.search);
   const initial = resolveInterior(params);
   const outdoor = new URL('../village/',location.href);
@@ -131,7 +79,7 @@ async function start() {
     dialogue.close();
     room = nextRoom;
     selectedRoom=selected;
-    shopActive=false;shopPanel.hidden=true;
+    shop.close();
     plan = prepareInterior(room);
     plan.resident.bitmap=residentArt.get(plan.resident.asset);
     const find=Object.entries(VILLAGE_FINDS).find(([,site])=>site.building&&site.building===initial.returnFocus);
@@ -210,7 +158,7 @@ async function start() {
       }
     }
     if (!drewHero) drawHero();
-    if(!dialogue.active && !shopActive && shouldShowFindHint({x,y},roomFind,collectedFinds))
+    if(!dialogue.active && !shop.active && shouldShowFindHint({x,y},roomFind,collectedFinds))
       drawFindHint(context,roomFind.hintX,roomFind.hintY,lastFrame);
     dialogue.update(residentInFront(x,y,face,[plan.resident]),x,y);
 
@@ -225,7 +173,7 @@ async function start() {
     sceneTime += elapsed;
     const direction = [...input.values()].at(-1);
     let moving = false;
-    if (direction && !dialogue.active && !shopActive) {
+    if (direction && !dialogue.active && !shop.active) {
       const [dx,dy,row] = directions[direction];
       face = row;
       const step=hizukiWalkDistance(elapsed);
@@ -249,7 +197,7 @@ async function start() {
     button.addEventListener('pointerdown',event=>{
       if (event.button!==0 || dialogue.active) return;
       event.preventDefault();
-      if(shopActive){moveShop(button.dataset.dir);return;}
+      if(shop.active){shop.choose(button.dataset.dir);return;}
       button.setPointerCapture(event.pointerId);
       setInput(event.pointerId,button.dataset.dir);
     });
@@ -267,22 +215,22 @@ async function start() {
   const actionA=document.querySelector('#action-a');
   const actionB=document.querySelector('#action-b');
   actionA.addEventListener('click',()=>{
-    if(shopActive)confirmShop();
+    if(shop.active)shop.confirm();
     else if(dialogue.active)dialogue.advance();
     else interact();
   });
   actionB.addEventListener('click',()=>{
-    if(shopActive)closeShop();
+    if(shop.active)shop.close();
     else if(dialogue.active)dialogue.advance();
   });
   addEventListener('keydown',event=>{
-    if(shopActive){
+    if(shop.active){
       const direction=keys[event.key];
-      if(direction){event.preventDefault();if(!event.repeat)moveShop(direction);}
+      if(direction){event.preventDefault();if(!event.repeat)shop.choose(direction);}
       else if(['Enter',' '].includes(event.key)){
         if(event.target?.tagName==='BUTTON')return;
-        event.preventDefault();if(!event.repeat)confirmShop();
-      }else if(event.key==='Escape'||event.key==='Backspace'){event.preventDefault();closeShop();}
+        event.preventDefault();if(!event.repeat)shop.confirm();
+      }else if(event.key==='Escape'||event.key==='Backspace'){event.preventDefault();shop.close();}
       return;
     }
     if(dialogue.active){

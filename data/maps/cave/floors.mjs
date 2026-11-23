@@ -65,7 +65,7 @@ export function caveFeatureBlocks({kind,origin},x,y){
  const px=x-origin[0]*CAVE_TILE,py=y-origin[1]*CAVE_TILE;
  switch(kind){
   case 'down':return ((px-48)/36)**2+((py-48)/35)**2<1;
-  case 'up':return px>6&&px<93&&py>5&&py<94&&!(px<34&&py>68);
+  case 'up':return px>6&&px<93&&py>5&&py<94&&!(px<34&&py>=64);
   case 'rise':return Math.abs(px-48)<34&&py>12&&py<86.4;
   default:return false;
  }

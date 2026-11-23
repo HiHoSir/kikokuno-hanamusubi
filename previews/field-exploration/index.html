@@ -33,6 +33,7 @@ walkCode=walkCode.replace(encounterLine,'const encounterAfter=Number.POSITIVE_IN
 // instead of silently falling back to the village on failed battle return.
 const inspectionSpawn="(()=>{const world=window.YK_WORLD;const requested=window.__FIELD_EXPLORATION_REQUESTED_CELL;\n"+
 " if(!world||!requested)throw Error('レビュー位置を決定できません');\n"+
+" world.setBridgeRockCleared(true);\n"+
 " const wanted=requested.map(n=>n*32+16);let actual=world.safePosition(wanted);\n"+
 " const isOpen=p=>world.walkable(...p)&&!window.YK_AREA_TRANSITIONS.contact(world,...p)&&"+
 "world.mapData.travelReachable.has(Math.floor(p[0]/32)+','+Math.floor(p[1]/32));\n"+

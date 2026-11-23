@@ -111,6 +111,8 @@ function updateMenu(){
 function navigateBack(){
   if(state.outcome==='defeat'){
     window.KIKOKU_ROUTE.go(new URL('../village/?focus=field-exit',import.meta.url));
+  }else if(caveBattle){
+    window.KIKOKU_ROUTE.go(new URL('../cave/?from=guardian',import.meta.url));
   }else{
     window.KIKOKU_ROUTE.go(new URL('../../field/?from=battle',import.meta.url));
   }

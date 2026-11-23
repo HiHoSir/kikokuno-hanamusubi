@@ -58,7 +58,7 @@ window.YK_WORLD=(()=>{
  mapData.decorations.push({kind:'newCaveLarge',x:14*32,y:48*32,width:64,height:32,
    foot:49*32,contactTiles:caveCells,occupiedTiles:[],walkThrough:true,destination:'cave'});
  const bridgeRock={id:'bridge-rock',kind:'bridgeRock',x:48*32-14,y:44*32-40,
-   width:60,height:40,foot:44*32,contactTiles:[bridgeRockCell],occupiedTiles:[bridgeRockCell]};
+   width:60,height:40,foot:44*32,contactTiles:[bridgeRockCell],occupiedTiles:[]};
  mapData.decorations.push(bridgeRock);
  function setBridgeRockCleared(cleared){
   mapData.bridgeRockCleared=cleared;
@@ -92,7 +92,8 @@ window.YK_WORLD=(()=>{
    walkThrough:o.walkThrough,biome:'forest',supportHeight:mapData.heights[y][x]
   }));
  });
- YK_FIELD_ELEVATION.refreshCollision(mapData);
+ // Establish the original elevation routes before closing the quest gate.
+ setBridgeRockCleared(false);
  const passable=new Set(['grass','forest','sand','snow','barren','road','bridge']);
  const cellOpen=(x,y)=>x>0&&y>0&&x<79&&y<79&&passable.has(mapData[y]?.[x])&&!mapData.occupiedTiles.has(x+','+y)&&mapData.travelReachable.has(x+','+y)&&YK_ELEVATION.pointWalkable(mapData,x*32+16,y*32+16);
  // Data-only save repair: keep valid positions, otherwise find the nearest

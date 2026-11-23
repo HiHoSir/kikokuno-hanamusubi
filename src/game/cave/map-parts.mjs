@@ -1,4 +1,4 @@
-import {CAVE_TILE as TILE} from '../../../data/maps/cave/floors.mjs?v=cave-maps-1-stair-links-1-exploration-1-guardian-1';
+import {CAVE_TILE as TILE} from '../../../data/maps/cave/floors.mjs?v=cave-maps-1-stair-links-1-exploration-1-maze-1';
 import {drawStairwell} from './stair-art.mjs?v=cave-visual-1-stair-links-1-guardian-1';
 import {createCaveTerrain,drawCaveRim} from './terrain-art.mjs?v=cave-visual-1-guardian-1';
 
@@ -31,6 +31,12 @@ export function createCaveMap(layout,{floorArt,wallArt,stairsUp,ledgeArt,crateAr
     break;
    case 'cache':
     objects.push({id,depth:y+TILE/2,draw:ctx=>ctx.drawImage(crateArt,x+TILE/2-crateArt.width/2,y+TILE/2-crateArt.height)});
+    break;
+   case 'drop':
+    paint.drawImage(ledgeArt,x,y+TILE+12-ledgeArt.height);
+    paint.fillStyle='#a09673';
+    paint.fillRect(x+16,y+26,16,2);
+    paint.fillRect(x+20,y+30,8,2);
     break;
    case 'ledge':
     objects.push({depth:y+TILE,draw:ctx=>ctx.drawImage(ledgeArt,x,y+TILE-ledgeArt.height)});

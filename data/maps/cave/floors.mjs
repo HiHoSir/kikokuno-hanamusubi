@@ -13,19 +13,27 @@ function terrain(width,runs){
 
 const floors=[
  {
-  // South entrance, a rocky shelf to the north, and an eastern
-  // alcove that branches off the main path before the recessed stairwell.
+  // The west galleries lead past the stores and an inscription. The
+  // southeast route leads straight to the stairs, below the return ledge.
   grid:terrain(26,[
-   [],[[7,10]],[[6,11]],[[5,12]],[[4,12],[18,21]],
-   [[3,15],[17,23]],[[3,23]],[[4,16],[18,22]],[[7,13],[19,21]],
-   [[6,12]],[[6,11]],[[5,12]],[[6,12]],[[6,14]],[[8,10]]
+   [],[[4,7]],[[3,8],[11,21]],[[3,7],[11,22]],[[4,7],[11,12],[19,22]],
+   [[4,12],[19,23]],[[4,12],[18,23]],[[4,5],[8,12],[18,23]],
+   [[4,5],[8,11],[19,22]],[[4,5],[8,9],[20,21]],[[4,9],[14,21]],
+   [[4,9],[14,21]],[[4,5],[14,15],[18,20]],[[4,5],[14,17]],
+   [[4,5],[14,17]],[[4,19]],[[4,15]],[[8,10]],[[8,10]],
+   [[8,10]],[[8,10]]
   ]),
-  entry:[9,13],exit:[9,14],
+  entry:[9,19],exit:[9,20],
   down:{kind:'down',origin:[20,5],approach:[21,7]},
-  danger:(_x,y)=>y>=5&&y<=10,
-  scenery:[{kind:'ledge',origin:[8,3]},
-   {kind:'cache',origin:[8,2],id:'cave-entry-shelf'},
-   {kind:'inscription',origin:[10,3]}]
+  danger:(x,y)=>x>=13&&y>=8&&y<=16,
+  visibilityRadius:340,
+  scenery:[
+   {kind:'ledge',origin:[6,3]},
+   {kind:'cache',origin:[6,2],id:'cave-entry-shelf'},
+   {kind:'inscription',origin:[10,5],text:'刻まれた文字。「下の階で、白を沈めよ。続いて黒を沈めれば道はひらく」'},
+   {kind:'inscription',origin:[16,13],text:'荷運び人の刻み跡。「東の段から下りれば、入口までひと息。荷を担いで登るのは無理だ」'},
+   {kind:'drop',origin:[19,12],landing:[19,15]}
+  ]
  },
  {
   // Two passages around a rock mass. Both reach the east chamber, where the

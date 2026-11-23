@@ -1,6 +1,6 @@
 import {CAVE_WHITE_SEAL,CAVE_BLACK_SEAL} from '../../../data/maps/cave/finds.mjs?v=guardian-1';
 import {CAVE_TILE,CAVE_FLOORS,CAVE_BOSS_ID,caveCellCenter,caveFeatureBlocks,caveStairAt,caveEncounterTerrain,caveLayout}
- from '../../../data/maps/cave/floors.mjs?v=cave-maps-1-stair-links-1-exploration-1-guardian-1';
+ from '../../../data/maps/cave/floors.mjs?v=cave-maps-1-stair-links-1-exploration-1-maze-1';
 import {hizukiWalkDistance,makeWalk} from '../village/movement.mjs?v=shared-walk-1';
 import {bindDialogue} from '../village/dialogue.mjs';
 import {drawCharacter} from '../village/residents.mjs';
@@ -8,7 +8,7 @@ import {WORLD_SCENE_ZOOM} from '../ui/world-scale.mjs';
 import {BATTLE_REQUEST_KEY,readPlayer,savePlayer,collectFind,chooseFieldEncounter} from '../battle/rules.mjs?v=cave-quest-1-finds-1-guardian-1';
 import {consumeRestorePosition} from '../save/save-game.mjs?v=save-slots-1-shiomachi-gear-1-cave-quest-1-finds-1-guardian-1';
 import {CAVE_DARK} from './terrain-art.mjs?v=cave-visual-1-guardian-1';
-import {createCaveMap} from './map-parts.mjs?v=cave-maps-1-stair-links-1-exploration-1-guardian-1';
+import {createCaveMap} from './map-parts.mjs?v=cave-maps-1-stair-links-1-exploration-1-maze-1';
 
 const root=new URL('../../../',import.meta.url);
 const scene=document.querySelector('#scene'),load=document.querySelector('#load');
@@ -99,14 +99,22 @@ async function start(){
   }
   const [dx,dy]=Object.values(directions).find(([, ,row])=>row===face);
   const cache=layout.features.find(feature=>{
-   if(!['cache','seal','inscription'].includes(feature.kind))return false;
+   if(!['cache','seal','inscription','drop'].includes(feature.kind))return false;
    if(feature.kind==='cache'&&player.foundItems.includes(feature.id))return false;
    const [tx,ty]=caveCellCenter(feature.origin);
+   if(feature.kind==='drop')return dy===1&&y<ty&&ty-y<62&&Math.abs(x-tx)<26;
    return Math.hypot(tx-x,ty-y)<62&&(tx-x)*dx+(ty-y)*dy>0;
   });
   if(cache){
    if(cache.kind==='inscription'){
-    tell('刻まれた文字。「下の階で、白を沈めよ。続いて黒を沈めれば道はひらく」');
+    tell(cache.text);
+    return;
+   }
+   if(cache.kind==='drop'){
+    clear();
+    [x,y]=caveCellCenter(cache.landing);
+    tell('岩段を飛び降りた。入口へ戻る道だ。');
+    window.parent?.KIKOKU_GAME?.autosave?.(window);
     return;
    }
    if(cache.id===CAVE_BLACK_SEAL&&!player.foundItems.includes(CAVE_WHITE_SEAL)){
@@ -166,6 +174,14 @@ async function start(){
    actors.push({depth:by,draw:ctx=>ctx.drawImage(bossArt,bx-bossArt.width/2,by-bossArt.height+7)});
   }
   terrain.draw(ctx,x,y,actors,player.foundItems);
+  if(layout.visibilityRadius){
+   const radius=layout.visibilityRadius;
+   const shade=ctx.createRadialGradient(x,y-28,radius*.42,x,y-28,radius);
+   shade.addColorStop(0,'transparent');
+   shade.addColorStop(1,'#080b10d9');
+   ctx.fillStyle=shade;
+   ctx.fillRect(cx,cy,width/scale,height/scale);
+  }
  }
  function frame(now){
   if(leaving)return;

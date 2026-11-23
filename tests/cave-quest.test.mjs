@@ -27,6 +27,34 @@ test('all three cave floors have walkable routes between their portals',()=>{
  }
 });
 
+test('the entrance maze has independent west and east routes and a one-way return ledge',()=>{
+ const floor=CAVE_FLOORS[0];
+ const portal=floor.down.approach.join(',');
+ function traverse(blocked, features=floor.features){
+  const reachable=new Set([floor.entry.join(',')]);
+  const queue=[floor.entry];
+  for(const [x,y] of queue){
+   for(const [col,row] of [[x+1,y],[x-1,y],[x,y+1],[x,y-1]]){
+    const key=[col,row].join(',');
+    if(blocked.has(key)||reachable.has(key)||!caveCellOpen(0,col,row))continue;
+    if(features.some(part=>caveFeatureBlocks(part,...caveCellCenter([col,row]))))continue;
+    queue.push([col,row]);
+    reachable.add(key);
+   }
+  }
+  return reachable;
+ }
+ const west=traverse(new Set(['14,14','15,14','16,14','17,14']));
+ assert.ok(west.has(portal));
+ assert.ok(west.has('6,3'),'the store alcove is accessible');
+ const east=traverse(new Set(['4,14','5,14']));
+ assert.ok(east.has(portal));
+ const ledge=floor.features.find(part=>part.kind==='drop');
+ assert.ok(east.has(ledge.origin.join(','))&&east.has(ledge.landing.join(',')));
+ assert.equal(caveCellOpen(0,ledge.origin[0],ledge.origin[1]+1),false);
+ assert.equal(caveCellOpen(0,ledge.landing[0],ledge.landing[1]-1),false);
+});
+
 test('the lower passage has encounters, and caches use the saved one-time pickup system',()=>{
  assert.equal(caveEncounterTerrain(1,...caveCellCenter([15,14])),true);
  assert.equal(caveEncounterTerrain(1,...caveCellCenter([15,3])),false);

@@ -383,12 +383,12 @@ try{
   const {readPlayer,savePlayer}=await import('./battle/rules.mjs');
   savePlayer({...readPlayer(),lv:5,hp:58});
  });
- await walkCave([[9,5],[10,5],[10,4]]);
+ await walkCave([[9,16],[4,16],[4,4],[6,4],[6,3]]);
+ await takeCaveCache('cave-entry-shelf','薬草');
+ await walkCave([[4,3],[4,6],[10,6],[10,7],[10,6]]);
  await caveButton.click();
  assert.match(await cave.locator('#notice').textContent(),/白を沈めよ/);
- await walkCave([[8,4],[8,3]]);
- await takeCaveCache('cave-entry-shelf','薬草');
- await walkCave([[8,6],[18,6],[18,7],[21,7]]);
+ await walkCave([[12,6],[12,3],[19,3],[19,7],[21,7]]);
  await page.screenshot({path:'artifacts/cave-first-floor.png'});
  await climbWithPad(2);
  // Both walking onto the stair and pressing A at its foot work.
@@ -464,7 +464,16 @@ try{
  await walkCave([[15,7],[8,7],[6,7],[6,18],[7,18]]);
 
  await climbWithPad(1);
- await walkCave([[18,7],[18,6],[9,6],[9,13]]);
+ await walkCave([[19,7],[19,11]]);
+ const beforeDrop=await cave.locator('#scene').evaluate(()=>window.KIKOKU_SAVE_SNAPSHOT().position);
+ await caveButton.click();
+ assert.match(await cave.locator('#notice').textContent(),/岩段を飛び降りた/);
+ const afterDrop=await cave.locator('#scene').evaluate(()=>window.KIKOKU_SAVE_SNAPSHOT().position);
+ assert.equal(afterDrop.floor,beforeDrop.floor);
+ assert.ok(afterDrop.y>beforeDrop.y+48*3);
+ await caveButton.click();
+ assert.deepEqual(await cave.locator('#scene').evaluate(()=>window.KIKOKU_SAVE_SNAPSHOT().position),afterDrop);
+ await walkCave([[9,15],[9,19]]);
  assert.ok(caveEncounters>=1);
  await page.frames().find(frame=>frame.url().includes('/src/game/cave/')).evaluate(()=>{
   window.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowDown'}));

@@ -1,0 +1,22 @@
+{
+ "schemaVersion": 1,
+ "id": "2026-11-23-cave-maze",
+ "kind": "user-approved",
+ "scopes": ["progression"],
+ "affectedFiles": ["docs/MAP_ENEMY_EQUIPMENT_RECONCILIATION.md"],
+ "readBeforeEditing": [
+  "docs/MAP_ENEMY_EQUIPMENT_RECONCILIATION.md の社西の洞窟の接続と探索の決定を参照",
+  "data/maps/field/terrain.js のフィールドと洞窟の境界、および data/maps/cave/floors.mjs の洞窟地形を参照"
+ ],
+ "previousDesign": "地下1階は広い通路から薬草と刻文、下り階段に向かう構造だった。",
+ "intendedDifference": "地下1階を西と東から攻略可能な迷路にし、視界を絞り、奥からだけ使える岩段を加える。",
+ "impactAnalysis": "洞窟地下1階の形状と通常遇敵の有無を分岐単位にする。導入前のセーブが新しい壁に重なる場合はその階の入口から再開する。",
+ "preservedBoundaries": "既存の洞窟階層、岩守の鬼、通常敵と報酬の数値、フィールド地形、地下2階の封印を維持する。",
+ "verification": "両経路の到達性と岩段の一方通行、ブラウザで道中の拾得・刻文・戦闘・帰還を検査する。",
+ "userEvidence": {
+  "status": "explicit-user-instruction",
+  "date": "2026-11-23",
+  "quote": "もっと探索要素をお願い。例えば迷路とか。",
+  "source": "本会話の探索の追加指示。迷路の具体的配置と岩段と視界は今回の実装案。"
+ }
+}

@@ -305,9 +305,11 @@ try{
   return f?.KIKOKU_SAVE_SNAPSHOT?.()?.scene==='cave'&&f.document.querySelector('#load').hidden;
  });
  const first=await caveCheckpoint(0,12,11);
+ await page.screenshot({path:'artifacts/cave-first-floor.png'});
  await first.locator('#action-a').click();
  await first.locator('#scene[data-floor="2"]').waitFor();
- const second=await caveCheckpoint(1,16,4);
+ await page.screenshot({path:'artifacts/cave-second-floor.png'});
+ const second=await caveCheckpoint(1,16,6);
  await second.locator('#action-a').click();
  await second.locator('#scene[data-floor="3"]').waitFor();
  await page.screenshot({path:'artifacts/cave-deepest-floor.png'});

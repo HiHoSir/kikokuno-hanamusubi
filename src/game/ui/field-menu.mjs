@@ -144,7 +144,7 @@ function renderEquipment(hero){
   slotList.className='equipment-slot-list';gearList.className='equipment-choice-list';
   const currentSlot=equipmentSlots[equipmentSlotIndex][0];
   equipmentOptions=equipmentChoices(hero,currentSlot);
-  equipmentOptionIndex=Math.min(equipmentOptionIndex,Math.max(0,equipmentOptions.length-1));
+  equipmentOptionIndex=Math.max(0,Math.min(equipmentOptionIndex,equipmentOptions.length-1));
   equipmentSlots.forEach(([slot,label],index)=>{
     const item=EQUIPMENT_ITEMS[hero.equipment[slot]];
     const node=button(slotList,'',()=>{
@@ -201,11 +201,12 @@ function renderDetails(hero,id){
         label:shell.name+' ×'+count,caption:'茶店で1個'+shell.value+'両で売れる'
       });
     }
-    if(ARMORY_STOCK.some(item=>hero.equipmentInventory[item.id]&&hero.equipment[item.slot]!==item.id)){
-      rows.push({label:'持っている兵具',caption:'装備を変更する',action:'装備を開く',run:()=>{
-        selected=entries.findIndex(([key])=>key==='equipment');
-        pane='detail';detailIndex=0;selection=null;render();
-      }});
+    for(const item of ARMORY_STOCK){
+      if(!hero.equipmentInventory[item.id]||hero.equipment[item.slot]===item.id)continue;
+      rows.push({
+        label:item.name,caption:EQUIPMENT_SLOTS[item.slot]+'の兵具',action:'装備を開く',
+        run:()=>openCommand(entries.findIndex(([key])=>key==='equipment'),item)
+      });
     }
     if(readStoryStage()!=='chief')rows.push({label:'結び札',caption:'里長から預かった札。'});
     if(readStoryStage()==='forest')rows.push({
@@ -274,12 +275,16 @@ function render(){
   }
   updateCursor();
 }
-function openCommand(index){
+function openCommand(index,item=null){
+  selection=null;
   selected=index;
   detailIndex=0;
   pane='detail';
   if(entries[index][0]==='equipment'){
-    equipmentSlotIndex=0;equipmentOptionIndex=0;equipmentFocus='slots';
+    const slot=item?.slot??'weapon';
+    equipmentSlotIndex=equipmentSlots.findIndex(([key])=>key===slot);
+    equipmentOptionIndex=item?equipmentChoices(readPlayer(),slot).findIndex(choice=>choice.id===item.id):0;
+    equipmentFocus=item?'gear':'slots';
   }
   message.textContent='';
   render();

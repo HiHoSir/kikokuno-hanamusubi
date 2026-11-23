@@ -3,7 +3,7 @@
   "assets": [
     {
       "id": "cave-floor-material",
-      "type": "terrain",
+      "type": "map",
       "path": "assets/cave/floor-material.png",
       "status": "approved",
       "origin": {
@@ -19,7 +19,7 @@
     },
     {
       "id": "cave-wall-material",
-      "type": "terrain",
+      "type": "map",
       "path": "assets/cave/wall-material.png",
       "status": "approved",
       "origin": {
@@ -35,7 +35,7 @@
     },
     {
       "id": "cave-stairs-up",
-      "type": "terrain",
+      "type": "map",
       "path": "assets/cave/stairs-up.png",
       "status": "approved",
       "origin": {
@@ -51,7 +51,7 @@
     },
     {
       "id": "cave-stairs-down",
-      "type": "terrain",
+      "type": "map",
       "path": "assets/cave/stairs-down.png",
       "status": "approved",
       "origin": {
@@ -67,7 +67,7 @@
     },
     {
       "id": "cave-rock-ledge",
-      "type": "terrain",
+      "type": "map",
       "path": "assets/cave/rock-ledge.png",
       "status": "approved",
       "origin": {

@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-11-23-shiomachi-armory-prices",
+  "kind": "user-approved",
+  "scopes": ["balance", "equipment"],
+  "affectedFiles": [
+    "data/maps/shiomachi-village/armory.mjs",
+    "docs/BALANCE_PROGRESSION_CONTRACT.md",
+    "docs/BATTLE_BALANCE.md",
+    "docs/FOUR_VILLAGES_EQUIPMENT_PLAN.md",
+    "src/game/battle/rules.mjs",
+    "src/game/shiomachi/interior-preview.mjs"
+  ],
+  "readBeforeEditing": [
+    "docs/BALANCE_PROGRESSION_CONTRACT.md と data/characters/hizuki-status.json：確定バランスとティアの出典を確認",
+    "docs/BATTLE_BALANCE.md と docs/MAP_ENEMY_EQUIPMENT_RECONCILIATION.md：地形と進行段の既存履歴を確認",
+    "docs/FOUR_VILLAGES_EQUIPMENT_PLAN.md と docs/EQUIPMENT_CURRENT_PLAYABLE.md：試用購入の境界と個別販売の対象を確認",
+    "src/game/battle/rules.mjs：鬼灯村の個別価格、所持品の正規化、装着処理を確認"
+  ],
+  "previousDesign": "本編から潮待村へ入れるが、兵具は160・120・80・60両の試用購入のみ。購入記録は本編の所持品や戦闘へ引き継がれなかった。",
+  "intendedDifference": "潮待村の4品を本編販売へつなぎ、鬼灯村の同部位の2倍である80・64・40・24両にする。品名と画面に出ていた部位別の性能はそのまま使う。",
+  "impactAnalysis": "本編では現在の所持両で購入し、共通の装備枠で装着して保存・戦闘に反映される。従来の試用購入は実セーブ内に移すデータがない。",
+  "preservedBoundaries": "T0〜T6の基礎補正、鬼灯村の価格と性能、敵報酬、潮待村の宿と茶店、独立プレビューの試用所持金を維持する。",
+  "verification": "npm test と Chromium のフィールド往復、店頭価格、所持両、重複拒否、装着・セーブ、独立プレビューの分離を確認する。",
+  "userEvidence": {
+    "status": "explicit-user-instruction",
+    "date": "2026-11-23",
+    "quote": "鬼灯村の兵具の2倍価格くらいを基準にして",
+    "source": "本会話の2026-11-23のユーザーメッセージ。直前に、潮待村の既存4品を本編に採用する場合の店頭価格と性能を確認した。"
+  }
+}

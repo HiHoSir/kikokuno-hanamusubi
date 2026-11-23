@@ -1,7 +1,6 @@
 // Current FIRST-GAME equipment availability, sourced from the actual game data.
 // A record of *what works today*, not an approval for new prices or tier shops.
-// Deliberately keeps the field/shrine/cove, standalone village preview and
-// underlying B-v2 tier progression separate.
+// Individual shop items and the B-v2 tier benchmarks are tracked independently.
 import {
   ARMORY_STOCK,EQUIPMENT_ITEMS,EQUIPMENT_SLOTS,STARTER_EQUIPMENT,STATUS_V2
 } from '../battle/rules.mjs';
@@ -23,15 +22,14 @@ const hozukiItems=ARMORY_STOCK.map(item=>itemRow(item,{
   availability:'in-game',location:'hozuki-village',action:'purchase'
 }));
 const shiomachiItems=SHIOMACHI_ARMORY_STOCK.map(item=>itemRow(item,{
-  availability:'preview-only',location:'shiomachi-village',action:'trial-purchase'
+  availability:'in-game',location:'shiomachi-village',action:'purchase'
 }));
 
 export const EXISTING_EQUIPMENT_CATALOG=Object.freeze([
   ...startItems,...hozukiItems,...shiomachiItems
 ]);
 
-// Existing areas are explicit. No merchant, treasure or acquisition has been
-// invented for a shrine or beach, and the new village is NOT connected to field.
+// Each entry corresponds to an existing area and its current equipment sources.
 export const EXISTING_EQUIPMENT_LOCATIONS=Object.freeze([
   Object.freeze({id:'start',name:'旅立ち',availability:'initial',
     enteredFrom:'new-game',gameplayConnected:true,
@@ -45,10 +43,10 @@ export const EXISTING_EQUIPMENT_LOCATIONS=Object.freeze([
   Object.freeze({id:'sea-cove',name:'海の入り江',availability:'no-equipment',
     enteredFrom:'field',gameplayConnected:true,
     note:'貝殻は拾って売れるが装備品ではない。兵具の販売・拾得はない。'}),
-  Object.freeze({id:'shiomachi-village',name:'潮待村（単独プレビュー）',
-    availability:'preview-only',enteredFrom:'field-and-independent-preview',
+  Object.freeze({id:'shiomachi-village',name:'潮待村',
+    availability:'in-game',enteredFrom:'field-and-independent-preview',
     gameplayConnected:true,
-    note:'村への入場は本編対応。4点は未承認の試用品で、装着・セーブ反映なし。'})
+    note:'本編の兵具屋で4点を個別購入・装着・保存可能。独立プレビューは試用購入。'})
 ]);
 
 export function existingEquipmentAt(locationId){

@@ -2,6 +2,7 @@
 // Approved base/growth/T0–T6 values must match data/characters/hizuki-status.json.
 import {VILLAGE_FINDS} from '../../../data/maps/hozuki-village/finds.mjs';
 import {normalizeCoveShells} from '../../../data/maps/sea-cove/shells.mjs';
+import {SHIOMACHI_ARMORY_STOCK} from '../../../data/maps/shiomachi-village/armory.mjs?v=shiomachi-gear-1';
 
 export const PLAYER_KEY='kikokuno-hanamusubi-battle-player';
 export const BATTLE_REQUEST_KEY='kikokuno-hanamusubi-battle-request';
@@ -64,7 +65,8 @@ export const EQUIPMENT_ITEMS=Object.freeze({
  wakizashi:Object.freeze({id:'wakizashi',name:'脇差',slot:'weapon',attack:4,defense:0,price:40}),
  'padded-body':Object.freeze({id:'padded-body',name:'厚布の胴当て',slot:'body',attack:0,defense:4,price:32}),
  headband:Object.freeze({id:'headband',name:'鉢巻',slot:'head',attack:0,defense:2,price:20}),
- tabi:Object.freeze({id:'tabi',name:'足袋',slot:'feet',attack:0,defense:1,price:12})
+ tabi:Object.freeze({id:'tabi',name:'足袋',slot:'feet',attack:0,defense:1,price:12}),
+ ...Object.fromEntries(SHIOMACHI_ARMORY_STOCK.map(item=>[item.id,item]))
 });
 export const ARMORY_STOCK=Object.freeze(['wakizashi','padded-body','headband','tabi'].map(id=>EQUIPMENT_ITEMS[id]));
 function applyEquipmentStats(stats,equipment){
@@ -106,6 +108,9 @@ export function normalizePlayer(input={}){
   for(const id of Object.values(STARTER_EQUIPMENT))if(id)inventory[id]=1;
   for(const item of ARMORY_STOCK){
    inventory[item.id]=migrateBundle?1:clamp(nonNegative(input?.equipmentInventory?.[item.id],0),0,1);
+  }
+  for(const item of SHIOMACHI_ARMORY_STOCK){
+   inventory[item.id]=clamp(nonNegative(input?.equipmentInventory?.[item.id],0),0,1);
   }
   const equippedBundle=migrateBundle&&equipmentTier==='T1';
   const savedEquipment=equippedBundle?Object.fromEntries(ARMORY_STOCK.map(item=>[item.slot,item.id])):input?.equipment;
@@ -202,8 +207,8 @@ export function purchaseFood(player,id){
   hero.gold-=item.price;hero.foods[id]++;
   return {accepted:true,player:hero,message:item.name+'を買いました。'};
 }
-export function purchaseArmory(player,id){
- const hero=normalizePlayer(player),item=ARMORY_STOCK.find(entry=>entry.id===id);
+export function purchaseArmory(player,id,stock=ARMORY_STOCK){
+ const hero=normalizePlayer(player),item=stock.find(entry=>entry.id===id);
  if(!item)return {accepted:false,player:hero,message:'商品を選んでください。'};
  if(hero.equipmentInventory[id])return {accepted:false,player:hero,message:'その兵具はもう持っています。'};
  if(hero.gold<item.price)return {accepted:false,player:hero,message:'両が足りません。'};

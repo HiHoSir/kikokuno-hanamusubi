@@ -197,8 +197,9 @@ try{
      assert.equal(afterPurchase.hp,afterPurchase.maxhp);
      assert.equal(afterPurchase.mp,afterPurchase.maxmp);
    }else if(room==='armory'){
-     assert.equal(afterPurchase.shiomachiGear['shiomachi-tide-blade'],1,
+     assert.equal(afterPurchase.equipmentInventory['shiomachi-tide-blade'],1,
        'purchased item is recorded only in preview inventory');
+     assert.equal(goldBefore-afterPurchase.gold,80);
      const secondGold=afterPurchase.gold;
      await page.locator('#shop-options [data-shop-item="shiomachi-tide-blade"]').click();
      const again=await page.evaluate(()=>window.__SHIOMACHI_QA.trial());

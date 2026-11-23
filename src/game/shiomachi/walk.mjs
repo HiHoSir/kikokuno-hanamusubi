@@ -9,12 +9,11 @@ import {advanceResident,makeResident,RESIDENT_RADIUS,residentInFront} from '../v
 import {bindDialogue} from '../village/dialogue.mjs';
 import {pixelViewport,DEFAULT_CAMERA_ZOOM} from '../village/render.mjs';
 import {createShiomachiRenderer} from './render.mjs?v=gate-posts-1';
-import {createShiomachiInteriorPreview} from './interior-preview.mjs?v=shop-clerk-1-shared-walk-1';
-import {consumeRestorePosition} from '../save/save-game.mjs?v=save-slots-1';
+import {createShiomachiInteriorPreview} from './interior-preview.mjs?v=shop-clerk-1-shared-walk-1-shiomachi-gear-1';
+import {consumeRestorePosition} from '../save/save-game.mjs?v=save-slots-1-shiomachi-gear-1';
 
 // Preview and real game share the SAME village map, art and interior code.
-// Demo shop balances remain trial-only; placing the village does not approve
-// their prices or add them to real saved inventory/equipment.
+// The standalone review and the inn/teahouse use trial resources.
 const previewMode=location.pathname.includes('/previews/');
 const scene=document.querySelector('#scene');
 const load=document.querySelector('#load');
@@ -157,7 +156,7 @@ async function start(){
    options:document.querySelector('#shop-options'),message:document.querySelector('#shop-message')
  };
  const interior=createShiomachiInteriorPreview({
-   ctx:scene.getContext('2d',{alpha:false}),images,viewport,clearInput,shopPanel
+   ctx:scene.getContext('2d',{alpha:false}),images,viewport,clearInput,shopPanel,previewMode
  });
  const dialogue=bindDialogue(()=>{
    clearInput();

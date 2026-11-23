@@ -62,14 +62,15 @@ test('official village is protected by shell admission, uses original native-siz
  assert.match(preview,/data-review-room="armory"/,'the original isolated preview is unchanged');
 });
 
-test('placing a village does not make prototype armor real or adjust approved tier values',()=>{
+test('the connected shop uses individual items while approved tier values stay separate',()=>{
  assert.equal(SHIOMACHI_ARMORY_STOCK.length,4);
  for(const item of SHIOMACHI_ARMORY_STOCK)
-   assert.equal(EQUIPMENT_ITEMS[item.id],undefined);
+   assert.deepEqual(EQUIPMENT_ITEMS[item.id],item);
  assert.deepEqual(STATUS_V2.equipment.map(x=>[x.id,x.attack,x.defense]),[
   ['T0',0,0],['T1',20,14],['T2',42,30],['T3',64,46],
   ['T4',88,64],['T5',114,84],['T6',140,104]]);
  const interior=read('src/game/shiomachi/interior-preview.mjs');
  assert.match(interior,/試用・セーブには反映しません/);
- assert.doesNotMatch(interior,/savePlayer|localStorage|saveGame/);
+ assert.match(interior,/if\(live\)savePlayer\(result\.player\)/);
+ assert.match(interior,/!previewMode&&site\?\.room==='armory'/);
 });

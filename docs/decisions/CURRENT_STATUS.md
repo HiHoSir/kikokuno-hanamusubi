@@ -12,8 +12,8 @@
 | **鬼灯村の個別装備** | **販売実装済み：4部位・合計攻+4／守+7**。T1確定値との**不一致が未解決** | `src/game/battle/rules.mjs`、`tests/approved-progression-contract.test.mjs`、[現行装備台帳](../EQUIPMENT_CURRENT_PLAYABLE.md) | 承認済み個別販売を勝手に書き換えない。T1との合算規則を明示的に整理 |
 | **4村体制** | **ユーザー決定：鬼灯村を含め合計4村**。3つの新村の名前・フィールド座標は試作・未承認 | `docs/FOUR_VILLAGES_EQUIPMENT_PLAN.md`、[PR #64](https://github.com/HiHoSir/kikokuno-hanamusubi/pull/64) | 村を増やすためにティア数を変更しない |
 | **潮待村フィールド配置** | **本編フィールドの草地セル(53,51)に村の入口を配置**。従来の42×54村マップと4室内を共用し、南口で元のフィールドセルへ帰還。独立プレビューも維持 | [配置と検査](../SHIOMACHI_FIELD_CONNECTION.md)、`src/field/world.js`、`src/field/walk.mjs`、`src/game/shiomachi/walk.mjs` | iPhone Safariで実際の出入り・見た目を確認。現在の位置は試行配置 |
-| **既存地域の装備入手状況** | **鬼灯村＝本編販売4点、天妖の社／海の入り江＝装備入手なし、潮待村＝村マップに入れるが兵具屋商品は試用のみ**。ゲーム内定義から集約する台帳モジュールを追加 | [現行装備台帳](../EQUIPMENT_CURRENT_PLAYABLE.md)、`src/game/equipment/current-availability.mjs` | 地名やティアとショップ実装を混同せず、装備の追加前に必ず台帳と原案を照合 |
-| **潮待村の装備** | **村への出入りは本編対応、兵具販売はデモ専用・未承認**。正式な装着・セーブ・戦闘反映なし。128両案は撤回済み | `data/maps/shiomachi-village/armory.mjs`、[PR #72](https://github.com/HiHoSir/kikokuno-hanamusubi/pull/72) | 原案の地域別到達段・敵・ティア数値との整合性が確認できるまで値を確定しない |
+| **既存地域の装備入手状況** | **鬼灯村・潮待村＝本編販売各4点、天妖の社／海の入り江＝装備入手なし**。ゲーム内定義から集約する台帳モジュールを追加 | [現行装備台帳](../EQUIPMENT_CURRENT_PLAYABLE.md)、`src/game/equipment/current-availability.mjs` | 地名やティアとショップ実装を混同せず、装備の追加前に必ず台帳と原案を照合 |
+| **潮待村の装備** | **本編で4点を購入・装着・保存可能。価格は鬼灯村の各部位の2倍、合計208両。** 全装着で攻+12／守+19 | [現行装備台帳](../EQUIPMENT_CURRENT_PLAYABLE.md)、`data/maps/shiomachi-village/armory.mjs` | 個別販売の進行バランスを実戦で検査 |
 | **装備ティアの入手場所** | **未確定**。天妖の社後T1／入り江T2などは11月15日の**当初配置仮説**。潮待村=T2は承認されていない | `docs/MAP_ENEMY_EQUIPMENT_RECONCILIATION.md`、`docs/BALANCE_PROGRESSION_CONTRACT.md` | 実際の到達段・洞窟経路・地域敵の進行を先に評価 |
 | **序盤の敵** | **実装済み：野の小鬼・化け狸・鬼火**。最初の道路区間に出現帯を設定。9〜13歩間隔 | `src/game/battle/rules.mjs`、`src/field/walk.mjs`、`tests/map-progression-audit.test.mjs` | 海・森・滝・祠の仮の敵を実装済みとみなさない |
 | **フィールド道順** | **80×80、32pxグリッド**。道路メタデータは42／45／33／20／60／30マス。実通行判定の最短経路は**鬼灯村→天妖の社43歩／社→入り江37歩／入り江→潮待村5歩**。入り江の入口は南岸の砂浜 (49,53) | `data/maps/field/terrain.js`、`tools/audit-map-progression.mjs`、`tools/qa-field-route-playability.mjs`、`docs/MAP_ENEMY_EQUIPMENT_RECONCILIATION.md` | 今後のマップ変更で歩数・遭遇数の変化をブラウザ再測定。実戦回数は未検証 |
@@ -31,7 +31,7 @@
 ## 当面の未解決事項
 
 - T1の確定攻+20／守+14と鬼灯村の4点合計攻+4／守+7の関係。
-- 潮待村の**正式装備性能・価格・入手段階**。村そのもののフィールド出入り・保存は接続済み（[詳細](../SHIOMACHI_FIELD_CONNECTION.md)）。
+- 潮待村の個別装備の進行バランス。価格の基準は鬼灯村の同部位の2倍。
 - 山越え洞窟を含む北部の実装、実走エンカウント数、海の入り江以北の敵の出現分布。
 - **何を確認して仕様変更を許可したのか**の原文根拠がない変更は実装しない。
 

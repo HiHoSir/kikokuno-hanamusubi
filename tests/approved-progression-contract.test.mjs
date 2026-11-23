@@ -56,12 +56,11 @@ test('individual Hozuki shop catalog remains independently approved and unchange
  assert.deepEqual(normalizePlayer(DEFAULT_PLAYER).equipmentTier,'T0');
 });
 
-test('Shiomachi demo does not counterfeit T2 or mutate the battle item catalog',()=>{
+test('Shiomachi has individual gear and leaves the established T2 benchmark separate',()=>{
  assert.equal(SHIOMACHI_ARMORY_STOCK.length,4);
  assert.deepEqual(SHIOMACHI_ARMORY_STOCK.map(x=>x.slot),Object.keys(EQUIPMENT_SLOTS));
  for(const item of SHIOMACHI_ARMORY_STOCK){
-   assert.equal(EQUIPMENT_ITEMS[item.id],undefined,
-     'coastal prototype ID cannot masquerade as battle-equipped canon gear');
+   assert.deepEqual(EQUIPMENT_ITEMS[item.id],item);
    assert.ok(Number.isInteger(item.price)&&item.price>=0);
  }
  const doc=read('docs/BALANCE_PROGRESSION_CONTRACT.md');

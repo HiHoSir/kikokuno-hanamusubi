@@ -1,7 +1,7 @@
 // Two independent checkpoints: a user-written slot and a rotating autosave.
 // Existing live player/story keys remain unchanged.
 // Save data is not uploaded; Safari may erase site storage when website data is cleared.
-import {PLAYER_KEY,DEFAULT_PLAYER,normalizePlayer,readPlayer,FIELD_RETURN_KEY,BATTLE_REQUEST_KEY} from '../battle/rules.mjs?v=shiomachi-gear-1-cave-quest-1';
+import {PLAYER_KEY,DEFAULT_PLAYER,normalizePlayer,readPlayer,FIELD_RETURN_KEY,BATTLE_REQUEST_KEY} from '../battle/rules.mjs?v=shiomachi-gear-1-cave-quest-1-finds-1';
 import {CHAPTER_ONE_KEY,CHAPTER_ONE_STAGES,normalizeStage,readStoryStage,
   USHIOHEI_HAMMER_KEY,hasUshioheiCelebratedHammer
 } from '../story/chapter-one.mjs?v=ushiohei-hammer-1';

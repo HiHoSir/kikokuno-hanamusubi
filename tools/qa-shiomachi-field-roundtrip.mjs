@@ -313,34 +313,79 @@ try{
   try{await cave.locator('#scene[data-floor="'+floor+'"]').waitFor({timeout:3500});}
   finally{await page.mouse.up();}
  };
+ const caveBattleReturn=async()=>{
+  const battle=page.frameLocator('#game-scene');
+  await battle.locator('#encounter[hidden]').waitFor({state:'attached',timeout:5000});
+  assert.equal(await battle.locator('main').getAttribute('data-battle-terrain'),'cave');
+  assert.notEqual(await battle.locator('#enemy-label').textContent(),'岩守の鬼');
+  for(let turn=0;turn<8&&!await battle.locator('[data-command="return"]').count();turn++){
+   await battle.locator('[data-command="attack"]').click();
+   const target=battle.locator('[data-command="target-0"]:enabled,[data-command="target-1"]:enabled').first();
+   if(await target.count())await target.click();
+   await page.waitForFunction(()=>{
+    const doc=document.querySelector('#game-scene')?.contentDocument;
+    return Boolean(doc?.querySelector('[data-command="attack"]:not(:disabled),[data-command="return"]'));
+   });
+  }
+  assert.match(await battle.locator('[data-command="return"]').textContent(),/洞窟/);
+  await battle.locator('[data-command="return"]').click();
+  await page.waitForFunction(()=>{
+   const frame=document.querySelector('#game-scene')?.contentWindow;
+   return frame?.location.search.includes('from=encounter')&&frame.KIKOKU_SAVE_SNAPSHOT?.()?.scene==='cave';
+  });
+ };
+ let caveEncounters=0;
  const walkCave=async waypoints=>{
-  const frame=page.frames().find(frame=>frame.url().includes('/src/game/cave/'));
   for(const [col,row] of waypoints){
    const target=[col*48+24,row*48+24];
-   const reached=await frame.evaluate(target=>new Promise(resolve=>{
-    const {position}=window.KIKOKU_SAVE_SNAPSHOT();
-    const values=[position.x,position.y];
-    const axis=Math.abs(values[0]-target[0])>12?0:1;
-    if(Math.abs(values[axis]-target[axis])<=5){resolve(true);return;}
-    const sign=Math.sign(target[axis]-values[axis]);
-    const key=axis===0?(sign>0?'ArrowRight':'ArrowLeft'):(sign>0?'ArrowDown':'ArrowUp');
-    const deadline=performance.now()+5500;
-    window.dispatchEvent(new KeyboardEvent('keydown',{key}));
-    function check(now){
-     const {position}=window.KIKOKU_SAVE_SNAPSHOT();
-     const current=axis===0?position.x:position.y;
-     const arrived=sign*(target[axis]-current)<=5;
-     if(arrived||now>deadline){
-      window.dispatchEvent(new KeyboardEvent('keyup',{key}));
-      resolve(arrived?true:position);
-     }else requestAnimationFrame(check);
+   let reached=false;
+   for(let retry=0;retry<5&&reached!==true;retry++){
+    const frame=page.frames().find(frame=>frame.url().includes('/src/game/cave/'));
+    try{
+     reached=await frame.evaluate(target=>new Promise(resolve=>{
+      const {position}=window.KIKOKU_SAVE_SNAPSHOT();
+      const values=[position.x,position.y];
+      const axis=Math.abs(values[0]-target[0])>12?0:1;
+      if(Math.abs(values[axis]-target[axis])<=5){resolve(true);return;}
+      const sign=Math.sign(target[axis]-values[axis]);
+      const key=axis===0?(sign>0?'ArrowRight':'ArrowLeft'):(sign>0?'ArrowDown':'ArrowUp');
+      const deadline=performance.now()+5500;
+      window.dispatchEvent(new KeyboardEvent('keydown',{key}));
+      function check(now){
+       const {position}=window.KIKOKU_SAVE_SNAPSHOT();
+       const current=axis===0?position.x:position.y;
+       const arrived=sign*(target[axis]-current)<=5;
+       if(arrived||now>deadline){
+        window.dispatchEvent(new KeyboardEvent('keyup',{key}));
+        resolve(arrived?true:position);
+       }else requestAnimationFrame(check);
+      }
+      requestAnimationFrame(check);
+     }),target);
+    }catch(error){
+     if(!/context was destroyed|frame was detached/i.test(String(error)))throw error;
+     await caveBattleReturn();
+     caveEncounters++;
     }
-    requestAnimationFrame(check);
-   }),target);
+    if(reached!==false)break;
+   }
    assert.equal(reached,true,'cave route blocked before '+[col,row]+': '+JSON.stringify(reached));
   }
  };
- await walkCave([[9,12],[12,12],[12,11]]);
+ const takeCaveCache=async(id,name)=>{
+  await caveButton.click();
+  assert.match(await cave.locator('#notice').textContent(),new RegExp(name));
+  assert.ok((await player()).foundItems.includes(id));
+  await caveButton.click();
+  assert.equal((await player()).foundItems.filter(item=>item===id).length,1);
+ };
+ await page.evaluate(async()=>{
+  const {readPlayer,savePlayer}=await import('./battle/rules.mjs');
+  savePlayer({...readPlayer(),lv:5,hp:58});
+ });
+ await walkCave([[9,4],[8,4],[8,3]]);
+ await takeCaveCache('cave-entry-shelf','薬草');
+ await walkCave([[8,6],[18,6],[18,7],[21,7]]);
  await page.screenshot({path:'artifacts/cave-first-floor.png'});
  await climbWithPad(2);
  // Both walking onto the stair and pressing A at its foot work.
@@ -355,7 +400,9 @@ try{
   const {readPlayer,savePlayer}=await import('./battle/rules.mjs');
   savePlayer({...readPlayer(),lv:5,hp:58});
  });
- await walkCave([[17,18],[17,16],[19,16],[19,14],[15,14],[15,8],[11,8],[11,7]]);
+ await walkCave([[17,18],[17,16],[19,16],[19,14],[15,14],[15,11],[9,11],[9,12]]);
+ await takeCaveCache('cave-guardian-alcove','おにぎり');
+ await walkCave([[9,11],[11,11],[11,7]]);
  await page.screenshot({path:'artifacts/cave-deepest-floor.png'});
  await caveButton.click();
  const battle=page.frameLocator('#game-scene');
@@ -375,9 +422,14 @@ try{
  assert.equal((await player()).caveQuest.rockBreaker,true);
 
  await climbWithPad(2);
- await walkCave([[20,8],[20,14],[6,14],[6,18],[7,18]]);
+ await walkCave([[20,8],[20,5],[17,5],[17,4],[15,4],[15,3],[9,3]]);
+ // Enter the cache's facing direction after approaching from the east.
+ await walkCave([[9,4],[9,3]]);
+ await takeCaveCache('cave-upper-passage','団子');
+ await walkCave([[6,3],[6,18],[7,18]]);
  await climbWithPad(1);
- await walkCave([[12,12],[9,12],[9,13]]);
+ await walkCave([[18,7],[18,6],[9,6],[9,13]]);
+ assert.ok(caveEncounters>=1);
  await page.frames().find(frame=>frame.url().includes('/src/game/cave/')).evaluate(()=>{
   window.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowDown'}));
  });

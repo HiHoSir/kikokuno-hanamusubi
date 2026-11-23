@@ -3,7 +3,7 @@
 // Individual shop items and the B-v2 tier benchmarks are tracked independently.
 import {
   ARMORY_STOCK,EQUIPMENT_ITEMS,EQUIPMENT_SLOTS,STARTER_EQUIPMENT,STATUS_V2
-} from '../battle/rules.mjs';
+} from '../battle/rules.mjs?v=finds-1';
 import {SHIOMACHI_ARMORY_STOCK} from '../../../data/maps/shiomachi-village/armory.mjs';
 
 const itemRow=(item,{availability,location,action})=>Object.freeze({

@@ -1,6 +1,6 @@
-import {BATTLE_REQUEST_KEY,ENEMIES,carriedConsumables,createBattle,readPlayer,savePlayer} from './rules.mjs?v=equipment-4slots-2-cove-shells-1-shiomachi-gear-1-cave-quest-1';
-import {CAVE_BOSS_ID,CAVE_FLOORS,CAVE_TILE,CAVE_TOOL_NAME} from '../../../data/maps/cave/floors.mjs?v=cave-maps-1-stair-links-1';
-import {saveAutoGame} from '../save/save-game.mjs?v=save-slots-1-shiomachi-gear-1-cave-quest-1-ushiohei-hammer-1';
+import {BATTLE_REQUEST_KEY,ENEMIES,carriedConsumables,createBattle,readPlayer,savePlayer} from './rules.mjs?v=equipment-4slots-2-cove-shells-1-shiomachi-gear-1-cave-quest-1-finds-1';
+import {CAVE_BOSS_ID,CAVE_FLOORS,CAVE_TILE,CAVE_TOOL_NAME} from '../../../data/maps/cave/floors.mjs?v=cave-maps-1-stair-links-1-exploration-1';
+import {saveAutoGame,RESTORE_POSITION_KEY} from '../save/save-game.mjs?v=save-slots-1-shiomachi-gear-1-cave-quest-1-ushiohei-hammer-1-finds-1';
 
 const root=new URL('../../../',import.meta.url);
 const el=id=>document.getElementById(id);
@@ -28,7 +28,11 @@ try{
 }catch{}
 const battle=createBattle(request?.enemyId||'field-oni',readPlayer(),Math.random,request?.count||1);
 const {state}=battle;
-const caveBattle=request?.enemyId===CAVE_BOSS_ID;
+const caveBoss=request?.enemyId===CAVE_BOSS_ID;
+const cavePosition=request?.cavePosition;
+const caveField=Number.isInteger(cavePosition?.floor)&&Boolean(CAVE_FLOORS[cavePosition.floor])&&
+ Number.isFinite(cavePosition.x)&&Number.isFinite(cavePosition.y);
+const caveBattle=caveBoss||caveField;
 if(caveBattle)document.querySelector('main').dataset.battleTerrain='cave';
 const audio=()=>globalThis.KIKOKU_AUDIO;
 let mode='main',selected=0,ready=false,locked=false,targetCommand=null,targetReturn='main';
@@ -112,7 +116,10 @@ function navigateBack(){
   if(state.outcome==='defeat'){
     window.KIKOKU_ROUTE.go(new URL('../village/?focus=field-exit',import.meta.url));
   }else if(caveBattle){
-    window.KIKOKU_ROUTE.go(new URL('../cave/?from=guardian',import.meta.url));
+    if(!caveBoss&&caveField){
+      sessionStorage.setItem(RESTORE_POSITION_KEY,JSON.stringify({scene:'cave',position:cavePosition}));
+    }
+    window.KIKOKU_ROUTE.go(new URL(caveBoss?'../cave/?from=guardian':'../cave/?from=encounter',import.meta.url));
   }else{
     window.KIKOKU_ROUTE.go(new URL('../../field/?from=battle',import.meta.url));
   }
@@ -161,10 +168,12 @@ function perform(command){
   setTimeout(()=>{
     updateStatus(); // Enemy defeated: hide only after its impact.
     savePlayer(state.hero);
-    const wonTool=caveBattle&&result.outcome==='victory';
+    const wonTool=caveBoss&&result.outcome==='victory';
     if(wonTool){
       const [x,y]=CAVE_FLOORS[2].entry.map(cell=>(cell+.5)*CAVE_TILE);
       saveAutoGame({scene:'cave',position:{x,y,floor:2,face:1}});
+    }else if(!caveBoss&&caveField&&['victory','escape'].includes(result.outcome)){
+      saveAutoGame({scene:'cave',position:cavePosition});
     }
     if(result.outcome){
       if(result.outcome==='defeat'){

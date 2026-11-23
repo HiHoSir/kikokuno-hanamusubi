@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {CAVE_FLOORS,CAVE_TILE,CAVE_BOSS_ID,caveCellOpen,caveCellCenter,caveFeatureBlocks,caveStairAt} from '../data/maps/cave/floors.mjs';
-import {DEFAULT_PLAYER,createBattle,normalizePlayer,readPlayer,savePlayer} from '../src/game/battle/rules.mjs';
+import {CAVE_FLOORS,CAVE_TILE,CAVE_BOSS_ID,caveCellOpen,caveCellCenter,caveFeatureBlocks,caveStairAt,caveEncounterTerrain} from '../data/maps/cave/floors.mjs';
+import {DEFAULT_PLAYER,createBattle,collectFind,normalizePlayer,readPlayer,savePlayer} from '../src/game/battle/rules.mjs';
 import {saveManualGame,restoreSavedGame} from '../src/game/save/save-game.mjs';
 
 test('all three cave floors have walkable routes between their portals',()=>{
@@ -24,6 +24,19 @@ test('all three cave floors have walkable routes between their portals',()=>{
      const cell=layout[key]?.approach??layout[key];
      if(cell)assert.ok(visited.has(cell.join(',')),key+' on B'+(floor+1));
    }
+ }
+});
+
+test('the lower passage has encounters, and caches use the saved one-time pickup system',()=>{
+ assert.equal(caveEncounterTerrain(1,...caveCellCenter([15,14])),true);
+ assert.equal(caveEncounterTerrain(1,...caveCellCenter([15,3])),false);
+ assert.equal(caveEncounterTerrain(1,...caveCellCenter([6,14])),false);
+ for(const floor of CAVE_FLOORS){
+  const cache=floor.features.find(feature=>feature.kind==='cache');
+  const find=collectFind(DEFAULT_PLAYER,cache.id);
+  assert.equal(find.accepted,true);
+  const restored=normalizePlayer(find.player);
+  assert.equal(collectFind(restored,cache.id).accepted,false);
  }
 });
 

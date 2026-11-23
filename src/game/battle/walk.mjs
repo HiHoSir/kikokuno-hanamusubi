@@ -114,16 +114,19 @@ function navigateBack(){
 function perform(command){
   if(locked||!ready)return;
   locked=true;updateMenu();
-  const baseCommand=command.split(':')[0];
-  const result=battle.act(command);
+  const [baseCommand,chosenTarget]=command.split(':');
+  const isStrike=baseCommand==='attack'||baseCommand==='bloom';
+  // Resolve the slot before taking damage. The same slot drives HP and FX,
+  // including a remaining second enemy when the command has no target suffix.
+  const targetIndex=chosenTarget===undefined?state.enemies.findIndex(enemy=>enemy.hp>0):Number(chosenTarget);
+  const result=battle.act(isStrike?baseCommand+':'+targetIndex:command);
   if(!result.accepted){
     locked=false;announce(result.events[0]?.text||'行動できない。');sound('cancel');updateMenu();return;
   }
   const actionPose={attack:'attack',bloom:'skill',heal:'skill',herb:'idle',food:'idle',
     guard:'guard',flee:'idle'}[baseCommand]||'idle';
   pose(actionPose);
-  const isStrike=baseCommand==='attack'||baseCommand==='bloom';
-  const enemyTarget=command.endsWith(':1')?enemyFigure2:enemyFigure;
+  const enemyTarget=[enemyFigure,enemyFigure2][targetIndex];
   const receivedHit=result.events.some(e=>e.kind==='hit');
   // Timeline for a physical/skill attack: hero attack (0ms), enemy impact
   // (95ms, removed by 505ms), optional enemy retaliation and hero hit (570ms),

@@ -80,6 +80,13 @@ try{
      musicParent:!!document.querySelector('#sound-toggle')};
    });
    // Validate the real background image that the production HTML and CSS use.
+   const heroCrop=await page.frameLocator('#game-scene').locator('#hero-image').evaluate(img=>{
+    const window=img.parentElement.getBoundingClientRect(),art=img.getBoundingClientRect();
+    return {overflow:getComputedStyle(img.parentElement).overflow,width:window.width,
+     croppedFeet:art.bottom-window.bottom,sourceBottom:(window.bottom-art.top)/art.height*img.naturalHeight};
+   });
+   if(heroCrop.overflow!=='hidden'||heroCrop.croppedFeet<10||heroCrop.sourceBottom<260||heroCrop.sourceBottom>295)
+    issues.push('hero should be framed from head to waist: '+JSON.stringify(heroCrop));
    const backdrop=await page.evaluate(async()=>{
     const frame=document.querySelector('iframe');
     const d=frame.contentDocument,main=d.querySelector('main');
@@ -169,12 +176,6 @@ try{
     const chosen=await frame.locator('#enemy-figure').evaluate(x=>x.classList.contains('targeted'));
     const secondVisible=await frame.locator('#enemy-figure-2').isVisible();
     if(!chosen||!secondVisible)issues.push(name+' two-target cursor not visible');
-    const cursor=await frame.locator('#enemy-figure').evaluate(el=>{
-     const r=el.getBoundingClientRect();
-     const style=getComputedStyle(el,'::before');
-     return {position:r.bottom-Number.parseFloat(style.bottom),top:r.top,bottom:r.bottom};
-    });
-
     await page.screenshot({path:'artifacts/battle-'+width+'x'+height+'-target.png'});
     if(width===900&&enemyId==='tanuki'){
      // The combat DOM and target mode must survive landscape -> portrait -> landscape.
@@ -196,18 +197,24 @@ try{
      if(!stateAfterRotation.target||!stateAfterRotation.stillSelecting||!stateAfterRotation.framePreserved)
       issues.push(name+' battle target or iframe reset by portrait rotation');
     }
-    // Two attacks against the second enemy must remove that specific sprite,
-    // while the first remains alive. This proves independent HP and targeting.
-    await frame.locator('#enemy-figure-2').click();
-    // Combat now animates before removing a defeated figure. Verify actual
-    // DOM/paint progression, not just final hit points.
-    const early=await frame.locator('#enemy-figure-2').evaluate(node=>({
-     hidden:node.hidden,firstAlive:!document.getElementById('enemy-figure').hidden
+    // The smaller layout selects enemy two; the larger layout kills enemy one
+    // to exercise default targeting when only the original second slot survives.
+    const targetId=width===900?'enemy-figure-2':'enemy-figure';
+    const otherId=width===900?'enemy-figure':'enemy-figure-2';
+    const target=frame.locator('#'+targetId);
+    const other=frame.locator('#'+otherId);
+    const impact=frame.locator('#'+targetId+'.impact-physical');
+    await target.click();
+    if(!await target.isVisible()||!await other.isVisible())
+     issues.push(name+' enemy hidden before first hit animation');
+    await impact.waitFor({state:'attached',timeout:1500});
+    const visibleArc=await target.locator('.impact-effect').evaluate(node=>({
+     crop:getComputedStyle(node,'::before').clipPath,
+     animation:getComputedStyle(node).animationName,
+     onOther:document.querySelectorAll('.actor.enemy.impact-physical').length!==1
     }));
-    if(early.hidden||!early.firstAlive)issues.push(name+' target hidden before first hit animation');
-    await frame.locator('#enemy-figure-2.impact-physical').waitFor({state:'attached',timeout:900});
-    if(await frame.locator('#enemy-figure-2').evaluate(node=>node.hidden))
-     issues.push(name+' impact started after enemy disappeared');
+    if(visibleArc.crop==='none'||visibleArc.animation!=='battle-impact-physical'||visibleArc.onOther)
+     issues.push(name+' slash is missing or paints on multiple enemies');
     const attackPhase=await frame.locator('#hero-image').evaluate(node=>({
      pose:node.dataset.pose,src:node.getAttribute('src'),
      heroHit:document.getElementById('hero-figure').classList.contains('impact-hit')
@@ -215,33 +222,23 @@ try{
     if(attackPhase.pose!=='attack'||!attackPhase.src.includes('/attack.png')||attackPhase.heroHit)
      issues.push(name+' attack action used hit pose before enemy retaliation');
     await page.screenshot({path:'artifacts/battle-'+width+'x'+height+'-attack.png'});
-    await frame.locator('#hero-figure.impact-hit').waitFor({state:'attached',timeout:1200});
-    const retaliationPhase=await frame.locator('#hero-image').evaluate(node=>({
+    await frame.locator('#hero-figure.impact-hit').waitFor({state:'attached',timeout:1500});
+    const retaliationPhase=await frame.locator('#hero-image').evaluate((node,id)=>({
      pose:node.dataset.pose,src:node.getAttribute('src'),
-     enemyFX:document.getElementById('enemy-figure-2').classList.contains('impact-physical')
-    }));
+     enemyFX:document.getElementById(id).classList.contains('impact-physical')
+    }),targetId);
     if(retaliationPhase.pose!=='hit'||!retaliationPhase.src.includes('/hit.png')||retaliationPhase.enemyFX)
      issues.push(name+' hit pose overlaps physical attack animation or uses wrong image');
-    const fx=await frame.locator('#enemy-figure-2 .impact-effect').evaluate(node=>{
-     const p=node.getBoundingClientRect(),actor=node.closest('figure').getBoundingClientRect();
-     return {height:p.height,top:p.top,actorTop:actor.top,actorHeight:actor.height};
-    });
 
     const staleCursor=await frame.locator('.actor.enemy.targeted').count();
     if(staleCursor)issues.push(name+' cursor remains on another enemy during attack');
     await page.screenshot({path:'artifacts/battle-'+width+'x'+height+'-impact.png'});
     await frame.locator('[data-command="attack"]').click();
-    await frame.locator('#enemy-figure-2').click();
-    await frame.locator('#enemy-figure-2.impact-physical').waitFor({state:'attached',timeout:900});
-    if(await frame.locator('#enemy-figure-2').evaluate(node=>node.hidden))
-     issues.push(name+' defeated target was hidden before last impact');
-    await frame.locator('#enemy-figure-2[hidden]').waitFor({state:'attached',timeout:1500});
-    const targetResult=await frame.locator('#enemy-figure-2').evaluate(el=>({
-     secondDefeated:el.hidden,
-     firstAlive:!document.querySelector('#enemy-figure').hidden
-    }));
-    if(!targetResult.secondDefeated||!targetResult.firstAlive)
-     issues.push(name+' independent target HP was not respected');
+    await target.click();
+    await impact.waitFor({state:'attached',timeout:1500});
+    if(!await target.isVisible())issues.push(name+' defeated target was hidden before last impact');
+    await frame.locator('#'+targetId+'[hidden]').waitFor({state:'attached',timeout:2000});
+    if(!await other.isVisible())issues.push(name+' independent target HP was not respected');
     // A submenu can be entered and dismissed without leaving the fight.
     await frame.locator('[data-command="magic"]').click();
     const spellShown=await frame.locator('#command-title').innerText();
@@ -249,6 +246,10 @@ try{
     await frame.locator('#action-b').click();
     const mainShown=await frame.locator('#command-title').innerText();
     if(mainShown!=='緋月の行動')issues.push(name+' B button failed to return from spell menu');
+    await frame.locator('[data-command="attack"]').click();
+    await frame.locator('#'+otherId+'.impact-physical').waitFor({state:'attached',timeout:1500});
+    if(!await other.isVisible()||await impact.count())
+     issues.push(name+' automatic attack on the surviving enemy targeted the wrong slot');
    }
   }catch(e){
    issues.push(width+'x'+height+': '+e.message+' '+errors.join(';'));

@@ -1,4 +1,4 @@
-import {COVE_MAP,walkableCell,coveExitFenceSegments} from '../../../data/maps/sea-cove/scene.mjs?v=cove-south-gate-1';
+import {COVE_MAP,walkableCell,coveExitFenceSegments} from '../../../data/maps/sea-cove/scene.mjs?v=cove-south-gate-1-south-arrival-1';
 import {makeWalk,hizukiWalkDistance} from '../village/movement.mjs?v=shared-walk-1';
 import {makeVillageFence,VILLAGE_FENCE_ART,VILLAGE_GATE_POST_ART} from '../village/boundary.mjs?v=gate-posts-1';
 import {residentInFront} from '../village/residents.mjs';
@@ -140,7 +140,8 @@ async function start(){
   if(images[id].naturalWidth!==128||images[id].naturalHeight!==128)
    throw Error('海岸線の16チップアトラスが不正です: '+id);
  }
- const {width,height,tileSize,fisher:site,entry}=COVE_MAP;
+ const {width,height,tileSize,fisher:site}=COVE_MAP;
+ const entry=previewMode?previewSpots.shore:COVE_MAP.entry;
  const blocked=Uint8Array.from({length:width*height},(_,i)=>
    walkableCell(i%width,Math.floor(i/width))?0:1);
  const collision=Uint8Array.from(

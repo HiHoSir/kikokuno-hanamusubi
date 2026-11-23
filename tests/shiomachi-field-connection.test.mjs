@@ -36,8 +36,8 @@ test('coastal field marker is on free grass by the cove, not a replaced location
  assert.deepEqual([shiomachi.width,shiomachi.height],[hozuki.width,hozuki.height]);
  assert.deepEqual([shiomachi.x,shiomachi.y,shiomachi.foot],[53*32,51*32,52*32]);
  assert.equal(terrain.tiles[51][54],'grass','the second art cell also sits on land');
- assert.deepEqual(structuredClone(landmarkContactTiles.shiomachi),[[53,51]]);
- assert.deepEqual(structuredClone(shiomachi.contactTiles),[[53,51]]);
+ assert.deepEqual(structuredClone(landmarkContactTiles.shiomachi),[[53,51],[54,51]]);
+ assert.deepEqual(structuredClone(shiomachi.contactTiles),[[53,51],[54,51]]);
  assert.equal(shiomachi.occupiedTiles.length,0);
 });
 

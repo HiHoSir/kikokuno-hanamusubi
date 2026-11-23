@@ -220,6 +220,18 @@ test('field movement retains the 32px grid and projects the SD from its foot anc
     const entry = neighbors.map(([dx, dy]) => fieldStep({x, y}, dx, dy, 1000))
       .find(step => step && contact(step.x, step.y) === 'village');
     assert.ok(entry, 'the village entrance is one legal step from the field arrival');
+    for (const [destination, column, row] of [['village',37,69],['shiomachi',53,51]]) {
+      for (const offset of [0,1]) {
+        const x=(column+offset)*32+16,y=row*32+16;
+        assert.equal(contact(x,y),destination);
+        assert.ok(neighbors.some(([dx,dy])=>{
+          const fromX=x-dx*32,fromY=y-dy*32;
+          return contact(fromX,fromY)===null&&world.walkable(fromX,fromY)&&
+            world.canMove(fromX,fromY,x,y);
+        }),destination+' footprint has a walkable approach at column '+(column+offset));
+      }
+    }
+
     // Confirm the new destination is actually reachable using the authored
     // field collision and elevation, not just wired by an unwalkable URL.
     const shrineStart=placeArrival('shrine');

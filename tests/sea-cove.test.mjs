@@ -115,8 +115,8 @@ test('approved 30-column coast is preserved exactly while its connected wave chi
  assert.equal(COVE_MAP.objects.filter(o=>o.kind==='flowers').length,0,
    'do not introduce unreviewed flowers and woods on the beach');
  assert.ok(walkablePoint(COVE_MAP.entry.x,COVE_MAP.entry.y));
- assert.deepEqual([COVE_MAP.entry.x,COVE_MAP.entry.y],[336,432],
-   'do not shift the approved starting view one tile upward');
+ assert.deepEqual(COVE_MAP.entry,{x:336,y:1360,face:1},
+   'the field arrival faces north one cell inside the south gate');
  assert.equal(tileAt(0,0),'~');
  assert.equal(walkableCell(41,20),false);
  assert.equal(walkableCell(29,20),true);

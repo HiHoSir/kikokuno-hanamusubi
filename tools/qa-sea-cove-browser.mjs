@@ -78,10 +78,7 @@ try{
    const frame=document.querySelector('#game-scene'),child=frame.contentWindow;
    const position=child.KIKOKU_SAVE_SNAPSHOT();
    const canvas=child.document.querySelector('#scene');
-   const height=child.document.querySelector('.viewport').clientHeight/0.5;
-   const cameraY=Math.max(0,Math.min(22*32-height,position.position.y-height/2-106));
    return {label:frame.title,position,canvas:[canvas.width,canvas.height],
-     topWorldY:cameraY,waterVisible:cameraY<9*32,
      menuVisible:!document.querySelector('#field-menu-toggle').hidden,
      shells:child.__COVE_SHELL_QA?.(),surf:child.__COVE_SURF_QA?.(),
      fisher:child.__COVE_FISHER_QA,rockAssets:child.__COVE_HAMLET_QA?.assets};
@@ -97,7 +94,9 @@ try{
   ['rockEast',{width:104,height:64}],
   ['rockHeadland',{width:108,height:72}]
  ])assert.deepEqual(initial.rockAssets?.[key],dimensions,'native rock '+key);
- assert.equal(initial.waterVisible,true,'first view includes the moving sea, not only grass');
+ assert.deepEqual(initial.position.position,{x:336,y:1360,face:1},
+   'field entry starts one cell inside the south gate, facing into the cove');
+ await page.screenshot({path:'artifacts/sea-cove-entry.png'});
  assert.ok(initial.canvas[0]>0&&initial.canvas[1]>0);
  // A drawing buffer can be 2x the CSS viewport on Retina devices, but the
  // canvas ELEMENT itself must never be 2x the display area (hero cut-off).
@@ -144,8 +143,6 @@ try{
    'preserve the 56 real western shoreline chips without fake cutoff surf');
  assert.equal(initial.surf.tileCount,78,
    'the extended 42-column beach uses 78 connected animated shore chips');
- assert.equal(initial.position.position.y,432,
-   'the original accepted player position (and camera composition) must not shift');
  assert.equal(initial.surf.atlas[0]%32,0);
  assert.equal(initial.surf.atlas[1]%32,0);
  assert.ok(initial.surf.coverage[4].washedPixels>
@@ -154,13 +151,6 @@ try{
  assert.ok(initial.surf.coverage[4].foamPixels>
    initial.surf.coverage[0].foamPixels+250,
    'white-crest effect really animates across the sand');
- const waterBefore=await page.screenshot({path:'artifacts/sea-cove-entry.png'});
- await page.waitForTimeout(260);
- const middle=await page.screenshot({path:'artifacts/sea-cove-water.png'});
- await page.waitForTimeout(270);
- const after=await page.screenshot();
- assert.ok(!waterBefore.equals(middle)||!waterBefore.equals(after),
-   'sea must animate during idle play');
  const yBefore=(await page.evaluate(()=>
    document.querySelector('#game-scene').contentWindow.KIKOKU_SAVE_SNAPSHOT().position.y));
  // The parent owns the UI. Inject into the admitted child window so focus on
@@ -180,6 +170,13 @@ try{
    document.querySelector('#game-scene').contentWindow.KIKOKU_SAVE_SNAPSHOT().position.y));
  console.log(JSON.stringify({movement:{yBefore,yAfter}}));
  assert.ok(yAfter<yBefore,'hero must walk across the authored shore');
+ const waterBefore=await page.screenshot({path:'artifacts/sea-cove-shore-reached.png'});
+ await page.waitForTimeout(260);
+ const middle=await page.screenshot({path:'artifacts/sea-cove-water.png'});
+ await page.waitForTimeout(270);
+ const after=await page.screenshot();
+ assert.ok(!waterBefore.equals(middle)||!waterBefore.equals(after),
+   'sea must animate once the player walks north from the gate');
  // Move on the approved wide sand towards an actual native shell.
  // The original controls (not a test teleport) bring the hero within pickup range.
  await page.evaluate(()=>{

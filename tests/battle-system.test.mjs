@@ -350,7 +350,7 @@ test('landscape A and portrait B layout keep the same battle DOM and leave touch
   assert.match(js,/choose\('target-'\+index\)/);
   assert.doesNotMatch(js,/orientationchange|location\.assign/);
   assert.ok(html.includes('assets/characters/hizuki/battle/idle.png'));
-  assert.ok(html.includes('href="./battle.css?v=onibi-float-1"'));
+  assert.match(html,/href="\.\/battle\.css\?v=onibi-float-1(?:-[^"]+)?"/);
 });
 
 
@@ -404,6 +404,8 @@ test('battle visuals preserve approved figures and sequence impacts before hidin
   const runtime=readFileSync('src/game/battle/walk.mjs','utf8');
   assert.equal((html.match(/class="impact-effect"/g)||[]).length,3);
   assert.match(css,/battle-impact-physical/);
+  assert.match(css,/clip-path:polygon/);
+  assert.match(html,/class="hero-crop"/);
   assert.match(css,/battle-impact-magic/);
   assert.match(css,/battle-impact-hit/);
   assert.match(css,/assets\/field\/objects\/horizon\.png/);

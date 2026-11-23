@@ -31,6 +31,7 @@ test('BGM ownership is persistent and a door to the interior does not restart vi
   assert.equal(map.get('src/game/village/'),'village');
   assert.equal(map.get('src/game/interiors/'),'village');
   assert.equal(map.get('src/field/'),'field');
+  assert.equal(map.get('src/game/cave/'),'dungeon');
   assert.equal(map.get('src/game/tenyo/'),'prologue');
   assert.equal(map.get('src/game/shiomachi/'),'field','the field and new village share the same BGM without restarting');
   assert.equal(map.get('src/game/battle/'),'battle');

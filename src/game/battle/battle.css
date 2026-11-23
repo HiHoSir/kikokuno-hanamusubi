@@ -274,3 +274,12 @@ main[data-battle-terrain="grassland"] .battle-backdrop .earth{
   background-position:center center;
  }
 }
+
+main[data-battle-terrain="cave"] .battle-backdrop{
+ background:radial-gradient(ellipse at 55% 50%,#3e465a,transparent 69%),#101520;
+}
+main[data-battle-terrain="cave"] .earth{
+ background:#242a35 url("../../../assets/cave/floor-material.png") repeat;
+ border-radius:0;
+}
+main[data-battle-terrain="cave"] .battle-backdrop::before{display:none}

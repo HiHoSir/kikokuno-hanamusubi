@@ -1,6 +1,6 @@
-import {contact, createFieldRenderer, fieldStep, loadFieldArt, villageArrival, placeArrival, world} from './runtime.mjs?v=authored-waterfall-1';
-import {BATTLE_REQUEST_KEY,FIELD_RETURN_KEY,chooseFieldEncounter} from '../game/battle/rules.mjs?v=equipment-4slots-2';
-import {consumeRestorePosition} from '../game/save/save-game.mjs?v=save-slots-1';
+import {contact, createFieldRenderer, fieldStep, loadFieldArt, villageArrival, placeArrival, world} from './runtime.mjs?v=authored-waterfall-1-cave-quest-1';
+import {BATTLE_REQUEST_KEY,FIELD_RETURN_KEY,chooseFieldEncounter,readPlayer,savePlayer} from '../game/battle/rules.mjs?v=equipment-4slots-2-cave-quest-1';
+import {consumeRestorePosition} from '../game/save/save-game.mjs?v=save-slots-1-cave-quest-1';
 
 const scene = document.querySelector('#scene');
 const load = document.querySelector('#load');
@@ -61,19 +61,26 @@ function enterFieldPlace(destination,fromPoint){
     }));
   }catch{}
   const scenePath={
-    shrine:'../game/tenyo/',cove:'../game/cove/',shiomachi:'../game/shiomachi/'
+    shrine:'../game/tenyo/',cove:'../game/cove/',shiomachi:'../game/shiomachi/',cave:'../game/cave/'
   }[destination];
   if(!scenePath)throw Error('未対応の地点: '+destination);
   window.KIKOKU_ROUTE.go(new URL(scenePath,import.meta.url));
 }
 async function start() {
   const art=await loadFieldArt();
+  if(readPlayer().caveQuest?.bridgeCleared)world.setBridgeRockCleared?.(true);
   const from=new URLSearchParams(location.search).get('from');
-  const [x, y] = ['shrine','cove','shiomachi'].includes(from)
+  const [x, y] = (['shrine','cove','shiomachi'].includes(from)||from==='cave')
     ?placeReturnPosition(from) : from==='battle'?battleReturnPosition():villageArrival();
   const resumed=consumeRestorePosition('field');
   const safeResume=resumed&&world.walkable(resumed.x,resumed.y)&&!contact(resumed.x,resumed.y);
-  const state = {x:safeResume?resumed.x:x,y:safeResume?resumed.y:y,
+  // Saves made before this gate can be on the far bank. Place those
+  // checkpoints on the near side so the tool remains reachable.
+  const gatedResume=resumed&&world.bridgeRockCell&&!world.mapData.bridgeRockCleared&&
+    !world.mapData.travelReachable.has(Math.floor(resumed.x/32)+','+Math.floor(resumed.y/32));
+  const nearBank=world.bridgeRockCell&&world.bridgeRockCell.map((cell,index)=>cell*32+16+index*32);
+  const state = {x:gatedResume?nearBank[0]:safeResume?resumed.x:x,
+    y:gatedResume?nearBank[1]:safeResume?resumed.y:y,
     row:safeResume?(resumed.row??1):from==='village' ? 0 : 1,column:0};
   let walkedSteps=0;
   const encounterAfter=9+Math.floor(Math.random()*5);
@@ -132,7 +139,7 @@ async function start() {
         window.KIKOKU_ROUTE.go(new URL('../game/village/?focus=field-exit', import.meta.url));
         return;
       }
-      if(['shrine','cove','shiomachi'].includes(destination)){
+      if((['shrine','cove','shiomachi'].includes(destination)||destination==='cave')){
         enterFieldPlace(destination,completed);
         return;
       }
@@ -171,11 +178,28 @@ async function start() {
   }
 
   document.querySelector('#action-a')?.addEventListener('click',()=>{
+    const front=Object.values(directions).find(([, ,row])=>row===state.row);
+    if(!state.motion&&world.bridgeRockCell&&!world.mapData.bridgeRockCleared&&
+       world.bridgeRockCell.every((cell,index)=>cell===Math.floor((index?state.y:state.x)/32)+front[index])){
+      const player=readPlayer();
+      const notice=document.querySelector('#field-notice');
+      if(player.caveQuest.rockBreaker){
+        savePlayer({...player,caveQuest:{...player.caveQuest,bridgeCleared:true}});
+        world.setBridgeRockCleared(true);
+        lastWaterFrame=-1;
+        notice.textContent='岩砕きの槌で岩を砕いた。橋を渡れるようになった。';
+        window.parent?.KIKOKU_GAME?.autosave?.(window);
+      }else notice.textContent='大きな岩が橋をふさいでいる。砕く道具があれば通れそうだ。';
+      notice.hidden=false;
+      clearTimeout(notice.hideTimer);
+      notice.hideTimer=setTimeout(()=>{notice.hidden=true;},3500);
+      return;
+    }
     const destination=contact(state.x,state.y);
     if(destination==='village'){
       clearInput();
       window.KIKOKU_ROUTE.go(new URL('../game/village/?focus=field-exit',location.href));
-    }else if(['shrine','cove','shiomachi'].includes(destination)){
+    }else if((['shrine','cove','shiomachi'].includes(destination)||destination==='cave')){
       enterFieldPlace(destination,state.motion??state);
     }
   });

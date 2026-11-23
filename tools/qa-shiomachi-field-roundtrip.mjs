@@ -275,6 +275,73 @@ try{
   },destination);
  }
 
+ // Main-game gate and boss. Use stored checkpoints to place the hero
+ // before each interaction, then verify the real input and scene routes.
+ const snapshotAt=async(scene,position,path)=>{
+  await page.evaluate(({scene,position,path})=>{
+   sessionStorage.setItem('kikokuno-hanamusubi-restore-position',JSON.stringify({scene,position}));
+   window.KIKOKU_GAME.navigate(new URL(path,location.href));
+  },{scene,position,path});
+  await page.waitForFunction(({scene,position,path})=>{
+   const f=document.querySelector('#game-scene')?.contentWindow;
+   if(!f||f.location.pathname+f.location.search!==path)return false;
+   const snapshot=f.KIKOKU_SAVE_SNAPSHOT?.();
+   return snapshot?.scene===scene&&snapshot.position.x===position.x&&snapshot.position.y===position.y;
+  },{scene,position,path});
+  return page.frames().find(frame=>frame.url().endsWith(path));
+ };
+ const fieldCheckpoint=(x,y,row,tag)=>snapshotAt('field',{x:x*32+16,y:y*32+16,row},'/src/field/?qa-cave='+tag);
+ const caveCheckpoint=(floor,x,y)=>snapshotAt('cave',{x:x*48+24,y:y*48+24,face:1,floor},'/src/game/cave/?qa-floor='+floor);
+ const nearRock=await fieldCheckpoint(48,44,1,'locked');
+ await nearRock.locator('#action-a').click();
+ assert.match(await nearRock.locator('#field-notice').textContent(),/砕く道具/);
+ assert.equal(await nearRock.evaluate(()=>window.YK_WORLD.mapData.occupiedTiles.has('48,43')),true);
+ await page.screenshot({path:'artifacts/cave-bridge-blocked.png'});
+
+ const outside=await fieldCheckpoint(15,47,0,'entrance');
+ await outside.evaluate(()=>window.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowDown',bubbles:true})));
+ await page.waitForFunction(()=>{
+  const f=document.querySelector('#game-scene')?.contentWindow;
+  return f?.KIKOKU_SAVE_SNAPSHOT?.()?.scene==='cave'&&f.document.querySelector('#load').hidden;
+ });
+ const first=await caveCheckpoint(0,12,11);
+ await first.locator('#action-a').click();
+ await first.locator('#scene[data-floor="2"]').waitFor();
+ const second=await caveCheckpoint(1,16,4);
+ await second.locator('#action-a').click();
+ await second.locator('#scene[data-floor="3"]').waitFor();
+ await page.screenshot({path:'artifacts/cave-deepest-floor.png'});
+
+ await page.evaluate(async()=>{
+  const {readPlayer,savePlayer}=await import('./battle/rules.mjs');
+  savePlayer({...readPlayer(),lv:5,hp:58});
+ });
+ const deepest=await caveCheckpoint(2,9,6);
+ await deepest.locator('#action-a').click();
+ const battle=page.frameLocator('#game-scene');
+ await battle.locator('#encounter[hidden]').waitFor({state:'attached'});
+ assert.equal(await battle.locator('#enemy-label').textContent(),'岩守の鬼');
+ for(let turn=0;turn<8&&!await battle.locator('[data-command="return"]').count();turn++){
+  await battle.locator('[data-command="attack"]').click();
+  await page.waitForFunction(()=>{
+   const doc=document.querySelector('#game-scene')?.contentDocument;
+   return Boolean(doc?.querySelector('[data-command="attack"]:not(:disabled),[data-command="return"]'));
+  });
+ }
+ assert.match(await battle.locator('#battle-message').textContent(),/岩砕きの槌/);
+ await battle.locator('[data-command="return"]').click();
+ await page.waitForFunction(()=>document.querySelector('#game-scene')?.contentWindow
+   ?.KIKOKU_SAVE_SNAPSHOT?.()?.position.floor===2);
+ assert.equal((await player()).caveQuest.rockBreaker,true);
+
+ const unlock=await fieldCheckpoint(48,44,1,'unlock');
+ await unlock.locator('#action-a').click();
+ assert.match(await unlock.locator('#field-notice').textContent(),/橋を渡れる/);
+ assert.equal(await unlock.evaluate(()=>window.YK_WORLD.mapData.occupiedTiles.has('48,43')),false);
+ const reloaded=await fieldCheckpoint(48,44,1,'reloaded');
+ await reloaded.evaluate(()=>window.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowUp',bubbles:true})));
+ await reloaded.waitForFunction(()=>Number(document.querySelector('#scene').dataset.y)<=43);
+ assert.deepEqual((await player()).caveQuest,{rockBreaker:true,bridgeCleared:true});
  assert.deepEqual(failures,[]);
  console.log('SHIOMACHI_FIELD_ROUNDTRIP '+JSON.stringify({before,found,purchasedGold:purchased.gold,equipped:equipped.equipment,
    returned:after,errors:failures}));

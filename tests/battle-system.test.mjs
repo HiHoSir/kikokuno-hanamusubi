@@ -376,7 +376,7 @@ test('all three approved battle sprites retain original 128px PNGs without runti
   assert.ok(!runtime.includes('coarseEnemyImage'));
   assert.ok(!runtime.includes('ENEMY_PIXEL_MAX_SIDE'));
   assert.ok(!runtime.includes("canvas.toDataURL('image/png')"));
-  assert.ok(runtime.includes("image.dataset.pixelArt=['tanuki','field-oni','onibi'].includes(e.id)?'true':'false'"));
+  assert.ok(runtime.includes("image.dataset.pixelArt=['tanuki','field-oni','onibi',CAVE_BOSS_ID].includes(e.id)?'true':'false'"));
   assert.match(runtime,/source\.searchParams\.set\('v','77a93691'\)/);
   assert.match(runtime,/source\.searchParams\.set\('v','651fcddc'\)/);
   assert.match(runtime,/source\.searchParams\.set\('v','4efa9446'\)/);

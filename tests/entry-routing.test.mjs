@@ -11,6 +11,7 @@ const scenes=[
   ['src/game/village/','src/game/village/index.html'],
   ['src/game/interiors/','src/game/interiors/index.html'],
   ['src/field/','src/field/index.html'],
+  ['src/game/cave/','src/game/cave/index.html'],
   ['src/game/tenyo/','src/game/tenyo/index.html'],
   ['src/game/cove/','src/game/cove/index.html'],
   ['src/game/shiomachi/','src/game/shiomachi/index.html'],
@@ -87,7 +88,7 @@ test('all in-world transitions use the shared routing helper',()=>{
   assert.match(readFileSync('src/title/title.js','utf8'),/KIKOKU_ROUTE\.go\(/);
   for(const file of ['src/opening/opening.js','src/game/village/walk.mjs',
     'src/game/interiors/walk.mjs','src/field/walk.mjs','src/game/tenyo/walk.mjs',
-    'src/game/cove/walk.mjs','src/game/shiomachi/walk.mjs','src/game/battle/walk.mjs']){
+    'src/game/cove/walk.mjs','src/game/shiomachi/walk.mjs','src/game/cave/walk.mjs','src/game/battle/walk.mjs']){
     const content=readFileSync(file,'utf8');
     assert.match(content,/KIKOKU_ROUTE\.go\(/,file);
     assert.doesNotMatch(content,/(?:window\.)?location\.assign\(/,file);

@@ -7,7 +7,7 @@ import {pixelViewport,DEFAULT_CAMERA_ZOOM} from '../village/render.mjs?v=nonfiel
 import {readStoryStage,advanceStoryStage} from '../story/chapter-one.mjs';
 import {consumeRestorePosition} from '../save/save-game.mjs?v=save-slots-1-shiomachi-gear-1';
 import {createCoveRenderer} from './render.mjs?v=cove-south-gate-1';
-import {readPlayer,savePlayer} from '../battle/rules.mjs?v=shiomachi-gear-1';
+import {readPlayer,savePlayer} from '../battle/rules.mjs?v=shiomachi-gear-1-cave-quest-1';
 import {SHELL_KINDS} from '../items/shells.mjs';
 import {
  coveVisibleShells,nearestCoveShell,collectCoveShell,validateCoveShellSites

@@ -174,6 +174,7 @@ test('waterfall basin uses moving river tiles, clears ghost mountains and preser
     assert.ok(world.canMove(...at(...route[i-1]),...at(...route[i])),'entrance route remains walkable');
     assert.ok(world.canMove(...at(...route[i]),...at(...route[i-1])),'entrance has a return route');
   }
+  world.setBridgeRockCleared(true);
   assert.ok(route.every(([x,y])=>m.travelReachable.has(x+','+y)));
   assert.ok(m.ladders.some(l=>l.lower.join(',')==='67,21'&&l.upper.join(',')==='67,20'),
     'original automatically selected ladder is made explicit after basin reshaping');
@@ -231,6 +232,17 @@ test('field movement retains the 32px grid and projects the SD from its foot anc
         }),destination+' footprint has a walkable approach at column '+(column+offset));
       }
     }
+
+    const center=(x,y)=>[x*32+16,y*32+16];
+    assert.equal(contact(...center(14,48)),'cave');
+    assert.ok(world.mapData.travelReachable.has('14,48'),'cave is available on the near side');
+    assert.ok(world.mapData.travelReachable.has('52,51'),'Shiomachi is reachable before the gate opens');
+    assert.equal(world.canMove(...center(48,44),...center(48,43)),false);
+    assert.equal(world.mapData.travelReachable.has('60,34'),false,'the far side is genuinely cut off');
+    world.setBridgeRockCleared(true);
+    assert.equal(world.canMove(...center(48,44),...center(48,43)),true);
+    assert.ok(world.mapData.travelReachable.has('60,34'),'the northern route opens after the rock breaks');
+    world.setBridgeRockCleared(false);
 
     // Confirm the new destination is actually reachable using the authored
     // field collision and elevation, not just wired by an unwalkable URL.
@@ -294,7 +306,7 @@ test('a direction tap between animation frames still moves one cell', async () =
     location: {search: ''}, URL, URLSearchParams, console, performance: {now: () => 0},
     addEventListener() {}, requestAnimationFrame: frame => frames.push(frame),
     contact: () => null, createFieldRenderer: () => () => {}, loadFieldArt: async () => ({}),
-    consumeRestorePosition:()=>null,window:{parent:{}},
+    readPlayer:()=>({}),consumeRestorePosition:()=>null,window:{parent:{}},
     villageArrival: () => [1200, 2256], world: {tileSize: 32},
     fieldStep: ({x, y}, dx, dy, at) => ({x: x + dx * 32, y: y + dy * 32, motion: {x, y, at, duration: 192}}),
   });

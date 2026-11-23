@@ -1,4 +1,4 @@
-import {ARMORY_STOCK,FOOD_ITEMS,purchaseArmory,purchaseFood,readPlayer,savePlayer,normalizePlayer} from '../battle/rules.mjs?v=equipment-4slots-2-cove-shells-1-shiomachi-gear-1-cave-quest-1';
+import {ARMORY_STOCK,FOOD_ITEMS,purchaseArmory,purchaseFood,readPlayer,savePlayer,normalizePlayer} from '../battle/rules.mjs?v=equipment-4slots-2-cove-shells-1-shiomachi-gear-1-cave-quest-1-finds-1';
 import {shellBagCount,shellBagValue} from '../items/shells.mjs';
 import {sellCoveShells} from '../../../data/maps/sea-cove/shells.mjs';
 

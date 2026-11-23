@@ -2,7 +2,7 @@
 // Only this parent document owns the BGM player and the sound toggle.
 import {makeAudioEngine} from '../audio/audio.mjs';
 import {pendingRestoreLocation,routeForSavedGame,saveAutoGame,saveManualGame}
-  from '../save/save-game.mjs?v=save-slots-1-shiomachi-gear-1-cave-quest-1-ushiohei-hammer-1';
+  from '../save/save-game.mjs?v=save-slots-1-shiomachi-gear-1-cave-quest-1-ushiohei-hammer-1-finds-1';
 
 const root = new URL('../../../', import.meta.url);
 // Scene HTML itself needs a fresh URL, not just the top-level title page.

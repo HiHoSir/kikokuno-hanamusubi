@@ -1,0 +1,25 @@
+{
+ "schemaVersion": 1,
+ "id": "2026-11-23-cave-exploration",
+ "kind": "user-approved",
+ "scopes": ["balance", "equipment", "progression"],
+ "affectedFiles": ["docs/MAP_ENEMY_EQUIPMENT_RECONCILIATION.md", "src/game/battle/rules.mjs", "src/game/shiomachi/interior-preview.mjs", "src/field/walk.mjs"],
+ "readBeforeEditing": [
+  "docs/MAP_ENEMY_EQUIPMENT_RECONCILIATION.md の既存ダンジョンと遭遇範囲を確認",
+  "data/maps/field/terrain.js のフィールド地形を参照する既存遭遇設計と洞窟を区別",
+  "docs/BALANCE_PROGRESSION_CONTRACT.md と docs/BATTLE_BALANCE.md の既存バランスを確認",
+  "data/characters/hizuki-status.json の成長値と src/game/battle/rules.mjs の継承する既存報酬を確認",
+  "docs/FOUR_VILLAGES_EQUIPMENT_PLAN.md を参照し、今回は既存消耗品のみを配置"
+ ],
+ "previousDesign": "洞窟内は階段をつないだ3階層で、最深部のボス以外の戦闘と道中の拾得がなかった。",
+ "intendedDifference": "洞窟内だけに通常遭遇、寄り道の拾得、敵が出る近道と静かな迂回路を実装する。",
+ "impactAnalysis": "洞窟内で歩数相当の距離を使って接敵し、既存のフィールド外れの小鬼と化け狸の編成を使う。拾得場所と中身はプレイ検証用の配置。",
+ "preservedBoundaries": "フィールドの地形、ティア、敵ステータス、店舗、ボスで得る岩砕きの槌を維持する。",
+ "verification": "通常戦闘後の同地点復帰、拾得の保存と重複防止、ボス攻略と橋の開通まで検査する。",
+ "userEvidence": {
+  "status": "explicit-user-instruction",
+  "date": "2026-11-23",
+  "quote": "色々指摘するので直してね。\n・敵エンカウントしないのでつまらない\n・構造がつまらない\n・意味のない遮蔽を使っても意味がない\n・アイテムなどがないので探求心もわかない\n・ただとりあえずつないでるようにしか見えない",
+  "source": "本会話の洞窟の改善指示。具体的な拾得品やルート分岐は検証用の実装案。"
+ }
+}

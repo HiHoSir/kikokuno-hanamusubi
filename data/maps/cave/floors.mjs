@@ -16,11 +16,13 @@ const floors=[
   grid:terrain(26,[
    [],[[7,10]],[[6,11]],[[5,12]],[[4,12],[18,21]],
    [[3,15],[17,23]],[[3,23]],[[4,16],[18,22]],[[7,13],[19,21]],
-   [[6,15]],[[5,17]],[[5,17]],[[6,15]],[[6,14]],[[8,10]]
+   [[6,12]],[[6,11]],[[5,12]],[[6,12]],[[6,14]],[[8,10]]
   ]),
   entry:[9,13],exit:[9,14],
-  down:{kind:'down',origin:[11,9],approach:[12,11]},
-  scenery:[{kind:'ledge',origin:[8,2]},{kind:'ledge',origin:[19,6]}]
+  down:{kind:'down',origin:[20,5],approach:[21,7]},
+  danger:(_x,y)=>y>=5&&y<=10,
+  scenery:[{kind:'ledge',origin:[8,3]},
+   {kind:'cache',origin:[8,2],id:'cave-entry-shelf'}]
  },
  {
   // Two passages around a rock mass. Both reach the east chamber, where the
@@ -34,7 +36,8 @@ const floors=[
   ]),
   up:{kind:'up',origin:[7,17],approach:[7,18]},
   down:{kind:'down',origin:[23,6],approach:[24,8]},
-  scenery:[{kind:'ledge',origin:[6,8]},{kind:'ledge',origin:[15,13]}]
+  danger:(x,y)=>x>=9&&y>=10&&y<=16,
+  scenery:[{kind:'cache',origin:[9,2],id:'cave-upper-passage'}]
  },
  {
   // A bent approach opens into the guardian's room. The alcoves flank the
@@ -42,12 +45,12 @@ const floors=[
   grid:terrain(26,[
    [],[],[[8,13]],[[6,15]],[[5,17]],[[4,18]],
    [[3,19]],[[3,20]],[[4,20]],[[6,19]],[[8,17]],
-   [[10,15]],[[12,16]],[[13,18]],[[14,20]],[[15,21]],
+   [[9,15]],[[8,11],[12,16]],[[8,10],[13,18]],[[14,20]],[[15,21]],
    [[16,21]],[[17,19]],[[17,21]],[]
   ]),
   up:{kind:'up',origin:[18,17],approach:[18,18]},
   boss:[11,6],
-  scenery:[{kind:'ledge',origin:[6,8]},{kind:'ledge',origin:[17,8]}]
+  scenery:[{kind:'cache',origin:[9,13],id:'cave-guardian-alcove'}]
  }
 ];
 
@@ -64,6 +67,7 @@ export const caveCellOpen=(floor,x,y)=>CAVE_FLOORS[floor]?.grid[y]?.[x]==='.';
 export function caveFeatureBlocks({kind,origin},x,y){
  const px=x-origin[0]*CAVE_TILE,py=y-origin[1]*CAVE_TILE;
  if(kind==='down')return ((px-48)/36)**2+((py-48)/35)**2<1;
+ if(kind==='cache')return Math.hypot(px-24,py-24)<18;
  if(kind==='up')return px>6&&px<93&&py>5&&py<94&&!(px<34&&py>=64);
  return false;
 }
@@ -78,4 +82,10 @@ export function caveStairAt(floor,x,y){
   if(stair.kind==='up')return px>=-14&&px<=52&&py>=53&&py<=111;
   return false;
  });
+}
+
+// Measure walking in marked passages only; landings and treasure alcoves are quiet.
+export function caveEncounterTerrain(floor,x,y){
+ const col=Math.floor(x/CAVE_TILE),row=Math.floor(y/CAVE_TILE);
+ return caveCellOpen(floor,col,row)&&Boolean(CAVE_FLOORS[floor].danger?.(col,row));
 }

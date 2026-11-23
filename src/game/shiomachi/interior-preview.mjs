@@ -3,10 +3,10 @@ import {paintRoom,paintPartition,paintContactShadow} from '../interiors/room-art
 import {drawFurnitureLife} from '../interiors/life-effects.mjs';
 import {drawCharacter,residentInFront} from '../village/residents.mjs';
 import {makeWalk,hizukiWalkDistance} from '../village/movement.mjs?v=shared-walk-1';
-import {normalizePlayer,DEFAULT_PLAYER} from '../battle/rules.mjs?v=equipment-4slots-2-cove-shells-1-shiomachi-gear-1-cave-quest-1';
+import {normalizePlayer,DEFAULT_PLAYER} from '../battle/rules.mjs?v=equipment-4slots-2-cove-shells-1-shiomachi-gear-1-cave-quest-1-finds-1';
 import {SHIOMACHI_ARMORY_STOCK} from '../../../data/maps/shiomachi-village/armory.mjs?v=shiomachi-gear-1';
 
-import {createVillageShop} from '../interiors/shop.mjs?v=shared-shops-1-cave-quest-1';
+import {createVillageShop} from '../interiors/shop.mjs?v=shared-shops-1-cave-quest-1-finds-1';
 
 export function createShiomachiInteriorPreview({ctx,images,viewport,clearInput,shopPanel,previewMode=true}){
  const furniture=images.furniture;

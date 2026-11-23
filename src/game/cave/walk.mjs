@@ -1,12 +1,12 @@
-import {CAVE_TILE,CAVE_FLOORS,CAVE_BOSS_ID,caveCellOpen,caveCellCenter,caveFeatureBlocks,caveStairAt}
- from '../../../data/maps/cave/floors.mjs?v=cave-maps-1-stair-links-1';
+import {CAVE_TILE,CAVE_FLOORS,CAVE_BOSS_ID,caveCellOpen,caveCellCenter,caveFeatureBlocks,caveStairAt,caveEncounterTerrain}
+ from '../../../data/maps/cave/floors.mjs?v=cave-maps-1-stair-links-1-exploration-1';
 import {hizukiWalkDistance,makeWalk} from '../village/movement.mjs?v=shared-walk-1';
 import {drawCharacter} from '../village/residents.mjs';
 import {WORLD_SCENE_ZOOM} from '../ui/world-scale.mjs';
-import {BATTLE_REQUEST_KEY,readPlayer} from '../battle/rules.mjs?v=cave-quest-1';
-import {consumeRestorePosition} from '../save/save-game.mjs?v=save-slots-1-shiomachi-gear-1-cave-quest-1';
+import {BATTLE_REQUEST_KEY,readPlayer,savePlayer,collectFind,chooseFieldEncounter} from '../battle/rules.mjs?v=cave-quest-1-finds-1';
+import {consumeRestorePosition} from '../save/save-game.mjs?v=save-slots-1-shiomachi-gear-1-cave-quest-1-finds-1';
 import {CAVE_DARK} from './terrain-art.mjs?v=cave-visual-1';
-import {createCaveMap} from './map-parts.mjs?v=cave-maps-1-stair-links-1';
+import {createCaveMap} from './map-parts.mjs?v=cave-maps-1-stair-links-1-exploration-1';
 
 const root=new URL('../../../',import.meta.url);
 const scene=document.querySelector('#scene'),load=document.querySelector('#load');
@@ -23,9 +23,10 @@ async function image(path){
 }
 
 async function start(){
- const [floorArt,wallArt,stairsUp,ledgeArt,heroArt,bossArt]=await Promise.all([
+ const [floorArt,wallArt,stairsUp,ledgeArt,heroArt,bossArt,crateArt]=await Promise.all([
   ...['floor-material-atlas','wall-material','stairs-up','rock-ledge'].map(id=>image('assets/cave/'+id+'.png?v=cave-visual-1')),
-  image('assets/characters/hizuki/walk-4dir-80x112.png'),image('assets/enemies/field-oni.png')
+  image('assets/characters/hizuki/walk-4dir-80x112.png'),image('assets/enemies/field-oni.png'),
+  image('assets/sea-cove/objects/fish-crate-92x70.png')
  ]);
  const restored=consumeRestorePosition('cave');
  const inputs=new Map();
@@ -33,7 +34,9 @@ async function start(){
  let floor,layout,walk,terrain,x,y,face,distance,last=0;
  const renderedFloors=new Map();
  const hero={bitmap:heroArt};
- const bossDefeated=readPlayer().caveQuest.rockBreaker;
+ let player=readPlayer();
+ const bossDefeated=player.caveQuest.rockBreaker;
+ let encounterRemaining;
  const clear=()=>{inputs.clear();pending=null;};
  function tell(text){
   notice.textContent=text;
@@ -43,12 +46,13 @@ async function start(){
  }
  function enter(index,cell,point){
   clear();
+  encounterRemaining=tile*(9+Math.floor(Math.random()*5));
   floor=index;layout=CAVE_FLOORS[floor];
   const width=layout.grid[0].length*tile,height=layout.grid.length*tile;
   const blocked=new Uint8Array(width*height);
   terrain=renderedFloors.get(index);
   if(!terrain){
-   terrain=createCaveMap(layout,{floorArt,wallArt,stairsUp,ledgeArt});
+   terrain=createCaveMap(layout,{floorArt,wallArt,stairsUp,ledgeArt,crateArt});
    renderedFloors.set(index,terrain);
   }
   for(const [row,line] of layout.grid.entries())for(let col=0;col<line.length;col++){
@@ -65,7 +69,7 @@ async function start(){
  }
  const snapshot=()=>({scene:'cave',position:{x,y,face,floor}});
  function occupied(px,py){
-  if(layout.features.some(feature=>caveFeatureBlocks(feature,px,py)))return true;
+  if(layout.features.some(feature=>!player.foundItems.includes(feature.id)&&caveFeatureBlocks(feature,px,py)))return true;
   if(!layout.boss||bossDefeated)return false;
   const [bx,by]=caveCellCenter(layout.boss);
   return Math.hypot(px-bx,py-by)<34;
@@ -89,17 +93,38 @@ async function start(){
    useStair(stair);
    return;
   }
-  const boss=layout.boss&&!bossDefeated?caveCellCenter(layout.boss):null;
-  if(boss&&Math.hypot(x-boss[0],y-boss[1])<74){
-   leaving=true;clear();
-   try{
-    sessionStorage.setItem(BATTLE_REQUEST_KEY,JSON.stringify({enemyId:CAVE_BOSS_ID,count:1,at:Date.now()}));
-   }catch{
-    leaving=false;tell('戦闘の準備ができませんでした。');return;
+  const [dx,dy]=Object.values(directions).find(([, ,row])=>row===face);
+  const cache=layout.features.find(feature=>{
+   if(feature.kind!=='cache'||player.foundItems.includes(feature.id))return false;
+   const [tx,ty]=caveCellCenter(feature.origin);
+   return Math.hypot(tx-x,ty-y)<62&&(tx-x)*dx+(ty-y)*dy>0;
+  });
+  if(cache){
+   const result=collectFind(readPlayer(),cache.id);
+   tell(result.message);
+   if(result.accepted){
+    player=savePlayer(result.player);
+    window.parent?.KIKOKU_GAME?.autosave?.(window);
    }
-   window.KIKOKU_ROUTE.go(new URL('../battle/',import.meta.url));
+   return;
   }
+  const boss=layout.boss&&!bossDefeated?caveCellCenter(layout.boss):null;
+  if(boss&&Math.hypot(x-boss[0],y-boss[1])<74)startBattle({enemyId:CAVE_BOSS_ID,count:1});
  }
+ function startBattle(encounter){
+  clear();
+  try{
+   sessionStorage.setItem(BATTLE_REQUEST_KEY,JSON.stringify({
+    ...encounter,at:Date.now(),cavePosition:snapshot().position
+   }));
+  }catch{
+   tell('戦闘の準備ができませんでした。');return false;
+  }
+  leaving=true;
+  window.KIKOKU_ROUTE.go(new URL('../battle/',import.meta.url));
+  return true;
+ }
+
  function draw(moving){
   const rect=scene.parentElement.getBoundingClientRect();
   const dpr=Math.min(devicePixelRatio||1,3),scale=dpr*WORLD_SCENE_ZOOM;
@@ -116,7 +141,7 @@ async function start(){
    const [bx,by]=caveCellCenter(layout.boss);
    actors.push({depth:by,draw:ctx=>ctx.drawImage(bossArt,bx-64,by-111)});
   }
-  terrain.draw(ctx,x,y,actors);
+  terrain.draw(ctx,x,y,actors,player.foundItems);
  }
  function frame(now){
   if(leaving)return;
@@ -143,6 +168,14 @@ async function start(){
    distance+=travel;moving=travel>0;x=nx;y=ny;face=row;
    if(layout.exit&&dy>0&&Math.abs(x-caveCellCenter(layout.exit)[0])<1.5*tile&&y>=layout.exit[1]*tile+17){
     leaving=true;window.KIKOKU_ROUTE.go(new URL('../../field/?from=cave',import.meta.url));return;
+   }
+   if(moving&&caveEncounterTerrain(floor,x,y)&&!caveStairAt(floor,x,y)){
+    encounterRemaining-=travel;
+    if(encounterRemaining<=0){
+     const encounter=chooseFieldEncounter();
+     if(startBattle(encounter))return;
+     encounterRemaining=tile*9;
+    }
    }
   }
   draw(moving);

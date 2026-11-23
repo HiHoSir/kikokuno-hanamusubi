@@ -1,12 +1,14 @@
 // First-game one-hero B-formula v2 rules. Pure game logic: no DOM, timers, or assets.
 // Approved base/growth/T0–T6 values must match data/characters/hizuki-status.json.
 import {VILLAGE_FINDS} from '../../../data/maps/hozuki-village/finds.mjs';
+import {CAVE_FINDS} from '../../../data/maps/cave/finds.mjs';
 import {normalizeCoveShells} from '../../../data/maps/sea-cove/shells.mjs';
 import {SHIOMACHI_ARMORY_STOCK} from '../../../data/maps/shiomachi-village/armory.mjs?v=shiomachi-gear-1';
 
 import {CAVE_BOSS_ID} from '../../../data/maps/cave/floors.mjs';
 
 export const PLAYER_KEY='kikokuno-hanamusubi-battle-player';
+const FINDS={...VILLAGE_FINDS,...CAVE_FINDS};
 export const BATTLE_REQUEST_KEY='kikokuno-hanamusubi-battle-request';
 export const FIELD_RETURN_KEY='kikokuno-hanamusubi-battle-field-return';
 export const STATUS_V2=Object.freeze({
@@ -134,7 +136,7 @@ export function normalizePlayer(input={}){
     lv,...stats, hp:v2?clamp(nonNegative(input.hp,stats.maxhp),0,stats.maxhp):stats.maxhp,
     mp:v2?clamp(nonNegative(input.mp,stats.maxmp),0,stats.maxmp):stats.maxmp,
     equipmentTier:activeTier,equipment,equipmentInventory:inventory,awakening,balanceVersion:2,
-    foundItems:Array.isArray(savedFinds)?Object.keys(VILLAGE_FINDS).filter(id=>savedFinds.includes(id)):[],
+    foundItems:Array.isArray(savedFinds)?Object.keys(FINDS).filter(id=>savedFinds.includes(id)):[],
     xp:nonNegative(input?.xp,0),gold:nonNegative(input?.gold,0),
     potions:nonNegative(input?.potions,3),
     foods:Object.fromEntries(Object.keys(FOOD_ITEMS).map(id=>[id,clamp(nonNegative(input?.foods?.[id],0),0,99)])),
@@ -166,9 +168,9 @@ export function carriedConsumables(hero){
 }
 export function collectFind(player,id){
   const hero=normalizePlayer(player);
-  if(!Object.hasOwn(VILLAGE_FINDS,id))
+  if(!Object.hasOwn(FINDS,id))
     return {accepted:false,player:hero,message:'何も見つからなかった。'};
-  const site=VILLAGE_FINDS[id];
+  const site=FINDS[id];
   if(hero.foundItems.includes(id)){
     return {accepted:false,player:hero,message:site.building?'もう何も入っていない。':'もう何も見つからない。'};
   }

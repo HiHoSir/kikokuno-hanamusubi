@@ -285,17 +285,19 @@ try{
           await page.evaluate(key=>document.querySelector('iframe').contentWindow.dispatchEvent(new KeyboardEvent('keyup',{key})),key);
         };
         await interior.locator('#scene[data-room="house-family"]').waitFor();
-        await move('ArrowLeft','x',131);
-        await move('ArrowUp','y',265);
-        const finish=async()=>{
+        // Walk around the table to the front of the chest at (142, 170).
+        await move('ArrowLeft','x',146);
+        await move('ArrowUp','y',220);
+        const inspectChest=async()=>{
           await interior.locator('#action-a').tap();
-          await interior.locator('#next').tap();
-          return interior.locator('#line').innerText();
+          const close=interior.locator('#next[aria-label="会話を閉じる"]');
+          await close.waitFor({state:'visible',timeout:4000});
+          const line=await interior.locator('#line').innerText();
+          await close.tap();
+          return line;
         };
-        const found=await finish();
-        await interior.locator('#next').tap();
-        const checked=await finish();
-        await interior.locator('#next').tap();
+        const found=await inspectChest();
+        const checked=await inspectChest();
         const count=await page.evaluate(()=>JSON.parse(localStorage.getItem('kikokuno-hanamusubi-battle-player')).foods.onigiri);
         if(!found.includes('おにぎりを見つけた')||!checked.includes('何も入っていない')||count!==1){
           issues.push('furniture discovery failed: '+JSON.stringify({found,checked,count}));

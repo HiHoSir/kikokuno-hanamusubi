@@ -5,12 +5,21 @@
 <script src="../navigation/entry.js?v=cave-quest-1" data-entry="game"></script>
 <link rel="stylesheet" href="../ui/controls.css?v=dotgothic16">
 <link rel="stylesheet" href="../audio/audio.css">
+<link rel="stylesheet" href="../village/dialogue.css?v=dotgothic16">
 <title>社西の洞窟｜鬼哭の花結び</title>
 <style>canvas{display:block;width:100%;height:100%;image-rendering:pixelated}#notice{left:50%;transform:translateX(-50%)}#load{position:absolute;inset:40% 0 auto;text-align:center}</style>
 </head><body>
 <main data-bgm="dungeon" aria-label="社西の洞窟">
 <section class="viewport"><canvas id="scene"></canvas><p id="load">洞窟を読み込んでいます</p>
- <output id="notice" class="field-hud" aria-live="polite" hidden></output></section>
+ <output id="notice" class="field-hud" aria-live="polite" hidden></output>
+ <button id="talk" type="button" hidden>話す</button>
+ <section id="dialogue" aria-labelledby="speaker" hidden>
+  <div class="dialog-window" role="dialog" aria-modal="false">
+   <strong id="speaker"></strong><p id="line"></p>
+   <button id="next" type="button" aria-label="次のセリフへ">▼</button>
+  </div>
+ </section>
+</section>
 <section id="pad" class="controls" aria-label="ゲーム操作">
  <div class="dpad">
   <button id="up" data-dir="up" aria-label="上">▲</button>
@@ -23,5 +32,5 @@
 <button id="sound-toggle" aria-label="サウンドを再生">♪ 再生</button>
 </main>
 <script type="module" src="../audio/boot.mjs"></script>
-<script type="module" src="./walk.mjs?v=cave-quest-1-cave-visual-1-cave-maps-1-stair-links-1-exploration-1-finds-1"></script>
+<script type="module" src="./walk.mjs?v=cave-quest-1-cave-visual-1-cave-maps-1-stair-links-1-exploration-1-finds-1-guardian-1"></script>
 </body></html>

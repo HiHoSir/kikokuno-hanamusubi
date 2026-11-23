@@ -1241,6 +1241,38 @@
       "usage": "battle-hero"
     },
     {
+      "id": "enemy-cave-guardian",
+      "type": "character",
+      "path": "assets/enemies/cave-guardian.png",
+      "status": "approved",
+      "name": "岩守の鬼",
+      "origin": {
+        "kind": "generated-original-enemy-sprite",
+        "source": "社西の洞窟・岩守の鬼の専用原画"
+      },
+      "usage": "battle-enemy",
+      "dimensions": {
+        "width": 256,
+        "height": 256
+      }
+    },
+    {
+      "id": "enemy-cave-guardian-idle",
+      "type": "character",
+      "path": "assets/enemies/cave-guardian-idle.png",
+      "status": "approved",
+      "name": "岩守の鬼",
+      "origin": {
+        "kind": "generated-original-enemy-sprite",
+        "source": "社西の洞窟・岩守の鬼の専用原画"
+      },
+      "usage": "cave-npc",
+      "dimensions": {
+        "width": 144,
+        "height": 144
+      }
+    },
+    {
       "id": "enemy-field-oni",
       "type": "character",
       "path": "assets/enemies/field-oni.png",

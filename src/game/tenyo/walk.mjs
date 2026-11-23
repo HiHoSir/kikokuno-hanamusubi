@@ -4,7 +4,7 @@ import {bindDialogue} from '../village/dialogue.mjs';
 import {residentInFront,walkFrame} from '../village/residents.mjs?v=shared-walk-1';
 import {hizukiWalkDistance} from '../village/movement.mjs?v=shared-walk-1';
 import {readStoryStage,advanceStoryStage,objectiveForStage} from '../story/chapter-one.mjs';
-import {consumeRestorePosition} from '../save/save-game.mjs?v=save-slots-1-finds-1';
+import {consumeRestorePosition} from '../save/save-game.mjs?v=save-slots-1-finds-1-guardian-1';
 import {WORLD_ACTOR_FRAME} from '../ui/world-scale.mjs';
 import {sanctuaryCollisionGeometry,shrineCanStand,shrineAdvance,shrineExitReached} from './movement.mjs';
 

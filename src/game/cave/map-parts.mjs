@@ -1,6 +1,6 @@
-import {CAVE_TILE as TILE} from '../../../data/maps/cave/floors.mjs?v=cave-maps-1-stair-links-1-exploration-1';
-import {drawStairwell} from './stair-art.mjs?v=cave-visual-1-stair-links-1';
-import {createCaveTerrain,drawCaveRim} from './terrain-art.mjs?v=cave-visual-1';
+import {CAVE_TILE as TILE} from '../../../data/maps/cave/floors.mjs?v=cave-maps-1-stair-links-1-exploration-1-guardian-1';
+import {drawStairwell} from './stair-art.mjs?v=cave-visual-1-stair-links-1-guardian-1';
+import {createCaveTerrain,drawCaveRim} from './terrain-art.mjs?v=cave-visual-1-guardian-1';
 
 export function createCaveMap(layout,{floorArt,wallArt,stairsUp,ledgeArt,crateArt}){
  const {ground,rim}=createCaveTerrain(layout,floorArt,wallArt);
@@ -18,6 +18,17 @@ export function createCaveMap(layout,{floorArt,wallArt,stairsUp,ledgeArt,crateAr
    case 'up':
     objects.push({depth:y+70,draw:ctx=>ctx.drawImage(stairsUp,x,y)});
     break;
+   case 'seal':
+   case 'inscription':
+    objects.push({depth:y+TILE/2,draw:(ctx,foundItems)=>{
+     const lit=kind==='seal'&&foundItems.includes(id);
+     ctx.drawImage(ledgeArt,x,y+TILE/2-ledgeArt.height);
+     ctx.fillStyle=kind==='inscription'?'#72878a':id==='cave-white-seal'?'#dddfcc':'#6d80a0';
+     ctx.fillRect(x+19,y-14,10,9);
+     ctx.fillStyle=lit?'#ffffa9':'#2b3944';
+     ctx.fillRect(x+22,y-12,4,5);
+    }});
+    break;
    case 'cache':
     objects.push({id,depth:y+TILE/2,draw:ctx=>ctx.drawImage(crateArt,x+TILE/2-crateArt.width/2,y+TILE/2-crateArt.height)});
     break;
@@ -30,7 +41,7 @@ export function createCaveMap(layout,{floorArt,wallArt,stairsUp,ledgeArt,crateAr
   width:ground.width,height:ground.height,
   draw(ctx,x,y,actors,foundItems){
    ctx.drawImage(ground,0,0);
-   for(const item of [...objects,...actors].sort((a,b)=>a.depth-b.depth))if(!foundItems.includes(item.id))item.draw(ctx);
+   for(const item of [...objects,...actors].sort((a,b)=>a.depth-b.depth))if(!foundItems.includes(item.id))item.draw(ctx,foundItems);
    drawCaveRim(ctx,rim,x,y);
    for(const item of foreground)if(y<item.depth)item.draw(ctx);
   }

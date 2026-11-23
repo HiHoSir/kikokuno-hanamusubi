@@ -1,12 +1,14 @@
-import {CAVE_TILE,CAVE_FLOORS,CAVE_BOSS_ID,caveCellOpen,caveCellCenter,caveFeatureBlocks,caveStairAt,caveEncounterTerrain}
- from '../../../data/maps/cave/floors.mjs?v=cave-maps-1-stair-links-1-exploration-1';
+import {CAVE_WHITE_SEAL,CAVE_BLACK_SEAL} from '../../../data/maps/cave/finds.mjs?v=guardian-1';
+import {CAVE_TILE,CAVE_FLOORS,CAVE_BOSS_ID,caveCellCenter,caveFeatureBlocks,caveStairAt,caveEncounterTerrain,caveLayout}
+ from '../../../data/maps/cave/floors.mjs?v=cave-maps-1-stair-links-1-exploration-1-guardian-1';
 import {hizukiWalkDistance,makeWalk} from '../village/movement.mjs?v=shared-walk-1';
+import {bindDialogue} from '../village/dialogue.mjs';
 import {drawCharacter} from '../village/residents.mjs';
 import {WORLD_SCENE_ZOOM} from '../ui/world-scale.mjs';
-import {BATTLE_REQUEST_KEY,readPlayer,savePlayer,collectFind,chooseFieldEncounter} from '../battle/rules.mjs?v=cave-quest-1-finds-1';
-import {consumeRestorePosition} from '../save/save-game.mjs?v=save-slots-1-shiomachi-gear-1-cave-quest-1-finds-1';
-import {CAVE_DARK} from './terrain-art.mjs?v=cave-visual-1';
-import {createCaveMap} from './map-parts.mjs?v=cave-maps-1-stair-links-1-exploration-1';
+import {BATTLE_REQUEST_KEY,readPlayer,savePlayer,collectFind,chooseFieldEncounter} from '../battle/rules.mjs?v=cave-quest-1-finds-1-guardian-1';
+import {consumeRestorePosition} from '../save/save-game.mjs?v=save-slots-1-shiomachi-gear-1-cave-quest-1-finds-1-guardian-1';
+import {CAVE_DARK} from './terrain-art.mjs?v=cave-visual-1-guardian-1';
+import {createCaveMap} from './map-parts.mjs?v=cave-maps-1-stair-links-1-exploration-1-guardian-1';
 
 const root=new URL('../../../',import.meta.url);
 const scene=document.querySelector('#scene'),load=document.querySelector('#load');
@@ -25,7 +27,7 @@ async function image(path){
 async function start(){
  const [floorArt,wallArt,stairsUp,ledgeArt,heroArt,bossArt,crateArt]=await Promise.all([
   ...['floor-material-atlas','wall-material','stairs-up','rock-ledge'].map(id=>image('assets/cave/'+id+'.png?v=cave-visual-1')),
-  image('assets/characters/hizuki/walk-4dir-80x112.png'),image('assets/enemies/field-oni.png'),
+  image('assets/characters/hizuki/walk-4dir-80x112.png'),image('assets/enemies/cave-guardian-idle.png'),
   image('assets/sea-cove/objects/fish-crate-92x70.png')
  ]);
  const restored=consumeRestorePosition('cave');
@@ -38,6 +40,7 @@ async function start(){
  const bossDefeated=player.caveQuest.rockBreaker;
  let encounterRemaining;
  const clear=()=>{inputs.clear();pending=null;};
+ const dialogue=bindDialogue(clear,()=>startBattle({enemyId:CAVE_BOSS_ID,count:1}));
  function tell(text){
   notice.textContent=text;
   notice.hidden=false;
@@ -47,7 +50,7 @@ async function start(){
  function enter(index,cell,point){
   clear();
   encounterRemaining=tile*(9+Math.floor(Math.random()*5));
-  floor=index;layout=CAVE_FLOORS[floor];
+  floor=index;layout=caveLayout(floor,player.foundItems);
   const width=layout.grid[0].length*tile,height=layout.grid.length*tile;
   const blocked=new Uint8Array(width*height);
   terrain=renderedFloors.get(index);
@@ -56,7 +59,7 @@ async function start(){
    renderedFloors.set(index,terrain);
   }
   for(const [row,line] of layout.grid.entries())for(let col=0;col<line.length;col++){
-   if(caveCellOpen(floor,col,row))continue;
+   if(line[col]==='.')continue;
    const px=col*tile,py=row*tile;
    for(let line=py;line<py+tile;line++)blocked.fill(1,line*width+px,line*width+px+tile);
   }
@@ -69,7 +72,7 @@ async function start(){
  }
  const snapshot=()=>({scene:'cave',position:{x,y,face,floor}});
  function occupied(px,py){
-  if(layout.features.some(feature=>!player.foundItems.includes(feature.id)&&caveFeatureBlocks(feature,px,py)))return true;
+  if(layout.features.some(feature=>(feature.kind!=='cache'||!player.foundItems.includes(feature.id))&&caveFeatureBlocks(feature,px,py)))return true;
   if(!layout.boss||bossDefeated)return false;
   const [bx,by]=caveCellCenter(layout.boss);
   return Math.hypot(px-bx,py-by)<34;
@@ -88,6 +91,7 @@ async function start(){
  }
  function interact(){
   if(leaving||paused)return;
+  if(dialogue.active){dialogue.advance();return;}
   const stair=caveStairAt(floor,x,y);
   if(stair){
    useStair(stair);
@@ -95,21 +99,41 @@ async function start(){
   }
   const [dx,dy]=Object.values(directions).find(([, ,row])=>row===face);
   const cache=layout.features.find(feature=>{
-   if(feature.kind!=='cache'||player.foundItems.includes(feature.id))return false;
+   if(!['cache','seal','inscription'].includes(feature.kind))return false;
+   if(feature.kind==='cache'&&player.foundItems.includes(feature.id))return false;
    const [tx,ty]=caveCellCenter(feature.origin);
    return Math.hypot(tx-x,ty-y)<62&&(tx-x)*dx+(ty-y)*dy>0;
   });
   if(cache){
+   if(cache.kind==='inscription'){
+    tell('刻まれた文字。「下の階で、白を沈めよ。続いて黒を沈めれば道はひらく」');
+    return;
+   }
+   if(cache.id===CAVE_BLACK_SEAL&&!player.foundItems.includes(CAVE_WHITE_SEAL)){
+    tell('黒い石は動かない。台座に白い石の紋が刻まれている。');
+    return;
+   }
    const result=collectFind(readPlayer(),cache.id);
-   tell(result.message);
    if(result.accepted){
     player=savePlayer(result.player);
+    if(cache.id===CAVE_BLACK_SEAL){
+     renderedFloors.delete(floor);
+     enter(floor,layout.entry,snapshot().position);
+    }
     window.parent?.KIKOKU_GAME?.autosave?.(window);
    }
+   tell(result.message);
    return;
   }
   const boss=layout.boss&&!bossDefeated?caveCellCenter(layout.boss):null;
-  if(boss&&Math.hypot(x-boss[0],y-boss[1])<74)startBattle({enemyId:CAVE_BOSS_ID,count:1});
+  if(boss&&Math.hypot(x-boss[0],y-boss[1])<74){
+   dialogue.update({x:boss[0],y:boss[1],name:'岩守の鬼',lines:[
+    '岩守の鬼「止まれ。その槌は、山が崩れぬよう代々ここで預かってきた。」',
+    '緋月「潮待村の先で、大岩が橋を塞いでるの。道を開けたら、きっと返す。」',
+    '岩守の鬼「ならば試そう。岩を砕く力より、大槌を受け止める覚悟を見せてみろ。」'
+   ]},x,y);
+   dialogue.open();
+  }
  }
  function startBattle(encounter){
   clear();
@@ -139,7 +163,7 @@ async function start(){
   const actors=[{depth:y,draw:ctx=>drawCharacter(ctx,{...hero,x,y,face,moving,distance})}];
   if(layout.boss&&!bossDefeated){
    const [bx,by]=caveCellCenter(layout.boss);
-   actors.push({depth:by,draw:ctx=>ctx.drawImage(bossArt,bx-64,by-111)});
+   actors.push({depth:by,draw:ctx=>ctx.drawImage(bossArt,bx-bossArt.width/2,by-bossArt.height+7)});
   }
   terrain.draw(ctx,x,y,actors,player.foundItems);
  }
@@ -150,7 +174,7 @@ async function start(){
   let moving=false;
   const dir=pending??[...inputs.values()].at(-1);
   pending=null;
-  if(dir&&!paused){
+  if(dir&&!paused&&!dialogue.active){
    const [dx,dy,row]=directions[dir],step=hizukiWalkDistance(elapsed);
    const stair=caveStairAt(floor,x,y);
    let touchedStair=false;
@@ -183,7 +207,7 @@ async function start(){
  }
  for(const button of document.querySelectorAll('[data-dir]')){
   button.addEventListener('pointerdown',event=>{
-   if(event.button!==0||paused)return;
+   if(event.button!==0||paused||dialogue.active)return;
    event.preventDefault();button.setPointerCapture(event.pointerId);
    pending=button.dataset.dir;inputs.set(event.pointerId,pending);
   });
@@ -193,7 +217,7 @@ async function start(){
  document.querySelector('#action-a').addEventListener('click',interact);
  addEventListener('keydown',event=>{
   if(event.ctrlKey||event.metaKey||event.altKey||paused||event.repeat)return;
-  if(keys[event.key]){
+  if(keys[event.key]&&!dialogue.active){
    event.preventDefault();pending=keys[event.key];inputs.set(event.key,pending);
   }else if(['Enter',' ','z'].includes(event.key)&&event.target?.tagName!=='BUTTON'){
    event.preventDefault();interact();

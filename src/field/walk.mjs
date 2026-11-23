@@ -1,6 +1,6 @@
 import {contact, createFieldRenderer, fieldStep, loadFieldArt, villageArrival, placeArrival, world} from './runtime.mjs?v=authored-waterfall-1-cave-quest-1';
-import {BATTLE_REQUEST_KEY,FIELD_RETURN_KEY,chooseFieldEncounter,readPlayer,savePlayer} from '../game/battle/rules.mjs?v=equipment-4slots-2-cave-quest-1-finds-1';
-import {consumeRestorePosition} from '../game/save/save-game.mjs?v=save-slots-1-cave-quest-1-finds-1';
+import {BATTLE_REQUEST_KEY,FIELD_RETURN_KEY,chooseFieldEncounter,readPlayer,savePlayer} from '../game/battle/rules.mjs?v=equipment-4slots-2-cave-quest-1-finds-1-guardian-1';
+import {consumeRestorePosition} from '../game/save/save-game.mjs?v=save-slots-1-cave-quest-1-finds-1-guardian-1';
 
 const scene = document.querySelector('#scene');
 const load = document.querySelector('#load');

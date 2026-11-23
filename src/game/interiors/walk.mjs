@@ -5,11 +5,11 @@ import {bindDialogue} from '../village/dialogue.mjs?v=field-menu-1';
 import {rooms, resolveInterior, prepareInterior} from './rooms.mjs?v=interior-wall-anchor-1';
 import {paintRoom, paintPartition, paintContactShadow} from './room-art.mjs?v=interior-wall-anchor-1';
 import {drawFurnitureLife} from './life-effects.mjs?v=indoor-life-3-kamado';
-import {collectFind,readPlayer,savePlayer} from '../battle/rules.mjs?v=equipment-4slots-2-cove-shells-1-shiomachi-gear-1-cave-quest-1-finds-1';
-import {consumeRestorePosition} from '../save/save-game.mjs?v=save-slots-1-shiomachi-gear-1-finds-1';
+import {collectFind,readPlayer,savePlayer} from '../battle/rules.mjs?v=equipment-4slots-2-cove-shells-1-shiomachi-gear-1-cave-quest-1-finds-1-guardian-1';
+import {consumeRestorePosition} from '../save/save-game.mjs?v=save-slots-1-shiomachi-gear-1-finds-1-guardian-1';
 import {VILLAGE_FINDS} from '../../../data/maps/hozuki-village/finds.mjs';
 import {drawFindHint,shouldShowFindHint} from '../village/find-indicator.mjs?v=nearby-1';
-import {createVillageShop} from './shop.mjs?v=shared-shops-1-cave-quest-1-finds-1';
+import {createVillageShop} from './shop.mjs?v=shared-shops-1-cave-quest-1-finds-1-guardian-1';
 
 const scene = document.querySelector('#scene');
 const context = scene.getContext('2d', {alpha:false});

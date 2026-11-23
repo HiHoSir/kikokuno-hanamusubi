@@ -1,4 +1,4 @@
-import {CAVE_TILE as TILE} from '../../../data/maps/cave/floors.mjs';
+import {CAVE_TILE as TILE} from '../../../data/maps/cave/floors.mjs?v=guardian-1';
 
 export const CAVE_DARK='#090d13';
 const DARK=[9,13,19];

@@ -1,3 +1,5 @@
+import {CAVE_WHITE_SEAL,CAVE_BLACK_SEAL} from './finds.mjs?v=guardian-1';
+
 export const CAVE_TILE=48;
 export const CAVE_BOSS_ID='cave-guardian';
 export const CAVE_TOOL_NAME='岩砕きの槌';
@@ -22,7 +24,8 @@ const floors=[
   down:{kind:'down',origin:[20,5],approach:[21,7]},
   danger:(_x,y)=>y>=5&&y<=10,
   scenery:[{kind:'ledge',origin:[8,3]},
-   {kind:'cache',origin:[8,2],id:'cave-entry-shelf'}]
+   {kind:'cache',origin:[8,2],id:'cave-entry-shelf'},
+   {kind:'inscription',origin:[10,3]}]
  },
  {
   // Two passages around a rock mass. Both reach the east chamber, where the
@@ -37,7 +40,11 @@ const floors=[
   up:{kind:'up',origin:[7,17],approach:[7,18]},
   down:{kind:'down',origin:[23,6],approach:[24,8]},
   danger:(x,y)=>x>=9&&y>=10&&y<=16,
-  scenery:[{kind:'cache',origin:[9,2],id:'cave-upper-passage'}]
+  scenery:[{kind:'cache',origin:[9,2],id:'cave-upper-passage'},
+   {kind:'seal',origin:[11,2],id:CAVE_WHITE_SEAL},
+   {kind:'seal',origin:[12,15],id:CAVE_BLACK_SEAL}],
+  shortcut:[[6,14,16],[7,9,19]],
+  hiddenCache:{kind:'cache',origin:[15,6],id:'cave-sealed-passage'}
  },
  {
   // A bent approach opens into the guardian's room. The alcoves flank the
@@ -67,7 +74,7 @@ export const caveCellOpen=(floor,x,y)=>CAVE_FLOORS[floor]?.grid[y]?.[x]==='.';
 export function caveFeatureBlocks({kind,origin},x,y){
  const px=x-origin[0]*CAVE_TILE,py=y-origin[1]*CAVE_TILE;
  if(kind==='down')return ((px-48)/36)**2+((py-48)/35)**2<1;
- if(kind==='cache')return Math.hypot(px-24,py-24)<18;
+ if(['cache','seal','inscription'].includes(kind))return Math.hypot(px-24,py-24)<18;
  if(kind==='up')return px>6&&px<93&&py>5&&py<94&&!(px<34&&py>=64);
  return false;
 }
@@ -88,4 +95,14 @@ export function caveStairAt(floor,x,y){
 export function caveEncounterTerrain(floor,x,y){
  const col=Math.floor(x/CAVE_TILE),row=Math.floor(y/CAVE_TILE);
  return caveCellOpen(floor,col,row)&&Boolean(CAVE_FLOORS[floor].danger?.(col,row));
+}
+
+// Opening a route changes both its drawn edges and its walking grid.
+export function caveLayout(floor,foundItems){
+ const base=CAVE_FLOORS[floor];
+ if(!base.shortcut||!foundItems.includes(CAVE_BLACK_SEAL))return base;
+ const grid=base.grid.slice();
+ for(const [row,left,right] of base.shortcut)
+  grid[row]=grid[row].slice(0,left)+'.'.repeat(right-left+1)+grid[row].slice(right+1);
+ return {...base,grid,features:[...base.features,base.hiddenCache]};
 }

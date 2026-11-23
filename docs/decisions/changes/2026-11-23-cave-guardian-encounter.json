@@ -1,0 +1,23 @@
+{
+ "schemaVersion": 1,
+ "id": "2026-11-23-cave-guardian-encounter",
+ "kind": "user-approved",
+ "scopes": ["balance", "equipment", "progression"],
+ "affectedFiles": ["docs/MAP_ENEMY_EQUIPMENT_RECONCILIATION.md", "src/game/battle/rules.mjs", "src/game/shiomachi/interior-preview.mjs", "src/field/walk.mjs"],
+ "readBeforeEditing": [
+  "docs/MAP_ENEMY_EQUIPMENT_RECONCILIATION.md と data/maps/field/terrain.js の既存経路と洞窟の接続設計を参照",
+  "docs/BALANCE_PROGRESSION_CONTRACT.md と docs/BATTLE_BALANCE.md、data/characters/hizuki-status.json の確定成長とバランスを参照",
+  "docs/FOUR_VILLAGES_EQUIPMENT_PLAN.md と src/game/battle/rules.mjs の装備と報酬を確認"
+ ],
+ "previousDesign": "岩守の鬼は既存の小鬼の絵を使い、話しかけると即座に戦いが始まった。探索には拾得や迂回路があったが仕掛けの発見で変化する道はなかった。",
+ "intendedDifference": "専用グラフィック、会話、予告付きの岩砕きで岩守の鬼を強化し、別階の手がかりと石の仕掛けを調べると抜け道が開くようにする。",
+ "impactAnalysis": "ボス個体の体力・攻・守と攻撃行動を暫定調整する。フィールド・潮待村は保存処理を読み込むURLの版変更のみ。",
+ "preservedBoundaries": "フィールド経路、店舗、通常敵、ヒヅキの成長、報酬、岩砕きの槌の取得条件を維持する。",
+ "verification": "会話が終わるまで戦闘しないこと、予告と強打、防御効果、洞窟の仕掛けと保存、橋の開通を検査する。",
+ "userEvidence": {
+  "status": "explicit-user-instruction",
+  "date": "2026-11-23",
+  "quote": "岩守の鬼が弱すぎる。\nグラフィックも作ろう。\nで会話時にセリフも入れて、その後戦闘にしよう。\nちなみに探索要素は皆無でつまらない。",
+  "source": "本会話でのボスと探索に関する指示。数値、台詞、仕掛けの具体案は実装側の判断。"
+ }
+}

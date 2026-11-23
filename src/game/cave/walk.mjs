@@ -1,12 +1,12 @@
 import {CAVE_TILE,CAVE_FLOORS,CAVE_BOSS_ID,caveCellOpen,caveCellCenter,caveFeatureBlocks,caveStairAt}
- from '../../../data/maps/cave/floors.mjs?v=cave-maps-1';
+ from '../../../data/maps/cave/floors.mjs?v=cave-maps-1-stair-links-1';
 import {hizukiWalkDistance,makeWalk} from '../village/movement.mjs?v=shared-walk-1';
 import {drawCharacter} from '../village/residents.mjs';
 import {WORLD_SCENE_ZOOM} from '../ui/world-scale.mjs';
 import {BATTLE_REQUEST_KEY,readPlayer} from '../battle/rules.mjs?v=cave-quest-1';
 import {consumeRestorePosition} from '../save/save-game.mjs?v=save-slots-1-shiomachi-gear-1-cave-quest-1';
 import {CAVE_DARK} from './terrain-art.mjs?v=cave-visual-1';
-import {createCaveMap} from './map-parts.mjs?v=cave-maps-1';
+import {createCaveMap} from './map-parts.mjs?v=cave-maps-1-stair-links-1';
 
 const root=new URL('../../../',import.meta.url);
 const scene=document.querySelector('#scene'),load=document.querySelector('#load');
@@ -77,15 +77,16 @@ async function start(){
  if(returning&&bossDefeated)tell('岩砕きの槌を手に入れた。');
  load.hidden=true;
 
+ function useStair(stair){
+  const next=floor+(stair.kind==='down'?1:-1);
+  const arrival=stair.kind==='down'?CAVE_FLOORS[next].up:CAVE_FLOORS[next].down;
+  enter(next,arrival.approach);
+ }
  function interact(){
   if(leaving||paused)return;
   const stair=caveStairAt(floor,x,y);
-  if(stair?.kind==='down'){
-   enter(floor+1,CAVE_FLOORS[floor+1].up.approach);
-   return;
-  }
-  if(stair?.kind==='up'){
-   enter(floor-1,CAVE_FLOORS[floor-1].down.approach);
+  if(stair){
+   useStair(stair);
    return;
   }
   const boss=layout.boss&&!bossDefeated?caveCellCenter(layout.boss):null;
@@ -126,7 +127,18 @@ async function start(){
   pending=null;
   if(dir&&!paused){
    const [dx,dy,row]=directions[dir],step=hizukiWalkDistance(elapsed);
-   const [nx,ny]=walk.move(x,y,dx*step,dy*step,occupied);
+   const stair=caveStairAt(floor,x,y);
+   let touchedStair=false;
+   const [nx,ny]=walk.move(x,y,dx*step,dy*step,(px,py)=>{
+    if(stair&&caveFeatureBlocks(stair,px,py))touchedStair=true;
+    return occupied(px,py);
+   });
+   if(touchedStair){
+    useStair(stair);
+    draw(false);
+    requestAnimationFrame(frame);
+    return;
+   }
    const travel=Math.hypot(nx-x,ny-y);
    distance+=travel;moving=travel>0;x=nx;y=ny;face=row;
    if(layout.exit&&dy>0&&Math.abs(x-caveCellCenter(layout.exit)[0])<1.5*tile&&y>=layout.exit[1]*tile+17){

@@ -11,7 +11,7 @@ function terrain(width,runs){
 
 const floors=[
  {
-  // South entrance, the original raised steps to the north, and an eastern
+  // South entrance, a rocky shelf to the north, and an eastern
   // alcove that branches off the main path before the recessed stairwell.
   grid:terrain(26,[
    [],[[7,10]],[[6,11]],[[5,12]],[[4,12],[18,21]],
@@ -20,7 +20,7 @@ const floors=[
   ]),
   entry:[9,13],exit:[9,14],
   down:{kind:'down',origin:[11,9],approach:[12,11]},
-  scenery:[{kind:'rise',origin:[8,1]},{kind:'ledge',origin:[19,6]}]
+  scenery:[{kind:'ledge',origin:[8,2]},{kind:'ledge',origin:[19,6]}]
  },
  {
   // Two passages around a rock mass. Both reach the east chamber, where the
@@ -30,7 +30,7 @@ const floors=[
    [[3,8],[17,25]],[[3,8],[19,26]],[[3,8],[20,27]],[[3,8],[20,27]],
    [[4,8],[19,26]],[[4,9],[18,25]],[[4,9],[17,24]],
    [[5,10],[15,23]],[[5,23]],[[5,22]],[[6,20]],
-   [[6,13]],[[6,11]],[[6,11]],[[8,10]],[]
+   [[6,13]],[[6,8]],[[6,9]],[[8,10]],[]
   ]),
   up:{kind:'up',origin:[7,17],approach:[7,18]},
   down:{kind:'down',origin:[23,6],approach:[24,8]},
@@ -43,7 +43,7 @@ const floors=[
    [],[],[[8,13]],[[6,15]],[[5,17]],[[4,18]],
    [[3,19]],[[3,20]],[[4,20]],[[6,19]],[[8,17]],
    [[10,15]],[[12,16]],[[13,18]],[[14,20]],[[15,21]],
-   [[16,21]],[[17,21]],[[17,21]],[]
+   [[16,21]],[[17,19]],[[17,21]],[]
   ]),
   up:{kind:'up',origin:[18,17],approach:[18,18]},
   boss:[11,6],
@@ -60,21 +60,22 @@ export const caveCellCenter=cell=>cell.map(value=>(value+.5)*CAVE_TILE);
 export const caveCellOpen=(floor,x,y)=>CAVE_FLOORS[floor]?.grid[y]?.[x]==='.';
 
 // Hard shapes constrain feet independently of the art's transparent outline.
-// Stairs, floor holes and raised stone use the prototype's distinct footprints.
+// Upper stairs and floor holes use the prototype's distinct footprints.
 export function caveFeatureBlocks({kind,origin},x,y){
  const px=x-origin[0]*CAVE_TILE,py=y-origin[1]*CAVE_TILE;
- switch(kind){
-  case 'down':return ((px-48)/36)**2+((py-48)/35)**2<1;
-  case 'up':return px>6&&px<93&&py>5&&py<94&&!(px<34&&py>=64);
-  case 'rise':return Math.abs(px-48)<34&&py>12&&py<86.4;
-  default:return false;
- }
+ if(kind==='down')return ((px-48)/36)**2+((py-48)/35)**2<1;
+ if(kind==='up')return px>6&&px<93&&py>5&&py<94&&!(px<34&&py>=64);
+ return false;
 }
 
+// Use the visible shore of the floor hole or the foot of the upper stair.
+// The arrival cell is independent of where the player approaches it.
 export function caveStairAt(floor,x,y){
- return CAVE_FLOORS[floor].features.find(({approach})=>{
-  if(!approach)return false;
-  const [cx,cy]=caveCellCenter(approach);
-  return Math.hypot(x-cx,y-cy)<24;
+ return CAVE_FLOORS[floor].features.find(stair=>{
+  const px=x-stair.origin[0]*CAVE_TILE,py=y-stair.origin[1]*CAVE_TILE;
+  if(caveFeatureBlocks(stair,x,y))return false;
+  if(stair.kind==='down')return Math.hypot(px-48,py-48)<=82;
+  if(stair.kind==='up')return px>=-14&&px<=52&&py>=53&&py<=111;
+  return false;
  });
 }

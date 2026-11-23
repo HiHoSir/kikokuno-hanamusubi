@@ -1,5 +1,5 @@
-import {CAVE_TILE as TILE} from '../../../data/maps/cave/floors.mjs?v=cave-maps-1';
-import {drawRaisedSteps,drawStairwell} from './stair-art.mjs?v=cave-visual-1';
+import {CAVE_TILE as TILE} from '../../../data/maps/cave/floors.mjs?v=cave-maps-1-stair-links-1';
+import {drawStairwell} from './stair-art.mjs?v=cave-visual-1-stair-links-1';
 import {createCaveTerrain,drawCaveRim} from './terrain-art.mjs?v=cave-visual-1';
 
 export function createCaveMap(layout,{floorArt,wallArt,stairsUp,ledgeArt}){
@@ -14,11 +14,6 @@ export function createCaveMap(layout,{floorArt,wallArt,stairsUp,ledgeArt}){
     drawStairwell(paint,col,row,'back');
     drawStairwell(paint,col,row,'front');
     foreground.push({depth:y+100,draw:ctx=>drawStairwell(ctx,col,row,'front')});
-    break;
-   case 'rise':
-    drawRaisedSteps(paint,col,row,'back');
-    drawRaisedSteps(paint,col,row,'front');
-    foreground.push({depth:y+70,draw:ctx=>drawRaisedSteps(ctx,col,row,'front')});
     break;
    case 'up':
     objects.push({depth:y+70,draw:ctx=>ctx.drawImage(stairsUp,x,y)});

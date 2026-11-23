@@ -1,6 +1,6 @@
 import {
   readManualGame,readAutoGame,restoreSavedGame,startNewGame,manualSaveLabel
-} from '../game/save/save-game.mjs?v=save-slots-1-shiomachi-gear-1-cave-quest-1';
+} from '../game/save/save-game.mjs?v=save-slots-1-shiomachi-gear-1-cave-quest-1-ushiohei-hammer-1';
 
 const scenes = [
   { name: '鬼灯村', url: new URL('../../assets/ui/title/village.webp', import.meta.url) },
@@ -43,7 +43,7 @@ function refreshSaveChoices(){
       const restored=restoreSavedGame(slot);
       if(!restored.accepted){loadMessage.textContent=restored.message;refreshSaveChoices();return;}
       const target=new URL('src/game/',document.baseURI);
-      target.searchParams.set('build','save-slots-1-shared-walk-1-owned-gear-2-shiomachi-gear-1-south-arrival-slash-1-shared-shops-1-cave-quest-1');
+      target.searchParams.set('build','save-slots-1-shared-walk-1-owned-gear-2-shiomachi-gear-1-south-arrival-slash-1-shared-shops-1-cave-quest-1-ushiohei-hammer-1');
       window.KIKOKU_ROUTE.go(target);
     });
     loadSlots.append(button);

@@ -4,7 +4,8 @@ import {makeVillageFence,VILLAGE_FENCE_ART,VILLAGE_GATE_POST_ART} from '../villa
 import {residentInFront} from '../village/residents.mjs';
 import {bindDialogue} from '../village/dialogue.mjs';
 import {pixelViewport,DEFAULT_CAMERA_ZOOM} from '../village/render.mjs?v=nonfield-world-scale-1';
-import {readStoryStage,advanceStoryStage} from '../story/chapter-one.mjs';
+import {readStoryStage,advanceStoryStage,hasUshioheiCelebratedHammer,recordUshioheiHammerCelebration
+} from '../story/chapter-one.mjs?v=ushiohei-hammer-1';
 import {consumeRestorePosition} from '../save/save-game.mjs?v=save-slots-1-shiomachi-gear-1';
 import {createCoveRenderer} from './render.mjs?v=cove-south-gate-1';
 import {readPlayer,savePlayer} from '../battle/rules.mjs?v=shiomachi-gear-1-cave-quest-1';
@@ -84,7 +85,16 @@ const chooseInput=(id,direction)=>{
  const active=[...inputs.values()].at(-1);
  for(const node of buttons)node.classList.toggle('held',node.dataset.dir===active);
 };
-export function linesForFisher(stage){
+function bridgeAdvice({rockBreaker,bridgeCleared}){
+ if(bridgeCleared)return [];
+ const useHammer='潮平「槌を持って橋の大岩の前に立ち、岩の方を向いてAで調べるんだ。」';
+ if(rockBreaker)return [useHammer];
+ return [
+  '潮平「潮待村の先の橋は、大岩でふさがってる。天妖の社の西にある洞窟の奥には、岩砕きの槌が眠ってるそうだ。」',
+  useHammer
+ ];
+}
+function linesForFisher(stage,quest){
  if(stage==='chief')return [
   '潮平「潮が引くと、不思議な花が残ることがあるんだ。」',
   '潮平「里の鐘のことなら、まず里長さんに聞いておいで。」'
@@ -97,11 +107,13 @@ export function linesForFisher(stage){
   '潮平「昨夜の潮は妙だった。波が引いたあと、見たこともない花がひとひら残っていてな。」',
   '潮平「これを見ると、昔ここで誰かを待っていた気がする。誰だったかは思い出せないが……。」',
   '緋月「待っていたことは覚えてるんだね。花びら、預かってもいい？　手がかりを探してみる。」',
-  '潮平「持っていきな。忘れの森の方へ光が伸びている。俺はここで、帰る人を待つよ。」'
+  '潮平「持っていきな。忘れの森の方へ光が伸びている。俺はここで、帰る人を待つよ。」',
+  ...bridgeAdvice(quest)
  ];
  return [
   '潮平「花びらは忘れの森の方へ光を伸ばしていた。」',
-  '潮平「名前を忘れても、俺はここで帰る人を待つよ。」'
+  '潮平「名前を忘れても、俺はここで帰る人を待つよ。」',
+  ...bridgeAdvice(quest)
  ];
 }
 async function start(){
@@ -152,8 +164,7 @@ async function start(){
  const fence=makeVillageFence(coveExitFenceSegments(COVE_MAP),collision,width*tileSize);
  const walk=makeWalk(width*tileSize,height*tileSize,collision,7);
  // Native-sized objects remain separate from sand/grass tiles.
- const fishermen={...site,bitmap:images.fisher,distance:0,moving:false,
-   lines:linesForFisher(readStoryStage())};
+ const fishermen={...site,bitmap:images.fisher,distance:0,moving:false};
  // Collider positions are authored independently of roof alpha and net mesh.
  // The house blocks full roof overlap, so the character never disappears
  // behind its art. The cove rocks have their own native foot radii.
@@ -184,12 +195,14 @@ async function start(){
  }
  let elapsedMs=0,lastFrame=0,distance=0,menuPaused=false,lastRenderedFrame=-1;
  let noticeUntil=0;
+ let celebratingHammer=false;
  const renderer=createCoveRenderer(scene.getContext('2d',{alpha:false}),images,fence);
  const dialogue=bindDialogue(clearInputs,ended=>{
-   if(!previewMode&&ended.id==='ushiohei'&&readStoryStage()==='cove'){
-     advanceStoryStage('forest');
-     fishermen.lines=linesForFisher(readStoryStage());
-   }
+   if(previewMode||ended.id!=='ushiohei')return;
+   const earnedPetal=readStoryStage()==='cove';
+   if(earnedPetal)advanceStoryStage('forest');
+   if(celebratingHammer)recordUshioheiHammerCelebration();
+   if(earnedPetal||celebratingHammer)window.parent?.KIKOKU_GAME?.autosave?.(window);
  });
  function refreshShellHint(now=performance.now()){
    if(now>=noticeUntil&&shellNotice.textContent)shellNotice.textContent='';
@@ -227,7 +240,6 @@ async function start(){
      distance+=Math.hypot(nx-x,ny-y);
      x=nx;y=ny;
    }
-   fishermen.lines=linesForFisher(readStoryStage());
    dialogue.update(residentInFront(x,y,face,[fishermen]),x,y);
    refreshShellHint(now);
    const tick=Math.floor(now/180);
@@ -243,6 +255,15 @@ async function start(){
    if(dialogue.active){dialogue.advance();return;}
    // Talking to the story NPC always takes precedence.
    if(residentInFront(x,y,face,[fishermen])){
+     const stage=readStoryStage();
+     const quest=heroInventory.caveQuest;
+     celebratingHammer=!previewMode&&quest.rockBreaker&&!hasUshioheiCelebratedHammer();
+     fishermen.lines=linesForFisher(stage,quest);
+     if(celebratingHammer)fishermen.lines.unshift(
+       '潮平「おお、岩砕きの槌を手に入れたのか！　よくやったな、緋月。無事に戻ってきてくれて何よりだ。」',
+       '緋月「ありがとう、潮平さん。」'
+     );
+     dialogue.update(fishermen,x,y);
      dialogue.open();return;
    }
    const shell=nearestCoveShell(heroInventory,x,y);
@@ -259,7 +280,6 @@ async function start(){
        return;
      }
    }
-   dialogue.open();
  };
  if(previewMode){
   for(const button of document.querySelectorAll('[data-review-spot]')){

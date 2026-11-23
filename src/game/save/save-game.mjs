@@ -2,7 +2,9 @@
 // Existing live player/story keys remain unchanged.
 // Save data is not uploaded; Safari may erase site storage when website data is cleared.
 import {PLAYER_KEY,DEFAULT_PLAYER,normalizePlayer,readPlayer,FIELD_RETURN_KEY,BATTLE_REQUEST_KEY} from '../battle/rules.mjs?v=shiomachi-gear-1-cave-quest-1';
-import {CHAPTER_ONE_KEY,CHAPTER_ONE_STAGES,normalizeStage,readStoryStage} from '../story/chapter-one.mjs';
+import {CHAPTER_ONE_KEY,CHAPTER_ONE_STAGES,normalizeStage,readStoryStage,
+  USHIOHEI_HAMMER_KEY,hasUshioheiCelebratedHammer
+} from '../story/chapter-one.mjs?v=ushiohei-hammer-1';
 
 export const MANUAL_SAVE_KEY='kikokuno-hanamusubi-manual-save';
 export const AUTO_SAVE_KEY='kikokuno-hanamusubi-auto-save';
@@ -46,7 +48,7 @@ export function readSavedGame(slot='manual',storage=globalThis.localStorage){
     if(!location||!CHAPTER_ONE_STAGES.includes(raw.story))return null;
     if(!Number.isFinite(Date.parse(raw.savedAt)))return null;
     return {version:1,savedAt:raw.savedAt,player:normalizePlayer(raw.player),
-      story:normalizeStage(raw.story),location};
+      story:normalizeStage(raw.story),ushioheiHammerCelebrated:raw.ushioheiHammerCelebrated===true,location};
   }catch{return null;}
 }
 export const readManualGame=(storage=globalThis.localStorage)=>readSavedGame('manual',storage);
@@ -57,7 +59,8 @@ export function saveGame(slot,location,storage=globalThis.localStorage,now=Date.
   const clean=normalizeLocation(location);
   if(!clean)return {accepted:false,message:'現在地を取得できません。移動後にもう一度お試しください。'};
   const save={version:1,savedAt:new Date(now()).toISOString(),
-    player:readPlayer(storage),story:readStoryStage(storage),location:clean};
+    player:readPlayer(storage),story:readStoryStage(storage),
+    ushioheiHammerCelebrated:hasUshioheiCelebratedHammer(storage),location:clean};
   try{
     storage.setItem(key,JSON.stringify(save));
     if(!readSavedGame(slot,storage))throw Error('save verification failed');
@@ -93,7 +96,7 @@ export function routeForSavedGame(save,root){
 export function restoreSavedGame(slot,storage=globalThis.localStorage,session=globalThis.sessionStorage){
   const save=readSavedGame(slot,storage);
   if(!save)return {accepted:false,message:'記録されたデータがありません。'};
-  const keys=[PLAYER_KEY,CHAPTER_ONE_KEY];
+  const keys=[PLAYER_KEY,CHAPTER_ONE_KEY,USHIOHEI_HAMMER_KEY];
   let previous;
   try{
     previous=keys.map(key=>storage.getItem(key));
@@ -101,6 +104,8 @@ export function restoreSavedGame(slot,storage=globalThis.localStorage,session=gl
     session.setItem(RESTORE_POSITION_KEY,JSON.stringify(save.location));
     storage.setItem(PLAYER_KEY,JSON.stringify(save.player));
     storage.setItem(CHAPTER_ONE_KEY,save.story);
+    if(save.ushioheiHammerCelebrated)storage.setItem(USHIOHEI_HAMMER_KEY,'1');
+    else storage.removeItem(USHIOHEI_HAMMER_KEY);
     // A prior encounter/return must never hijack the checkpoint's location.
     for(const key of [FIELD_RETURN_KEY,BATTLE_REQUEST_KEY,FIELD_PLACE_RETURN_KEY])
       try{session.removeItem(key)}catch{}
@@ -120,6 +125,7 @@ export function startNewGame(storage=globalThis.localStorage,session=globalThis.
   try{
     storage.setItem(PLAYER_KEY,JSON.stringify(normalizePlayer(DEFAULT_PLAYER)));
     storage.setItem(CHAPTER_ONE_KEY,'chief');
+    storage.removeItem(USHIOHEI_HAMMER_KEY);
     for(const key of [RESTORE_POSITION_KEY,FIELD_RETURN_KEY,BATTLE_REQUEST_KEY,FIELD_PLACE_RETURN_KEY])
       session?.removeItem(key);
     return {accepted:true};

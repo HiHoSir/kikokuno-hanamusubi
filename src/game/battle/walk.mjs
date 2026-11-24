@@ -33,7 +33,9 @@ const cavePosition=request?.cavePosition;
 const caveField=Number.isInteger(cavePosition?.floor)&&Boolean(CAVE_FLOORS[cavePosition.floor])&&
  Number.isFinite(cavePosition.x)&&Number.isFinite(cavePosition.y);
 const caveBattle=caveBoss||caveField;
-if(caveBattle)document.querySelector('main').dataset.battleTerrain='cave';
+const scene=heroFigure.closest('main');
+if(caveBattle)scene.dataset.battleTerrain='cave';
+if(caveBoss)scene.classList.add('large-enemy');
 const audio=()=>globalThis.KIKOKU_AUDIO;
 let mode='main',selected=0,ready=false,locked=false,targetCommand=null,targetReturn='main';
 const commands={

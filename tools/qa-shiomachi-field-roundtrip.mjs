@@ -493,10 +493,15 @@ try{
  assert.deepEqual((await player()).caveQuest,{rockBreaker:true,bridgeCleared:true});
  // Reopen the title and use the same replay control exposed to players.
  await page.goto(new URL('/',page.url()).href,{waitUntil:'domcontentloaded'});
+ const openingBuild=await page.locator('.title-start').evaluate(link=>new URL(link.href).searchParams.get('build'));
+ assert.ok(openingBuild);
  await page.locator('#title-continue:enabled').click();
  page.once('dialog',dialog=>dialog.accept());
  await page.locator('[data-guardian-rematch="auto"]').click();
  await caveFloor(3);
+ assert.equal(new URL(page.url()).searchParams.get('build'),openingBuild);
+ const resumedCave=page.frames().find(frame=>new URL(frame.url()).pathname.endsWith('/src/game/cave/'));
+ assert.equal(new URL(resumedCave.url()).searchParams.get('build'),openingBuild);
  assert.deepEqual((await player()).caveQuest,{rockBreaker:false,bridgeCleared:false});
  await caveButton.click();
  await cave.locator('#dialogue:not([hidden])').waitFor();

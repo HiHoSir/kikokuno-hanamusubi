@@ -8,7 +8,8 @@ const scenes = [
 ];
 
 // Only a title-menu click may authorize entering the opening movie.
-document.querySelector('.title-start').addEventListener('click', event => {
+const startLink=document.querySelector('.title-start');
+startLink.addEventListener('click', event => {
   if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
   event.preventDefault();
   const reset=startNewGame();
@@ -43,7 +44,8 @@ function refreshSaveChoices(){
       const restored=restoreSavedGame(slot,undefined,undefined,{guardianRematch});
       if(!restored.accepted){loadMessage.textContent=restored.message;refreshSaveChoices();return;}
       const target=new URL('src/game/',document.baseURI);
-      target.searchParams.set('build','save-slots-1-shared-walk-1-owned-gear-2-shiomachi-gear-1-south-arrival-slash-1-shared-shops-1-cave-quest-1-ushiohei-hammer-1-rematch-1');
+      const build=new URL(startLink.href,document.baseURI).searchParams.get('build');
+      if(build)target.searchParams.set('build',build);
       window.KIKOKU_ROUTE.go(target);
     };
     button.addEventListener('click',()=>load(false));

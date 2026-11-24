@@ -175,7 +175,7 @@ test('title continue opens distinct selectable manual and automatic checkpoints'
   '.title-demo','#show-demo','#demo-image','#demo-name',
   '#next-scene','#close-demo'];
  const nodes=Object.fromEntries(selectors.map(k=>[k,node()]));
- nodes['.title-start'].href='https://example.test/kikokuno-hanamusubi/src/opening/';
+ nodes['.title-start'].href='https://example.test/kikokuno-hanamusubi/src/opening/?build=save-slots-1-test';
  const calls=[];
  const manual={savedAt:'2026-11-17T00:00:00Z',location:{scene:'village'},player:{lv:2,gold:25}};
  const auto={savedAt:'2026-11-17T00:03:00Z',location:{scene:'field'},player:{lv:3,gold:29}};
@@ -199,7 +199,8 @@ test('title continue opens distinct selectable manual and automatic checkpoints'
  assert.ok(slots[0].children[0].textContent.includes('手動'));
  assert.ok(slots[1].children[0].textContent.includes('自動'));
  slots[1].click();
- assert.match(String(calls.at(-1)),/src\/game\/\?build=save-slots-1/);
+ assert.equal(new URL(calls.at(-1)).searchParams.get('build'),
+  new URL(nodes['.title-start'].href).searchParams.get('build'));
  nodes['#title-load-back'].click();
  assert.equal(nodes['.title-menu'].hidden,false);
  assert.match(readFileSync('index.html','utf8'),/id="title-continue"/);

@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {CAVE_FLOORS,CAVE_TILE,CAVE_BOSS_ID,caveCellOpen,caveCellCenter,caveFeatureBlocks,caveStairAt,caveEncounterTerrain,caveLayout} from '../data/maps/cave/floors.mjs';
 import {DEFAULT_PLAYER,createBattle,collectFind,normalizePlayer,readPlayer,savePlayer} from '../src/game/battle/rules.mjs';
+import {makeWalk} from '../src/game/village/movement.mjs';
 import {saveManualGame,restoreSavedGame} from '../src/game/save/save-game.mjs';
 
 test('all three cave floors have walkable routes between their portals',()=>{
@@ -14,7 +15,9 @@ test('all three cave floors have walkable routes between their portals',()=>{
    }
    for(const feature of [layout.up,layout.down].filter(Boolean)){
      const position=caveCellCenter(feature.approach);
-     assert.equal(caveStairAt(floor,...position),feature);
+     const [x,y]=position;
+     for(const offset of [-14,0,14])
+      assert.equal(caveStairAt(floor,x+offset,y),feature);
      assert.ok(layout.features.every(part=>!caveFeatureBlocks(part,...position)));
      const solid=feature.origin.map(value=>(value+1)*CAVE_TILE);
      assert.equal(caveFeatureBlocks(feature,...solid),true);
@@ -24,6 +27,30 @@ test('all three cave floors have walkable routes between their portals',()=>{
      const cell=layout[key]?.approach??layout[key];
      if(cell)assert.ok(visited.has(cell.join(',')),key+' on B'+(floor+1));
    }
+ }
+});
+
+test('off-center walking from each stair landing reaches the opening',()=>{
+ for(const [index,floor] of CAVE_FLOORS.entries()){
+  const width=floor.grid[0].length*CAVE_TILE,height=floor.grid.length*CAVE_TILE;
+  const blocked=Uint8Array.from({length:width*height},(_,pixel)=>
+   floor.grid[Math.floor(pixel/width/CAVE_TILE)][Math.floor(pixel%width/CAVE_TILE)]==='#');
+  const walk=makeWalk(width,height,blocked,8);
+  for(const stair of [floor.up,floor.down].filter(Boolean)){
+   for(const offset of [-14,0,14]){
+    const [cx,cy]=caveCellCenter(stair.approach);
+    let x=cx+offset,y=cy,touched=false;
+    const dy=stair.kind==='up'?5:-5;
+    for(let step=0;step<20&&!touched;step++){
+     const active=caveStairAt(index,x,y);
+     [x,y]=walk.move(x,y,0,dy,(px,py)=>{
+      if(active===stair&&caveFeatureBlocks(stair,px,py))touched=true;
+      return floor.features.some(part=>caveFeatureBlocks(part,px,py));
+     });
+    }
+    assert.ok(touched,'stair approach '+[index,stair.kind,offset].join('/'));
+   }
+  }
  }
 });
 

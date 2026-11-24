@@ -53,57 +53,22 @@ function drawDescent(ctx,layer){
  ctx.fillRect(-22,86,43,1);
 }
 
-// The flight climbs onto a shelf cut into the far rock. Its foot is open
-// to the corridor; the shelf's exposed cheek makes its height visible.
-function drawAscent(ctx,layer){
- if(layer==='front'){
-  polygon(ctx,[[21,64],[37,72],[47,94],[39,110],[26,117],[29,95],
-   [17,83]],STONE.side);
-  return;
- }
- polygon(ctx,[[-28,12],[28,12],[49,54],[61,88],[53,118],[26,131],
-  [-24,120],[-43,90],[-32,51]],STONE.shadow);
- // Rock top and its right-hand face extend behind the last step.
- polygon(ctx,[[-42,77],[-51,97],[-43,118],[-30,130],[30,132],[46,117],
-  [51,95],[38,75],[26,66],[-28,65]],STONE.edge);
- polygon(ctx,[[-42,76],[-49,94],[-35,111],[-18,110],[-8,111],[21,108],
-  [37,108],[48,94],[37,76],[26,66],[-28,65]],STONE.middle);
- polygon(ctx,[[-49,94],[-35,111],[-18,110],[-16,127],[-32,123],
-  [-43,115]],STONE.side);
- polygon(ctx,[[37,108],[48,94],[50,101],[43,117],[30,132],[22,128],[23,111]],STONE.dark);
- // Right cheek is a vertical stone face, with a broken edge near the foot.
- polygon(ctx,[[23,13],[26,25],[27,42],[29,52],[28,62],[36,76],[27,91],
-  [20,91],[20,58],[17,32]],STONE.side);
- polygon(ctx,[[26,25],[27,26],[29,42],[29,52],[31,53],[33,70],
-  [27,82],[24,72],[22,54],[21,40]],STONE.edge);
- // Each exposed front face increases in height toward the cave shelf.
- for(let i=6;i>=0;i--){
-  const x=i*1.4,y=14+i*8,half=27-i;
-  const riser=3+Math.floor(i/2);
-  polygon(ctx,[[x-half,y],[x+half,y],[x+half,y+riser],[x-half,y+riser]],STONE.side);
-  polygon(ctx,[[x-half,y],[x+half,y],[x+half-2,y+2],[x-half+1,y+2]],TREADS[i]);
-  ctx.fillStyle=STONE.light;
-  ctx.fillRect(Math.round(x-half+2),y,half*2-5,1);
-  ctx.fillStyle=STONE.edge;
-  ctx.fillRect(Math.round(x+half-9),y+2,4,1);
- }
- polygon(ctx,[[-27,14],[-25,19],[-23,33],[-24,50],[-19,62],[-12,65],
-  [-18,77],[-31,74],[-36,62],[-34,39],[-32,22]],STONE.middle);
- // Rough rock teeth surround a cut in the shelf. The square opening is
- // recessed behind the landing and casts a shadow down its inner face.
- polygon(ctx,[[-23,86],[-16,71],[-4,68],[8,67],[25,69],[37,78],
-  [41,91],[33,97],[23,92],[-13,92]],STONE.side);
- polygon(ctx,[[-12,86],[-7,76],[3,73],[17,72],[26,77],[30,85],
-  [28,93],[-12,93]],STONE.dark);
- polygon(ctx,[[-12,94],[0,89],[21,89],[28,93],[24,99],[-10,99]],STONE.top);
- polygon(ctx,[[-32,96],[-24,88],[-18,93],[-24,104],[-33,109]],STONE.top);
- polygon(ctx,[[31,99],[40,93],[44,98],[37,105],[28,107]],STONE.middle);
+// The approved side-profile stair climbs into a rock opening on the right.
+export function drawAscent(ctx,col,row,art){
+ ctx.save();
+ ctx.translate(col*T-8,row*T-16);
+ polygon(ctx,[[72,27],[75,13],[83,6],[96,4],[115,10],[128,17],
+  [124,43],[108,52],[95,49],[84,42]],STONE.edge);
+ polygon(ctx,[[76,23],[80,13],[88,8],[101,8],[117,13],[125,18],
+  [121,28],[109,31],[96,24],[87,26]],STONE.side);
+ polygon(ctx,[[98,30],[116,27],[128,19],[125,43],[108,51],[96,45]],STONE.shadow);
+ ctx.drawImage(art,0,0);
+ ctx.restore();
 }
 
-export function drawStairwell(ctx,col,row,layer,ascending=false){
+export function drawStairwell(ctx,col,row,layer){
  ctx.save();
- ctx.translate((col+(ascending?.5:1))*T,row*T);
- if(ascending)drawAscent(ctx,layer);
- else drawDescent(ctx,layer);
+ ctx.translate((col+1)*T,row*T);
+ drawDescent(ctx,layer);
  ctx.restore();
 }

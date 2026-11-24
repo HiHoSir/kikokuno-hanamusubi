@@ -1,5 +1,5 @@
 import {BATTLE_REQUEST_KEY,ENEMIES,carriedConsumables,createBattle,readPlayer,savePlayer} from './rules.mjs?v=equipment-4slots-2-cove-shells-1-shiomachi-gear-1-cave-quest-1-finds-1-guardian-1';
-import {CAVE_BOSS_ID,CAVE_FLOORS,CAVE_TILE,CAVE_TOOL_NAME} from '../../../data/maps/cave/floors.mjs?v=cave-maps-1-stair-links-1-exploration-1-guardian-1-stairs-2';
+import {CAVE_BOSS_ID,CAVE_FLOORS,CAVE_TILE,CAVE_TOOL_NAME} from '../../../data/maps/cave/floors.mjs?v=cave-maps-1-stair-links-1-exploration-1-guardian-1-stairs-2-rise-1';
 import {saveAutoGame,RESTORE_POSITION_KEY} from '../save/save-game.mjs?v=save-slots-1-shiomachi-gear-1-cave-quest-1-ushiohei-hammer-1-finds-1-guardian-1';
 
 const root=new URL('../../../',import.meta.url);

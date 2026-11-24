@@ -30,9 +30,11 @@ const rect=e=>{const r=e?.getBoundingClientRect();return r?
 try{
  for(const [width,height,enemyId,count] of [
   [900,390,'tanuki',2],[1536,706,'tanuki',2],
-  [900,390,'field-oni',1],[900,390,'onibi',1]
+  [900,390,'field-oni',1],[900,390,'onibi',1],
+  [1536,706,'cave-guardian',1],[900,390,'cave-guardian',1]
  ]){
   const page=await chromiumBrowser.newPage({viewport:{width,height},deviceScaleFactor:1,hasTouch:true,isMobile:true});
+  const large=enemyId==='cave-guardian';
   const errors=[];
   page.on('pageerror',e=>errors.push(e.message));
   page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
@@ -65,7 +67,7 @@ try{
     const names={'viewport':'.viewport','command':'.command-window',
      'status':'.status-window','message':'.battle-message',
      'stage':'.battle-stage','dpad':'#pad .dpad',
-     'a':'#action-a','b':'#action-b','pad':'#pad',
+     'a':'#action-a','b':'#action-b','pad':'#pad','enemyLabel':'#enemy-label',
      'enemy1':'#enemy-figure','enemy2':'#enemy-figure-2','hero':'#hero-figure'};
     const bounding=e=>{const r=e?.getBoundingClientRect();return r?
      {x:r.x,y:r.y,w:r.width,h:r.height,right:r.right,bottom:r.bottom}:null;};
@@ -90,7 +92,8 @@ try{
    const backdrop=await page.evaluate(async()=>{
     const frame=document.querySelector('iframe');
     const d=frame.contentDocument,main=d.querySelector('main');
-    const node=d.querySelector('.battle-backdrop');
+    const terrain=main.dataset.battleTerrain;
+    const node=d.querySelector(terrain==='cave'?'.earth':'.battle-backdrop');
     const style=d.defaultView.getComputedStyle(node);
     const url=style.backgroundImage.match(/url\(["']?([^"')]+)/)?.[1];
     if(!url)return {terrain:main.dataset.battleTerrain,error:'CSS has no image'};
@@ -101,9 +104,10 @@ try{
      width:bitmap.naturalWidth,height:bitmap.naturalHeight,
      imageRendering:style.imageRendering,url:bitmap.src};
    });
-   if(backdrop.terrain!=='grassland'||backdrop.width!==384||backdrop.height!==216||
-       backdrop.imageRendering!=='pixelated'){
-    issues.push(width+'x'+height+' grassland backdrop missing/unreadable: '+JSON.stringify(backdrop));
+   const backdropOK=large?backdrop.terrain==='cave'&&backdrop.url?.includes('/cave/floor-material.png'):
+    backdrop.terrain==='grassland'&&backdrop.width===384&&backdrop.height===216&&backdrop.imageRendering==='pixelated';
+   if(!backdropOK){
+    issues.push(width+'x'+height+' battle backdrop missing/unreadable: '+JSON.stringify(backdrop));
    }
    const enemyArt=await page.evaluate(()=>{
     const d=document.querySelector('iframe').contentDocument;
@@ -121,7 +125,9 @@ try{
      issues.push(width+'x'+height+' onibi idle float missing: '+JSON.stringify(enemyArt));
    if(enemyArt.length!==count||enemyArt.some(item=>
      item.source.startsWith('data:')||
-     (expectsPixelArt?(item.pixelArt!=='true'||item.dimensions[0]!==128||item.dimensions[1]!==128||
+     (large?(item.pixelArt!=='true'||item.dimensions[0]!==256||item.dimensions[1]!==256||
+       item.interpolation!=='pixelated'||!item.source.includes('/cave-guardian.png')):
+      expectsPixelArt?(item.pixelArt!=='true'||item.dimensions[0]!==128||item.dimensions[1]!==128||
        item.interpolation!=='pixelated'||!item.source.includes('/'+enemyId+'.png?v='+version)):
       (item.pixelArt!=='false'||!item.source.includes('/'+enemyId+'.png'))))){
      issues.push(width+'x'+height+' approved enemy PNG failed to load: '+JSON.stringify(enemyArt));
@@ -164,12 +170,21 @@ try{
     overlapIssues.push('enemy numbering must progress left to right');
    }
 
-   const shot='artifacts/battle-'+width+'x'+height+'-'+count+'enemy.png';
+   if(large&&(rects.enemy1.h<rects.hero.h*1.2||rects.enemyLabel.right>width||
+      overlaps(rects.enemy1,rects.status)>0||overlaps(rects.enemyLabel,rects.status)>0)){
+    overlapIssues.push('large enemy or name does not fit the dedicated battle framing');
+   }
+   const shot='artifacts/battle-'+width+'x'+height+'-'+enemyId+'-'+count+'enemy.png';
    await page.screenshot({path:shot});
    const name=width+'x'+height+'/'+count+'enemy';
    if(overlapIssues.length)issues.push(name+': '+overlapIssues.join(', '));
    if(errors.some(e=>/Error|TypeError|ReferenceError/.test(e)))issues.push(name+' JS errors '+errors.join(','));
    results.push({name,rects,rows:data.controlRows,layout:data.viewportGrid,mainGrid:data.mainGrid,graphics:data.pictures,overlapIssues,screenshot:shot,errors:errors.slice(0,5)});
+   if(large){
+    const frame=page.frameLocator('#game-scene');
+    await frame.locator('[data-command="attack"]').click();
+    await frame.locator('#enemy-figure.impact-physical').waitFor({state:'attached',timeout:1500});
+   }
    if(count===2){
     const frame=page.frameLocator('#game-scene');
     await frame.locator('[data-command="attack"]').click();

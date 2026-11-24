@@ -17,7 +17,7 @@ test('all three cave floors have walkable routes between their portals',()=>{
      const position=caveCellCenter(feature.approach);
      const [x,y]=position;
      for(const offset of [-14,0,14])
-      assert.equal(caveStairAt(floor,x+(feature.kind==='down'?offset:0),y+(feature.kind==='up'?offset:0)),feature);
+      assert.equal(caveStairAt(floor,x+offset,y),feature);
      assert.ok(layout.features.every(part=>!caveFeatureBlocks(part,...position)));
      const solid=feature.origin.map(value=>(value+1)*CAVE_TILE);
      assert.equal(caveFeatureBlocks(feature,...solid),true);
@@ -39,11 +39,11 @@ test('off-center walking from each stair landing reaches the opening',()=>{
   for(const stair of [floor.up,floor.down].filter(Boolean)){
    for(const offset of [-14,0,14]){
     const [cx,cy]=caveCellCenter(stair.approach);
-    let x=cx+(stair.kind==='down'?offset:0),y=cy+(stair.kind==='up'?offset:0),touched=false;
-    const dx=stair.kind==='up'?5:0,dy=stair.kind==='down'?-5:0;
+    let x=cx+offset,y=cy,touched=false;
+    const dy=stair.kind==='up'?5:-5;
     for(let step=0;step<20&&!touched;step++){
      const active=caveStairAt(index,x,y);
-     [x,y]=walk.move(x,y,dx,dy,(px,py)=>{
+     [x,y]=walk.move(x,y,0,dy,(px,py)=>{
       if(active===stair&&caveFeatureBlocks(stair,px,py))touched=true;
       return floor.features.some(part=>caveFeatureBlocks(part,px,py));
      });

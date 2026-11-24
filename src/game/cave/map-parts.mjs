@@ -1,5 +1,5 @@
 import {CAVE_TILE as TILE} from '../../../data/maps/cave/floors.mjs?v=cave-maps-1-stair-links-1-exploration-1-maze-2-stairs-2';
-import {drawStairwell,drawAscent} from './stair-art.mjs?v=cave-visual-1-stair-links-1-guardian-1-pair-1-stairs-2-rise-1-treads-1-perspective-1';
+import {drawStairwell,drawAscent} from './stair-art.mjs?v=cave-visual-1-stair-links-1-guardian-1-pair-1-stairs-2-rise-1-topdown-1';
 import {createCaveTerrain,drawCaveRim} from './terrain-art.mjs?v=cave-visual-1-guardian-1';
 
 export function createCaveMap(layout,{floorArt,wallArt,ledgeArt,crateArt}){

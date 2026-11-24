@@ -13,7 +13,7 @@ import {roadCell} from '../src/game/shiomachi/render.mjs';
 import {makeResident,RESIDENT_RADIUS,residentInFront} from '../src/game/village/residents.mjs';
 import {DEFAULT_CAMERA_ZOOM} from '../src/game/village/render.mjs';
 import {rooms,prepareInterior} from '../src/game/interiors/rooms.mjs';
-import {TRIAL_INN_PRICE,previewInnStay} from '../src/game/interiors/shop.mjs';
+import {INN_PRICE,stayAtInn} from '../src/game/interiors/shop.mjs';
 import {DEFAULT_PLAYER,normalizePlayer,ARMORY_STOCK,FOOD_ITEMS,purchaseArmory,purchaseFood} from '../src/game/battle/rules.mjs';
 import {SHIOMACHI_INTERIORS,shiomachiTouchedInterior} from '../data/maps/shiomachi-village/scene.mjs';
 import {SHIOMACHI_ARMORY_STOCK} from '../data/maps/shiomachi-village/armory.mjs';
@@ -279,14 +279,14 @@ test('three mandatory interiors and the craft home use the approved shared room 
 
 test('shop/inn preview uses actual purchase rules on volatile player data',()=>{
  const hero=normalizePlayer({...DEFAULT_PLAYER,gold:250,hp:7,mp:3});
- const lost=previewInnStay(normalizePlayer({...hero,gold:1}));
+ const lost=stayAtInn(normalizePlayer({...hero,gold:1}));
  assert.equal(lost.accepted,false);
  assert.equal(lost.player.gold,1);
- const healed=previewInnStay(hero);
+ const healed=stayAtInn(hero);
  assert.equal(healed.accepted,true);
  assert.equal(healed.player.hp,healed.player.maxhp);
  assert.equal(healed.player.mp,healed.player.maxmp);
- assert.equal(healed.player.gold,250-TRIAL_INN_PRICE);
+ assert.equal(healed.player.gold,250-INN_PRICE);
  assert.equal(hero.hp,7,'old player snapshot must not mutate');
  assert.equal(hero.gold,250,'the demo player remains immutable at the transaction boundary');
  assert.equal(ARMORY_STOCK.length,4);

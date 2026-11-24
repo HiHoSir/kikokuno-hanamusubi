@@ -506,6 +506,15 @@ try{
  await caveButton.click();
  await cave.locator('#dialogue:not([hidden])').waitFor();
  assert.equal(await cave.locator('#speaker').textContent(),'岩守の鬼');
+ await page.goto(origin+'/previews/cave-prototype/?v=stairs-side-2#downstairs');
+ await page.waitForFunction(()=>window.__ready&&window.__caveWalkTest.status.includes('下り階段付近'));
+ const previewStair=await page.evaluate(()=>{
+  const {player}=window.__caveWalkTest;
+  const portal=META.portals.explore.find(p=>p.id==='stairs_down');
+  return [player.x/T-portal.x,player.y/T-portal.y];
+ });
+ assert.deepEqual(previewStair,[-.5,.5]);
+ await page.locator('#walkScreen').screenshot({path:'artifacts/cave-preview-downstairs.png'});
  assert.deepEqual(failures,[]);
  console.log('SHIOMACHI_FIELD_ROUNDTRIP '+JSON.stringify({before,found,purchasedGold:purchased.gold,equipped:equipped.equipment,
    returned:after,errors:failures}));

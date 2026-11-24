@@ -412,8 +412,7 @@ test('battle visuals preserve approved figures and sequence impacts before hidin
   assert.match(css,/\.actor\.enemy \.impact-effect\{inset:auto 0 0;height:min\(48%,140px\)/);
   assert.match(runtime,/targetCommand=null;mode='main';selected=0;/);
   assert.match(runtime,/},95\);/);
-  assert.match(runtime,/const retaliationAt=isStrike\?570:225;/);
-  assert.match(runtime,/},retaliationAt\);/);
+  assert.match(runtime,/},isStrike\?570:225\);/);
   assert.match(runtime,/},receivedHit\?\(isStrike\?1060:680\):\(isStrike\?600:440\)\);/);
   // Enemy hit overlay remains for 410ms after the 95ms impact begins.
   // Hit pose may only be shown after that effect has cleared.

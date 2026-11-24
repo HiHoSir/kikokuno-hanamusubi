@@ -1,11 +1,10 @@
 import {BATTLE_REQUEST_KEY,ENEMIES,carriedConsumables,createBattle,readPlayer,savePlayer} from './rules.mjs?v=equipment-4slots-2-cove-shells-1-shiomachi-gear-1-cave-quest-1-finds-1-guardian-1';
-import {CAVE_BOSS_ID,CAVE_FLOORS,CAVE_TILE,CAVE_TOOL_NAME} from '../../../data/maps/cave/floors.mjs?v=cave-maps-1-stair-links-1-exploration-1-guardian-1-stairs-2-rise-1-topdown-1';
+import {CAVE_BOSS_ID,CAVE_FLOORS,CAVE_TOOL_NAME,caveCellCenter} from '../../../data/maps/cave/floors.mjs?v=cave-maps-1-stair-links-1-exploration-1-guardian-1-stairs-2-rise-1-topdown-1';
 import {saveAutoGame,RESTORE_POSITION_KEY} from '../save/save-game.mjs?v=save-slots-1-shiomachi-gear-1-cave-quest-1-ushiohei-hammer-1-finds-1-guardian-1';
 
 const root=new URL('../../../',import.meta.url);
 const el=id=>document.getElementById(id);
 const list=el('command-list'),title=el('command-title'),message=el('battle-message');
-const stage=el('battle-stage');
 const hero=el('hero-image'),heroFigure=el('hero-figure'),enemyFigure=el('enemy-figure');
 const enemyImage=el('enemy-image'),enemyLabel=el('enemy-label');
 const enemyFigure2=el('enemy-figure-2'),enemyImage2=el('enemy-image-2'),enemyLabel2=el('enemy-label-2');
@@ -31,9 +30,17 @@ const battle=createBattle(request?.enemyId||'field-oni',readPlayer(),Math.random
 const {state}=battle;
 const caveBoss=request?.enemyId===CAVE_BOSS_ID;
 const cavePosition=request?.cavePosition;
-const caveField=Number.isInteger(cavePosition?.floor)&&Boolean(CAVE_FLOORS[cavePosition.floor])&&
+const hasCavePosition=Number.isInteger(cavePosition?.floor)&&Boolean(CAVE_FLOORS[cavePosition.floor])&&
  Number.isFinite(cavePosition.x)&&Number.isFinite(cavePosition.y);
-const caveBattle=caveBoss||caveField;
+let caveReturn=hasCavePosition?{scene:'cave',position:cavePosition}:null;
+if(caveBoss&&!caveReturn){
+  // Older battle requests may lack a position. Use the guardian's approach.
+  const floor=CAVE_FLOORS.findIndex(area=>area.boss);
+  const [col,row]=CAVE_FLOORS[floor].boss;
+  const [x,y]=caveCellCenter([col,row+1]);
+  caveReturn={scene:'cave',position:{x,y,floor,face:1}};
+}
+const caveBattle=Boolean(caveReturn);
 if(caveBattle){
   const scene=document.querySelector('main');
   scene.dataset.battleTerrain='cave';
@@ -60,6 +67,7 @@ function flash(node,cssClass){
 }
 function updateEnemies(){
   const two=state.enemies.length>1;
+  const stage=el('battle-stage');
   stage.classList.toggle('pair',two);
   stage.classList.toggle('target-mode',mode==='targets');
   const figures=[enemyFigure,enemyFigure2],images=[enemyImage,enemyImage2],labels=[enemyLabel,enemyLabel2];
@@ -120,9 +128,7 @@ function navigateBack(){
   if(state.outcome==='defeat'){
     window.KIKOKU_ROUTE.go(new URL('../village/?focus=field-exit',import.meta.url));
   }else if(caveBattle){
-    if(!caveBoss&&caveField){
-      sessionStorage.setItem(RESTORE_POSITION_KEY,JSON.stringify({scene:'cave',position:cavePosition}));
-    }
+    sessionStorage.setItem(RESTORE_POSITION_KEY,JSON.stringify(caveReturn));
     window.KIKOKU_ROUTE.go(new URL(caveBoss?'../cave/?from=guardian':'../cave/?from=encounter',import.meta.url));
   }else{
     window.KIKOKU_ROUTE.go(new URL('../../field/?from=battle',import.meta.url));
@@ -136,7 +142,6 @@ function perform(command){
   // Resolve the slot before taking damage. The same slot drives HP and FX,
   // including a remaining second enemy when the command has no target suffix.
   const targetIndex=chosenTarget===undefined?state.enemies.findIndex(enemy=>enemy.hp>0):Number(chosenTarget);
-  const hammerTurn=caveBoss&&state.turn%3===2;
   const result=battle.act(isStrike?baseCommand+':'+targetIndex:command);
   if(!result.accepted){
     locked=false;announce(result.events[0]?.text||'行動できない。');sound('cancel');updateMenu();return;
@@ -145,11 +150,7 @@ function perform(command){
     guard:'guard',flee:'idle'}[baseCommand]||'idle';
   pose(actionPose);
   const enemyTarget=[enemyFigure,enemyFigure2][targetIndex];
-  const retaliation=result.events.findLast(event=>event.kind==='hit');
-  const receivedHit=Boolean(retaliation);
-  const windup=caveBoss&&result.events.find(event=>event.kind==='warning');
-  const hammerImpact=hammerTurn&&receivedHit;
-  const retaliationAt=isStrike?570:225;
+  const receivedHit=result.events.some(e=>e.kind==='hit');
   // Timeline for a physical/skill attack: hero attack (0ms), enemy impact
   // (95ms, removed by 505ms), optional enemy retaliation and hero hit (570ms),
   // result (1060ms). Do not display hit.png while attack FX remains on screen.
@@ -165,36 +166,21 @@ function perform(command){
   }else if(baseCommand==='guard'){sound('confirm');}
   else if(baseCommand==='flee'){sound(result.outcome==='escape'?'confirm':'cancel');}
   else sound('notify');
-  if(windup){
-    setTimeout(()=>{
-      enemyFigure.classList.add('hammer-ready');
-      announce(windup.text);
-    },isStrike?515:150);
-  }else if(hammerImpact){
-    setTimeout(()=>{
-      enemyFigure.classList.remove('hammer-ready');
-      flash(enemyFigure,'hammer-swing');
-    },retaliationAt-160);
-  }
   if(receivedHit){
     setTimeout(()=>{
-      if(hammerImpact)flash(stage,'hammer-impact');
       pose('hit');
       flash(heroFigure,'hit');
       flash(heroFigure,'impact-hit');
-      announce(retaliation.text);
-    },retaliationAt);
+      const retaliation=result.events.filter(e=>e.kind==='hit');
+      announce(retaliation.at(-1)?.text||'緋月は傷を負った。');
+    },isStrike?570:225);
   }
   setTimeout(()=>{
-    if(result.outcome)enemyFigure.classList.remove('hammer-ready');
     updateStatus(); // Enemy defeated: hide only after its impact.
     savePlayer(state.hero);
     const wonTool=caveBoss&&result.outcome==='victory';
-    if(wonTool){
-      const [x,y]=CAVE_FLOORS[2].entry.map(cell=>(cell+.5)*CAVE_TILE);
-      saveAutoGame({scene:'cave',position:{x,y,floor:2,face:1}});
-    }else if(!caveBoss&&caveField&&['victory','escape'].includes(result.outcome)){
-      saveAutoGame({scene:'cave',position:cavePosition});
+    if(caveReturn&&['victory','escape'].includes(result.outcome)){
+      saveAutoGame(caveReturn);
     }
     if(result.outcome){
       if(result.outcome==='defeat'){

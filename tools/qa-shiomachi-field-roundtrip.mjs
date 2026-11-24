@@ -424,6 +424,7 @@ try{
   return lines;
  });
  assert.match(revealed.join(' '),/槌.*潮待村.*受け止める覚悟/);
+ const beforeGuardian=await cave.locator('#scene').evaluate(()=>window.KIKOKU_SAVE_SNAPSHOT());
  await cave.locator('#next').click();
  const battle=page.frameLocator('#game-scene');
  await battle.locator('#encounter[hidden]').waitFor({state:'attached'});
@@ -443,11 +444,20 @@ try{
  await bossAct('bloom');
  await bossAct('bloom');
  assert.match(await battle.locator('#battle-message').textContent(),/岩砕きの槌/);
+ const guardianSave=await page.evaluate(async()=>{
+  const {readAutoGame}=await import('./save/save-game.mjs');
+  return readAutoGame()?.location;
+ });
+ assert.deepEqual(guardianSave,beforeGuardian,'victory autosave must retain the encounter position');
  await battle.locator('[data-command="return"]').click();
  await page.waitForFunction(()=>document.querySelector('#game-scene')?.contentWindow
    ?.KIKOKU_SAVE_SNAPSHOT?.()?.position.floor===2);
  assert.equal((await player()).caveQuest.rockBreaker,true);
+ assert.deepEqual(await cave.locator('#scene').evaluate(()=>window.KIKOKU_SAVE_SNAPSHOT()),beforeGuardian,
+  'return must retain the encounter position and facing');
+ await page.screenshot({path:'artifacts/cave-guardian-return.png'});
 
+ await walkCave([[11,11],[15,11],[15,14],[19,14],[19,16],[18,16]]);
  await climbWithPad(2,'left');
  await walkCave([[20,8],[20,5],[17,5],[17,4],[15,4],[15,3],[9,3]]);
  // Enter the cache's facing direction after approaching from the east.

@@ -1,62 +1,90 @@
 import {CAVE_TILE as T} from '../../../data/maps/cave/floors.mjs?v=guardian-1';
 
-// Independent stair geometry from the November 11 cave prototype.
-export function drawStairwell(c,x,y,layer,ascending=false){
- c.save();c.translate(x*T-(ascending?24:0),y*T);
- if(ascending){c.translate(0,2*T);c.scale(1,-1);}
- const poly=(pts,color)=>{
-   c.fillStyle=color;c.beginPath();
-   pts.forEach(([a,b],i)=>i?c.lineTo(a,b):c.moveTo(a,b));
-   c.closePath();c.fill();
- };
- if(layer==='back'){
-   // Irregular rock perimeter. No rectangular tile outline.
-   poly([[9,4],[25,-3],[43,-6],[65,-4],[83,4],[97,18],[102,33],
-     [104,53],[97,74],[87,90],[69,100],[46,105],[27,98],[10,89],
-     [-2,71],[-7,53],[-3,30]],'#303b45');
-   poly([[13,9],[29,3],[47,1],[67,4],[85,13],[94,30],[96,48],
-     [90,70],[79,85],[63,92],[44,94],[26,88],[12,76],[5,55],[6,29]],'#687078');
-   const hole=[[18,15],[34,9],[53,9],[70,12],[84,25],[89,40],
-     [89,59],[80,77],[67,85],[45,87],[29,81],[15,66],[11,45]];
-   poly(hole,'#131c25');
-   // The steps can NEVER protrude onto the flat surrounding floor.
-   c.save();c.beginPath();
-   hole.forEach(([a,b],i)=>i?c.lineTo(a,b):c.moveTo(a,b));
-   c.closePath();c.clip();
-   poly([[25,20],[39,14],[59,14],[73,21],[80,37],[81,57],
-     [70,72],[61,79],[37,79],[24,67],[19,47]],'#090f18');
-   const shades=['#29323b','#313a42','#39424b','#414b53',
-     '#4b535b','#565d65','#646b72','#72767b'];
-   for(let i=0;i<8;i++){
-     const top=23+i*8,half=13+i*3.6,L=Math.round(48-half),R=Math.round(48+half);
-     poly([[L-1,top+4],[R+1,top+4],[R+2,top+8],[L-2,top+8]],'#111922');
-     poly([[L,top],[R,top],[R+1,top+5],[L-1,top+5]],shades[ascending?7-i:i]);
-     c.strokeStyle=i<3?'#45505a':i<6?'#80858a':'#a0a09b';
-     c.lineWidth=1;c.beginPath();c.moveTo(L+2,top);c.lineTo(R-2,top);c.stroke();
-   }
-   c.restore();
-   poly([[17,17],[29,13],[35,22],[30,40],[26,55],[21,79],[12,69],[10,47]],'#26313c');
-   poly([[79,17],[67,13],[61,22],[66,40],[70,55],[75,79],[84,69],[86,47]],'#202c37');
-   poly([[17,19],[25,15],[29,25],[23,43],[20,58],[15,56]],'#47525c');
-   poly([[79,19],[71,15],[67,25],[73,43],[76,58],[81,56]],'#394752');
-   if(ascending){
-     poly([[18,34],[18,19],[28,8],[40,3],[56,3],[68,8],[78,19],[78,34],[69,34],[69,22],[62,14],[54,11],[42,11],[34,14],[27,22],[27,34]],'#687078');
-     poly([[27,29],[28,20],[38,12],[58,12],[68,20],[69,29]],'#3a4650');
-   }
- }else if(layer==='front'){
-   poly([[4,69],[13,80],[27,91],[44,96],[63,95],[79,87],[92,71],
-     [96,78],[86,91],[70,101],[48,106],[29,102],[13,93],[0,77]],'#27343d');
-   poly([[4,69],[13,80],[29,89],[47,93],[64,91],[81,82],[92,71],
-     [95,76],[84,85],[66,96],[47,99],[27,95],[11,88]],'#657078');
-   poly([[20,94],[38,99],[61,99],[79,91],[71,98],[46,103],[31,101]],'#3e4852');
-   c.strokeStyle='#7c8081';c.lineWidth=2;c.beginPath();
-   c.moveTo(9,11);c.lineTo(26,4);c.lineTo(44,1);
-   c.moveTo(68,2);c.lineTo(84,10);c.lineTo(93,22);
-   c.moveTo(5,54);c.lineTo(7,69);c.lineTo(18,81);c.stroke();
-   for(let j=0;j<13;j++){
-     c.fillStyle=j%3?'#37434d':'#858889';
-     c.fillRect(14+(j*17)%72,88+(j*7)%8,2+(j%3),2);
-   }
+const STONE={
+ edge:'#272e36', dark:'#161c24', side:'#404952', middle:'#57616a',
+ top:'#697179', light:'#858a87', shadow:'#131920'
+};
+const TREADS=['#343e47','#3e4851','#4b555e','#565f67','#626b73','#6d757c','#787e81'];
+
+function polygon(ctx,points,color){
+ ctx.fillStyle=color;
+ ctx.beginPath();
+ for(const [i,[x,y]] of points.entries()){
+  if(i===0)ctx.moveTo(x,y);
+  else ctx.lineTo(x,y);
  }
- c.restore();
+ ctx.closePath();
+ ctx.fill();
+}
+
+function step(ctx,half,y,shade,ascending){
+ const front=ascending?y:y+5;
+ const back=ascending?y-4:y;
+ polygon(ctx,[[-half,back],[half-1,back],[half,front],[-half-1,front]],shade);
+ ctx.fillStyle=STONE.side;
+ ctx.fillRect(-half,front,half*2,3);
+ ctx.fillStyle=STONE.light;
+ ctx.globalAlpha=.36;
+ ctx.fillRect(-half+2,ascending?front-1:back,half*2-6,1);
+ ctx.fillStyle=STONE.edge;
+ ctx.fillRect(-half+4,ascending?back+1:front-1,4,1);
+ ctx.globalAlpha=1;
+}
+
+// A floor cut: the level rim stays on the floor, and every tread is inside
+// the shaft. The closest tread connects directly to the southern landing.
+function drawDescent(ctx,layer){
+ if(layer==='back'){
+  polygon(ctx,[[-37,6],[-26,1],[22,2],[37,8],[44,28],[45,74],[35,87],
+   [20,94],[-25,92],[-40,84],[-45,68],[-44,28]],STONE.edge);
+  polygon(ctx,[[-34,10],[-25,6],[22,7],[35,11],[39,29],[40,73],[29,86],
+   [-27,86],[-35,80],[-41,64],[-39,32]],STONE.middle);
+  polygon(ctx,[[-25,12],[23,12],[31,22],[35,72],[26,84],[-26,84],
+   [-34,73],[-32,25]],STONE.dark);
+  for(const [i,shade] of TREADS.entries())step(ctx,19+i*2,25+i*8,shade,false);
+  polygon(ctx,[[-37,14],[-27,12],[-21,24],[-23,55],[-29,79],[-37,73],[-40,49]],STONE.side);
+  polygon(ctx,[[35,13],[27,13],[22,25],[25,59],[30,79],[36,73],[39,52]],STONE.edge);
+  return;
+ }
+ polygon(ctx,[[-44,47],[-39,64],[-31,78],[-27,86],[-37,89],[-43,79],[-47,62]],STONE.edge);
+ polygon(ctx,[[42,46],[45,62],[41,77],[35,89],[27,86],[32,79],[38,64]],STONE.edge);
+ polygon(ctx,[[-31,81],[-23,85],[23,85],[31,81],[35,86],[24,91],[-24,91],[-35,86]],STONE.top);
+ ctx.fillStyle=STONE.light;
+ ctx.fillRect(-22,86,43,1);
+}
+
+// A rising flight: exposed riser faces are cast toward the entrance. Rock
+// shoulders merge into the far wall, which frames the elevated doorway.
+function drawAscent(ctx,layer){
+ if(layer==='back'){
+  polygon(ctx,[[-33,10],[-18,9],[24,12],[42,30],[49,70],[44,96],
+   [19,103],[-31,99],[-45,81],[-42,43]],STONE.shadow);
+  polygon(ctx,[[-35,17],[-34,43],[-42,71],[-39,91],[-25,98],[24,98],[39,88],
+   [42,73],[33,46],[33,19],[25,11],[-25,11]],STONE.edge);
+  polygon(ctx,[[-29,14],[26,14],[26,60],[-28,60]],STONE.side);
+  // Draw the rear steps first so the nearer riser covers the next tread.
+  for(let i=TREADS.length-1;i>=0;i--)step(ctx,27-i,19+i*8,TREADS[6-i],true);
+  polygon(ctx,[[-32,14],[-27,16],[-24,42],[-23,61],[-30,73],[-38,74],[-37,50]],STONE.middle);
+  polygon(ctx,[[30,13],[25,16],[22,43],[22,62],[28,75],[35,79],[39,67],[35,46]],STONE.side);
+  polygon(ctx,[[-40,72],[-35,61],[-27,58],[-21,62],[19,62],[26,57],[34,62],
+   [42,77],[39,90],[31,96],[-32,96],[-40,88]],STONE.edge);
+  polygon(ctx,[[-38,74],[-32,64],[-26,62],[-21,67],[19,67],[27,62],[33,65],
+   [38,74],[37,83],[28,86],[-29,86],[-38,81]],STONE.top);
+  polygon(ctx,[[-22,72],[-18,66],[-10,62],[10,62],[18,66],[22,72],
+   [22,92],[-22,92]],STONE.light);
+  polygon(ctx,[[-17,74],[-14,69],[-8,67],[8,67],[14,69],[17,74],
+   [17,92],[-17,92]],STONE.dark);
+  polygon(ctx,[[-17,90],[17,90],[14,94],[-15,94]],STONE.middle);
+  return;
+ }
+ polygon(ctx,[[-37,76],[-30,74],[-22,79],[-22,89],[-28,95],[-39,91]],STONE.side);
+ polygon(ctx,[[34,73],[38,78],[40,89],[32,96],[22,91],[22,80],[29,76]],STONE.side);
+}
+
+export function drawStairwell(ctx,col,row,layer,ascending=false){
+ ctx.save();
+ ctx.translate((col+(ascending?.5:1))*T,row*T);
+ if(ascending)drawAscent(ctx,layer);
+ else drawDescent(ctx,layer);
+ ctx.restore();
 }

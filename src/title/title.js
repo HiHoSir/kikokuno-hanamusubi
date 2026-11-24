@@ -1,6 +1,6 @@
 import {
   readManualGame,readAutoGame,restoreSavedGame,startNewGame,manualSaveLabel
-} from '../game/save/save-game.mjs?v=save-slots-1-shiomachi-gear-1-cave-quest-1-ushiohei-hammer-1-finds-1-guardian-1';
+} from '../game/save/save-game.mjs?v=save-slots-1-shiomachi-gear-1-cave-quest-1-ushiohei-hammer-1-finds-1-guardian-1-rematch-1';
 
 const scenes = [
   { name: '鬼灯村', url: new URL('../../assets/ui/title/village.webp', import.meta.url) },
@@ -39,14 +39,25 @@ function refreshSaveChoices(){
     const detail=document.createElement('span');
     detail.textContent=save?manualSaveLabel(save)+'　'+displayDate(save.savedAt):'記録なし';
     button.append(heading,detail);
-    button.addEventListener('click',()=>{
-      const restored=restoreSavedGame(slot);
+    const load=guardianRematch=>{
+      const restored=restoreSavedGame(slot,undefined,undefined,{guardianRematch});
       if(!restored.accepted){loadMessage.textContent=restored.message;refreshSaveChoices();return;}
       const target=new URL('src/game/',document.baseURI);
-      target.searchParams.set('build','save-slots-1-shared-walk-1-owned-gear-2-shiomachi-gear-1-south-arrival-slash-1-shared-shops-1-cave-quest-1-ushiohei-hammer-1');
+      target.searchParams.set('build','save-slots-1-shared-walk-1-owned-gear-2-shiomachi-gear-1-south-arrival-slash-1-shared-shops-1-cave-quest-1-ushiohei-hammer-1-rematch-1');
       window.KIKOKU_ROUTE.go(target);
-    });
+    };
+    button.addEventListener('click',()=>load(false));
     loadSlots.append(button);
+    if(save?.player?.caveQuest?.rockBreaker){
+      const rematch=document.createElement('button');
+      rematch.type='button';rematch.className='title-load-slot';
+      rematch.dataset.guardianRematch=slot;
+      rematch.textContent=name+'で岩守の鬼に再戦';
+      rematch.addEventListener('click',()=>{
+        if(window.confirm(name+'の岩砕きの槌と橋の開通状態を戻し、岩守の鬼の前から始めますか？'))load(true);
+      });
+      loadSlots.append(rematch);
+    }
   }
 }
 continueButton.addEventListener('click',()=>{

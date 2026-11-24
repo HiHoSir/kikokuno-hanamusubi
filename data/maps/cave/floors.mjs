@@ -11,28 +11,45 @@ function terrain(width,runs){
    row.some(([left,right])=>col>=left&&col<=right)?'.':'#').join(''));
 }
 
+// Lay out the maze as connected rectilinear passages and authored chambers.
+function gallery(width,height,passages,chambers){
+ const rows=Array.from({length:height},()=>Array(width).fill('#'));
+ const carve=(x1,y1,x2,y2)=>{
+  for(let y=Math.min(y1,y2);y<=Math.max(y1,y2);y++)
+   rows[y].fill('.',Math.min(x1,x2),Math.max(x1,x2)+1);
+ };
+ for(const path of passages){
+  for(let i=1;i<path.length;i++)carve(...path[i-1],...path[i]);
+ }
+ for(const room of chambers)carve(...room);
+ return rows.map(row=>row.join(''));
+}
+
 const floors=[
  {
-  // The west galleries lead past the stores and an inscription. The
-  // southeast route leads straight to the stairs, below the return ledge.
-  grid:terrain(26,[
-   [],[[4,7]],[[3,8],[11,21]],[[3,7],[11,22]],[[4,7],[11,12],[19,22]],
-   [[4,12],[19,23]],[[4,12],[18,23]],[[4,5],[8,12],[18,23]],
-   [[4,5],[8,11],[19,22]],[[4,5],[8,9],[20,21]],[[4,9],[14,21]],
-   [[4,9],[14,21]],[[4,5],[14,15],[18,20]],[[4,5],[14,17]],
-   [[4,5],[14,17]],[[4,19]],[[4,15]],[[8,10]],[[8,10]],
-   [[8,10]],[[8,10]]
-  ]),
+  grid:gallery(26,21,[
+   [[9,20],[9,17],[5,17],[5,14],[3,14],[3,10],[7,10],[7,7],[4,7],[4,3],[6,3]],
+   [[4,5],[12,5],[12,3],[18,3],[18,7],[21,7]],
+   [[9,17],[13,17],[13,14],[17,14],[17,11],[22,11],[22,7],[21,7]],
+   [[13,17],[16,17],[16,16],[19,16]],
+   [[19,11],[19,12]],
+   [[7,7],[10,7]],
+   [[5,14],[8,14],[8,12],[10,12],[10,15]],
+   [[10,5],[10,9],[13,9],[13,7]],
+   [[12,5],[15,5],[15,7],[16,7]],
+   [[22,11],[24,11],[24,14],[22,14]],
+   [[3,10],[2,10],[2,7]]
+  ],[[5,2,7,4],[8,4,11,5],[19,5,23,8],[8,19,10,20]]),
   entry:[9,19],exit:[9,20],
   down:{kind:'down',origin:[20,5],approach:[21,7]},
-  danger:(x,y)=>x>=13&&y>=8&&y<=16,
-  visibilityRadius:340,
+  danger:(x,y)=>x>=12&&y>=8&&y<=17,
+  visibilityRadius:292,
   scenery:[
    {kind:'ledge',origin:[6,3]},
    {kind:'cache',origin:[6,2],id:'cave-entry-shelf'},
-   {kind:'inscription',origin:[10,5],text:'刻まれた文字。「下の階で、白を沈めよ。続いて黒を沈めれば道はひらく」'},
-   {kind:'inscription',origin:[16,13],text:'荷運び人の刻み跡。「東の段から下りれば、入口までひと息。荷を担いで登るのは無理だ」'},
-   {kind:'drop',origin:[19,12],landing:[19,15]}
+   {kind:'inscription',origin:[10,4],text:'刻まれた文字。「下の階で、白を沈めよ。続いて黒を沈めれば道はひらく」'},
+   {kind:'inscription',origin:[10,15],text:'荷運び人の刻み跡。「東の段から下りれば、入口までひと息。荷を担いで登るのは無理だ」'},
+   {kind:'drop',origin:[19,12],landing:[19,16]}
   ]
  },
  {

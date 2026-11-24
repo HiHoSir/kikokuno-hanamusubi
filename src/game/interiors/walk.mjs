@@ -9,7 +9,7 @@ import {collectFind,readPlayer,savePlayer} from '../battle/rules.mjs?v=equipment
 import {consumeRestorePosition} from '../save/save-game.mjs?v=save-slots-1-shiomachi-gear-1-finds-1-guardian-1';
 import {VILLAGE_FINDS} from '../../../data/maps/hozuki-village/finds.mjs';
 import {drawFindHint,shouldShowFindHint} from '../village/find-indicator.mjs?v=nearby-1';
-import {createVillageShop} from './shop.mjs?v=shared-shops-1-cave-quest-1-finds-1-guardian-1-inn-stay-1';
+import {createVillageShop} from './shop.mjs?v=shared-shops-1-cave-quest-1-finds-1-guardian-1-inn-stay-1-inn-morning-1';
 
 const scene = document.querySelector('#scene');
 const context = scene.getContext('2d', {alpha:false});

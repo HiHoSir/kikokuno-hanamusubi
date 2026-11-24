@@ -212,24 +212,59 @@ try{
  assert.equal((await player()).foods.onigiri,1);
  await villageAgain.evaluate(()=>window.__SHIOMACHI_QA.exitRoom());
 
- // Both inns must charge and heal the actual player and write an autosave.
- const checkInn=async frame=>{
+ // Both inns must charge once, autosave, and play the same overnight sequence.
+ await page.evaluate(()=>{
+  const audio=window.KIKOKU_GAME.audio;
+  const play=audio.se;
+  window.innSounds=[];
+  audio.se=name=>{
+   if(name!=='rooster'){play(name);return;}
+   const curtain=document.querySelector('#inn-curtain');
+   const start=OscillatorNode.prototype.start;
+   let started=0;
+   OscillatorNode.prototype.start=function(...args){started++;return start.apply(this,args);};
+   try{play(name);}finally{OscillatorNode.prototype.start=start;}
+   window.innSounds.push({covered:curtain.open&&getComputedStyle(curtain).opacity==='1',started});
+  };
+ });
+ const curtain=page.locator('#inn-curtain');
+ const sounds=()=>page.evaluate(()=>window.innSounds);
+ const checkInn=async(frame,{muted=false}={})=>{
+  const count=(await sounds()).length;
+  const snapshot=()=>page.evaluate(()=>document.querySelector('#game-scene').contentWindow.KIKOKU_SAVE_SNAPSHOT());
+  const before=await snapshot();
   await frame.locator('[data-shop-item="sleep"]').click();
   assert.match(await frame.locator('#shop-message').textContent(),/両が足りません/);
   assert.deepEqual([(await player()).gold,(await player()).hp,(await player()).mp],[19,7,3]);
+  assert.equal(await curtain.isVisible(),false);
+  assert.equal((await sounds()).length,count);
   await page.evaluate(async()=>{
    const {readPlayer,savePlayer}=await import('./battle/rules.mjs');
-   savePlayer({...readPlayer(),gold:20});
+   savePlayer({...readPlayer(),gold:40});
   });
+  if(muted)await page.evaluate(()=>window.KIKOKU_GAME.audio.setEnabled(false));
   await frame.locator('[data-shop-item="sleep"]').click();
-  assert.match(await frame.locator('#shop-message').textContent(),/体力と術力が回復/);
+  await curtain.waitFor({state:'visible'});
+  await page.keyboard.press('Escape');
+  await frame.locator('[data-shop-item="sleep"]').dispatchEvent('click');
+  await page.waitForFunction(()=>{
+   const cover=document.querySelector('#inn-curtain');
+   const style=getComputedStyle(cover);
+   return cover.open&&style.backgroundColor==='rgb(0, 0, 0)'&&style.opacity==='1'&&
+    document.elementFromPoint(1,1)===cover&&document.elementFromPoint(innerWidth-2,innerHeight-2)===cover;
+  });
+  await curtain.waitFor({state:'hidden'});
+  assert.match(await frame.locator('#shop-message').textContent(),/おはようございます。体力と術力が回復/);
+  assert.deepEqual(await snapshot(),before,'wake in the same inn at the same position');
+  assert.deepEqual((await sounds()).slice(count),[{covered:true,started:muted?0:2}]);
   const healed=await player();
-  assert.deepEqual([healed.gold,healed.hp,healed.mp],[0,healed.maxhp,healed.maxmp]);
+  assert.deepEqual([healed.gold,healed.hp,healed.mp],[20,healed.maxhp,healed.maxmp]);
   const checkpoint=await page.evaluate(async()=>{
    const {readAutoGame}=await import('./save/save-game.mjs');
    return readAutoGame()?.player;
   });
-  assert.deepEqual([checkpoint.gold,checkpoint.hp,checkpoint.mp],[0,healed.maxhp,healed.maxmp]);
+  assert.deepEqual([checkpoint.gold,checkpoint.hp,checkpoint.mp],[20,healed.maxhp,healed.maxmp]);
+  if(muted)await page.evaluate(()=>window.KIKOKU_GAME.audio.setEnabled(true));
  };
  const injureForInn=()=>page.evaluate(async()=>{
   const {readPlayer,savePlayer}=await import('./battle/rules.mjs');
@@ -258,6 +293,8 @@ try{
  await hozukiInn.locator('#action-a').click();
  await hozukiInn.locator('#next.hasLastLine').click();
  await checkInn(hozukiInn);
+ await injureForInn();
+ await checkInn(hozukiInn,{muted:true});
 
  // Place the hero on ordinary ground near each fence, then hold an actual
  // movement input far enough to cross the map edge if the fence were absent.

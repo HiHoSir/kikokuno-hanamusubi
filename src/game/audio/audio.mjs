@@ -13,6 +13,44 @@ export const ENCOUNTER_SE=new URL('se/battle-encounter.ogg',ASSET_ROOT);
 export const SOUND_SETTING_KEY='kikokuno-hanamusubi-audio-enabled';
 export const BGM_CHECKPOINT_KEY='kikokuno-hanamusubi-bgm-checkpoint';
 
+function playRooster(context){
+  const voice=context.createOscillator(),vibrato=context.createOscillator();
+  const pitchDepth=context.createGain(),volume=context.createGain();
+  const now=context.currentTime;
+  // A bright harmonic voice with a rough trill and a falling, drawn-out final syllable.
+  voice.setPeriodicWave(context.createPeriodicWave(new Float32Array(9),
+    new Float32Array([0,1,.72,.50,.29,.18,.13,.07,.05])));
+  vibrato.frequency.value=29;
+  pitchDepth.gain.value=24;
+  vibrato.connect(pitchDepth);
+  pitchDepth.connect(voice.frequency);
+  voice.connect(volume);
+  volume.connect(context.destination);
+  const syllables=[
+    {start:0,attack:.034,length:.13,low:412,peak:633,end:527,level:.13},
+    {start:.15,attack:.037,length:.14,low:468,peak:748,end:634,level:.15},
+    {start:.31,attack:.055,length:.14,low:544,peak:806,end:735,level:.19},
+    {start:.46,attack:.11,length:.64,low:614,peak:839,end:426,level:.21}
+  ];
+  for(const {start,attack,length,low,peak,end,level} of syllables){
+    const onset=now+start,accent=onset+attack,release=onset+length;
+    voice.frequency.setValueAtTime(low,onset);
+    voice.frequency.exponentialRampToValueAtTime(peak,accent);
+    voice.frequency.exponentialRampToValueAtTime(end,release);
+    volume.gain.setValueAtTime(.0001,onset);
+    volume.gain.linearRampToValueAtTime(level,accent);
+    volume.gain.exponentialRampToValueAtTime(level*.64,onset+length*.65);
+    volume.gain.exponentialRampToValueAtTime(.0001,release);
+  }
+  for(const oscillator of [voice,vibrato]){
+    oscillator.start(now);
+    oscillator.stop(now+1.11);
+  }
+  voice.onended=()=>{
+    voice.disconnect();vibrato.disconnect();pitchDepth.disconnect();volume.disconnect();
+  };
+}
+
 export function makeAudioEngine(trackName,button=null) {
   let track=TRACKS[trackName];
   if(!track)throw new Error('Unknown game BGM: '+trackName);
@@ -106,6 +144,12 @@ export function makeAudioEngine(trackName,button=null) {
     return true;
   }
   function se(name){
+    const context=audioContext();
+    if(!context||context.state!=='running')return;
+    if(name==='rooster'){
+      try{playRooster(context);}catch(e){console.warn('SE再生失敗',name,e);}
+      return;
+    }
     const patterns={
       confirm:[680,980,.10,'triangle',.052],
       cancel:[480,290,.12,'triangle',.045],
@@ -114,8 +158,6 @@ export function makeAudioEngine(trackName,button=null) {
       notify:[760,1040,.16,'sine',.055],
     };
     const a=patterns[name]??patterns.confirm;
-    const context=audioContext();
-    if(!context||context.state!=='running')return;
     try{
       const oscillator=context.createOscillator();
       const gain=context.createGain();

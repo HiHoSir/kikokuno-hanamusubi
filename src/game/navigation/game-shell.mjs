@@ -1,6 +1,6 @@
 // The browser stays on /src/game/ while independent scene renderers swap.
 // Only this parent document owns the BGM player and the sound toggle.
-import {makeAudioEngine} from '../audio/audio.mjs';
+import {makeAudioEngine} from '../audio/audio.mjs?v=inn-morning-1';
 import {pendingRestoreLocation,routeForSavedGame,saveAutoGame,saveManualGame}
   from '../save/save-game.mjs?v=save-slots-1-shiomachi-gear-1-cave-quest-1-ushiohei-hammer-1-finds-1-guardian-1';
 
@@ -9,6 +9,8 @@ const root = new URL('../../../', import.meta.url);
 const build = new URL(location.href).searchParams.get('build');
 const frame = document.querySelector('#game-scene');
 const curtain = document.querySelector('#scene-transition');
+const innCurtain = document.querySelector('#inn-curtain');
+innCurtain?.addEventListener('cancel', event => event.preventDefault());
 const audio = makeAudioEngine('village', document.querySelector('#sound-toggle'));
 globalThis.KIKOKU_AUDIO = audio;
 
@@ -74,7 +76,27 @@ function manualSave(){
   if(!position)return {accepted:false,message:'読み込み中は記録できません。'};
   return saveManualGame(position);
 }
-window.KIKOKU_GAME = Object.freeze({acceptsChild, navigate, audio, autosave,manualSave});
+async function playInnMorning(sourceWindow, onWake){
+  if(!acceptsChild(sourceWindow.location.href,sourceWindow)||innCurtain.open)return;
+  audio.unlock(); // Resume Web Audio during the confirmation gesture on iOS.
+  innCurtain.showModal();
+  let night,dawn;
+  try{
+    night=innCurtain.animate([
+      {opacity:0},{opacity:1,offset:.32},{opacity:1}
+    ],{duration:1000,fill:'forwards'});
+    await night.finished;
+    onWake();
+    if(acceptsChild(sourceWindow.location.href,sourceWindow))audio.se('rooster');
+    dawn=innCurtain.animate([{opacity:1},{opacity:0}],{duration:480,fill:'forwards'});
+    await dawn.finished;
+  }finally{
+    innCurtain.close();
+    night?.cancel();
+    dawn?.cancel();
+  }
+}
+window.KIKOKU_GAME = Object.freeze({acceptsChild, navigate, audio, autosave,manualSave,playInnMorning});
 globalThis.setInterval?.(()=>{
   if(!document.hidden)autosave();
 },15000);

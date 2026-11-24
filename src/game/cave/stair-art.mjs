@@ -1,82 +1,74 @@
 import {CAVE_TILE as T} from '../../../data/maps/cave/floors.mjs?v=guardian-1';
 
-const STONE={
- edge:'#272e36', dark:'#161c24', side:'#404952', middle:'#57616a',
- top:'#697179', light:'#858a87'
+const ROCK={
+ outline:'#202831', hollow:'#19222c', wall:'#38434d',
+ side:'#46515a', edge:'#5e6970', lip:'#737e83'
 };
-const TREADS=['#343e47','#3e4851','#4b555e','#565f67','#626b73','#6d757c','#787e81'];
 
-function polygon(ctx,points,color){
- ctx.fillStyle=color;
+function path(ctx,points){
  ctx.beginPath();
- for(const [i,[x,y]] of points.entries()){
-  if(i===0)ctx.moveTo(x,y);
+ for(const [index,[x,y]] of points.entries()){
+  if(index===0)ctx.moveTo(x,y);
   else ctx.lineTo(x,y);
  }
  ctx.closePath();
+}
+
+function polygon(ctx,points,color){
+ path(ctx,points);
+ ctx.fillStyle=color;
  ctx.fill();
 }
 
-function step(ctx,half,y,shade){
- ctx.fillStyle=STONE.side;
- ctx.fillRect(-half,y+5,half*2,3);
- ctx.fillStyle=shade;
- ctx.fillRect(-half,y,half*2,5);
- ctx.fillStyle=STONE.light;
- ctx.globalAlpha=.36;
- ctx.fillRect(-half+2,y,half*2-5,1);
- ctx.globalAlpha=1;
- ctx.fillStyle=STONE.edge;
- ctx.fillRect(-half+4,y+4,4,1);
+// The width runs across the view so both the tread and its vertical face read.
+function tread(ctx,x,y,width,slant,runX,runY,rise,top,riser){
+ const front=[[x,y],[x+width,y+slant]];
+ polygon(ctx,[...front,[x+width,y+slant+rise],[x,y+rise]],riser);
+ polygon(ctx,[...front,[x+width+runX,y+slant+runY],[x+runX,y+runY]],top);
+ polygon(ctx,[...front,[x+width,y+slant+1],[x,y+1]],ROCK.lip);
 }
 
-// A floor cut: the level rim stays on the floor, and every tread is inside
-// the shaft. The closest tread connects directly to the southern landing.
-function drawDescent(ctx,layer){
- if(layer==='back'){
-  polygon(ctx,[[-37,6],[-26,1],[22,2],[37,8],[44,28],[45,74],[35,87],
-   [20,94],[-25,92],[-40,84],[-45,68],[-44,28]],STONE.edge);
-  polygon(ctx,[[-34,10],[-25,6],[22,7],[35,11],[39,29],[40,73],[29,86],
-   [-27,86],[-35,80],[-41,64],[-39,32]],STONE.middle);
-  polygon(ctx,[[-25,12],[23,12],[31,22],[35,72],[26,84],[-26,84],
-   [-34,73],[-32,25]],STONE.dark);
-  for(const [i,shade] of TREADS.entries())step(ctx,19+i*2,25+i*8,shade);
-  polygon(ctx,[[-37,14],[-27,12],[-21,24],[-23,55],[-29,79],[-37,73],[-40,49]],STONE.side);
-  polygon(ctx,[[35,13],[27,13],[22,25],[25,59],[30,79],[36,73],[39,52]],STONE.edge);
-  return;
- }
- polygon(ctx,[[-44,47],[-39,64],[-31,78],[-27,86],[-37,89],[-43,79],[-47,62]],STONE.edge);
- polygon(ctx,[[42,46],[45,62],[41,77],[35,89],[27,86],[32,79],[38,64]],STONE.edge);
- polygon(ctx,[[-31,81],[-23,85],[23,85],[31,81],[35,86],[24,91],[-24,91],[-35,86]],STONE.top);
- ctx.fillStyle=STONE.light;
- ctx.fillRect(-22,86,43,1);
-}
-
-// Readable stepped silhouette with a flat upper landing and the same
-// foot position as the previous side-profile staircase.
 export function drawAscent(ctx,col,row){
  ctx.save();
  ctx.translate(col*T-8,row*T-16);
- const steps=7,width=11,rise=8;
- // Draw the support, risers and tread highlights without resampling.
- for(let i=steps-1;i>=0;i--){
-  const x=5+i*width,y=80-i*rise;
-  const span=i===steps-1?17:width;
-  ctx.fillStyle=STONE.edge;
-  ctx.fillRect(x,y,span,92-y);
-  ctx.fillStyle=i%2===0?STONE.middle:STONE.side;
-  ctx.fillRect(x+1,y+6,span-2,rise-2);
-  ctx.fillStyle=STONE.top;
-  ctx.fillRect(x,y,span,5);
-  ctx.fillStyle=STONE.light;
-  ctx.fillRect(x+1,y,span-2,1);
-  ctx.fillStyle=STONE.side;
-  ctx.fillRect(x+span-3,y+2,2,2);
+ // The foot stays at the corridor side. The staircase ends at a flat tread.
+ const firstX=3,firstY=66,width=36,slant=17,count=5;
+ const side=[];
+ for(let i=0;i<count;i++){
+  const x=firstX+i*10+width,y=firstY-i*10+slant;
+  side.push([x,y+6],[x+10,y+1]);
  }
- ctx.fillStyle=STONE.side;
- ctx.fillRect(10,87,28,1);
- ctx.fillRect(43,87,34,1);
+ polygon(ctx,[...side,[89,76],[45,95],[39,89]],ROCK.outline);
+ polygon(ctx,[...side,[86,74],[45,92],[40,88]],ROCK.side);
+ for(let i=count-1;i>=0;i--){
+  const x=firstX+i*10,y=firstY-i*10;
+  tread(ctx,x,y,width,slant,10,-5,7,i===count-1?'#889196':'#778289','#505d67');
+ }
  ctx.restore();
+}
+
+const rim=[[-4,8],[46,31],[47,38],[3,90],[-5,91],[-47,70],[-48,63]];
+const inner=[[-3,16],[39,35],[0,83],[-40,64]];
+
+function drawDescent(ctx,layer){
+ if(layer==='back'){
+  polygon(ctx,rim,ROCK.outline);
+  polygon(ctx,[[-4,11],[43,33],[43,38],[1,87],[-5,87],[-44,67],[-44,63]],ROCK.edge);
+  polygon(ctx,inner,ROCK.hollow);
+  ctx.save();
+  path(ctx,inner);
+  ctx.clip();
+  polygon(ctx,[[-40,67],[-3,16],[7,21],[-22,65],[-25,76]],ROCK.wall);
+  for(let i=0;i<5;i++){
+   const x=2-i*7,y=26+i*10;
+   const shade=['#707c85','#63717c','#556571','#465863','#394b56'][i];
+   tread(ctx,x,y,37,18,-1,-6,5,shade,ROCK.wall);
+  }
+  ctx.restore();
+  return;
+ }
+ polygon(ctx,[[-47,66],[-5,88],[3,88],[29,57],[44,40],[43,46],[3,92],[-5,94],[-46,73]],ROCK.outline);
+ polygon(ctx,[[-44,66],[-4,87],[1,87],[32,51],[44,38],[43,41],[2,90],[-5,90],[-44,70]],ROCK.lip);
 }
 
 export function drawStairwell(ctx,col,row,layer){

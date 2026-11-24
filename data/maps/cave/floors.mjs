@@ -41,7 +41,7 @@ const floors=[
    [[3,10],[2,10],[2,7]]
   ],[[5,2,7,4],[8,4,11,5],[18,5,23,8],[8,19,10,20]]),
   entry:[9,19],exit:[9,20],
-  down:{kind:'down',origin:[20,5],approach:[21,7]},
+  down:{kind:'down',origin:[21,6],approach:[20,6]},
   danger:(x,y)=>x>=12&&y>=8&&y<=17,
   visibilityRadius:292,
   scenery:[
@@ -54,7 +54,7 @@ const floors=[
  },
  {
   // Two passages around a rock mass. Both reach the east chamber, where the
-  // stairwell opens south; a solid spur separates its lip from the east wall.
+  // stairwell descends east from the landing.
   grid:terrain(30,[
    [],[[7,11]],[[5,15]],[[4,18]],[[4,9],[13,21]],
    [[3,8],[17,25]],[[3,8],[19,26]],[[3,8],[20,27]],[[3,8],[20,27]],
@@ -63,7 +63,7 @@ const floors=[
    [[5,13]],[[5,9]],[[6,9]],[[8,10]],[]
   ]),
   up:{kind:'up',origin:[6,16],approach:[7,16]},
-  down:{kind:'down',origin:[23,6],approach:[24,8]},
+  down:{kind:'down',origin:[25,8],approach:[24,8]},
   danger:(x,y)=>x>=9&&y>=10&&y<=16,
   scenery:[{kind:'cache',origin:[9,2],id:'cave-upper-passage'},
    {kind:'seal',origin:[11,2],id:CAVE_WHITE_SEAL},
@@ -96,15 +96,14 @@ export const caveCellOpen=(floor,x,y)=>CAVE_FLOORS[floor]?.grid[y]?.[x]==='.';
 
 // The center of the opening is shared by the drawing, collision and action range.
 function stairOffset(stair,x,y){
- const offset=stair.kind==='up'?.5:1;
- return [x-(stair.origin[0]+offset)*CAVE_TILE,y-(stair.origin[1]+offset)*CAVE_TILE];
+ return [x-(stair.origin[0]+.5)*CAVE_TILE,y-(stair.origin[1]+.5)*CAVE_TILE];
 }
 export function caveFeatureBlocks(feature,x,y){
  const {kind,origin}=feature;
  if(kind==='up'||kind==='down'){
   const [dx,dy]=stairOffset(feature,x,y);
   if(kind==='up')return Math.abs(dx)<25&&dy>=-16&&dy<20;
-  return (dx/44)**2+(dy/35)**2<1;
+  return Math.abs(dx)<CAVE_TILE/2&&Math.abs(dy)<CAVE_TILE/2;
  }
  if(['cache','seal','inscription'].includes(kind))
   return Math.hypot(x-(origin[0]+.5)*CAVE_TILE,y-(origin[1]+.5)*CAVE_TILE)<18;
@@ -117,8 +116,7 @@ export function caveStairAt(floor,x,y){
  return CAVE_FLOORS[floor].features.find(stair=>{
   if(stair.kind!=='up'&&stair.kind!=='down')return false;
   const [dx,dy]=stairOffset(stair,x,y);
-  const reach=stair.kind==='up'?64:86;
-  if(Math.hypot(dx,dy)>reach||caveFeatureBlocks(stair,x,y))return false;
+  if(Math.hypot(dx,dy)>64||caveFeatureBlocks(stair,x,y))return false;
   for(let scale=.125;scale<1;scale+=.125){
    const px=x-dx*scale,py=y-dy*scale;
    if(caveFeatureBlocks(stair,px,py))return true;

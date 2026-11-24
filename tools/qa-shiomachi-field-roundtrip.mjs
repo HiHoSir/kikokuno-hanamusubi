@@ -305,7 +305,7 @@ try{
  const cave=page.frameLocator('#game-scene');
  const caveButton=cave.locator('#action-a');
  const caveFloor=number=>cave.locator('#scene[data-floor="'+number+'"]').waitFor();
- const climbWithPad=async(floor,direction='up')=>{
+ const climbWithPad=async(floor,direction='right')=>{
   const pad=await cave.locator('#'+direction).boundingBox();
   assert.ok(pad,'the selected direction button must be visible');
   await page.mouse.move(pad.x+pad.width/2,pad.y+pad.height/2);
@@ -388,14 +388,14 @@ try{
  await walkCave([[4,3],[4,5],[10,5],[10,6],[10,5]]);
  await caveButton.click();
  assert.match(await cave.locator('#notice').textContent(),/白を沈めよ/);
- await walkCave([[12,5],[12,3],[18,3],[18,7],[21,7]]);
+ await walkCave([[12,5],[12,3],[18,3],[18,7],[20,7],[20,6]]);
  await page.screenshot({path:'artifacts/cave-first-floor.png'});
  await climbWithPad(2);
  await page.screenshot({path:'artifacts/cave-ascending-stair.png'});
  // Both walking onto the stair and pressing A at its foot work.
  await caveButton.click();
  await caveFloor(1);
- await walkCave([[20,7],[20.75,7]]);
+ await walkCave([[20,6.25]]);
  await climbWithPad(2);
  await walkCave([[7,14],[20,14],[20,8],[24,8]]);
  await page.screenshot({path:'artifacts/cave-second-floor.png'});
@@ -466,7 +466,7 @@ try{
  await walkCave([[15,7],[8,7],[6,7],[6,14],[7,14],[7,16]]);
 
  await climbWithPad(1,'left');
- await walkCave([[22,7],[22,11],[19,11],[19,11.2]]);
+ await walkCave([[20,7],[22,7],[22,11],[19,11],[19,11.2]]);
  const beforeDrop=await cave.locator('#scene').evaluate(()=>window.KIKOKU_SAVE_SNAPSHOT().position);
  await caveButton.click();
  assert.match(await cave.locator('#notice').textContent(),/岩段を飛び降りた/);

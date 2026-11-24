@@ -3,6 +3,7 @@ import {CAVE_TILE as T} from '../../../data/maps/cave/floors.mjs?v=guardian-1';
 // Independent stair geometry from the November 11 cave prototype.
 export function drawStairwell(c,x,y,layer,ascending=false){
  c.save();c.translate(x*T-(ascending?24:0),y*T);
+ if(ascending){c.translate(0,2*T);c.scale(1,-1);}
  const poly=(pts,color)=>{
    c.fillStyle=color;c.beginPath();
    pts.forEach(([a,b],i)=>i?c.lineTo(a,b):c.moveTo(a,b));

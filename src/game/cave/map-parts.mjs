@@ -1,5 +1,5 @@
-import {CAVE_TILE as TILE} from '../../../data/maps/cave/floors.mjs?v=cave-maps-1-stair-links-1-exploration-1-maze-2';
-import {drawStairwell} from './stair-art.mjs?v=cave-visual-1-stair-links-1-guardian-1-pair-1';
+import {CAVE_TILE as TILE} from '../../../data/maps/cave/floors.mjs?v=cave-maps-1-stair-links-1-exploration-1-maze-2-stairs-2';
+import {drawStairwell} from './stair-art.mjs?v=cave-visual-1-stair-links-1-guardian-1-pair-1-stairs-2';
 import {createCaveTerrain,drawCaveRim} from './terrain-art.mjs?v=cave-visual-1-guardian-1';
 
 export function createCaveMap(layout,{floorArt,wallArt,ledgeArt,crateArt}){
@@ -18,7 +18,7 @@ export function createCaveMap(layout,{floorArt,wallArt,ledgeArt,crateArt}){
    case 'up':
     drawStairwell(paint,col,row,'back',true);
     drawStairwell(paint,col,row,'front',true);
-    foreground.push({depth:y+64,draw:ctx=>drawStairwell(ctx,col,row,'front',true)});
+    foreground.push({depth:y+TILE,draw:ctx=>drawStairwell(ctx,col,row,'front',true)});
     break;
    case 'seal':
    case 'inscription':

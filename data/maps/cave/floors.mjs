@@ -39,7 +39,7 @@ const floors=[
    [[12,5],[15,5],[15,7],[16,7]],
    [[22,11],[24,11],[24,14],[22,14]],
    [[3,10],[2,10],[2,7]]
-  ],[[5,2,7,4],[8,4,11,5],[19,5,23,8],[8,19,10,20]]),
+  ],[[5,2,7,4],[8,4,11,5],[18,5,23,8],[8,19,10,20]]),
   entry:[9,19],exit:[9,20],
   down:{kind:'down',origin:[20,5],approach:[21,7]},
   danger:(x,y)=>x>=12&&y>=8&&y<=17,
@@ -60,9 +60,9 @@ const floors=[
    [[3,8],[17,25]],[[3,8],[19,26]],[[3,8],[20,27]],[[3,8],[20,27]],
    [[4,8],[19,26]],[[4,9],[18,25]],[[4,9],[17,24]],
    [[5,10],[15,23]],[[5,23]],[[5,22]],[[6,20]],
-   [[6,13]],[[6,8]],[[6,9]],[[8,10]],[]
+   [[5,13]],[[5,9]],[[6,9]],[[8,10]],[]
   ]),
-  up:{kind:'up',origin:[7,17],approach:[7,18]},
+  up:{kind:'up',origin:[7,17],approach:[7,16]},
   down:{kind:'down',origin:[23,6],approach:[24,8]},
   danger:(x,y)=>x>=9&&y>=10&&y<=16,
   scenery:[{kind:'cache',origin:[9,2],id:'cave-upper-passage'},
@@ -78,9 +78,9 @@ const floors=[
    [],[],[[8,13]],[[6,15]],[[5,17]],[[4,18]],
    [[3,19]],[[3,20]],[[4,20]],[[6,19]],[[8,17]],
    [[9,15]],[[8,11],[12,16]],[[8,10],[13,18]],[[14,20]],[[15,21]],
-   [[16,21]],[[17,19]],[[17,21]],[]
+   [[16,21]],[[16,20]],[[17,21]],[]
   ]),
-  up:{kind:'up',origin:[18,17],approach:[18,18]},
+  up:{kind:'up',origin:[18,17],approach:[18,16]},
   boss:[11,6],
   scenery:[{kind:'cache',origin:[9,13],id:'cave-guardian-alcove'}]
  }
@@ -94,25 +94,35 @@ export const CAVE_FLOORS=floors.map(floor=>({
 export const caveCellCenter=cell=>cell.map(value=>(value+.5)*CAVE_TILE);
 export const caveCellOpen=(floor,x,y)=>CAVE_FLOORS[floor]?.grid[y]?.[x]==='.';
 
-// Hard shapes constrain feet independently of the art's transparent outline.
-// Upper stairs and floor holes use the prototype's distinct footprints.
-export function caveFeatureBlocks({kind,origin},x,y){
- const px=x-origin[0]*CAVE_TILE,py=y-origin[1]*CAVE_TILE;
- if(kind==='down')return ((px-48)/36)**2+((py-48)/35)**2<1;
- if(['cache','seal','inscription'].includes(kind))return Math.hypot(px-24,py-24)<18;
- if(kind==='up')return px>6&&px<93&&py>5&&py<94&&!(px<34&&py>=64);
+// The center of the opening is shared by the drawing, collision and action range.
+function stairOffset(stair,x,y){
+ return [x-(stair.origin[0]+(stair.kind==='up'?.5:1))*CAVE_TILE,
+         y-(stair.origin[1]+1)*CAVE_TILE];
+}
+export function caveFeatureBlocks(feature,x,y){
+ const {kind,origin}=feature;
+ if(kind==='up'||kind==='down'){
+  const [dx,dy]=stairOffset(feature,x,y);
+  return (dx/44)**2+(dy/35)**2<1;
+ }
+ if(['cache','seal','inscription'].includes(kind))
+  return Math.hypot(x-(origin[0]+.5)*CAVE_TILE,y-(origin[1]+.5)*CAVE_TILE)<18;
  return false;
 }
 
-// Use the visible shore of the floor hole or the foot of the upper stair.
-// The arrival cell is independent of where the player approaches it.
+// A works anywhere alongside an opening, provided the player is on the
+// same side of the rock wall. Walking onto the lip uses the same opening.
 export function caveStairAt(floor,x,y){
  return CAVE_FLOORS[floor].features.find(stair=>{
-  const px=x-stair.origin[0]*CAVE_TILE,py=y-stair.origin[1]*CAVE_TILE;
-  if(caveFeatureBlocks(stair,x,y))return false;
-  if(stair.kind==='down')return Math.hypot(px-48,py-48)<=82;
-  if(stair.kind==='up')return px>=-14&&px<=52&&py>=53&&py<=111;
-  return false;
+  if(stair.kind!=='up'&&stair.kind!=='down')return false;
+  const [dx,dy]=stairOffset(stair,x,y);
+  if(Math.hypot(dx,dy)>86||caveFeatureBlocks(stair,x,y))return false;
+  for(let scale=.125;scale<1;scale+=.125){
+   const px=x-dx*scale,py=y-dy*scale;
+   if(caveFeatureBlocks(stair,px,py))return true;
+   if(!caveCellOpen(floor,Math.floor(px/CAVE_TILE),Math.floor(py/CAVE_TILE)))return false;
+  }
+  return true;
  });
 }
 

@@ -305,9 +305,9 @@ try{
  const cave=page.frameLocator('#game-scene');
  const caveButton=cave.locator('#action-a');
  const caveFloor=number=>cave.locator('#scene[data-floor="'+number+'"]').waitFor();
- const climbWithPad=async floor=>{
-  const pad=await cave.locator('#up').boundingBox();
-  assert.ok(pad,'cave up button must be visible');
+ const climbWithPad=async(floor,direction='up')=>{
+  const pad=await cave.locator('#'+direction).boundingBox();
+  assert.ok(pad,'the selected direction button must be visible');
   await page.mouse.move(pad.x+pad.width/2,pad.y+pad.height/2);
   await page.mouse.down();
   try{await cave.locator('#scene[data-floor="'+floor+'"]').waitFor({timeout:3500});}
@@ -395,8 +395,9 @@ try{
  // Both walking onto the stair and pressing A at its foot work.
  await caveButton.click();
  await caveFloor(1);
+ await walkCave([[20,7],[20.75,7]]);
  await climbWithPad(2);
- await walkCave([[6,18],[6,14],[20,14],[20,8],[24,8]]);
+ await walkCave([[6,16],[6,14],[20,14],[20,8],[24,8]]);
  await page.screenshot({path:'artifacts/cave-second-floor.png'});
  await climbWithPad(3);
 
@@ -404,7 +405,7 @@ try{
   const {readPlayer,savePlayer}=await import('./battle/rules.mjs');
   savePlayer({...readPlayer(),lv:5,hp:58});
  });
- await walkCave([[17,18],[17,16],[19,16],[19,14],[15,14],[15,11],[9,11],[9,12]]);
+ await walkCave([[19,16],[19,14],[15,14],[15,11],[9,11],[9,12]]);
  await takeCaveCache('cave-guardian-alcove','おにぎり');
  await walkCave([[9,11],[11,11],[11,7]]);
  await page.screenshot({path:'artifacts/cave-deepest-floor.png'});
@@ -447,7 +448,7 @@ try{
    ?.KIKOKU_SAVE_SNAPSHOT?.()?.position.floor===2);
  assert.equal((await player()).caveQuest.rockBreaker,true);
 
- await climbWithPad(2);
+ await climbWithPad(2,'down');
  await walkCave([[20,8],[20,5],[17,5],[17,4],[15,4],[15,3],[9,3]]);
  // Enter the cache's facing direction after approaching from the east.
  await walkCave([[9,4],[9,3]]);
@@ -462,9 +463,9 @@ try{
  // Turn north next to the newly revealed alcove without colliding with the cache.
  await walkCave([[15,6.55]]);
  await takeCaveCache('cave-sealed-passage','団子');
- await walkCave([[15,7],[8,7],[6,7],[6,18],[7,18]]);
+ await walkCave([[15,7],[8,7],[6,7],[6,16],[7,16]]);
 
- await climbWithPad(1);
+ await climbWithPad(1,'down');
  await walkCave([[22,7],[22,11],[19,11],[19,11.2]]);
  const beforeDrop=await cave.locator('#scene').evaluate(()=>window.KIKOKU_SAVE_SNAPSHOT().position);
  await caveButton.click();

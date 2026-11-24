@@ -1,79 +1,50 @@
 import {CAVE_TILE as T} from '../../../data/maps/cave/floors.mjs?v=guardian-1';
 
-const ROCK={
- outline:'#202831', hollow:'#19222c', wall:'#38434d',
- side:'#46515a', edge:'#5e6970', lip:'#737e83'
-};
+const UP_TREADS=['#59636a','#626d74','#69737a','#707b81','#7b8589','#899293'];
+const DOWN_TREADS=['#303a44','#394650','#47535d','#52606b','#606d76','#6f7b83'];
 
-function path(ctx,points){
- ctx.beginPath();
- for(const [index,[x,y]] of points.entries()){
-  if(index===0)ctx.moveTo(x,y);
-  else ctx.lineTo(x,y);
- }
- ctx.closePath();
-}
-
-function polygon(ctx,points,color){
- path(ctx,points);
+function rect(ctx,color,x,y,width,height){
  ctx.fillStyle=color;
- ctx.fill();
+ ctx.fillRect(x,y,width,height);
 }
 
-// The width runs across the view so both the tread and its vertical face read.
-function tread(ctx,x,y,width,slant,runX,runY,rise,top,riser){
- const front=[[x,y],[x+width,y+slant]];
- polygon(ctx,[...front,[x+width,y+slant+rise],[x,y+rise]],riser);
- polygon(ctx,[...front,[x+width+runX,y+slant+runY],[x+runX,y+runY]],top);
- polygon(ctx,[...front,[x+width,y+slant+1],[x,y+1]],ROCK.lip);
+function drawTreads(ctx,colors,edge){
+ for(const [index,color] of colors.entries()){
+  const y=15+index*11;
+  rect(ctx,color,-30,y,60,8);
+  rect(ctx,edge,-28,y,56,2);
+  rect(ctx,'#303941',-30,y+8,60,3);
+ }
 }
 
+// An open flight viewed from near overhead. The raised last tread is wide
+// and bright; the low entry edge meets the corridor on the north side.
 export function drawAscent(ctx,col,row){
  ctx.save();
- ctx.translate(col*T-8,row*T-16);
- // The foot stays at the corridor side. The staircase ends at a flat tread.
- const firstX=3,firstY=66,width=36,slant=17,count=5;
- const side=[];
- for(let i=0;i<count;i++){
-  const x=firstX+i*10+width,y=firstY-i*10+slant;
-  side.push([x,y+6],[x+10,y+1]);
- }
- polygon(ctx,[...side,[89,76],[45,95],[39,89]],ROCK.outline);
- polygon(ctx,[...side,[86,74],[45,92],[40,88]],ROCK.side);
- for(let i=count-1;i>=0;i--){
-  const x=firstX+i*10,y=firstY-i*10;
-  tread(ctx,x,y,width,slant,10,-5,7,i===count-1?'#889196':'#778289','#505d67');
- }
+ ctx.translate((col+.5)*T,row*T);
+ rect(ctx,'#232b33',-34,12,68,81);
+ rect(ctx,'#4a555f',-34,13,4,68);
+ rect(ctx,'#3a464f',30,13,4,68);
+ drawTreads(ctx,UP_TREADS,'#899497');
+ rect(ctx,'#879195',-34,80,68,8);
+ rect(ctx,'#4d5962',-34,88,68,5);
  ctx.restore();
 }
 
-const rim=[[-4,8],[46,31],[47,38],[3,90],[-5,91],[-47,70],[-48,63]];
-const inner=[[-3,16],[39,35],[0,83],[-40,64]];
-
-function drawDescent(ctx,layer){
- if(layer==='back'){
-  polygon(ctx,rim,ROCK.outline);
-  polygon(ctx,[[-4,11],[43,33],[43,38],[1,87],[-5,87],[-44,67],[-44,63]],ROCK.edge);
-  polygon(ctx,inner,ROCK.hollow);
-  ctx.save();
-  path(ctx,inner);
-  ctx.clip();
-  polygon(ctx,[[-40,67],[-3,16],[7,21],[-22,65],[-25,76]],ROCK.wall);
-  for(let i=0;i<5;i++){
-   const x=2-i*7,y=26+i*10;
-   const shade=['#707c85','#63717c','#556571','#465863','#394b56'][i];
-   tread(ctx,x,y,37,18,-1,-6,5,shade,ROCK.wall);
-  }
-  ctx.restore();
-  return;
- }
- polygon(ctx,[[-47,66],[-5,88],[3,88],[29,57],[44,40],[43,46],[3,92],[-5,94],[-46,73]],ROCK.outline);
- polygon(ctx,[[-44,66],[-4,87],[1,87],[32,51],[44,38],[43,41],[2,90],[-5,90],[-44,70]],ROCK.lip);
-}
-
+// The lower stairs sit inside a floor cut. The floor lip is at the south
+// side and the furthest treads recede into shade at the north end.
 export function drawStairwell(ctx,col,row,layer){
  ctx.save();
  ctx.translate((col+1)*T,row*T);
- drawDescent(ctx,layer);
+ if(layer==='back'){
+  rect(ctx,'#252e36',-39,8,78,82);
+  rect(ctx,'#5c6871',-36,11,72,76);
+  rect(ctx,'#212c35',-32,14,64,70);
+  drawTreads(ctx,DOWN_TREADS,'#697782');
+  rect(ctx,'#29343e',-30,15,60,3);
+ }else{
+  rect(ctx,'#78838a',-34,82,68,4);
+  rect(ctx,'#3d4952',-36,86,72,4);
+ }
  ctx.restore();
 }

@@ -23,7 +23,7 @@ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
 const origin='http://127.0.0.1:'+server.address().port;
 await mkdir('artifacts',{recursive:true});
 const chromiumBrowser=await chromium.launch({headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
-const results=[],issues=[];
+const results=[],issues=[],battleScales=[];
 const rect=e=>{const r=e?.getBoundingClientRect();return r?
  {x:Math.round(r.x),y:Math.round(r.y),w:Math.round(r.width),h:Math.round(r.height),
  right:Math.round(r.right),bottom:Math.round(r.bottom)}:null;};
@@ -119,6 +119,9 @@ try{
       animation:d.defaultView.getComputedStyle(img).animationName
     }));
    });
+   const spriteFit=Math.min(data.rects.enemy1.w,data.rects.enemy1.h);
+   battleScales.push({width,height,large,enemyId,heroHeight:data.rects.hero.h,
+    enemyScale:spriteFit/enemyArt[0].dimensions[0]});
    const expectsPixelArt=['tanuki','field-oni','onibi'].includes(enemyId);
    const version=({tanuki:'77a93691','field-oni':'651fcddc',onibi:'4efa9446'})[enemyId];
    if(enemyId==='onibi'&&enemyArt.some(item=>item.animation!=='battle-onibi-float'))
@@ -170,7 +173,7 @@ try{
     overlapIssues.push('enemy numbering must progress left to right');
    }
 
-   if(large&&(rects.enemy1.h<rects.hero.h*1.2||rects.enemyLabel.right>width||
+   if(large&&(rects.enemyLabel.right>width||
       overlaps(rects.enemy1,rects.status)>0||overlaps(rects.enemyLabel,rects.status)>0)){
     overlapIssues.push('large enemy or name does not fit the dedicated battle framing');
    }
@@ -272,5 +275,10 @@ try{
   }finally{await page.close();}
  }
 }finally{await chromiumBrowser.close();server.close();}
+for(const boss of battleScales.filter(battle=>battle.large)){
+ const others=battleScales.filter(battle=>!battle.large&&battle.width===boss.width&&battle.height===boss.height);
+ if(!others.length||others.some(other=>other.heroHeight!==boss.heroHeight||Math.abs(other.enemyScale-boss.enemyScale)>0.01))
+  issues.push(boss.width+'x'+boss.height+' hero or enemy scaling varies between encounters');
+}
 console.log('BATTLE_BROWSER_QA '+JSON.stringify({summary:results.map(({name,rects,overlapIssues,layout,mainGrid})=>({name,rects,overlapIssues,layout,mainGrid})),issues},null,2));
 if(issues.length)throw Error('Battle layout failed: '+issues.join(' | '));

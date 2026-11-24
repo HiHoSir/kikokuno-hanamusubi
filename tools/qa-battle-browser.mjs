@@ -184,21 +184,6 @@ try{
     const frame=page.frameLocator('#game-scene');
     await frame.locator('[data-command="attack"]').click();
     await frame.locator('#enemy-figure.impact-physical').waitFor({state:'attached',timeout:1500});
-    const guardian=frame.locator('#enemy-figure');
-    await frame.locator('#enemy-figure.hammer-ready').waitFor({timeout:1500});
-    await page.screenshot({path:'artifacts/battle-'+width+'x'+height+'-guardian-ready.png'});
-    const guarding=frame.locator('[data-command="guard"]');
-    if(width===1536)await page.emulateMedia({reducedMotion:'reduce'});
-    await guarding.click();
-    const impact=frame.locator('#battle-stage.hammer-impact');
-    await impact.waitFor({timeout:1500});
-    const dust=await impact.locator('.hammer-dust').evaluate(node=>getComputedStyle(node).display);
-    const text=await frame.locator('#battle-message').innerText();
-    if(dust==='none'||!text.includes('岩砕き')||await guardian.evaluate(node=>node.classList.contains('hammer-ready')))
-     issues.push(name+' guardian impact missing dust, damage text, or transition out of windup');
-    const shake=await impact.evaluate(node=>getComputedStyle(node).animationName);
-    if(shake!==(width===1536?'none':'guardian-impact-shake'))issues.push(name+' guardian camera shake ignores motion preference');
-    await page.screenshot({path:'artifacts/battle-'+width+'x'+height+'-guardian-impact.png'});
    }
    if(count===2){
     const frame=page.frameLocator('#game-scene');

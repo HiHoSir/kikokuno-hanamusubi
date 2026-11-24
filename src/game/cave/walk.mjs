@@ -8,7 +8,7 @@ import {WORLD_SCENE_ZOOM} from '../ui/world-scale.mjs';
 import {BATTLE_REQUEST_KEY,readPlayer,savePlayer,collectFind,chooseFieldEncounter} from '../battle/rules.mjs?v=cave-quest-1-finds-1-guardian-1';
 import {consumeRestorePosition} from '../save/save-game.mjs?v=save-slots-1-shiomachi-gear-1-cave-quest-1-finds-1-guardian-1';
 import {CAVE_DARK} from './terrain-art.mjs?v=cave-visual-1-guardian-1';
-import {createCaveMap} from './map-parts.mjs?v=cave-maps-1-stair-links-1-exploration-1-maze-2-stairs-2-rise-1';
+import {createCaveMap} from './map-parts.mjs?v=cave-maps-1-stair-links-1-exploration-1-maze-2-stairs-2-rise-1-treads-1';
 
 const root=new URL('../../../',import.meta.url);
 const scene=document.querySelector('#scene'),load=document.querySelector('#load');
@@ -25,8 +25,8 @@ async function image(path){
 }
 
 async function start(){
- const [floorArt,wallArt,stairsUp,ledgeArt,heroArt,bossArt,crateArt]=await Promise.all([
-  ...['floor-material-atlas','wall-material','stairs-up','rock-ledge'].map(id=>image('assets/cave/'+id+'.png?v=cave-visual-1')),
+ const [floorArt,wallArt,ledgeArt,heroArt,bossArt,crateArt]=await Promise.all([
+  ...['floor-material-atlas','wall-material','rock-ledge'].map(id=>image('assets/cave/'+id+'.png?v=cave-visual-1')),
   image('assets/characters/hizuki/walk-4dir-80x112.png'),image('assets/enemies/cave-guardian-idle.png'),
   image('assets/sea-cove/objects/fish-crate-92x70.png')
  ]);
@@ -55,7 +55,7 @@ async function start(){
   const blocked=new Uint8Array(width*height);
   terrain=renderedFloors.get(index);
   if(!terrain){
-   terrain=createCaveMap(layout,{floorArt,wallArt,stairsUp,ledgeArt,crateArt});
+   terrain=createCaveMap(layout,{floorArt,wallArt,ledgeArt,crateArt});
    renderedFloors.set(index,terrain);
   }
   for(const [row,line] of layout.grid.entries())for(let col=0;col<line.length;col++){

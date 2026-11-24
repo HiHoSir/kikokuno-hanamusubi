@@ -2,7 +2,7 @@ import {CAVE_TILE as T} from '../../../data/maps/cave/floors.mjs?v=guardian-1';
 
 const STONE={
  edge:'#272e36', dark:'#161c24', side:'#404952', middle:'#57616a',
- top:'#697179', light:'#858a87', shadow:'#131920'
+ top:'#697179', light:'#858a87'
 };
 const TREADS=['#343e47','#3e4851','#4b555e','#565f67','#626b73','#6d757c','#787e81'];
 
@@ -18,17 +18,16 @@ function polygon(ctx,points,color){
 }
 
 function step(ctx,half,y,shade){
- const front=y+5;
- const back=y;
- polygon(ctx,[[-half,back],[half-1,back],[half,front],[-half-1,front]],shade);
  ctx.fillStyle=STONE.side;
- ctx.fillRect(-half,front,half*2,3);
+ ctx.fillRect(-half,y+5,half*2,3);
+ ctx.fillStyle=shade;
+ ctx.fillRect(-half,y,half*2,5);
  ctx.fillStyle=STONE.light;
  ctx.globalAlpha=.36;
- ctx.fillRect(-half+2,back,half*2-6,1);
- ctx.fillStyle=STONE.edge;
- ctx.fillRect(-half+4,front-1,4,1);
+ ctx.fillRect(-half+2,y,half*2-5,1);
  ctx.globalAlpha=1;
+ ctx.fillStyle=STONE.edge;
+ ctx.fillRect(-half+4,y+4,4,1);
 }
 
 // A floor cut: the level rim stays on the floor, and every tread is inside
@@ -53,16 +52,30 @@ function drawDescent(ctx,layer){
  ctx.fillRect(-22,86,43,1);
 }
 
-// The approved side-profile stair climbs into a rock opening on the right.
-export function drawAscent(ctx,col,row,art){
+// Readable stepped silhouette with a flat upper landing and the same
+// foot position as the previous side-profile staircase.
+export function drawAscent(ctx,col,row){
  ctx.save();
  ctx.translate(col*T-8,row*T-16);
- polygon(ctx,[[72,27],[75,13],[83,6],[96,4],[115,10],[128,17],
-  [124,43],[108,52],[95,49],[84,42]],STONE.edge);
- polygon(ctx,[[76,23],[80,13],[88,8],[101,8],[117,13],[125,18],
-  [121,28],[109,31],[96,24],[87,26]],STONE.side);
- polygon(ctx,[[98,30],[116,27],[128,19],[125,43],[108,51],[96,45]],STONE.shadow);
- ctx.drawImage(art,0,0);
+ const steps=7,width=11,rise=8;
+ // Draw the support, risers and tread highlights without resampling.
+ for(let i=steps-1;i>=0;i--){
+  const x=5+i*width,y=80-i*rise;
+  const span=i===steps-1?17:width;
+  ctx.fillStyle=STONE.edge;
+  ctx.fillRect(x,y,span,92-y);
+  ctx.fillStyle=i%2===0?STONE.middle:STONE.side;
+  ctx.fillRect(x+1,y+6,span-2,rise-2);
+  ctx.fillStyle=STONE.top;
+  ctx.fillRect(x,y,span,5);
+  ctx.fillStyle=STONE.light;
+  ctx.fillRect(x+1,y,span-2,1);
+  ctx.fillStyle=STONE.side;
+  ctx.fillRect(x+span-3,y+2,2,2);
+ }
+ ctx.fillStyle=STONE.side;
+ ctx.fillRect(10,87,28,1);
+ ctx.fillRect(43,87,34,1);
  ctx.restore();
 }
 

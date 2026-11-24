@@ -12,7 +12,7 @@ export function stayAtInn(hero,price=INN_PRICE){
 
 const titles={teahouse:'茶店の品書き',armory:'兵具屋の品書き',inn:'宿'};
 export function createVillageShop({panel,title,wallet,options,message,clearInput,armoryStock=ARMORY_STOCK,trial}){
- let room=null,selected=0;
+ let room=null,selected=0,staying=false;
  const isTrial=()=>Boolean(trial);
  const player=()=>isTrial()?trial.read():readPlayer();
  function entries(hero){
@@ -48,7 +48,7 @@ export function createVillageShop({panel,title,wallet,options,message,clearInput
    }
  }
  function open(type,name=titles[type]){
-   if(!Object.hasOwn(titles,type))return false;
+   if(staying||!Object.hasOwn(titles,type))return false;
    room=type;selected=0;clearInput();
    title.textContent=name+(isTrial()?'（試用・セーブには反映しません）':'');
    message.textContent=room==='inn'?'お泊まりになりますか？':'何をお求めですか？';
@@ -56,15 +56,18 @@ export function createVillageShop({panel,title,wallet,options,message,clearInput
    refresh();
    return true;
  }
- function close(){room=null;panel.hidden=true;clearInput();}
+ function close(){
+   if(staying)return;
+   room=null;panel.hidden=true;clearInput();
+ }
  function choose(direction){
-   if(!room)return;
+   if(!room||staying)return;
    const count=entries(player()).length;
    selected=(selected+(direction==='up'||direction==='left'?-1:1)+count)%count;
    refresh();
  }
  function confirm(){
-   if(!room)return false;
+   if(!room||staying)return false;
    const hero=player(),choice=entries(hero)[selected];
    if(!choice)return false;
    if(choice.id==='exit'){close();return true;}
@@ -75,7 +78,22 @@ export function createVillageShop({panel,title,wallet,options,message,clearInput
      if(isTrial())trial.save(result.player);
      else{
        savePlayer(result.player);
-       if(room==='inn')globalThis.parent?.KIKOKU_GAME?.autosave?.(globalThis);
+       if(room==='inn'){
+         const game=globalThis.parent?.KIKOKU_GAME;
+         game?.autosave?.(globalThis);
+         if(game?.playInnMorning){
+           staying=true;
+           clearInput();
+           const wake=()=>{
+             message.textContent='おはようございます。体力と術力が回復しました。';
+             refresh();
+           };
+           game.playInnMorning(globalThis,wake)
+             .catch(error=>{console.warn('宿泊演出を再生できませんでした',error);wake();})
+             .finally(()=>{staying=false;});
+           return true;
+         }
+       }
      }
    }
    message.textContent=result.message;

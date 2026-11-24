@@ -6,7 +6,7 @@ import {makeWalk,hizukiWalkDistance} from '../village/movement.mjs?v=shared-walk
 import {normalizePlayer,DEFAULT_PLAYER} from '../battle/rules.mjs?v=equipment-4slots-2-cove-shells-1-shiomachi-gear-1-cave-quest-1-finds-1-guardian-1';
 import {SHIOMACHI_ARMORY_STOCK} from '../../../data/maps/shiomachi-village/armory.mjs?v=shiomachi-gear-1';
 
-import {createVillageShop} from '../interiors/shop.mjs?v=shared-shops-1-cave-quest-1-finds-1-guardian-1-inn-stay-1';
+import {createVillageShop} from '../interiors/shop.mjs?v=shared-shops-1-cave-quest-1-finds-1-guardian-1-inn-stay-1-inn-morning-1';
 
 export function createShiomachiInteriorPreview({ctx,images,viewport,clearInput,shopPanel,previewMode=true}){
  const furniture=images.furniture;

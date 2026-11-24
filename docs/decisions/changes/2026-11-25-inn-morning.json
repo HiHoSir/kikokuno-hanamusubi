@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-11-25-inn-morning",
+  "kind": "user-approved",
+  "scopes": ["equipment"],
+  "affectedFiles": ["src/game/shiomachi/interior-preview.mjs"],
+  "readBeforeEditing": ["docs/BALANCE_PROGRESSION_CONTRACT.md", "docs/decisions/changes/2026-11-24-inn-stay.json", "src/game/interiors/shop.mjs", "src/game/shiomachi/interior-preview.mjs"],
+  "previousDesign": "鬼灯村と潮待村の本編の宿では、一泊の支払いと回復を自動保存し、その場で結果を表示していた。",
+  "intendedDifference": "宿泊成立時に暗転し、同じ宿の画面へ戻るときに鶏の鳴き声を鳴らす。",
+  "impactAnalysis": "暗転から明転まで宿の操作を止め、朝の台詞を表示する。潮待村の店舗モジュールは共通実装の読込バージョンだけを更新する。",
+  "preservedBoundaries": "一泊20両、体力と術力の全回復、自動保存、独立プレビューの試用処理を維持する。効果音は既存のサウンド設定に従う。",
+  "verification": "両村で暗転と明転、鶏の鳴き声、連打防止、支払い・回復・自動保存、所持金不足時の拒否をブラウザ検査する。",
+  "userEvidence": {
+    "status": "explicit-user-instruction",
+    "date": "2026-11-24",
+    "quote": "宿屋演出として泊まるときにはブラックアウトして、もう一度戻る際に鶏の鳴き声とか入れてほしい",
+    "source": "2026-11-24のWork会話「作業引き継ぎ報告」のユーザーメッセージ"
+  }
+}

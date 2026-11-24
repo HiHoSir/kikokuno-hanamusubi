@@ -21,9 +21,11 @@
     #game-scene{display:block;width:100%;height:100%;border:0;background:#07101e;touch-action:manipulation}
     #scene-transition{position:absolute;inset:0;z-index:8;background:#07101e;pointer-events:none}
     #scene-transition[hidden]{display:none}
+    #inn-curtain{position:fixed;inset:0;width:100%;height:100%;max-width:none;max-height:none;margin:0;padding:0;border:0;background:#000;overscroll-behavior:none;touch-action:none}
+    #inn-curtain::backdrop{background:transparent}
     #sound-toggle{z-index:50}
   </style>
-  <script type="module" src="./navigation/game-shell.mjs?v=shiomachi-field-20261122-1-save-slots-1-shiomachi-gear-1-cave-quest-1-ushiohei-hammer-1-finds-1-guardian-1"></script>
+  <script type="module" src="./navigation/game-shell.mjs?v=shiomachi-field-20261122-1-save-slots-1-shiomachi-gear-1-cave-quest-1-ushiohei-hammer-1-finds-1-guardian-1-inn-morning-1"></script>
   <script type="module" src="./ui/field-menu.mjs?v=save-slots-1-cove-shells-1-owned-gear-2-shiomachi-gear-1-cave-quest-1-finds-1-guardian-1"></script>
 </head>
 <body>
@@ -31,6 +33,7 @@
     <iframe id="game-scene" title="鬼哭の花結び ゲーム画面" allow="autoplay" loading="eager"></iframe>
     <div id="scene-transition" aria-hidden="true"></div>
   </main>
+  <dialog id="inn-curtain" aria-label="宿泊中"></dialog>
   <button id="field-menu-toggle" type="button" aria-haspopup="dialog" aria-controls="field-menu-backdrop" aria-expanded="false" hidden>メニュー</button>
   <div id="field-menu-backdrop" hidden>
     <section id="field-menu-window" role="dialog" aria-modal="true" aria-label="メニュー">

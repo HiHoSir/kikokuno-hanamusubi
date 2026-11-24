@@ -62,7 +62,7 @@ const floors=[
    [[5,10],[15,23]],[[5,23]],[[5,22]],[[6,20]],
    [[5,13]],[[5,9]],[[6,9]],[[8,10]],[]
   ]),
-  up:{kind:'up',origin:[7,17],approach:[7,16]},
+  up:{kind:'up',origin:[8,17],approach:[7,18]},
   down:{kind:'down',origin:[23,6],approach:[24,8]},
   danger:(x,y)=>x>=9&&y>=10&&y<=16,
   scenery:[{kind:'cache',origin:[9,2],id:'cave-upper-passage'},
@@ -80,7 +80,7 @@ const floors=[
    [[9,15]],[[8,11],[12,16]],[[8,10],[13,18]],[[14,20]],[[15,21]],
    [[16,21]],[[16,20]],[[17,21]],[]
   ]),
-  up:{kind:'up',origin:[18,17],approach:[18,16]},
+  up:{kind:'up',origin:[19,17],approach:[18,18]},
   boss:[11,6],
   scenery:[{kind:'cache',origin:[9,13],id:'cave-guardian-alcove'}]
  }
@@ -97,7 +97,7 @@ export const caveCellOpen=(floor,x,y)=>CAVE_FLOORS[floor]?.grid[y]?.[x]==='.';
 // The center of the opening is shared by the drawing, collision and action range.
 function stairOffset(stair,x,y){
  return [x-(stair.origin[0]+(stair.kind==='up'?.5:1))*CAVE_TILE,
-         y-(stair.origin[1]+1)*CAVE_TILE];
+         y-(stair.origin[1]+(stair.kind==='up'?1.5:1))*CAVE_TILE];
 }
 export function caveFeatureBlocks(feature,x,y){
  const {kind,origin}=feature;

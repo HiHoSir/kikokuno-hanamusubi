@@ -1,6 +1,6 @@
 import {CAVE_WHITE_SEAL,CAVE_BLACK_SEAL} from '../../../data/maps/cave/finds.mjs?v=guardian-1';
 import {CAVE_TILE,CAVE_FLOORS,CAVE_BOSS_ID,caveCellCenter,caveFeatureBlocks,caveStairAt,caveEncounterTerrain,caveLayout}
- from '../../../data/maps/cave/floors.mjs?v=cave-maps-1-stair-links-1-exploration-1-maze-2-stairs-2-rise-1-topdown-1';
+ from '../../../data/maps/cave/floors.mjs?v=cave-maps-1-stair-links-1-exploration-1-maze-2-stairs-2-rise-1-topdown-1-side-1';
 import {hizukiWalkDistance,makeWalk} from '../village/movement.mjs?v=shared-walk-1';
 import {bindDialogue} from '../village/dialogue.mjs';
 import {drawCharacter} from '../village/residents.mjs';
@@ -8,7 +8,7 @@ import {WORLD_SCENE_ZOOM} from '../ui/world-scale.mjs';
 import {BATTLE_REQUEST_KEY,readPlayer,savePlayer,collectFind,chooseFieldEncounter} from '../battle/rules.mjs?v=cave-quest-1-finds-1-guardian-1';
 import {consumeRestorePosition} from '../save/save-game.mjs?v=save-slots-1-shiomachi-gear-1-cave-quest-1-finds-1-guardian-1';
 import {CAVE_DARK} from './terrain-art.mjs?v=cave-visual-1-guardian-1';
-import {createCaveMap} from './map-parts.mjs?v=cave-maps-1-stair-links-1-exploration-1-maze-2-stairs-2-rise-1-topdown-1-stone-1';
+import {createCaveMap} from './map-parts.mjs?v=cave-maps-1-stair-links-1-exploration-1-maze-2-stairs-2-rise-1-topdown-1-stone-1-side-1';
 
 const root=new URL('../../../',import.meta.url);
 const scene=document.querySelector('#scene'),load=document.querySelector('#load');

@@ -1,11 +1,5 @@
 import {CAVE_TILE as T} from '../../../data/maps/cave/floors.mjs?v=guardian-1';
 
-const ASCENT_STEPS=[
- {y:8,halfWidth:34,face:'#47434a',top:'#898078',edge:'#b1a392'},
- {y:32,halfWidth:32,face:'#595051',top:'#a29587',edge:'#c7b79e'},
- {y:56,halfWidth:30,face:'#6b5c56',top:'#b9a98f',edge:'#dccaac'}
-];
-
 const DESCENT_STEPS=[
  {y:12,halfWidth:20,face:'#1a222a',top:'#333e47',edge:'#505e68'},
  {y:36,halfWidth:26,face:'#222b33',top:'#4c585d',edge:'#6e7a80'},
@@ -29,16 +23,16 @@ function drawSlab(ctx,{y,halfWidth,face,top,edge},depth){
 
 export function drawAscent(ctx,col,row){
  ctx.save();
- ctx.translate((col+.5)*T,row*T);
- // The stepped shadow sits beside the solid flight and under the top landing.
- rect(ctx,'#30343b',-34,28,72,12);
- rect(ctx,'#30343b',-32,44,72,20);
- rect(ctx,'#30343b',-30,68,70,16);
- rect(ctx,'#39393d',-30,84,64,4);
- for(const step of ASCENT_STEPS)drawSlab(ctx,step,24);
- rect(ctx,'#6d6665',14,28,12,4);
- rect(ctx,'#82756a',-28,48,12,4);
- rect(ctx,'#978775',14,72,8,4);
+ ctx.translate((col+.5)*T,(row+.5)*T);
+ // The low end meets the corridor on the east. Tread depth runs north/south.
+ const stone=['#a0aaa9','#929e9f','#859298','#7c888e'];
+ for(let step=0;step<stone.length;step++){
+  const x=-24+step*12, top=-32+step*8;
+  rect(ctx,'#232a32',x,top,14,20-top);
+  rect(ctx,'#4a535a',x+2,top+4,10,14-top);
+  rect(ctx,stone[step],x+2,top+2,10,24);
+  rect(ctx,'#b3bab5',x+2,top+2,8,2);
+ }
  ctx.restore();
 }
 

@@ -62,7 +62,7 @@ const floors=[
    [[5,10],[15,23]],[[5,23]],[[5,22]],[[6,20]],
    [[5,13]],[[5,9]],[[6,9]],[[8,10]],[]
   ]),
-  up:{kind:'up',origin:[7,17],approach:[7,16]},
+  up:{kind:'up',origin:[6,16],approach:[7,16]},
   down:{kind:'down',origin:[23,6],approach:[24,8]},
   danger:(x,y)=>x>=9&&y>=10&&y<=16,
   scenery:[{kind:'cache',origin:[9,2],id:'cave-upper-passage'},
@@ -80,7 +80,7 @@ const floors=[
    [[9,15]],[[8,11],[12,16]],[[8,10],[13,18]],[[14,20]],[[15,21]],
    [[16,21]],[[16,20]],[[17,21]],[]
   ]),
-  up:{kind:'up',origin:[18,17],approach:[18,16]},
+  up:{kind:'up',origin:[17,16],approach:[18,16]},
   boss:[11,6],
   scenery:[{kind:'cache',origin:[9,13],id:'cave-guardian-alcove'}]
  }
@@ -96,13 +96,14 @@ export const caveCellOpen=(floor,x,y)=>CAVE_FLOORS[floor]?.grid[y]?.[x]==='.';
 
 // The center of the opening is shared by the drawing, collision and action range.
 function stairOffset(stair,x,y){
- return [x-(stair.origin[0]+(stair.kind==='up'?.5:1))*CAVE_TILE,
-         y-(stair.origin[1]+1)*CAVE_TILE];
+ const offset=stair.kind==='up'?.5:1;
+ return [x-(stair.origin[0]+offset)*CAVE_TILE,y-(stair.origin[1]+offset)*CAVE_TILE];
 }
 export function caveFeatureBlocks(feature,x,y){
  const {kind,origin}=feature;
  if(kind==='up'||kind==='down'){
   const [dx,dy]=stairOffset(feature,x,y);
+  if(kind==='up')return Math.abs(dx)<25&&dy>=-16&&dy<20;
   return (dx/44)**2+(dy/35)**2<1;
  }
  if(['cache','seal','inscription'].includes(kind))
@@ -116,7 +117,8 @@ export function caveStairAt(floor,x,y){
  return CAVE_FLOORS[floor].features.find(stair=>{
   if(stair.kind!=='up'&&stair.kind!=='down')return false;
   const [dx,dy]=stairOffset(stair,x,y);
-  if(Math.hypot(dx,dy)>86||caveFeatureBlocks(stair,x,y))return false;
+  const reach=stair.kind==='up'?64:86;
+  if(Math.hypot(dx,dy)>reach||caveFeatureBlocks(stair,x,y))return false;
   for(let scale=.125;scale<1;scale+=.125){
    const px=x-dx*scale,py=y-dy*scale;
    if(caveFeatureBlocks(stair,px,py))return true;

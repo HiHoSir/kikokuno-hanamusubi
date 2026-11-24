@@ -2,8 +2,8 @@ import {ARMORY_STOCK,FOOD_ITEMS,purchaseArmory,purchaseFood,readPlayer,savePlaye
 import {shellBagCount,shellBagValue} from '../items/shells.mjs';
 import {sellCoveShells} from '../../../data/maps/sea-cove/shells.mjs';
 
-export const TRIAL_INN_PRICE=20;
-export function previewInnStay(hero,price=TRIAL_INN_PRICE){
+export const INN_PRICE=20;
+export function stayAtInn(hero,price=INN_PRICE){
  const player=normalizePlayer(hero);
  if(player.gold<price)return {accepted:false,player,message:'両が足りません。'};
  const next=normalizePlayer({...player,gold:player.gold-price,hp:player.maxhp,mp:player.maxmp});
@@ -13,7 +13,7 @@ export function previewInnStay(hero,price=TRIAL_INN_PRICE){
 const titles={teahouse:'茶店の品書き',armory:'兵具屋の品書き',inn:'宿'};
 export function createVillageShop({panel,title,wallet,options,message,clearInput,armoryStock=ARMORY_STOCK,trial}){
  let room=null,selected=0;
- const isTrial=()=>Boolean(trial&&(trial.all||room==='inn'));
+ const isTrial=()=>Boolean(trial);
  const player=()=>isTrial()?trial.read():readPlayer();
  function entries(hero){
    let goods;
@@ -27,7 +27,7 @@ export function createVillageShop({panel,title,wallet,options,message,clearInput
      goods=armoryStock.map(item=>({id:item.id,label:item.name+'　'+item.price+'両（'+
        (item.attack?'攻撃+'+item.attack:'守備+'+item.defense)+'）'}));
    }else{
-     goods=[{id:'sleep',label:'一泊する　'+TRIAL_INN_PRICE+'両（体力・術力を回復）'}];
+     goods=[{id:'sleep',label:'一泊する　'+INN_PRICE+'両（体力・術力を回復）'}];
    }
    return [...goods,{id:'exit',label:'もどる'}];
  }
@@ -48,10 +48,10 @@ export function createVillageShop({panel,title,wallet,options,message,clearInput
    }
  }
  function open(type,name=titles[type]){
-   if(!Object.hasOwn(titles,type)||(type==='inn'&&!trial))return false;
+   if(!Object.hasOwn(titles,type))return false;
    room=type;selected=0;clearInput();
    title.textContent=name+(isTrial()?'（試用・セーブには反映しません）':'');
-   message.textContent='何をお求めですか？';
+   message.textContent=room==='inn'?'お泊まりになりますか？':'何をお求めですか？';
    panel.hidden=false;
    refresh();
    return true;
@@ -70,10 +70,13 @@ export function createVillageShop({panel,title,wallet,options,message,clearInput
    if(choice.id==='exit'){close();return true;}
    const result=choice.id==='sell-shells'?sellCoveShells(hero):
      room==='armory'?purchaseArmory(hero,choice.id,armoryStock):
-       room==='inn'?previewInnStay(hero):purchaseFood(hero,choice.id);
+       room==='inn'?stayAtInn(hero):purchaseFood(hero,choice.id);
    if(result.accepted){
      if(isTrial())trial.save(result.player);
-     else savePlayer(result.player);
+     else{
+       savePlayer(result.player);
+       if(room==='inn')globalThis.parent?.KIKOKU_GAME?.autosave?.(globalThis);
+     }
    }
    message.textContent=result.message;
    if(result.accepted&&room==='armory'&&!isTrial())

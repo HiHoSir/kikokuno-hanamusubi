@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-11-24-inn-stay",
+  "kind": "user-approved",
+  "scopes": ["equipment"],
+  "affectedFiles": ["src/game/shiomachi/interior-preview.mjs"],
+  "readBeforeEditing": ["docs/BALANCE_PROGRESSION_CONTRACT.md", "src/game/interiors/shop.mjs", "src/game/shiomachi/interior-preview.mjs"],
+  "previousDesign": "一泊20両の体力・術力回復処理は試用に限られ、鬼灯村では宿泊メニューが開かず、潮待村本編でも実データが回復しなかった。",
+  "intendedDifference": "鬼灯村と潮待村の本編で既存の宿泊処理を使い、支払いと回復を保存する。",
+  "impactAnalysis": "本編の両村で所持金から20両を支払い、現在の最大値まで体力と術力を回復する。",
+  "preservedBoundaries": "既存の宿泊料金、宿泊時の回復量、兵具屋と茶店の売買仕様、独立プレビューの試用データを維持する。",
+  "verification": "両村の店番に話しかけて、所持金不足時の拒否と、支払い・回復・自動保存を検査する。",
+  "userEvidence": {
+    "status": "explicit-user-instruction",
+    "date": "2026-11-24",
+    "quote": "次、宿屋泊まれないようになってるので直して",
+    "source": "2026-11-24の本会話のユーザーメッセージ"
+  }
+}

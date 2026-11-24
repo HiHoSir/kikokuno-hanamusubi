@@ -143,6 +143,13 @@ try{
    const clerk=await villageAgain.evaluate(()=>window.__SHIOMACHI_QA.indoorResident());
    const walkUp=type=>villageAgain.evaluate(type=>
      window.dispatchEvent(new KeyboardEvent(type,{key:'ArrowUp',bubbles:true})),type);
+   if(room==='inn'){
+     const left=type=>villageAgain.evaluate(type=>
+       window.dispatchEvent(new KeyboardEvent(type,{key:'ArrowLeft',bubbles:true})),type);
+     await left('keydown');
+     await villageAgain.waitForFunction(x=>window.__SHIOMACHI_QA.indoorPosition()?.x<=x,clerk.x+5);
+     await left('keyup');
+   }
    await walkUp('keydown');
    await villageAgain.waitForFunction(y=>window.__SHIOMACHI_QA.indoorPosition()?.y<=y,clerk.talkPoint[1]+42);
    await walkUp('keyup');
@@ -204,6 +211,53 @@ try{
  assert.equal((await player()).gold,69);
  assert.equal((await player()).foods.onigiri,1);
  await villageAgain.evaluate(()=>window.__SHIOMACHI_QA.exitRoom());
+
+ // Both inns must charge and heal the actual player and write an autosave.
+ const checkInn=async frame=>{
+  await frame.locator('[data-shop-item="sleep"]').click();
+  assert.match(await frame.locator('#shop-message').textContent(),/両が足りません/);
+  assert.deepEqual([(await player()).gold,(await player()).hp,(await player()).mp],[19,7,3]);
+  await page.evaluate(async()=>{
+   const {readPlayer,savePlayer}=await import('./battle/rules.mjs');
+   savePlayer({...readPlayer(),gold:20});
+  });
+  await frame.locator('[data-shop-item="sleep"]').click();
+  assert.match(await frame.locator('#shop-message').textContent(),/体力と術力が回復/);
+  const healed=await player();
+  assert.deepEqual([healed.gold,healed.hp,healed.mp],[0,healed.maxhp,healed.maxmp]);
+  const checkpoint=await page.evaluate(async()=>{
+   const {readAutoGame}=await import('./save/save-game.mjs');
+   return readAutoGame()?.player;
+  });
+  assert.deepEqual([checkpoint.gold,checkpoint.hp,checkpoint.mp],[0,healed.maxhp,healed.maxmp]);
+ };
+ const injureForInn=()=>page.evaluate(async()=>{
+  const {readPlayer,savePlayer}=await import('./battle/rules.mjs');
+  savePlayer({...readPlayer(),gold:19,hp:7,mp:3});
+ });
+ await injureForInn();
+ await openStore('inn');
+ await checkInn(villageAgain);
+ await villageAgain.evaluate(()=>window.__SHIOMACHI_QA.exitRoom());
+
+ await page.evaluate(()=>window.KIKOKU_GAME.navigate(new URL('/src/game/interiors/?building=inn-southeast',location.href)));
+ const hozukiInn=page.frameLocator('#game-scene');
+ await hozukiInn.locator('#load').waitFor({state:'hidden'});
+ await injureForInn();
+ const innFrame=page.frames().find(frame=>new URL(frame.url()).pathname==='/src/game/interiors/');
+ const walkInn=async(key,axis,limit)=>{
+  await innFrame.evaluate(key=>window.dispatchEvent(new KeyboardEvent('keydown',{key})),key);
+  try{
+   await innFrame.waitForFunction(({axis,limit})=>Number(document.querySelector('#scene').dataset[axis])<=limit,{axis,limit},{timeout:5000});
+  }finally{
+   await innFrame.evaluate(key=>window.dispatchEvent(new KeyboardEvent('keyup',{key})),key);
+  }
+ };
+ await walkInn('ArrowLeft','x',207);
+ await walkInn('ArrowUp','y',586);
+ await hozukiInn.locator('#action-a').click();
+ await hozukiInn.locator('#next.hasLastLine').click();
+ await checkInn(hozukiInn);
 
  // Place the hero on ordinary ground near each fence, then hold an actual
  // movement input far enough to cross the map edge if the fence were absent.

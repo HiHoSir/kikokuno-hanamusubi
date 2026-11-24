@@ -6,7 +6,7 @@ import {makeWalk,hizukiWalkDistance} from '../village/movement.mjs?v=shared-walk
 import {normalizePlayer,DEFAULT_PLAYER} from '../battle/rules.mjs?v=equipment-4slots-2-cove-shells-1-shiomachi-gear-1-cave-quest-1-finds-1-guardian-1';
 import {SHIOMACHI_ARMORY_STOCK} from '../../../data/maps/shiomachi-village/armory.mjs?v=shiomachi-gear-1';
 
-import {createVillageShop} from '../interiors/shop.mjs?v=shared-shops-1-cave-quest-1-finds-1-guardian-1';
+import {createVillageShop} from '../interiors/shop.mjs?v=shared-shops-1-cave-quest-1-finds-1-guardian-1-inn-stay-1';
 
 export function createShiomachiInteriorPreview({ctx,images,viewport,clearInput,shopPanel,previewMode=true}){
  const furniture=images.furniture;
@@ -15,7 +15,7 @@ export function createShiomachiInteriorPreview({ctx,images,viewport,clearInput,s
  let lastRoom=null;
  let trial=normalizePlayer({...DEFAULT_PLAYER,gold:250,hp:7,mp:3,shells:{bag:{white:1}}});
  const shop=createVillageShop({...shopPanel,clearInput,armoryStock:SHIOMACHI_ARMORY_STOCK,
-   trial:{all:previewMode,read:()=>trial,save:player=>{trial=player;}}});
+   trial:previewMode?{read:()=>trial,save:player=>{trial=player;}}:undefined});
  function setRoom(nextSite){
    if(!nextSite||!Object.hasOwn(rooms,nextSite.room))return false;
    shop.close();

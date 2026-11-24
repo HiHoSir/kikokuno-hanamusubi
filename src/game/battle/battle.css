@@ -118,7 +118,7 @@ body{margin:0;background:#0c1424}
  }
  .battle-stage{margin:0 11%;min-width:0;container-type:size}
  /* The 128px enemies and 256px guardian use the same scale per source pixel. */
- .actor.enemy{
+ .actor.enemy,.battle-stage.pair .actor.enemy{
   right:26.5%;top:auto;bottom:0;width:50cqh;max-width:30%;height:50%;
   translate:50% 0;
  }

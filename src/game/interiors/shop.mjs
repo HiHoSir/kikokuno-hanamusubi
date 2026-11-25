@@ -34,7 +34,8 @@ export function createVillageShop({panel,title,wallet,options,message,clearInput
  function refresh(){
    const hero=player();
    wallet.textContent=(isTrial()?'試用所持金 ':'所持金 ')+hero.gold+'両';
-   if(isTrial())wallet.textContent+='　体力 '+hero.hp+'/'+hero.maxhp+'　術力 '+hero.mp+'/'+hero.maxmp;
+   if(isTrial()&&panel.dataset.layout!=='armory')wallet.textContent+='　体力 '+hero.hp+'/'+hero.maxhp+'　術力 '+hero.mp+'/'+hero.maxmp;
+   const scroll=options.scrollTop;
    options.replaceChildren();
    for(const [index,item] of entries(hero).entries()){
      const button=document.createElement('button');
@@ -46,6 +47,7 @@ export function createVillageShop({panel,title,wallet,options,message,clearInput
      button.addEventListener('click',()=>{selected=index;confirm();});
      options.append(button);
    }
+   options.scrollTop=scroll;
  }
  function open(type,name=titles[type]){
    if(staying||!Object.hasOwn(titles,type))return false;
@@ -65,6 +67,7 @@ export function createVillageShop({panel,title,wallet,options,message,clearInput
    const count=entries(player()).length;
    selected=(selected+(direction==='up'||direction==='left'?-1:1)+count)%count;
    refresh();
+   if(panel.dataset.layout==='armory')options.children[selected]?.scrollIntoView({block:'nearest'});
  }
  function confirm(){
    if(!room||staying)return false;

@@ -58,7 +58,7 @@ try{
  for(const map of [
    {id:'forest',name:'梢音村',lane:866,inn:1390,returnY:724,house:438,houseRoom:'house-craft',houseY:725,
      north:{building:'herb-home',room:'house-farm',x:940,returnY:519,startY:1015}},
-   {id:'mountain',name:'月嶺村',lane:840,inn:573,returnY:777,house:1461,houseRoom:'house-family',houseY:771,
+   {id:'mountain',name:'月嶺村',lane:840,inn:573,returnY:777,house:1710,houseRoom:'house-family',houseY:549,
      north:{building:'bath-hut',room:'house-craft',x:1056,returnY:512,startY:1046}}
  ]){
    await page.goto(origin+'/previews/villages/?village='+map.id);
@@ -118,7 +118,7 @@ try{
    await leave(map.house,map.houseY);
    if(map.id==='mountain'){
      await pressUntil('ArrowDown','y','min',860);
-     await pressUntil('ArrowRight','x','min',1710);
+     await pressUntil('ArrowLeft','x','max',1461);
      await enter('armory');
      assert.equal(await page.locator('#scene').getAttribute('data-building'),'mountain-armory');
      await pressUntil('ArrowUp','y','max',430);
@@ -130,6 +130,11 @@ try{
      assert.match(await page.locator('#shop-wallet').textContent(),/230両/);
      const item=page.locator('[data-shop-item="shiomachi-tide-blade"]');
      await page.screenshot({path:'artifacts/village-mountain-armory.png'});
+     const panel=await page.locator('#shop-panel').boundingBox();
+     assert.ok(panel.x+panel.width<437,'the list leaves the center of the room visible');
+     const names=await page.locator('#shop-options button').allTextContents();
+     for(const [index,name] of ['峠守の太刀','山革の胴当て','岩守の鉢金','山駆けの脚絆'].entries())
+       assert.ok(names[index].startsWith(name));
      await item.tap();
      assert.match(await item.textContent(),/購入済/);
      assert.match(await page.locator('#shop-message').textContent(),/買いました/);
@@ -138,7 +143,7 @@ try{
      assert.match(await page.locator('#shop-message').textContent(),/もう持っています/);
      assert.match(await page.locator('#shop-wallet').textContent(),/150両/);
      await page.locator('#action-b').tap();
-     await leave(1710,549);
+     await leave(1461,771);
    }
    assert.deepEqual(await storage(),before);
  }

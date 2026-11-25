@@ -303,7 +303,7 @@ test('shop/inn preview uses actual purchase rules on volatile player data',()=>{
  assert.match(source,/paintRoom\(fctx,room\)/);
  assert.match(source,/drawFurnitureLife\(ctx,obj/);
  assert.match(source,/createVillageShop\(/);
- assert.match(source,/armoryStock:SHIOMACHI_ARMORY_STOCK/);
+ assert.match(source,/armoryStock:previewMode\?trialArmoryStock:SHIOMACHI_ARMORY_STOCK/);
  assert.doesNotMatch(source,/localStorage|sessionStorage|saveGame|KIKOKU_ROUTE\.go/);
  assert.match(runtime,/shiomachiTouchedInterior\(x,y,nx,ny,heading\)/);
  assert.match(runtime,/interior\.advance\(dt,dir\)/);

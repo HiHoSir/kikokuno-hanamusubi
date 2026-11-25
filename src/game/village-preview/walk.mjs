@@ -1,10 +1,11 @@
-import {WIDTH,HEIGHT,VILLAGES,villageBlockers} from '../../../data/maps/village-previews/scenes.mjs?v=villages-3';
-import {createVillageLandscape} from './render.mjs?v=villages-3';
+import {WIDTH,HEIGHT,VILLAGES,villageBlockers} from '../../../data/maps/village-previews/scenes.mjs?v=villages-4';
+import {createVillageLandscape} from './render.mjs?v=villages-4';
 import {hizukiWalkDistance,makeWalk} from '../village/movement.mjs';
 import {advanceResident,makeResident,residentInFront,RESIDENT_RADIUS} from '../village/residents.mjs';
 import {pixelViewport} from '../village/render.mjs';
 import {bindDialogue} from '../village/dialogue.mjs';
-import {createShiomachiInteriorPreview} from '../shiomachi/interior-preview.mjs?v=inn-morning-1';
+import {SHIOMACHI_ARMORY_STOCK} from '../../../data/maps/shiomachi-village/armory.mjs?v=shiomachi-gear-1';
+import {createShiomachiInteriorPreview} from '../shiomachi/interior-preview.mjs?v=inn-morning-1-armory-side-panel-1';
 
 const assets={
  hero:'characters/hizuki/walk-4dir-80x112.png',
@@ -31,6 +32,10 @@ const assets={
 };
 for(const id of ['elder','shop-clerk','villager','farm-worker','osumi'])
  assets[id]='characters/npc/'+id+'-walk-4dir-80x112.png';
+
+// The preview uses the existing equipment slots and transaction values.
+const mountainItemNames={weapon:'峠守の太刀',body:'山革の胴当て',head:'岩守の鉢金',feet:'山駆けの脚絆'};
+const mountainTrialStock=SHIOMACHI_ARMORY_STOCK.map(item=>({...item,name:mountainItemNames[item.slot]}));
 
 const directions={up:[0,-1,1],down:[0,1,0],left:[-1,0,3],right:[1,0,2]};
 const keys={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',w:'up',s:'down',a:'left',d:'right'};
@@ -84,13 +89,17 @@ async function start(){
  const residents=map.residents.map(o=>({...makeResident(o),bitmap:images[o.asset]}));
  const hero={x:map.spawn[0],y:map.spawn[1],face:1,distance:0,moving:false};
  const shopPanel=Object.fromEntries(['panel','title','wallet','options','message'].map(key=>[key,document.querySelector('#shop-'+key)]));
- const interior=createShiomachiInteriorPreview({ctx,images,viewport,clearInput,shopPanel});
+ const interior=createShiomachiInteriorPreview({ctx,images,viewport,clearInput,shopPanel,
+   trialArmoryStock:id==='mountain'?mountainTrialStock:undefined});
  const dialogue=bindDialogue(()=>{
    clearInput();
    hero.moving=false;
    for(const npc of residents)npc.moving=false;
  },npc=>{
-   if(interior.active&&npc===interior.resident())interior.openShop();
+   if(interior.active&&npc===interior.resident()){
+     shopPanel.panel.dataset.layout=interior.currentRoom;
+     interior.openShop();
+   }
  });
  function interact(){
    if(portrait.matches)return;

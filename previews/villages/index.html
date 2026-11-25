@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>村の歩行検査｜鬼哭の花結び</title>
+<link rel="stylesheet" href="../../src/game/village/dialogue.css?v=dotgothic16">
+<link rel="stylesheet" href="../../src/game/ui/controls.css?v=dotgothic16">
+<link rel="stylesheet" href="../../src/game/ui/landscape-only.css?v=1">
+<script type="module" src="../../src/game/ui/landscape-only.mjs?v=1"></script>
+<script type="module" src="../../src/game/ui/selection-guard.mjs"></script>
+<style>
+  [hidden]{display:none!important}
+  .viewport{position:relative;background:#263b2b}
+  #scene{display:block;width:100%;height:100%;image-rendering:pixelated}
+  #load{position:absolute;inset:0;z-index:40;display:grid;place-items:center;margin:0;background:#253c2e}
+  .village-selection{position:absolute;z-index:18;top:max(8px,env(safe-area-inset-top));
+    right:max(12px,env(safe-area-inset-right));display:flex;gap:4px}
+  .village-selection a{padding:7px 11px;background:#172c26ed;color:#fff2d8;font-size:13px;
+    border:1px solid #bdab7c;border-radius:4px;text-decoration:none;touch-action:manipulation}
+  .village-selection a[aria-current]{color:#233224;background:#e5cf98}
+  #shop-panel{position:absolute;top:5%;left:17%;right:17%;z-index:26;max-height:90%;
+    overflow:auto;touch-action:pan-y;padding:8px 14px;border:3px double #d6b881;
+    background:#122438f5;border-radius:7px;color:#fff4df;box-shadow:0 10px 24px #000a}
+  #shop-panel h2{font-size:17px;color:#eed59b;margin:0 0 4px}
+  #shop-panel p{margin:4px 0 7px;font-size:13px}
+  #shop-options{display:grid;gap:4px}
+  #shop-options button{min-height:36px;padding:5px 8px;text-align:left;touch-action:manipulation;
+    border:1px solid #8f8c79;border-radius:4px;background:#29453e;color:#fff6dd;font:inherit;font-size:13px}
+  #shop-options button.selected{border-color:#f4d482;background:#675435}
+</style>
+</head>
+<body>
+<main>
+  <section class="viewport" aria-labelledby="village-name">
+    <canvas id="scene" aria-label="村のゲーム画面"></canvas>
+    <div class="field-hud village-hud"><h1 id="village-name">梢音村（仮称）</h1></div>
+    <nav class="village-selection" aria-label="村を選ぶ">
+      <a href="?village=forest" data-village="forest">梢音村</a>
+      <a href="?village=mountain" data-village="mountain">月嶺村</a>
+    </nav>
+    <p id="load" role="status">村を読み込んでいます……</p>
+    <button id="talk" type="button" hidden>話す</button>
+    <section id="dialogue" aria-labelledby="speaker" hidden>
+      <div class="dialog-window" role="dialog">
+        <strong id="speaker"></strong>
+        <p id="line"></p>
+        <button id="next" type="button" aria-label="次のセリフへ">▼</button>
+      </div>
+    </section>
+    <section id="shop-panel" aria-labelledby="shop-title" hidden>
+      <h2 id="shop-title">宿</h2>
+      <p id="shop-wallet"></p>
+      <div id="shop-options"></div>
+      <p id="shop-message" aria-live="polite"></p>
+    </section>
+  </section>
+  <section id="pad" class="controls" aria-label="ゲーム操作">
+    <div class="dpad" aria-label="十字キー・4方向移動" role="group">
+      <button id="up" type="button" data-dir="up" aria-label="上">▲</button>
+      <button id="left" type="button" data-dir="left" aria-label="左">◀</button>
+      <button id="right" type="button" data-dir="right" aria-label="右">▶</button>
+      <button id="down" type="button" data-dir="down" aria-label="下">▼</button>
+    </div>
+    <button id="action-b" class="round sub" type="button" aria-label="B 戻る">B<small>戻る</small></button>
+    <button id="action-a" class="round main" type="button" aria-label="A 決定・話す">A<small>決定</small></button>
+  </section>
+</main>
+<aside id="landscape-required" class="landscape-required" role="status" aria-live="polite" aria-hidden="true">
+  <span class="landscape-required-icon" aria-hidden="true">▯</span>
+  <strong>横画面でプレイしてください</strong>
+  <p>端末を横向きにすると、そのまま遊べます。</p>
+</aside>
+<script type="module" src="../../src/game/village-preview/walk.mjs?v=villages-1"></script>
+</body>
+</html>

@@ -28,13 +28,14 @@ function reachableFrom(walk,[x,y]){
  return visited;
 }
 
-for(const map of Object.values(VILLAGES)){
- test(map.name+' has five accessible buildings and clear patrol loops',()=>{
+for(const [id,map] of Object.entries(VILLAGES)){
+ test(map.name+' has accessible buildings and clear patrol loops',()=>{
    const blocked=villageBlockers(map);
    const walk=makeWalk(WIDTH,HEIGHT,blocked,8);
    const accessible=reachableFrom(walk,map.spawn);
    const buildings=map.objects.filter(object=>object.site);
-   assert.equal(buildings.length,5);
+   assert.equal(buildings.length,id==='mountain'?6:5);
+   assert.equal(buildings.filter(object=>object.site.room==='armory').length,id==='mountain'?1:0);
    assert.equal(new Set(buildings.map(object=>object.site.id)).size,buildings.length);
    for(const {site} of buildings){
      assert.ok(rooms[site.room],site.name);

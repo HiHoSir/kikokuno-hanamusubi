@@ -1,5 +1,5 @@
-import {WIDTH,HEIGHT,VILLAGES,villageBlockers} from '../../../data/maps/village-previews/scenes.mjs?v=villages-2';
-import {createVillageLandscape} from './render.mjs?v=villages-2';
+import {WIDTH,HEIGHT,VILLAGES,villageBlockers} from '../../../data/maps/village-previews/scenes.mjs?v=villages-3';
+import {createVillageLandscape} from './render.mjs?v=villages-3';
 import {hizukiWalkDistance,makeWalk} from '../village/movement.mjs';
 import {advanceResident,makeResident,residentInFront,RESIDENT_RADIUS} from '../village/residents.mjs';
 import {pixelViewport} from '../village/render.mjs';
@@ -24,6 +24,7 @@ const assets={
  tile:'village/scene/house-tile.png',
  inn:'village/scene/inn.png',
  sign:'village/scene/sign-inn.png',
+ signArmory:'village/scene/sign-armory.png',
  rock:'sea-cove/objects/shore-rock-east-104x64.png',
  barrel:'sea-cove/objects/fish-barrel-64x86.png',
  crate:'sea-cove/objects/fish-crate-92x70.png'

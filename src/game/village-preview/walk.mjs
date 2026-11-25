@@ -1,5 +1,5 @@
-import {WIDTH,HEIGHT,VILLAGES,villageBlockers} from '../../../data/maps/village-previews/scenes.mjs?v=villages-4';
-import {createVillageLandscape} from './render.mjs?v=villages-4';
+import {WIDTH,HEIGHT,VILLAGES,villageBlockers} from '../../../data/maps/village-previews/scenes.mjs?v=villages-5';
+import {createVillageLandscape} from './render.mjs?v=villages-5';
 import {hizukiWalkDistance,makeWalk} from '../village/movement.mjs';
 import {advanceResident,makeResident,residentInFront,RESIDENT_RADIUS} from '../village/residents.mjs';
 import {pixelViewport} from '../village/render.mjs';
@@ -141,6 +141,7 @@ async function start(){
      if(site&&interior.enter(site)){
        clearInput();
        title.textContent=site.name;
+       if(site.lines)interior.resident().lines=site.lines;
      }
      Object.assign(hero,{x,y,face,moving:traveled>.01,distance:hero.distance+traveled});
    }

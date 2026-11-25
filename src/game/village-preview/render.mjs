@@ -1,4 +1,4 @@
-import {WIDTH,HEIGHT,TILE} from '../../../data/maps/village-previews/scenes.mjs?v=villages-4';
+import {WIDTH,HEIGHT,TILE} from '../../../data/maps/village-previews/scenes.mjs?v=villages-5';
 import {canopyOpacity} from '../village/render.mjs';
 import {drawCharacter} from '../village/residents.mjs';
 
@@ -49,7 +49,10 @@ export function createVillageLandscape(map,art){
    mask.ctx.drawImage(bitmap,0,0);
    return [sprite,mask.ctx.getImageData(0,0,bitmap.width,bitmap.height)];
  }));
- const structures=map.objects.map(object=>{
+ const signs=map.objects.filter(object=>object.sign).map(object=>({
+   sprite:object.sign,x:object.x-87,y:object.y-6,depth:object.y+1
+ }));
+ const structures=[...map.objects,...signs].map(object=>{
    const bitmap=art[object.sprite];
    return {...object,bitmap,point:[Math.round(object.x-bitmap.width/2),
      Math.round(object.y-bitmap.height)],depth:object.depth??object.y};

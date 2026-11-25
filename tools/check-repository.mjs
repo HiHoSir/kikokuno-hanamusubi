@@ -10,8 +10,8 @@ const allowedRoots = new Set([
   '.github', '.agents', 'docs', 'src', 'data', 'assets',
   'source-assets', 'tools', 'tests',
 ]);
-// One explicit, unapproved Pages review artifact; not a general previews/ allowance.
-const allowedPreviewFiles = new Set(['previews/cave-prototype/index.html', 'previews/field-overlook/index.html', 'previews/field-exploration/index.html', 'previews/shoreline-study/index.html', 'previews/sea-cove-review/index.html', 'previews/tenyo-scale-review/index.html', 'previews/shiomachi-village/index.html']);
+// Individually scoped GitHub Pages review entry points.
+const allowedPreviewFiles = new Set(['previews/cave-prototype/index.html', 'previews/field-overlook/index.html', 'previews/field-exploration/index.html', 'previews/shoreline-study/index.html', 'previews/sea-cove-review/index.html', 'previews/tenyo-scale-review/index.html', 'previews/shiomachi-village/index.html', 'previews/villages/index.html']);
 const bgmReviewFile = /^review\/audio\/bgm-pack\/(?:README\.md|[a-z0-9_]+\.(?:ogg|mid))$/;
 const forbiddenDirectories = new Set([
   'old', 'archive', 'archives', 'backup', 'backups', 'experimental',

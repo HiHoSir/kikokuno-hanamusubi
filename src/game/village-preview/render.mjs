@@ -42,10 +42,13 @@ export function createVillageLandscape(map,art){
      chip(ctx,art.crop,0,0,px,py);
    }
  }
- const treeArt=art.tree;
- const treeMask=surface(treeArt.width,treeArt.height);
- treeMask.ctx.drawImage(treeArt,0,0);
- const canopy=treeMask.ctx.getImageData(0,0,treeArt.width,treeArt.height);
+ const covers=new Set(map.objects.filter(object=>object.canopy||object.site).map(object=>object.sprite));
+ const masks=new Map([...covers].map(sprite=>{
+   const bitmap=art[sprite];
+   const mask=surface(bitmap.width,bitmap.height);
+   mask.ctx.drawImage(bitmap,0,0);
+   return [sprite,mask.ctx.getImageData(0,0,bitmap.width,bitmap.height)];
+ }));
  const structures=map.objects.map(object=>{
    const bitmap=art[object.sprite];
    return {...object,bitmap,point:[Math.round(object.x-bitmap.width/2),
@@ -69,7 +72,7 @@ export function createVillageLandscape(map,art){
    const ordered=[...structures,...actors].sort((a,b)=>(a.depth??a.y)-(b.depth??b.y));
    for(const obj of ordered){
      if(obj.point){
-       if(obj.canopy)ctx.globalAlpha=canopyOpacity(obj,hero.x,hero.y,canopy);
+       ctx.globalAlpha=canopyOpacity(obj,hero.x,hero.y,masks.get(obj.sprite));
        ctx.drawImage(obj.bitmap,...obj.point);
        ctx.globalAlpha=1;
      }else{

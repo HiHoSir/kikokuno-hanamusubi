@@ -55,8 +55,8 @@ try{
    }finally{await page.keyboard.up('ArrowDown');}
  };
  for(const map of [
-   {id:'forest',name:'梢音村',lane:866,inn:1390,returnY:724},
-   {id:'mountain',name:'月嶺村',lane:840,inn:573,returnY:777}
+   {id:'forest',name:'梢音村',lane:866,inn:1390,returnY:724,house:438,houseRoom:'house-craft',houseY:725},
+   {id:'mountain',name:'月嶺村',lane:840,inn:573,returnY:777,house:1461,houseRoom:'house-family',houseY:771}
  ]){
    await page.goto(origin+'/previews/villages/?village='+map.id);
    await page.locator('#load').waitFor({state:'hidden',timeout:7000});
@@ -95,6 +95,10 @@ try{
    await page.locator('#action-b').tap();
    await pressUntil('ArrowRight','x','min',416);
    await leave(map.inn,map.returnY);
+   await pressUntil('ArrowDown','y','min',map.id==='forest'?906:866);
+   await pressUntil(map.id==='forest'?'ArrowLeft':'ArrowRight','x',map.id==='forest'?'max':'min',map.house);
+   await enter(map.houseRoom);
+   await leave(map.house,map.houseY);
    assert.deepEqual(await storage(),before);
  }
  await page.locator('[data-village="forest"]').tap();

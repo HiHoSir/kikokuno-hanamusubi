@@ -23,8 +23,8 @@ export const VILLAGES={
    building('woodshed','thatch','house-craft','木こりの家',438,681,299,138),
    building('forest-inn','inn','inn','梢音の宿',1390,680,448,155),
    {sprite:'sign',x:1328,y:658,depth:679},
-   {sprite:'crate',x:475,y:879,foot:[440,852,70,26]},
-   {sprite:'barrel',x:541,y:875,foot:[519,847,44,28]},
+   {sprite:'crate',x:530,y:879,foot:[495,852,70,26]},
+   {sprite:'barrel',x:596,y:875,foot:[574,847,44,28]},
    lamp(855,839),lamp(1070,839),
    ...[[266,527],[734,586],[755,1095],[1190,1113],[1596,696],[632,1102],[335,1083],[1400,1230]].map(([x,y])=>shrub(x,y))
   ],

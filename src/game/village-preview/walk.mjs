@@ -1,7 +1,7 @@
-import {WIDTH,HEIGHT,VILLAGES,villageBlockers} from '../../../data/maps/village-previews/scenes.mjs?v=villages-1';
-import {createVillageLandscape} from './render.mjs?v=villages-1';
+import {WIDTH,HEIGHT,VILLAGES,villageBlockers} from '../../../data/maps/village-previews/scenes.mjs?v=villages-2';
+import {createVillageLandscape} from './render.mjs?v=villages-2';
 import {hizukiWalkDistance,makeWalk} from '../village/movement.mjs';
-import {makeResident,residentInFront,RESIDENT_RADIUS} from '../village/residents.mjs';
+import {advanceResident,makeResident,residentInFront,RESIDENT_RADIUS} from '../village/residents.mjs';
 import {pixelViewport} from '../village/render.mjs';
 import {bindDialogue} from '../village/dialogue.mjs';
 import {createShiomachiInteriorPreview} from '../shiomachi/interior-preview.mjs?v=inn-morning-1';
@@ -38,6 +38,7 @@ const load=document.querySelector('#load');
 const buttons=[...document.querySelectorAll('[data-dir]')];
 const ctx=canvas.getContext('2d',{alpha:false});
 const viewport={};
+const heroRadius=8;
 const input=new Map();
 const reduced=matchMedia('(prefers-reduced-motion: reduce)');
 const portrait=matchMedia('(orientation: portrait)');
@@ -75,13 +76,19 @@ async function start(){
  document.querySelector('[data-village="'+id+'"]').setAttribute('aria-current','page');
  const images=await readImages();
  const world=createVillageLandscape(map,images);
- const walk=makeWalk(WIDTH,HEIGHT,villageBlockers(map),8);
+ const blocked=villageBlockers(map);
+ const walk=makeWalk(WIDTH,HEIGHT,blocked,heroRadius);
+ const npcWalk=makeWalk(WIDTH,HEIGHT,blocked,RESIDENT_RADIUS);
  const sites=map.objects.flatMap(o=>o.site?[o.site]:[]);
  const residents=map.residents.map(o=>({...makeResident(o),bitmap:images[o.asset]}));
  const hero={x:map.spawn[0],y:map.spawn[1],face:1,distance:0,moving:false};
  const shopPanel=Object.fromEntries(['panel','title','wallet','options','message'].map(key=>[key,document.querySelector('#shop-'+key)]));
  const interior=createShiomachiInteriorPreview({ctx,images,viewport,clearInput,shopPanel});
- const dialogue=bindDialogue(clearInput,npc=>{
+ const dialogue=bindDialogue(()=>{
+   clearInput();
+   hero.moving=false;
+   for(const npc of residents)npc.moving=false;
+ },npc=>{
    if(interior.active&&npc===interior.resident())interior.openShop();
  });
  function interact(){
@@ -110,6 +117,7 @@ async function start(){
      if(site){
        clearInput();
        Object.assign(hero,{x:site.x,y:site.returnY,face:0,moving:false});
+       title.textContent=map.name;
      }
    }else{
      hero.moving=false;
@@ -117,10 +125,13 @@ async function start(){
      const [dx,dy,face]=directions[dir];
      const step=hizukiWalkDistance(dt);
      const [x,y]=walk.move(hero.x,hero.y,dx*step,dy*step,
-       (px,py)=>residents.some(npc=>Math.hypot(px-npc.x,py-npc.y)<8+RESIDENT_RADIUS));
+       (px,py)=>residents.some(npc=>Math.hypot(px-npc.x,py-npc.y)<heroRadius+RESIDENT_RADIUS));
      const traveled=Math.hypot(hero.x-x,hero.y-y);
      const site=face===1&&sites.find(site=>hero.y>=site.thresholdY&&y<site.thresholdY&&Math.abs(x-site.x)<=23);
-     if(site){clearInput();interior.enter(site);}
+     if(site&&interior.enter(site)){
+       clearInput();
+       title.textContent=site.name;
+     }
      Object.assign(hero,{x,y,face,moving:traveled>.01,distance:hero.distance+traveled});
    }
  }
@@ -129,13 +140,23 @@ async function start(){
    const dt=Math.min(32,now-last);
    last=now;
    const dir=dialogue.active||portrait.matches?undefined:[...input.values()].at(-1);
-   if(!dialogue.active)advance(dir,dt);
+   if(!dialogue.active&&!portrait.matches){
+     advance(dir,dt);
+     if(!interior.active){
+       for(const npc of residents){
+         advanceResident(npc,dt,npcWalk,(x,y)=>
+           Math.hypot(x-hero.x,y-hero.y)<heroRadius+RESIDENT_RADIUS||
+           residents.some(other=>other!==npc&&Math.hypot(x-other.x,y-other.y)<2*RESIDENT_RADIUS));
+       }
+     }
+   }
    if(interior.active)interior.draw(now);
    else world.draw(ctx,viewport,hero,residents,reduced.matches?0:now);
    const position=interior.position()??hero;
    canvas.dataset.x=String(Math.floor(position.x));
    canvas.dataset.y=String(Math.floor(position.y));
    canvas.dataset.room=interior.currentRoom??'';
+   canvas.dataset.building=interior.site?.id??'';
    requestAnimationFrame(frame);
  }
 
@@ -166,6 +187,9 @@ async function start(){
  document.addEventListener('landscape-blocked',clearInput);
  resize();
  new ResizeObserver(resize).observe(canvas);
+ window.__VILLAGE_PREVIEW_QA={
+   residents:()=>residents.map(({id,x,y,face,moving})=>({id,x,y,face,moving}))
+ };
  load.hidden=true;
  requestAnimationFrame(frame);
 }

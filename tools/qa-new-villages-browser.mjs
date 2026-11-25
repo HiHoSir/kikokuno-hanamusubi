@@ -29,6 +29,7 @@ try{
    if(response.url().startsWith(origin)&&response.status()>=400)errors.push(response.url());
  });
  await mkdir('artifacts',{recursive:true});
+ const residents=()=>page.evaluate(()=>window.__VILLAGE_PREVIEW_QA.residents());
  const storage=()=>page.evaluate(()=>[JSON.stringify(localStorage),JSON.stringify(sessionStorage)]);
  const pressUntil=async(key,axis,relation,target)=>{
    await page.keyboard.down(key);
@@ -55,8 +56,10 @@ try{
    }finally{await page.keyboard.up('ArrowDown');}
  };
  for(const map of [
-   {id:'forest',name:'梢音村',lane:866,inn:1390,returnY:724,house:438,houseRoom:'house-craft',houseY:725},
-   {id:'mountain',name:'月嶺村',lane:840,inn:573,returnY:777,house:1461,houseRoom:'house-family',houseY:771}
+   {id:'forest',name:'梢音村',lane:866,inn:1390,returnY:724,house:438,houseRoom:'house-craft',houseY:725,
+     north:{building:'herb-home',room:'house-farm',x:940,returnY:519,startY:1015}},
+   {id:'mountain',name:'月嶺村',lane:840,inn:573,returnY:777,house:1461,houseRoom:'house-family',houseY:771,
+     north:{building:'bath-hut',room:'house-craft',x:1056,returnY:512,startY:1046}}
  ]){
    await page.goto(origin+'/previews/villages/?village='+map.id);
    await page.locator('#load').waitFor({state:'hidden',timeout:7000});
@@ -67,16 +70,30 @@ try{
    assert.deepEqual(frame,{x:0,y:0,width:874,height:402});
    const pad=await page.locator('#action-a').boundingBox();
    assert.ok(pad.x>740&&pad.y>230&&pad.y+pad.height<=402);
+   const initialPatrol=await residents();
+   assert.equal(initialPatrol.length,4);
+   await page.waitForFunction(initial=>window.__VILLAGE_PREVIEW_QA.residents()
+     .every((npc,i)=>Math.hypot(npc.x-initial[i].x,npc.y-initial[i].y)>6),initialPatrol,{timeout:4000});
+   await enter(map.north.room);
+   assert.equal(await page.locator('#scene').getAttribute('data-building'),map.north.building);
+   await leave(map.north.x,map.north.returnY);
+   await pressUntil('ArrowDown','y','min',map.north.startY);
    if(map.id==='forest'){
      await pressUntil('ArrowLeft','x','max',742);
-     await pressUntil('ArrowUp','y','max',1007);
+     await pressUntil('ArrowUp','y','max',1000);
      await page.locator('#action-a').tap();
      assert.equal(await page.locator('#speaker').textContent(),'薬草摘み');
-     await page.locator('#next').tap();
+     const stopped=await residents();
+     await page.locator('#next.hasNextLine').waitFor({state:'visible'});
      assert.match(await page.locator('#line').textContent(),/薬草/);
+     assert.deepEqual(await residents(),stopped,'NPCs stop moving during conversation');
+     assert.ok([0,2].includes(stopped.find(npc=>npc.id==='gatherer').face));
+
      await page.locator('#next').tap();
      await page.locator('#next').tap();
      await page.locator('#next').tap();
+     await page.waitForFunction(stopped=>window.__VILLAGE_PREVIEW_QA.residents()
+       .some((npc,i)=>Math.hypot(npc.x-stopped[i].x,npc.y-stopped[i].y)>6),stopped,{timeout:4000});
      await pressUntil('ArrowRight','x','min',940);
    }
    await pressUntil('ArrowUp','y','max',map.lane);

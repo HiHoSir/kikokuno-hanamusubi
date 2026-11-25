@@ -58,7 +58,7 @@ try{
  for(const map of [
    {id:'forest',name:'梢音村',lane:866,inn:1390,returnY:724,house:438,houseRoom:'house-craft',houseY:725,
      north:{building:'herb-home',room:'house-farm',x:940,returnY:519,startY:1015}},
-   {id:'mountain',name:'月嶺村',lane:840,inn:573,returnY:777,house:1710,houseRoom:'house-family',houseY:549,
+   {id:'mountain',name:'月嶺村',lane:840,inn:573,returnY:777,house:1735,houseRoom:'house-family',houseY:442,
      north:{building:'bath-hut',room:'house-craft',x:1056,returnY:512,startY:1046}}
  ]){
    await page.goto(origin+'/previews/villages/?village='+map.id);
@@ -117,13 +117,14 @@ try{
    await enter(map.houseRoom);
    await leave(map.house,map.houseY);
    if(map.id==='mountain'){
-     await pressUntil('ArrowDown','y','min',860);
+     await pressUntil('ArrowDown','y','min',866);
      await pressUntil('ArrowLeft','x','max',1461);
      await enter('armory');
      assert.equal(await page.locator('#scene').getAttribute('data-building'),'mountain-armory');
      await pressUntil('ArrowUp','y','max',430);
      await page.locator('#action-a').tap();
      await page.locator('#next.hasLastLine').waitFor({state:'visible'});
+     assert.match(await page.locator('#line').textContent(),/峠に出るなら/);
      await page.locator('#next').tap();
      await page.locator('#shop-panel').waitFor({state:'visible'});
      assert.match(await page.locator('#shop-title').textContent(),/月嶺の兵具屋.*試用/);
@@ -143,7 +144,7 @@ try{
      assert.match(await page.locator('#shop-message').textContent(),/もう持っています/);
      assert.match(await page.locator('#shop-wallet').textContent(),/150両/);
      await page.locator('#action-b').tap();
-     await leave(1461,771);
+     await leave(1461,857);
    }
    assert.deepEqual(await storage(),before);
  }

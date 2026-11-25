@@ -1,9 +1,17 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
 import {VILLAGES,HEIGHT,WIDTH,villageBlockers} from '../data/maps/village-previews/scenes.mjs';
 import {rooms} from '../src/game/interiors/rooms.mjs';
 import {makeWalk} from '../src/game/village/movement.mjs';
 import {RESIDENT_RADIUS} from '../src/game/village/residents.mjs';
+
+const buildingArt={inn:'inn',tile:'house-tile',thatch:'house-thatch'};
+function buildingBounds(building){
+ const png=readFileSync(new URL('../assets/village/scene/'+buildingArt[building.sprite]+'.png',import.meta.url));
+ const width=png.readUInt32BE(16),height=png.readUInt32BE(20);
+ return {left:building.x-width/2,right:building.x+width/2,top:building.y-height,bottom:building.y};
+}
 
 const step=16;
 const snap=value=>Math.round(value/step)*step;
@@ -37,7 +45,16 @@ for(const [id,map] of Object.entries(VILLAGES)){
    assert.equal(buildings.length,id==='mountain'?6:5);
    assert.equal(buildings.filter(object=>object.site.room==='armory').length,id==='mountain'?1:0);
    assert.equal(new Set(buildings.map(object=>object.site.id)).size,buildings.length);
-   for(const {site} of buildings){
+   for(const [i,building] of buildings.entries()){
+     const a=buildingBounds(building);
+     for(const other of buildings.slice(i+1)){
+       const b=buildingBounds(other);
+       assert.ok(a.right<=b.left||b.right<=a.left||a.bottom<=b.top||b.bottom<=a.top,
+         building.id+' and '+other.id+' do not overlap');
+     }
+     const {site}=building;
+     if(site.room==='inn'||site.room==='armory')
+       assert.equal(building.sign,site.room==='inn'?'sign':'signArmory',site.name+' has a storefront sign');
      assert.ok(rooms[site.room],site.name);
      assert.ok(walk.canStand(site.x,site.returnY),site.name+' return position');
      assert.ok(accessible.has(key(snap(site.x),snap(site.returnY))),site.name+' accessible from spawn');

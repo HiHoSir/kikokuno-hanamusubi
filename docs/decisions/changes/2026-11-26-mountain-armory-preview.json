@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-11-26-mountain-armory-preview",
+  "kind": "user-approved",
+  "scopes": ["equipment"],
+  "affectedFiles": ["src/game/shiomachi/interior-preview.mjs"],
+  "readBeforeEditing": ["docs/BALANCE_PROGRESSION_CONTRACT.md", "data/maps/shiomachi-village/armory.mjs", "src/game/interiors/shop.mjs"],
+  "previousDesign": "月嶺村の試遊兵具屋が潮待村の表示名をそのまま使い、外の看板と購入中の店内が見えづらかった。",
+  "intendedDifference": "兵具屋を広場沿いに移し、試遊の装備名を山村に合わせ、陳列棚と店番が見える位置に品書きを置く。",
+  "impactAnalysis": "試遊の品名、店舗の位置、購入画面の配置を更新し、共通室内に試遊品揃えの引数を追加する。",
+  "preservedBoundaries": "本編の装備、価格、性能、セーブと潮待村の品書きは従来どおり。月嶺村の正式な装備の性能と価格は未確定のまま扱う。",
+  "verification": "両方の村の入退室と潮待村の既存購入、月嶺村の試遊購入と店内の表示をブラウザで確認する。",
+  "userEvidence": {
+    "status": "explicit-user-instruction",
+    "date": "2026-11-26",
+    "quote": "いや、指摘したんだから実装してよ",
+    "source": "月嶺村の兵具屋の品揃え・入口・店内表示の実装指示と、それに続く見直し依頼「なおして」"
+  }
+}

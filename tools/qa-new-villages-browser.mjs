@@ -116,6 +116,30 @@ try{
    await pressUntil(map.id==='forest'?'ArrowLeft':'ArrowRight','x',map.id==='forest'?'max':'min',map.house);
    await enter(map.houseRoom);
    await leave(map.house,map.houseY);
+   if(map.id==='mountain'){
+     await pressUntil('ArrowDown','y','min',860);
+     await pressUntil('ArrowRight','x','min',1710);
+     await enter('armory');
+     assert.equal(await page.locator('#scene').getAttribute('data-building'),'mountain-armory');
+     await pressUntil('ArrowUp','y','max',430);
+     await page.locator('#action-a').tap();
+     await page.locator('#next.hasLastLine').waitFor({state:'visible'});
+     await page.locator('#next').tap();
+     await page.locator('#shop-panel').waitFor({state:'visible'});
+     assert.match(await page.locator('#shop-title').textContent(),/月嶺の兵具屋.*試用/);
+     assert.match(await page.locator('#shop-wallet').textContent(),/230両/);
+     const item=page.locator('[data-shop-item="shiomachi-tide-blade"]');
+     await page.screenshot({path:'artifacts/village-mountain-armory.png'});
+     await item.tap();
+     assert.match(await item.textContent(),/購入済/);
+     assert.match(await page.locator('#shop-message').textContent(),/買いました/);
+     assert.match(await page.locator('#shop-wallet').textContent(),/150両/);
+     await item.tap();
+     assert.match(await page.locator('#shop-message').textContent(),/もう持っています/);
+     assert.match(await page.locator('#shop-wallet').textContent(),/150両/);
+     await page.locator('#action-b').tap();
+     await leave(1710,549);
+   }
    assert.deepEqual(await storage(),before);
  }
  await page.locator('[data-village="forest"]').tap();

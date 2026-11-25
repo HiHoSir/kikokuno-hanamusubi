@@ -3,6 +3,13 @@ import {canopyOpacity} from '../village/render.mjs';
 import {drawCharacter} from '../village/residents.mjs';
 
 const contains=([left,top,w,h],x,y)=>x>=left&&x<left+w&&y>=top&&y<top+h;
+// Coordinates in the shared 8×6 village path chip atlases, indexed by
+// exposed sides (north/east/south/west in bits 1/2/4/8).
+const pathEdges=new Map([
+ [1,[7,3]], [2,[4,4]], [3,[2,3]], [4,[3,4]], [6,[2,4]],
+ [8,[0,3]], [9,[4,2]], [12,[0,2]]
+]);
+const coreChips=[[4,5],[5,5],[6,5],[7,4]];
 const start=(world,view,desired)=>Math.min(Math.max(0,world-view),Math.max(0,desired));
 const chip=(ctx,art,sx,sy,x,y)=>ctx.drawImage(art,sx,sy,TILE,TILE,x,y,TILE,TILE);
 function surface(width,height){
@@ -15,11 +22,15 @@ function surface(width,height){
 
 export function createVillageLandscape(map,art){
  const {canvas,ctx}=surface(WIDTH,HEIGHT);
+ const paved=(x,y)=>map.paths.some(rect=>contains(rect,x+16,y+16));
+ const pathArt=map.pool?art.cobble:art.road;
  for(let y=0;y<HEIGHT;y+=TILE)for(let x=0;x<WIDTH;x+=TILE){
    chip(ctx,art.grass,0,0,x,y);
-   if(map.paths.some(rect=>contains(rect,x+16,y+16))){
-     if(map.pool)chip(ctx,art.cobble,32,32,x,y);
-     else chip(ctx,art.soil,x%256,y%256,x,y);
+   if(paved(x,y)){
+     const edges=(!paved(x,y-TILE)?1:0)|(!paved(x+TILE,y)?2:0)|
+       (!paved(x,y+TILE)?4:0)|(!paved(x-TILE,y)?8:0);
+     const [col,row]=pathEdges.get(edges)??coreChips[(x/TILE*7+y/TILE*11)%4];
+     chip(ctx,pathArt,col*TILE,row*TILE,x,y);
    }else if((x*7+y*13)%(TILE*43)<TILE&&x>64&&y>220){
      chip(ctx,art.groundDetails,TILE*(1+(x/TILE+y/TILE)%4),TILE*4,x,y);
    }
@@ -45,7 +56,7 @@ export function createVillageLandscape(map,art){
    const {step,bufferWidth,bufferHeight}=viewport;
    const viewWidth=bufferWidth/step,viewHeight=bufferHeight/step;
    const x0=Math.floor(start(WIDTH,viewWidth,hero.x-viewWidth/2));
-   const y0=Math.floor(start(HEIGHT,viewHeight,hero.y-viewHeight/2-92));
+   const y0=Math.floor(start(HEIGHT,viewHeight,hero.y-viewHeight/2-Math.min(306,viewHeight*.38)));
    ctx.setTransform(1,0,0,1,0,0);
    ctx.fillStyle=map.pool?'#344539':'#243c2d';
    ctx.fillRect(0,0,bufferWidth,bufferHeight);
@@ -78,7 +89,7 @@ function drawPool(ctx,art,[x,y,w,h],time){
  for(let dy=0;dy<h;dy+=TILE)for(let dx=0;dx<w;dx+=TILE){
    const rim=dy===0||dy===h-TILE||dx===0||dx===w-TILE;
    if(rim){
-     chip(ctx,art.cobble,32,32,x+dx,y+dy);
+     chip(ctx,art.cobble,224,128,x+dx,y+dy);
      chip(ctx,art.stone,0,0,x+dx,y+dy);
    }else{
      chip(ctx,art.water,0,(frame+((dx+dy)/TILE)%2)%4*TILE,x+dx,y+dy);

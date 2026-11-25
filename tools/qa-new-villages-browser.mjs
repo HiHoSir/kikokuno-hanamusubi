@@ -68,8 +68,8 @@ try{
    const pad=await page.locator('#action-a').boundingBox();
    assert.ok(pad.x>740&&pad.y>230&&pad.y+pad.height<=402);
    if(map.id==='forest'){
-     await pressUntil('ArrowUp','y','max',1010);
      await pressUntil('ArrowLeft','x','max',742);
+     await pressUntil('ArrowUp','y','max',1007);
      await page.locator('#action-a').tap();
      assert.equal(await page.locator('#speaker').textContent(),'薬草摘み');
      await page.locator('#next').tap();

@@ -11,6 +11,7 @@ const assets={
  furniture:'village/interiors/furniture.png',
  grass:'village/scene/terrain.png',
  soil:'village/scene/path-soil.png',
+ road:'village/terrain/auto-road.png',
  cobble:'village/terrain/ground-cobble.png',
  groundDetails:'village/scene/ground-decor.png',
  crop:'village/terrain/garden-crop.png',

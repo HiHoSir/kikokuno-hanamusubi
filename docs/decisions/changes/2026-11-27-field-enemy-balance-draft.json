@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-11-27-field-enemy-balance-draft",
+  "kind": "documentation-correction",
+  "scopes": ["progression"],
+  "affectedFiles": ["docs/MAP_ENEMY_EQUIPMENT_RECONCILIATION.md"],
+  "readBeforeEditing": [
+    "docs/MAP_ENEMY_EQUIPMENT_RECONCILIATION.md と docs/BATTLE_BALANCE.md の敵分布と既存の計算例",
+    "data/characters/hizuki-status.json と docs/BALANCE_PROGRESSION_CONTRACT.md の成長・ティア",
+    "src/game/battle/rules.mjs と data/maps/shiomachi-village/armory.mjs の戦闘・現行装備"
+  ],
+  "previousDesign": "区間別に敵候補の画像と編成の方向性を表示する検査地図があった。",
+  "intendedDifference": "候補が揃った区間に敵能力と心・両の暫定値を表示し、現行の戦闘処理で検算する。",
+  "impactAnalysis": "橋の北岸と森の入口に単体向けの値を置き、森奥の2体編成を別に試算した。試算に必要な到達段と装備水準の差が見える。",
+  "preservedBoundaries": "現行の敵マスタ・遭遇処理、出現率、確定ティア、装備価格を維持する。",
+  "verification": "戦闘試算、npm test、Chromium で区間別の能力・報酬表示と既存地図を確認する。",
+  "userEvidence": {
+    "status": "explicit-user-instruction",
+    "date": "2026-11-27",
+    "quote": "分布に応じて能力や報酬詰めていこう",
+    "source": "本会話でフィールドの敵分布マップを公開した直後に、能力と報酬の検討を依頼された。"
+  }
+}

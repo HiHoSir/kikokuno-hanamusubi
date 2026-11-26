@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-11-26-kozuene-midgame-prices",
+  "kind": "user-approved",
+  "scopes": ["equipment"],
+  "affectedFiles": ["src/game/shiomachi/interior-preview.mjs"],
+  "readBeforeEditing": [
+    "docs/FOUR_VILLAGES_EQUIPMENT_PLAN.md と docs/MAP_ENEMY_EQUIPMENT_RECONCILIATION.md の忘れの森手前の配置案・15段目安",
+    "docs/BALANCE_PROGRESSION_CONTRACT.md と docs/BATTLE_BALANCE.md と data/characters/hizuki-status.json の成長・価格",
+    "src/game/battle/rules.mjs の現行必要心と敵報酬、docs/EQUIPMENT_CURRENT_PLAYABLE.md の販売範囲"
+  ],
+  "previousDesign": "梢音村の試遊では、宿泊後の230両を基準に胴当て260両・脚絆140両としていた。",
+  "intendedDifference": "中盤の収支で暫定価格を見積もり、梢音村プレビューの胴当てを12000両、脚絆を7000両にする。買い物を比較できるよう試遊開始残高は16000両にする。",
+  "impactAnalysis": "忘れの森手前の旧配置案を試算に使い、15段までの累計18189心を現行通常戦の8両/8〜9心で換算すると約16168〜18189両。鬼灯村・潮待村の装備一式312両、宿5泊100両、団子20個320両を差し引く例では約15436〜17457両。貝殻・宝箱・敗北は個人差が大きく試算に入れない。この例ではどちらかを選び、両方には追加収入が要る。将来の中盤敵報酬・実際の到達段が決まれば再計算する。",
+  "preservedBoundaries": "試遊のみの暫定価格。本編の装備、報酬、所持金、価格とティア、他村の試遊初期所持金は維持する。",
+  "verification": "npm test と Chromium で宿泊、店頭価格、胴当て購入と二品目の所持金不足、試遊の非保存を検証する。",
+  "userEvidence": {
+    "status": "explicit-user-instruction",
+    "date": "2026-11-26",
+    "quote": "いや、旅の中間地点くらいだから、普通にレベリングしてたらもっとお金持ってるよ。試遊時の所持金なんか基準にしたらだめでしょ。",
+    "source": "本会話で梢音村の値上げを依頼した後、価格の基準を中盤到達までの通常プレイに修正したユーザー指示。"
+  }
+}

@@ -5,6 +5,9 @@
 <script type="module">
 const area=new URL("../../src/field/index.html",location.href);
 const query=new URLSearchParams(location.search);
+if(query.get("view")==="enemies"){
+ await import("../../tools/field-encounter-map.mjs?v=1");
+}else{
 const playUrl=new URL(location.href);
 if(query.get("from")!=="battle"){playUrl.searchParams.set("from","battle");location.replace(playUrl.href);}
 else try{
@@ -57,4 +60,5 @@ source=source.replace('</head>', '<style>\n'
  + '</style></head>').replace('</body>',navigation+instructions+'</body>');
 document.open();document.write(source);document.close();
 }catch(err){document.querySelector('#progress').textContent="検査ページを開けません："+err.message;console.error(err);}
+}
 </script></body></html>

@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-11-27-field-encounter-map",
+  "kind": "documentation-correction",
+  "scopes": ["progression"],
+  "affectedFiles": ["docs/MAP_ENEMY_EQUIPMENT_RECONCILIATION.md"],
+  "readBeforeEditing": [
+    "docs/MAP_ENEMY_EQUIPMENT_RECONCILIATION.md の橋・村・森・山越えの候補経路",
+    "docs/BATTLE_BALANCE.md の敵候補と採用済み素材台帳"
+  ],
+  "previousDesign": "敵分布の方向性は文書と既存の画像案にあり、区間別の候補を地形と見比べる検査ページがなかった。",
+  "intendedDifference": "現行地形に区間の目安を重ね、敵候補を選択して確認できるページとその参照先を記録する。",
+  "impactAnalysis": "橋の前後や森の入口と奥を分け、未選定の区間を明示できる。現行の歩行・戦闘・セーブに影響はない。",
+  "preservedBoundaries": "既存の地形、販売装備、敵能力・出現率・報酬、本編の遭遇処理を維持する。",
+  "verification": "Chromium で地形表示、区間切替、敵素材の読込、スマートフォン幅を確認する。",
+  "userEvidence": {
+    "status": "explicit-user-instruction",
+    "date": "2026-11-27",
+    "quote": "オッケー。じゃあ敵分布。",
+    "source": "村の接続とフィールド入退場の共通化を確認した後に、敵分布の作業を進めるよう指示された。"
+  }
+}

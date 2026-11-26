@@ -365,9 +365,9 @@ test('field landmark and shell/game routes remain part of the real game shell',(
  assert.match(html,/navigation\/entry\.js" data-entry="game"/);
  assert.match(html,/data-bgm="field"/);
  assert.match(html,/\.\/walk\.mjs\?v=sea-cove-1/);
- assert.match(field,/\['shrine','cove','shiomachi'\]\.includes\(destination\)/);
- assert.match(field,/enterFieldPlace\(destination,completed\)/);
- assert.match(field,/placeReturnPosition\(from\)/);
+ assert.match(source('src/field/landmarks.mjs'),/cove:'\.\.\/game\/cove\/'/);
+ assert.match(field,/enterFieldPlace\(destination\)/);
+ assert.match(field,/fieldExitPosition\(from\)/);
  assert.match(walker,/fisher:'assets\/characters\/npc\/ushiohei-walk-4dir-80x112\.png'/);
  assert.doesNotMatch(walker,/fisher:'assets\/characters\/npc\/villager-walk/);
  assert.match(walker,/KIKOKU_ROUTE\.go\(/);

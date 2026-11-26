@@ -17,17 +17,17 @@ export const FIELD_ENCOUNTER_PLAN=[
   {name:'潮待村から橋の南岸',paths:[[[53,51],[53,49],[51,47],[48,46],[48,44]]],
    formations:['oni','tanuki'],detail:'南岸は野の小鬼と化け狸を中心にする。'},
   {name:'橋の北岸から梢音村',paths:[[[48,43],[48,35],[56,35]]],
-   formations:['oni','tanuki','kodama'],detail:'渡った先で木霊の単体を混ぜ、梢音村に近づくほど森の敵を増やす。橋上と入村マスは遭遇対象外。'}
+   formations:['oni','tanuki','kodama'],balance:['bridge-kodama'],detail:'渡った先で木霊の単体を混ぜ、梢音村に近づくほど森の敵を増やす。橋上と入村マスは遭遇対象外。'}
  ]},
  {id:'forest',title:'梢音村から忘れの森',color:'#64db9d',sections:[
   {name:'梢音村から森の入口',paths:[[[56,35],[56,33],[60,33],[60,32]]],
-   formations:['kodama','spider'],detail:'入口付近は単体が中心。梢音村から最短7歩のため、直行時に戦闘を強制しない。'},
+   formations:['kodama','spider'],balance:['bridge-kodama','edge-spider'],detail:'入口付近は北岸と同じ木霊と、小型の迷い蜘蛛が単体で出る案。梢音村から最短7歩のため、直行時に戦闘を強制しない。'},
   {name:'森の奥から滝へ',paths:[[[60,32],[60,29],[63,29],[63,23],[65,23]]],
-   formations:['kodama','spider'],detail:'森の奥で木霊・迷い蜘蛛の2体編成を増やす。'}
+   formations:['kodama','spider'],balance:['forest-kodama','forest-spider'],detail:'森奥の木霊は単体の強敵。迷い蜘蛛は単体から2体編成へ移る。'}
  ]},
  {id:'waterfall',title:'龍神の滝から洞窟東口',color:'#6ad7f0',sections:[
   {name:'滝と水辺',paths:[[[65,23],[65,20],[67,20]],[[67,20],[67,22],[57,22]]],
-   formations:['snake','waterChild'],detail:'水辺の敵に切り替える。水鏡のイベント地点は通常遭遇から外す。'}
+   formations:['snake','waterChild'],balance:['falls-snake','falls-child'],detail:'水辺の敵に切り替える。水鏡のイベント地点は通常遭遇から外す。'}
  ]},
  {id:'tunnel',title:'山越えの洞窟',color:'#f294ae',tunnel:true,sections:[
   {name:'洞窟の入口側と奥',paths:[[[57,22],[42,18]]],
@@ -39,7 +39,7 @@ export const FIELD_ENCOUNTER_PLAN=[
  ]},
  {id:'fox',title:'月嶺村から九尾の祠',color:'#c1a0ff',sections:[
   {name:'北の参道',paths:[[[26,17],[26,13],[28,13],[28,11],[40,11],[40,5]]],
-   formations:['fox'],detail:'妖狐系を中心に、祠へ近づくにつれて編成を強める。'}
+   formations:['fox'],balance:['ridge-fox'],detail:'妖狐系を中心に、祠へ近づくにつれて編成を強める。'}
  ]}
 ];
 

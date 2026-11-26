@@ -2,7 +2,8 @@ import '../data/maps/field/terrain.js';
 import {
  FIELD_ENCOUNTER_PLAN,FIELD_ENCOUNTER_PLAN_ENEMIES,
  FIELD_ENCOUNTER_PLAN_MARKERS,FIELD_ENCOUNTER_PLANNED_MARKERS
-} from '../data/maps/field/encounter-plan.mjs?v=1';
+} from '../data/maps/field/encounter-plan.mjs?v=2';
+import {FIELD_ENCOUNTER_BALANCE_DRAFT} from '../data/maps/field/encounter-balance-draft.mjs?v=1';
 
 document.title='敵分布案｜鬼哭の花結び';
 const style=document.createElement('style');
@@ -24,6 +25,10 @@ article+article{border-top:1px solid #4c6363;margin-top:12px;padding-top:12px}
 .enemies{display:flex;gap:10px;flex-wrap:wrap}
 .enemy{display:grid;grid-template-rows:66px auto;width:70px;text-align:center;font-size:.75rem}
 .enemy img{width:100%;height:100%;object-fit:contain}
+table{width:100%;margin-top:12px;border-collapse:collapse;font-size:.8rem}
+caption{text-align:left;color:#d7d8b8}
+th,td{padding:3px 4px;border-bottom:1px solid #496067;text-align:right}
+th:first-child{text-align:left}
 .note{color:#cbd4cc;margin:0 0 14px}
 @media(max-width:620px){.layout{grid-template-columns:1fr}.map{max-height:55svh}}`;
 document.head.append(style);
@@ -139,6 +144,20 @@ function select(zone){
    image.src=new URL('../'+enemy.asset,import.meta.url);
    image.alt='';
    element('span',enemy.name,tile);
+  }
+  if(section.balance){
+   const table=element('table',null,article);
+   element('caption','暫定値・敵1体あたり',table);
+   const header=element('tr',null,element('thead',null,table));
+   for(const label of ['敵','体力','攻','守','心','両'])element('th',label,header).scope='col';
+   const body=element('tbody',null,table);
+   for(const id of section.balance){
+    const enemy=FIELD_ENCOUNTER_BALANCE_DRAFT[id];
+    const row=element('tr',null,body);
+    element('th',enemy.name,row).scope='row';
+    for(const field of ['hp','attack','defense','xp','gold'])
+     element('td',String(enemy[field]),row);
+   }
   }
  }
 }

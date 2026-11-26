@@ -164,6 +164,8 @@ try{
  await page.goto(origin+'/previews/field-exploration/?view=enemies');
  await page.locator('#zones button[aria-pressed="true"]').waitFor();
  assert.match(await page.locator('#details').textContent(),/橋の北岸から梢音村.*木霊/s);
+ assert.deepEqual(await page.getByRole('row',{name:/木霊（北岸）/}).locator('th,td').allTextContents(),
+   ['木霊（北岸）','72','49','16','250','72']);
  await page.getByRole('button',{name:'梢音村から忘れの森'}).click();
  assert.match(await page.locator('#details').textContent(),/迷い蜘蛛/);
  assert.equal(await page.locator('#map [data-zone="forest"]').getAttribute('opacity'),'1');

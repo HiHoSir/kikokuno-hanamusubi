@@ -109,7 +109,7 @@ try{
    assert.match(await page.locator('#shop-title').textContent(),/試用/);
    await page.locator('[data-shop-item="sleep"]').tap();
    assert.match(await page.locator('#shop-message').textContent(),/体力と術力が回復/);
-   assert.match(await page.locator('#shop-wallet').textContent(),map.id==='forest'?/15980両/:/230両/);
+   assert.match(await page.locator('#shop-wallet').textContent(),map.id==='forest'?/1680両/:/230両/);
    await page.locator('#action-b').tap();
    await pressUntil('ArrowRight','x','min',416);
    await leave(map.inn,map.returnY);
@@ -161,15 +161,15 @@ try{
      assert.match(await page.locator('#shop-title').textContent(),/梢音の兵具屋.*試用/);
      const buttons=await page.locator('#shop-options button').allTextContents();
      assert.equal(buttons.length,3);
-     assert.match(buttons[0],/^樹皮の胴当て.*12000両/);
-     assert.match(buttons[1],/^藪よけの脚絆.*7000両/);
+     assert.match(buttons[0],/^樹皮の胴当て.*1000両/);
+     assert.match(buttons[1],/^藪よけの脚絆.*600両/);
      await page.screenshot({path:'artifacts/village-forest-armory.png'});
      await page.locator('[data-shop-item="shiomachi-tide-armor"]').tap();
      assert.match(await page.locator('#shop-message').textContent(),/樹皮の胴当てを買いました/);
-     assert.match(await page.locator('#shop-wallet').textContent(),/3980両/);
+     assert.match(await page.locator('#shop-wallet').textContent(),/680両/);
      await page.locator('[data-shop-item="shiomachi-reef-gaiters"]').tap();
-     assert.match(await page.locator('#shop-message').textContent(),/両が足りません/);
-     assert.match(await page.locator('#shop-wallet').textContent(),/3980両/);
+     assert.match(await page.locator('#shop-message').textContent(),/藪よけの脚絆を買いました/);
+     assert.match(await page.locator('#shop-wallet').textContent(),/所持金 80両/);
      await page.locator('#action-b').tap();
      await leave(1120,1104);
    }

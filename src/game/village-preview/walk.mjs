@@ -39,8 +39,8 @@ const mountainItems={
  head:{name:'岩守の鉢金'},feet:{name:'山駆けの脚絆'}
 };
 const forestItems={
- body:{name:'樹皮の胴当て',price:12000},
- feet:{name:'藪よけの脚絆',price:7000}
+ body:{name:'樹皮の胴当て',price:1000},
+ feet:{name:'藪よけの脚絆',price:600}
 };
 const trialStockFor=items=>SHIOMACHI_ARMORY_STOCK
  .filter(item=>Object.hasOwn(items,item.slot))
@@ -100,7 +100,7 @@ async function start(){
  const hero={x:map.spawn[0],y:map.spawn[1],face:1,distance:0,moving:false};
  const shopPanel=Object.fromEntries(['panel','title','wallet','options','message'].map(key=>[key,document.querySelector('#shop-'+key)]));
  const interior=createShiomachiInteriorPreview({ctx,images,viewport,clearInput,shopPanel,
-   trialArmoryStock:trialStockByVillage[id],trialGold:id==='forest'?16000:undefined});
+   trialArmoryStock:trialStockByVillage[id],trialGold:id==='forest'?1700:undefined});
  const dialogue=bindDialogue(()=>{
    clearInput();
    hero.moving=false;

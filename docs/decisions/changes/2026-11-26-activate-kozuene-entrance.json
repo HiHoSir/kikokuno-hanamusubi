@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-11-26-activate-kozuene-entrance",
+  "kind": "user-approved",
+  "scopes": ["progression"],
+  "affectedFiles": ["src/field/world.js", "src/field/walk.mjs"],
+  "readBeforeEditing": [
+    "docs/MAP_ENEMY_EQUIPMENT_RECONCILIATION.md と data/maps/field/terrain.js：梢音村の入口候補と橋開通前後の検査結果",
+    "docs/BALANCE_PROGRESSION_CONTRACT.md と docs/FOUR_VILLAGES_EQUIPMENT_PLAN.md：進行と装備の確定範囲",
+    "src/field/world.js、src/game/navigation/game-shell.mjs、src/game/save/save-game.mjs：本編遷移とセーブの既存処理"
+  ],
+  "previousDesign": "梢音村は独立した村プレビューまで。手前のフィールド入口候補は左から (56,35) と (57,35)。",
+  "intendedDifference": "候補セル二つに既存の共通村マーカーを置き、梢音村の既存シーンと本編フィールドを往復できるようにする。",
+  "impactAnalysis": "岩を除いた橋から梢音村まで歩ける。入村時の直前セルへ帰還する。村内の屋外位置を既存セーブに対応させる。",
+  "preservedBoundaries": "序盤の敵、報酬、装備ティア、装備性能と商品価格を維持する。梢音村の店は引き続き試遊取引。",
+  "verification": "現行通行判定で橋の開閉を比較し、Chromium の本編画面で2セルの入村判定、保存用位置、南口からの帰還を検査する。",
+  "userEvidence": {
+    "status": "explicit-user-instruction",
+    "date": "2026-11-26",
+    "quote": "先に村の配置場所、ダンジョンの配置場所を決定した上で敵の分布図作らないといけないよね。\nで、その後村の作り込みに戻りたい。",
+    "source": "会話で潮待村と忘れの森の間の X56・Y35 付近を地図に示した際の返答。続く「進めて」と、候補セル二つを検証・報告した後の「続けて」に沿った地図接続。"
+  }
+}

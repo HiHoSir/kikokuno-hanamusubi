@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script src="../navigation/entry.js?v=kozuene-1" data-entry="game"></script>
+<title>梢音村｜鬼哭の花結び</title>
+<link rel="stylesheet" href="../village/dialogue.css?v=dotgothic16">
+<link rel="stylesheet" href="../ui/controls.css?v=dotgothic16">
+<link rel="stylesheet" href="../ui/landscape-only.css?v=1">
+<script type="module" src="../ui/landscape-only.mjs?v=1"></script>
+<script type="module" src="../ui/selection-guard.mjs"></script>
+<link rel="stylesheet" href="../village-preview/village.css">
+</head>
+<body data-field-village="kozuene">
+<main>
+  <section class="viewport" aria-labelledby="village-name">
+    <canvas id="scene" aria-label="村のゲーム画面"></canvas>
+    <div class="field-hud village-hud"><h1 id="village-name">梢音村</h1></div>
+    <p id="load" role="status">村を読み込んでいます……</p>
+    <button id="talk" type="button" hidden>話す</button>
+    <section id="dialogue" aria-labelledby="speaker" hidden>
+      <div class="dialog-window" role="dialog">
+        <strong id="speaker"></strong>
+        <p id="line"></p>
+        <button id="next" type="button" aria-label="次のセリフへ">▼</button>
+      </div>
+    </section>
+    <section id="shop-panel" aria-labelledby="shop-title" hidden>
+      <h2 id="shop-title">宿</h2>
+      <p id="shop-wallet"></p>
+      <div id="shop-options"></div>
+      <p id="shop-message" aria-live="polite"></p>
+    </section>
+  </section>
+  <section id="pad" class="controls" aria-label="ゲーム操作">
+    <div class="dpad" aria-label="十字キー・4方向移動" role="group">
+      <button id="up" type="button" data-dir="up" aria-label="上">▲</button>
+      <button id="left" type="button" data-dir="left" aria-label="左">◀</button>
+      <button id="right" type="button" data-dir="right" aria-label="右">▶</button>
+      <button id="down" type="button" data-dir="down" aria-label="下">▼</button>
+    </div>
+    <button id="action-b" class="round sub" type="button" aria-label="B 戻る">B<small>戻る</small></button>
+    <button id="action-a" class="round main" type="button" aria-label="A 決定・話す">A<small>決定</small></button>
+  </section>
+</main>
+<aside id="landscape-required" class="landscape-required" role="status" aria-live="polite" aria-hidden="true">
+  <span class="landscape-required-icon" aria-hidden="true">▯</span>
+  <strong>横画面でプレイしてください</strong>
+  <p>端末を横向きにすると、そのまま遊べます。</p>
+</aside>
+<script type="module" src="../village-preview/walk.mjs?v=villages-12"></script>
+</body>
+</html>

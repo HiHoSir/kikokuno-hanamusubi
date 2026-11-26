@@ -4,6 +4,7 @@ import {hizukiWalkDistance,makeWalk} from '../village/movement.mjs';
 import {advanceResident,makeResident,residentInFront,RESIDENT_RADIUS} from '../village/residents.mjs';
 import {pixelViewport} from '../village/render.mjs';
 import {bindDialogue} from '../village/dialogue.mjs';
+import {consumeRestorePosition} from '../save/save-game.mjs?v=kozuene-1';
 import {SHIOMACHI_ARMORY_STOCK} from '../../../data/maps/shiomachi-village/armory.mjs?v=shiomachi-gear-1';
 import {createShiomachiInteriorPreview} from '../shiomachi/interior-preview.mjs?v=inn-morning-1-armory-side-panel-1-trial-gold-1';
 
@@ -83,13 +84,16 @@ async function readImages(){
 }
 
 async function start(){
+ const fieldVillage=document.body.dataset.fieldVillage;
+ if(fieldVillage&&!window.KIKOKU_ROUTE?.admitted)return;
  const requested=new URL(location.href).searchParams.get('village');
- const id=Object.hasOwn(VILLAGES,requested)?requested:'forest';
+ const id=!fieldVillage&&Object.hasOwn(VILLAGES,requested)?requested:'forest';
  const map=VILLAGES[id];
  const title=document.querySelector('#village-name');
- title.textContent=map.name;
- document.title=map.name+'｜鬼哭の花結び';
- document.querySelector('[data-village="'+id+'"]').setAttribute('aria-current','page');
+ const villageName=fieldVillage?'梢音村':map.name;
+ title.textContent=villageName;
+ document.title=villageName+'｜鬼哭の花結び';
+ document.querySelector('[data-village="'+id+'"]')?.setAttribute('aria-current','page');
  const images=await readImages();
  const world=createVillageLandscape(map,images);
  const blocked=villageBlockers(map);
@@ -97,7 +101,18 @@ async function start(){
  const npcWalk=makeWalk(WIDTH,HEIGHT,blocked,RESIDENT_RADIUS);
  const sites=map.objects.flatMap(o=>o.site?[o.site]:[]);
  const residents=map.residents.map(o=>({...makeResident(o),bitmap:images[o.asset]}));
- const hero={x:map.spawn[0],y:map.spawn[1],face:1,distance:0,moving:false};
+ const restored=fieldVillage?consumeRestorePosition(fieldVillage):null;
+ const canRestore=restored&&walk.canStand(restored.x,restored.y)&&
+   !residents.some(npc=>Math.hypot(restored.x-npc.x,restored.y-npc.y)<heroRadius+RESIDENT_RADIUS);
+ const [x,y]=fieldVillage?[944,HEIGHT-85]:map.spawn;
+ const hero=canRestore
+   ?{x:restored.x,y:restored.y,face:restored.face??1,distance:0,moving:false}
+   :{x,y,face:1,distance:0,moving:false};
+ let menuPaused=false;
+ if(fieldVillage){
+   addEventListener('game-menu-open',()=>{menuPaused=true;clearInput();});
+   addEventListener('game-menu-close',()=>{menuPaused=false;});
+ }
  const shopPanel=Object.fromEntries(['panel','title','wallet','options','message'].map(key=>[key,document.querySelector('#shop-'+key)]));
  const interior=createShiomachiInteriorPreview({ctx,images,viewport,clearInput,shopPanel,
    trialArmoryStock:trialStockByVillage[id],trialGold:id==='forest'?1700:undefined});
@@ -112,7 +127,7 @@ async function start(){
    }
  });
  function interact(){
-   if(portrait.matches)return;
+   if(portrait.matches||menuPaused)return;
    if(interior.shopActive)interior.confirmShop();
    else if(dialogue.active)dialogue.advance();
    else{
@@ -124,10 +139,12 @@ async function start(){
    }
  }
  function back(){
+   if(menuPaused)return;
    if(interior.shopActive)interior.closeShop();
    else if(dialogue.active)dialogue.advance();
  }
  function hold(id,dir){
+   if(menuPaused)return;
    if(interior.shopActive){interior.choose(dir);return;}
    if(!portrait.matches&&!dialogue.active)updateInput(id,dir);
  }
@@ -137,15 +154,22 @@ async function start(){
      if(site){
        clearInput();
        Object.assign(hero,{x:site.x,y:site.returnY,face:0,moving:false});
-       title.textContent=map.name;
+       title.textContent=villageName;
      }
    }else{
      hero.moving=false;
      if(!dir)return;
      const [dx,dy,face]=directions[dir];
      const step=hizukiWalkDistance(dt);
-     const [x,y]=walk.move(hero.x,hero.y,dx*step,dy*step,
-       (px,py)=>residents.some(npc=>Math.hypot(px-npc.x,py-npc.y)<heroRadius+RESIDENT_RADIUS));
+     const southExit=Boolean(fieldVillage&&dy>0&&hero.x>=872&&hero.x<=1016);
+     const [x,y,leftMap]=walk.move(hero.x,hero.y,dx*step,dy*step,
+       (px,py)=>residents.some(npc=>Math.hypot(px-npc.x,py-npc.y)<heroRadius+RESIDENT_RADIUS),
+       southExit);
+     if(leftMap){
+       clearInput();
+       window.KIKOKU_ROUTE.go(new URL('../../field/?from=kozuene',import.meta.url));
+       return true;
+     }
      const traveled=Math.hypot(hero.x-x,hero.y-y);
      const site=face===1&&sites.find(site=>hero.y>=site.thresholdY&&y<site.thresholdY&&Math.abs(x-site.x)<=23);
      if(site&&interior.enter(site)){
@@ -161,8 +185,8 @@ async function start(){
    const dt=Math.min(32,now-last);
    last=now;
    const dir=dialogue.active||portrait.matches?undefined:[...input.values()].at(-1);
-   if(!dialogue.active&&!portrait.matches){
-     advance(dir,dt);
+   if(!dialogue.active&&!portrait.matches&&!menuPaused){
+     if(advance(dir,dt))return;
      if(!interior.active){
        for(const npc of residents){
          advanceResident(npc,dt,npcWalk,(x,y)=>
@@ -212,6 +236,11 @@ async function start(){
    residents:()=>residents.map(({id,x,y,face,moving})=>({id,x,y,face,moving}))
  };
  load.hidden=true;
+ if(fieldVillage){
+   window.KIKOKU_SAVE_SNAPSHOT=()=>({scene:fieldVillage,
+     position:{x:hero.x,y:hero.y,face:hero.face}});
+   window.parent.KIKOKU_GAME?.autosave(window);
+ }
  requestAnimationFrame(frame);
 }
 start().catch(error=>{

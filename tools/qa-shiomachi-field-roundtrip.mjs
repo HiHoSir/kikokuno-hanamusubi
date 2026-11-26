@@ -374,11 +374,14 @@ try{
   },{scene,position,path});
   await page.waitForFunction(({scene,position,path})=>{
    const f=document.querySelector('#game-scene')?.contentWindow;
-   if(!f||f.location.pathname+f.location.search!==path)return false;
+   if(!f)return false;
+   const actual=new URL(f.location.href),expected=new URL(path,location.href);
+   if(actual.pathname!==expected.pathname||
+     ![...expected.searchParams].every(([key,value])=>actual.searchParams.get(key)===value))return false;
    const snapshot=f.KIKOKU_SAVE_SNAPSHOT?.();
    return snapshot?.scene===scene&&snapshot.position.x===position.x&&snapshot.position.y===position.y;
   },{scene,position,path});
-  return page.frames().find(frame=>frame.url().endsWith(path));
+  return page.frames().find(frame=>frame.url()===origin+path||frame.url().startsWith(origin+path+'&'));
  };
  const fieldCheckpoint=(x,y,row,tag)=>snapshotAt('field',{x:x*32+16,y:y*32+16,row},'/src/field/?qa-cave='+tag);
  const nearRock=await fieldCheckpoint(48,44,1,'locked');
@@ -607,6 +610,28 @@ try{
  await caveButton.click();
  await cave.locator('#dialogue:not([hidden])').waitFor();
  assert.equal(await cave.locator('#speaker').textContent(),'岩守の鬼');
+ await page.evaluate(()=>{
+  const key='kikokuno-hanamusubi-battle-player';
+  const hero=JSON.parse(localStorage.getItem(key));
+  hero.caveQuest={rockBreaker:true,bridgeCleared:true};
+  localStorage.setItem(key,JSON.stringify(hero));
+ });
+ const forestApproach=await fieldCheckpoint(55,35,2,'kozuene');
+ assert.deepEqual(await forestApproach.evaluate(()=>Array.from(
+   {length:4},(_,i)=>window.YK_AREA_TRANSITIONS.contact(window.YK_WORLD,(55+i)*32+16,35*32+16))),
+   [null,'kozuene','kozuene',null]);
+ await forestApproach.evaluate(()=>window.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowRight'})));
+ await page.waitForFunction(()=>document.querySelector('#game-scene')?.contentWindow
+   ?.KIKOKU_SAVE_SNAPSHOT?.()?.scene==='kozuene');
+ assert.equal(await page.frameLocator('#game-scene').locator('#village-name').textContent(),'梢音村');
+ assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('kikokuno-hanamusubi-auto-save')).location.scene),'kozuene');
+ const villageFrame=page.frames().find(frame=>new URL(frame.url()).pathname==='/src/game/kozuene/');
+ await towardSouth(villageFrame,'keydown');
+ await page.waitForFunction(()=>{
+  const f=document.querySelector('#game-scene')?.contentWindow;
+  const scene=f?.document.querySelector('#scene');
+  return f?.location.search.includes('from=kozuene')&&scene?.dataset.x==='55'&&scene.dataset.y==='35';
+ });
  await page.goto(origin+'/previews/cave-prototype/?v=stairs-side-2#downstairs');
  await page.waitForFunction(()=>window.__ready&&window.__caveWalkTest.status.includes('下り階段付近'));
  const previewStair=await page.evaluate(()=>{

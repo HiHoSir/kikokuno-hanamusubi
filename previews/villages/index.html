@@ -9,34 +9,7 @@
 <link rel="stylesheet" href="../../src/game/ui/landscape-only.css?v=1">
 <script type="module" src="../../src/game/ui/landscape-only.mjs?v=1"></script>
 <script type="module" src="../../src/game/ui/selection-guard.mjs"></script>
-<style>
-  [hidden]{display:none!important}
-  .viewport{position:relative;background:#263b2b}
-  #scene{display:block;width:100%;height:100%;image-rendering:pixelated}
-  #load{position:absolute;inset:0;z-index:40;display:grid;place-items:center;margin:0;background:#253c2e}
-  .village-selection{position:absolute;z-index:18;top:max(8px,env(safe-area-inset-top));
-    right:max(12px,env(safe-area-inset-right));display:flex;gap:4px}
-  .village-selection a{padding:7px 11px;background:#172c26ed;color:#fff2d8;font-size:13px;
-    border:1px solid #bdab7c;border-radius:4px;text-decoration:none;touch-action:manipulation}
-  .village-selection a[aria-current]{color:#233224;background:#e5cf98}
-  #shop-panel{position:absolute;top:5%;left:17%;right:17%;z-index:26;max-height:90%;
-    overflow:auto;touch-action:pan-y;padding:8px 14px;border:3px double #d6b881;
-    background:#122438f5;border-radius:7px;color:#fff4df;box-shadow:0 10px 24px #000a}
-  #shop-panel h2{font-size:17px;color:#eed59b;margin:0 0 4px}
-  #shop-panel p{margin:4px 0 7px;font-size:13px}
-  #shop-options{display:grid;gap:4px}
-  #shop-options button{min-height:36px;padding:5px 8px;text-align:left;touch-action:manipulation;
-    border:1px solid #8f8c79;border-radius:4px;background:#29453e;color:#fff6dd;font:inherit;font-size:13px}
-  #shop-panel[data-layout="armory"]{box-sizing:border-box;display:flex;flex-direction:column;
-    overflow:hidden;top:max(8px,env(safe-area-inset-top));left:max(8px,env(safe-area-inset-left));
-    right:auto;width:clamp(190px,34vw,280px);max-height:calc(100% - 150px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
-    padding:7px 9px}
-  #shop-panel[data-layout="armory"] h2{font-size:14px;line-height:1.3}
-  #shop-panel[data-layout="armory"] p{margin:2px 0 5px}
-  #shop-panel[data-layout="armory"] #shop-options{min-height:0;overflow-y:auto;overscroll-behavior:contain}
-  .viewport:has(#shop-panel[data-layout="armory"]:not([hidden])) .village-hud{visibility:hidden}
-  #shop-options button.selected{border-color:#f4d482;background:#675435}
-</style>
+<link rel="stylesheet" href="../../src/game/village-preview/village.css">
 </head>
 <body>
 <main>
@@ -79,6 +52,6 @@
   <strong>横画面でプレイしてください</strong>
   <p>端末を横向きにすると、そのまま遊べます。</p>
 </aside>
-<script type="module" src="../../src/game/village-preview/walk.mjs?v=villages-11"></script>
+<script type="module" src="../../src/game/village-preview/walk.mjs?v=villages-12"></script>
 </body>
 </html>

@@ -161,7 +161,7 @@ try{
        ': '+JSON.stringify(item.replay));
    assert.ok(item.relevantEncounterInterval.minimum<=item.relevantEncounterInterval.maximum);
  }
- await page.goto(origin+'/previews/field-enemies/');
+ await page.goto(origin+'/previews/field-exploration/?view=enemies');
  await page.locator('#zones button[aria-pressed="true"]').waitFor();
  assert.match(await page.locator('#details').textContent(),/橋の北岸から梢音村.*木霊/s);
  await page.getByRole('button',{name:'梢音村から忘れの森'}).click();

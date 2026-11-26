@@ -1,7 +1,46 @@
+import '../data/maps/field/terrain.js';
 import {
  FIELD_ENCOUNTER_PLAN,FIELD_ENCOUNTER_PLAN_ENEMIES,
  FIELD_ENCOUNTER_PLAN_MARKERS,FIELD_ENCOUNTER_PLANNED_MARKERS
-} from '../../data/maps/field/encounter-plan.mjs?v=1';
+} from '../data/maps/field/encounter-plan.mjs?v=1';
+
+document.title='敵分布案｜鬼哭の花結び';
+const style=document.createElement('style');
+style.textContent=`:root{color-scheme:dark;background:#12232a;color:#fff3da;font:15px/1.65 system-ui,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;padding:clamp(12px,3vw,28px)}
+main{max-width:1060px;margin:auto}
+h1{font-size:clamp(24px,4vw,36px);margin:0 0 3px}
+h2{margin:0 0 10px;font-size:22px}
+h3{font-size:16px;margin:0}
+p{margin:0 0 10px}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(260px,0.65fr);gap:16px;align-items:start}
+.map{width:100%;display:block;background:#183342;border:1px solid #476269;border-radius:8px}
+aside{background:#1b3237;border:1px solid #446066;border-radius:8px;padding:14px}
+nav{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+button{border:1px solid #6e8584;border-radius:6px;background:#263d42;color:inherit;min-height:38px;padding:4px 8px;font:inherit;font-size:.85rem}
+button[aria-pressed=true]{border-color:var(--zone);box-shadow:inset 0 -2px var(--zone)}
+article+article{border-top:1px solid #4c6363;margin-top:12px;padding-top:12px}
+.enemies{display:flex;gap:10px;flex-wrap:wrap}
+.enemy{display:grid;grid-template-rows:66px auto;width:70px;text-align:center;font-size:.75rem}
+.enemy img{width:100%;height:100%;object-fit:contain}
+.note{color:#cbd4cc;margin:0 0 14px}
+@media(max-width:620px){.layout{grid-template-columns:1fr}.map{max-height:55svh}}`;
+document.head.append(style);
+document.body.innerHTML=`<main>
+<h1>フィールドの敵分布案</h1>
+<p class="note">区間を選ぶと、敵候補と出方を確認できます。</p>
+<div class="layout">
+ <section>
+  <svg class="map" id="map" viewBox="0 0 800 800" role="img" aria-label="花霞野のフィールドに敵の分布区間を重ねた地図"></svg>
+  <p class="note">◆ 地上の入口案　破線 山越えの洞窟　× 塞ぐ迂回路</p>
+ </section>
+ <aside>
+  <nav id="zones" aria-label="敵の分布区間"></nav>
+  <div id="details" aria-live="polite"></div>
+ </aside>
+</div>
+</main>`;
 
 const {tiles,referenceComposition}=window.YK_FIELD_TERRAIN;
 const places={...referenceComposition.places,shiomachi:[53,51],kozuene:[56,35]};
@@ -97,7 +136,7 @@ function select(zone){
    const tile=element('div',null,list);
    tile.className='enemy';
    const image=element('img',null,tile);
-   image.src=new URL('../../'+enemy.asset,import.meta.url);
+   image.src=new URL('../'+enemy.asset,import.meta.url);
    image.alt='';
    element('span',enemy.name,tile);
   }

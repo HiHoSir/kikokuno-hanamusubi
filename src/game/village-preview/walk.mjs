@@ -39,8 +39,8 @@ const mountainItems={
  head:{name:'岩守の鉢金'},feet:{name:'山駆けの脚絆'}
 };
 const forestItems={
- body:{name:'樹皮の胴当て',price:96},
- feet:{name:'藪よけの脚絆',price:36}
+ body:{name:'樹皮の胴当て',price:260},
+ feet:{name:'藪よけの脚絆',price:140}
 };
 const trialStockFor=items=>SHIOMACHI_ARMORY_STOCK
  .filter(item=>Object.hasOwn(items,item.slot))

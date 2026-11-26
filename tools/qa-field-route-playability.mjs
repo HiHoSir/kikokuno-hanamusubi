@@ -67,12 +67,13 @@ try{
  if(!frame)throw Error('The approved field iframe is missing');
  report=await frame.evaluate(async()=>{
    const w=window.YK_WORLD,transitions=window.YK_AREA_TRANSITIONS;
-   const [{villageArrival,placeArrival,fieldStep},{traceFieldRoute,replayMovementPath,battleIntervalEnvelope}]=
+   const [{fieldExitPosition,fieldStep},{traceFieldRoute,replayMovementPath,battleIntervalEnvelope},{FIELD_PLACE_ROUTES}]=
      await Promise.all([
        import('/src/field/runtime.mjs'),
-       import('/tools/field-route-pathfinder.mjs')
+       import('/tools/field-route-pathfinder.mjs'),
+       import('/src/field/landmarks.mjs')
      ]);
-   const begin=villageArrival(),shrineStart=placeArrival('shrine'),coveStart=placeArrival('cove');
+   const begin=fieldExitPosition('village'),shrineStart=fieldExitPosition('shrine'),coveStart=fieldExitPosition('cove');
    const routes=[
      {from:'village',to:'shrine',entry:begin,metadata:w.roads[0]},
      {from:'shrine',to:'cove',entry:shrineStart,metadata:w.roads[1]},
@@ -108,7 +109,12 @@ try{
      coveExit:coveStart.map(px=>Math.floor(px/w.tileSize)),
      routes:records,
      restStopsAreOnlyMetadata:w.restStops.map(({id,name,cell})=>({id,name,cell})),
-     liveTransitions:['village','shrine','cove','shiomachi'],
+     liveTransitions:Object.keys(FIELD_PLACE_ROUTES).map(id=>{
+       const point=fieldExitPosition(id);
+       if(transitions.contact(w,...point)!==id||!w.walkable(...point))
+         throw Error('Field exit must stand on its walkable marker: '+id);
+       return id;
+     }),
      note:'Paths use live world.canMove/fieldStep. They are shortest walkable paths, not user exploration or guaranteed battle counts.'
    };
  });
@@ -120,10 +126,23 @@ try{
    browserErrors:errors};
  console.log('FIELD_REAL_WALK_AUDIT '+JSON.stringify(summary));
  assert.deepEqual(report.mapSize,[80,80]);
- assert.deepEqual(report.liveTransitions,['village','shrine','cove','shiomachi']);
+ assert.deepEqual(report.liveTransitions,['village','shrine','cove','shiomachi','kozuene','cave']);
  assert.deepEqual(errors,[],'production field assets/scripts must load');
+ for(const id of report.liveTransitions){
+   await page.evaluate(id=>window.KIKOKU_GAME.navigate(
+     new URL('/src/field/?from='+id,location.href)),id);
+   await page.waitForFunction(id=>{
+     const field=document.querySelector('#game-scene')?.contentWindow;
+     if(field?.location.pathname!=='/src/field/'||
+       new URL(field.location.href).searchParams.get('from')!==id)return false;
+     const position=field.KIKOKU_SAVE_SNAPSHOT?.()?.position;
+     return position?.row===0&&field.YK_AREA_TRANSITIONS.contact(
+       field.YK_WORLD,position.x,position.y)===id;
+   },id);
+ }
+ assert.deepEqual(errors,[],'each return loads and leaves the hero facing the camera on its marker');
  // Live collision checks include the cove's new waterfront entrance.
- const recordedWalkDistances={shrine:43,cove:37};
+ const recordedWalkDistances={shrine:42,cove:39};
  for(const item of report.routes){
    assert.ok(item.reachable,
      item.from+' -> '+item.to+' must have an actual collision-safe, cardinal route');

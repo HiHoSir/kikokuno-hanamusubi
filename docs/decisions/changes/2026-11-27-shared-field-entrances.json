@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-11-27-shared-field-entrances",
+  "kind": "user-approved",
+  "scopes": ["progression"],
+  "affectedFiles": ["src/field/walk.mjs", "docs/MAP_ENEMY_EQUIPMENT_RECONCILIATION.md"],
+  "readBeforeEditing": [
+    "docs/MAP_ENEMY_EQUIPMENT_RECONCILIATION.md と docs/GAME_ENTRY.md の現行経路",
+    "src/field/world.js と src/field/area-transitions.js の接触セルと通行判定",
+    "src/field/walk.mjs と terrain-renderer.mjs の梢音村の入退場処理"
+  ],
+  "previousDesign": "梢音村だけがマーカーに重なって入退場する描画と再入場防止を備えていた。",
+  "intendedDifference": "フィールドに接続済みの全六地点で、重なって入る、重なって正面を向いて出る、マーカーを一度離れてから再入場する動作を共通化する。",
+  "impactAnalysis": "地点ごとに異なった帰還位置を入口の接触セルに揃えるため、帰還地点から測る経路の歩数が変わる。",
+  "preservedBoundaries": "マーカーと地形の配置、マップ内の出口、橋の開通条件、戦闘復帰の位置や敵の能力と報酬を維持する。",
+  "verification": "接続済み六地点の帰還セル・正面向き、入場と再入場、更新後の実通行経路を Chromium で確認する。",
+  "userEvidence": {
+    "status": "explicit-user-instruction",
+    "date": "2026-11-27",
+    "quote": "フィールドからの入退場の共通仕様としtr",
+    "source": "本会話で梢音村の個別修正を確認した直後の共通化依頼。直前の入退村の指定を接続済みのフィールド地点に適用する。"
+  }
+}

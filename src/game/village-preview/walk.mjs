@@ -33,13 +33,19 @@ const assets={
 for(const id of ['elder','shop-clerk','villager','farm-worker','osumi'])
  assets[id]='characters/npc/'+id+'-walk-4dir-80x112.png';
 
-// The preview uses the existing equipment slots and transaction values.
-const mountainItemNames={weapon:'峠守の太刀',body:'山革の胴当て',head:'岩守の鉢金',feet:'山駆けの脚絆'};
-const forestItemNames={body:'樹皮の胴当て',feet:'藪よけの脚絆'};
-const trialStockFor=names=>SHIOMACHI_ARMORY_STOCK
- .filter(item=>Object.hasOwn(names,item.slot))
- .map(item=>({...item,name:names[item.slot]}));
-const trialStockByVillage={forest:trialStockFor(forestItemNames),mountain:trialStockFor(mountainItemNames)};
+// The preview reuses the existing item IDs and combat stats.
+const mountainItems={
+ weapon:{name:'峠守の太刀'},body:{name:'山革の胴当て'},
+ head:{name:'岩守の鉢金'},feet:{name:'山駆けの脚絆'}
+};
+const forestItems={
+ body:{name:'樹皮の胴当て',price:96},
+ feet:{name:'藪よけの脚絆',price:36}
+};
+const trialStockFor=items=>SHIOMACHI_ARMORY_STOCK
+ .filter(item=>Object.hasOwn(items,item.slot))
+ .map(item=>({...item,...items[item.slot]}));
+const trialStockByVillage={forest:trialStockFor(forestItems),mountain:trialStockFor(mountainItems)};
 
 const directions={up:[0,-1,1],down:[0,1,0],left:[-1,0,3],right:[1,0,2]};
 const keys={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',w:'up',s:'down',a:'left',d:'right'};

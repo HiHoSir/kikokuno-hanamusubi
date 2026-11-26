@@ -3,6 +3,7 @@ import {createServer} from 'node:http';
 import {readFile,mkdir} from 'node:fs/promises';
 import {extname,resolve,relative} from 'node:path';
 import {chromium} from 'playwright';
+import {WIDTH,HEIGHT} from '../data/maps/village-previews/scenes.mjs';
 
 const root=resolve('.');
 const types={'.html':'text/html','.mjs':'text/javascript','.css':'text/css','.png':'image/png','.woff2':'font/woff2'};
@@ -54,6 +55,22 @@ try{
        return scene.dataset.room===''&&Number(scene.dataset.x)===x&&Number(scene.dataset.y)===y;
      },{x,y},{timeout:5000});
    }finally{await page.keyboard.up('ArrowDown');}
+   const camera=await page.locator('#scene').evaluate((canvas,{x,y,width,height})=>{
+     const {a,d,e,f}=canvas.getContext('2d').getTransform();
+     const expected=(position,mapSize,viewSize,scale)=>{
+       const view=viewSize/scale;
+       const start=view>=mapSize?(mapSize-view)/2:
+         Math.max(0,Math.min(mapSize-view,position-view/2));
+       return (position-start)*scale;
+     };
+     return {
+       heroX:x*a+e,heroY:y*d+f,
+       expectedX:expected(x,width,canvas.width,a),
+       expectedY:expected(y,height,canvas.height,d)
+     };
+   },{x,y,width:WIDTH,height:HEIGHT});
+   assert.ok(Math.abs(camera.heroX-camera.expectedX)<=2,JSON.stringify(camera));
+   assert.ok(Math.abs(camera.heroY-camera.expectedY)<=2,JSON.stringify(camera));
  };
  for(const map of [
    {id:'forest',name:'梢音村',lane:866,inn:1390,returnY:724,house:438,houseRoom:'house-craft',houseY:725,
@@ -184,6 +201,9 @@ try{
  await page.locator('#landscape-required').waitFor({state:'hidden'});
  const compact=await page.locator('#scene').boundingBox();
  assert.deepEqual(compact,{x:0,y:0,width:480,height:272});
+ await pressUntil('ArrowRight','x','min',940);
+ await enter('house-farm');
+ await leave(940,519);
  await page.screenshot({path:'artifacts/village-forest-480x272.png'});
  assert.deepEqual(errors,[]);
 }finally{

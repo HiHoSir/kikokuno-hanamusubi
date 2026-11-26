@@ -62,7 +62,7 @@ export function createVillageLandscape(map,art){
    const {step,bufferWidth,bufferHeight}=viewport;
    const viewWidth=bufferWidth/step,viewHeight=bufferHeight/step;
    const x0=Math.floor(start(WIDTH,viewWidth,hero.x-viewWidth/2));
-   const y0=Math.floor(start(HEIGHT,viewHeight,hero.y-viewHeight/2-Math.min(306,viewHeight*.38)));
+   const y0=Math.floor(start(HEIGHT,viewHeight,hero.y-viewHeight/2));
    ctx.setTransform(1,0,0,1,0,0);
    ctx.fillStyle=map.pool?'#344539':'#243c2d';
    ctx.fillRect(0,0,bufferWidth,bufferHeight);

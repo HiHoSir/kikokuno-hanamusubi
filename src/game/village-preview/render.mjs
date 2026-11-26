@@ -1,4 +1,4 @@
-import {WIDTH,HEIGHT,TILE} from '../../../data/maps/village-previews/scenes.mjs?v=villages-6';
+import {WIDTH,HEIGHT,TILE} from '../../../data/maps/village-previews/scenes.mjs?v=villages-7';
 import {canopyOpacity} from '../village/render.mjs';
 import {drawCharacter} from '../village/residents.mjs';
 

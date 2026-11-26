@@ -633,9 +633,17 @@ try{
    const f=document.querySelector('#game-scene')?.contentWindow;
    if(f?.location.pathname!=='/src/field/'||!f.location.search.includes('from=kozuene'))return false;
    const position=f.KIKOKU_SAVE_SNAPSHOT?.()?.position;
-   return position?.x===56*32+16&&position.y===36*32+16&&position.row===0&&
-     !f.YK_AREA_TRANSITIONS.contact(f.YK_WORLD,position.x,position.y);
+   return position?.x===56*32+16&&position.y===35*32+16&&position.row===0&&
+     f.YK_AREA_TRANSITIONS.contact(f.YK_WORLD,position.x,position.y)==='kozuene';
   });
+  const returned=page.frames().find(frame=>new URL(frame.url()).searchParams.get('from')==='kozuene');
+  if(direction==='ArrowRight')await page.screenshot({path:'artifacts/kozuene-field-marker-exit.png'});
+  await returned.locator('#action-a').click();
+  await returned.evaluate(()=>{
+   for(const type of ['keydown','keyup'])
+    window.dispatchEvent(new KeyboardEvent(type,{key:'ArrowRight'}));
+  });
+  await returned.waitForFunction(()=>document.querySelector('#scene').dataset.x==='57');
  }
  await page.goto(origin+'/previews/cave-prototype/?v=stairs-side-2#downstairs');
  await page.waitForFunction(()=>window.__ready&&window.__caveWalkTest.status.includes('下り階段付近'));

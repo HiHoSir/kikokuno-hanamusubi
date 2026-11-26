@@ -1,4 +1,4 @@
-import {contact, createFieldRenderer, fieldStep, loadFieldArt, villageArrival, placeArrival, world} from './runtime.mjs?v=authored-waterfall-1-cave-quest-1';
+import {contact, createFieldRenderer, fieldStep, loadFieldArt, villageArrival, placeArrival, world} from './runtime.mjs?v=kozuene-marker-overlap-1';
 import {BATTLE_REQUEST_KEY,FIELD_RETURN_KEY,chooseFieldEncounter,readPlayer,savePlayer} from '../game/battle/rules.mjs?v=equipment-4slots-2-cave-quest-1-finds-1-guardian-1';
 import {consumeRestorePosition} from '../game/save/save-game.mjs?v=save-slots-1-cave-quest-1-finds-1-guardian-1';
 
@@ -43,8 +43,7 @@ function battleReturnPosition(){
   return villageArrival();
 }
 function placeReturnPosition(placeId){
-  // Kozuene's south exit leads to the south side of the field marker.
-  if(placeId==='kozuene')return placeArrival(placeId);
+  if(placeId==='kozuene')return world.places.kozuene.point;
   try{
     const prior=JSON.parse(sessionStorage.getItem(RETURN_KEY)||'null');
     if(prior?.place===placeId&&Number.isFinite(prior.x)&&Number.isFinite(prior.y)&&
@@ -75,7 +74,9 @@ async function start() {
   const [x, y] = (['shrine','cove','shiomachi'].includes(from)||from==='cave'||from==='kozuene')
     ?placeReturnPosition(from) : from==='battle'?battleReturnPosition():villageArrival();
   const resumed=consumeRestorePosition('field');
-  const safeResume=resumed&&world.walkable(resumed.x,resumed.y)&&!contact(resumed.x,resumed.y);
+  const resumeContact=resumed&&contact(resumed.x,resumed.y);
+  const safeResume=resumed&&world.walkable(resumed.x,resumed.y)&&
+    (!resumeContact||resumeContact==='kozuene');
   // Saves made before this gate can be on the far bank. Place those
   // checkpoints on the near side so the tool remains reachable.
   const gatedResume=resumed&&world.bridgeRockCell&&!world.mapData.bridgeRockCleared&&
@@ -141,7 +142,14 @@ async function start() {
         window.KIKOKU_ROUTE.go(new URL('../game/village/?focus=field-exit', import.meta.url));
         return;
       }
-      if((['shrine','cove','shiomachi'].includes(destination)||destination==='cave'||destination==='kozuene')){
+      if(destination==='kozuene'&&contact(completed.x,completed.y)!==destination){
+        // Present the landed pose on the marker before covering the field.
+        clearInput();
+        if(!renderPaused)render(state,now);
+        requestAnimationFrame(()=>enterFieldPlace(destination,completed));
+        return;
+      }
+      if((['shrine','cove','shiomachi'].includes(destination)||destination==='cave')){
         enterFieldPlace(destination,completed);
         return;
       }
@@ -201,7 +209,7 @@ async function start() {
     if(destination==='village'){
       clearInput();
       window.KIKOKU_ROUTE.go(new URL('../game/village/?focus=field-exit',location.href));
-    }else if((['shrine','cove','shiomachi'].includes(destination)||destination==='cave'||destination==='kozuene')){
+    }else if((['shrine','cove','shiomachi'].includes(destination)||destination==='cave')){
       enterFieldPlace(destination,state.motion??state);
     }
   });

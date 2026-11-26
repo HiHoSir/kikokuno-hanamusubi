@@ -168,7 +168,10 @@ export function createFieldTerrainRenderer(map,drawHero,art,hero){
    const o=objects[i];
    if(o.id==='bridge-rock'&&map.bridgeRockCleared)continue;
    const foot=o.foot;
-   if(!player&&playerFoot<=foot){drawPlayer();player=true;}
+   // On the marker, keep the hero visible in front of its artwork.
+   const overlapsVillage=o.destination==='kozuene'&&playerFoot===foot&&
+     actor.x>=o.x&&actor.x<o.x+o.width;
+   if(!player&&playerFoot<=foot&&!overlapsVillage){drawPlayer();player=true;}
    const p=landscape.project(o.center,o.projectedFoot,cam,zoom);
    if(!p||!landscape.specs[o.kind])continue;
    const w=o.width*p.scale,h=o.height*p.scale,x=p.x-w/2,y=p.y-h;

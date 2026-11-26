@@ -145,6 +145,29 @@ try{
      assert.match(await page.locator('#shop-wallet').textContent(),/150両/);
      await page.locator('#action-b').tap();
      await leave(1461,857);
+   }else{
+     await pressUntil('ArrowRight','x','min',940);
+     await pressUntil('ArrowDown','y','min',1144);
+     await pressUntil('ArrowRight','x','min',1120);
+     await enter('armory');
+     assert.equal(await page.locator('#scene').getAttribute('data-building'),'forest-armory');
+     await pressUntil('ArrowUp','y','max',430);
+     await page.locator('#action-a').tap();
+     await page.locator('#next.hasLastLine').waitFor({state:'visible'});
+     assert.match(await page.locator('#line').textContent(),/森へ行くなら/);
+     await page.locator('#next').tap();
+     await page.locator('#shop-panel').waitFor({state:'visible'});
+     assert.match(await page.locator('#shop-title').textContent(),/梢音の兵具屋.*試用/);
+     const buttons=await page.locator('#shop-options button').allTextContents();
+     assert.equal(buttons.length,3);
+     assert.match(buttons[0],/^樹皮の胴当て/);
+     assert.match(buttons[1],/^藪よけの脚絆/);
+     await page.screenshot({path:'artifacts/village-forest-armory.png'});
+     await page.locator('[data-shop-item="shiomachi-reef-gaiters"]').tap();
+     assert.match(await page.locator('#shop-message').textContent(),/藪よけの脚絆を買いました/);
+     assert.match(await page.locator('#shop-wallet').textContent(),/206両/);
+     await page.locator('#action-b').tap();
+     await leave(1120,1104);
    }
    assert.deepEqual(await storage(),before);
  }

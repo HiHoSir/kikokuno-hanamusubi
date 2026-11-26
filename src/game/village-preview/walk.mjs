@@ -1,5 +1,5 @@
-import {WIDTH,HEIGHT,VILLAGES,villageBlockers} from '../../../data/maps/village-previews/scenes.mjs?v=villages-5';
-import {createVillageLandscape} from './render.mjs?v=villages-5';
+import {WIDTH,HEIGHT,VILLAGES,villageBlockers} from '../../../data/maps/village-previews/scenes.mjs?v=villages-6';
+import {createVillageLandscape} from './render.mjs?v=villages-6';
 import {hizukiWalkDistance,makeWalk} from '../village/movement.mjs';
 import {advanceResident,makeResident,residentInFront,RESIDENT_RADIUS} from '../village/residents.mjs';
 import {pixelViewport} from '../village/render.mjs';
@@ -35,7 +35,11 @@ for(const id of ['elder','shop-clerk','villager','farm-worker','osumi'])
 
 // The preview uses the existing equipment slots and transaction values.
 const mountainItemNames={weapon:'峠守の太刀',body:'山革の胴当て',head:'岩守の鉢金',feet:'山駆けの脚絆'};
-const mountainTrialStock=SHIOMACHI_ARMORY_STOCK.map(item=>({...item,name:mountainItemNames[item.slot]}));
+const forestItemNames={body:'樹皮の胴当て',feet:'藪よけの脚絆'};
+const trialStockFor=names=>SHIOMACHI_ARMORY_STOCK
+ .filter(item=>Object.hasOwn(names,item.slot))
+ .map(item=>({...item,name:names[item.slot]}));
+const trialStockByVillage={forest:trialStockFor(forestItemNames),mountain:trialStockFor(mountainItemNames)};
 
 const directions={up:[0,-1,1],down:[0,1,0],left:[-1,0,3],right:[1,0,2]};
 const keys={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',w:'up',s:'down',a:'left',d:'right'};
@@ -90,7 +94,7 @@ async function start(){
  const hero={x:map.spawn[0],y:map.spawn[1],face:1,distance:0,moving:false};
  const shopPanel=Object.fromEntries(['panel','title','wallet','options','message'].map(key=>[key,document.querySelector('#shop-'+key)]));
  const interior=createShiomachiInteriorPreview({ctx,images,viewport,clearInput,shopPanel,
-   trialArmoryStock:id==='mountain'?mountainTrialStock:undefined});
+   trialArmoryStock:trialStockByVillage[id]});
  const dialogue=bindDialogue(()=>{
    clearInput();
    hero.moving=false;

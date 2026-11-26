@@ -620,18 +620,23 @@ try{
  assert.deepEqual(await forestApproach.evaluate(()=>Array.from(
    {length:4},(_,i)=>window.YK_AREA_TRANSITIONS.contact(window.YK_WORLD,(55+i)*32+16,35*32+16))),
    [null,'kozuene','kozuene',null]);
- await forestApproach.evaluate(()=>window.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowRight'})));
- await page.waitForFunction(()=>document.querySelector('#game-scene')?.contentWindow
-   ?.KIKOKU_SAVE_SNAPSHOT?.()?.scene==='kozuene');
- assert.equal(await page.frameLocator('#game-scene').locator('#village-name').textContent(),'梢音村');
- assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('kikokuno-hanamusubi-auto-save')).location.scene),'kozuene');
- const villageFrame=page.frames().find(frame=>new URL(frame.url()).pathname==='/src/game/kozuene/');
- await towardSouth(villageFrame,'keydown');
- await page.waitForFunction(()=>{
-  const f=document.querySelector('#game-scene')?.contentWindow;
-  const scene=f?.document.querySelector('#scene');
-  return f?.location.search.includes('from=kozuene')&&scene?.dataset.x==='55'&&scene.dataset.y==='35';
- });
+ for(const direction of ['ArrowRight','ArrowDown']){
+  const approach=direction==='ArrowRight'?forestApproach:await fieldCheckpoint(57,34,0,'kozuene-north');
+  await approach.evaluate(key=>window.dispatchEvent(new KeyboardEvent('keydown',{key})),direction);
+  await page.waitForFunction(()=>document.querySelector('#game-scene')?.contentWindow
+    ?.KIKOKU_SAVE_SNAPSHOT?.()?.scene==='kozuene');
+  assert.equal(await page.frameLocator('#game-scene').locator('#village-name').textContent(),'梢音村');
+  assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('kikokuno-hanamusubi-auto-save')).location.scene),'kozuene');
+  const villageFrame=page.frames().find(frame=>new URL(frame.url()).pathname==='/src/game/kozuene/');
+  await towardSouth(villageFrame,'keydown');
+  await page.waitForFunction(()=>{
+   const f=document.querySelector('#game-scene')?.contentWindow;
+   if(f?.location.pathname!=='/src/field/'||!f.location.search.includes('from=kozuene'))return false;
+   const position=f.KIKOKU_SAVE_SNAPSHOT?.()?.position;
+   return position?.x===56*32+16&&position.y===36*32+16&&position.row===0&&
+     !f.YK_AREA_TRANSITIONS.contact(f.YK_WORLD,position.x,position.y);
+  });
+ }
  await page.goto(origin+'/previews/cave-prototype/?v=stairs-side-2#downstairs');
  await page.waitForFunction(()=>window.__ready&&window.__caveWalkTest.status.includes('下り階段付近'));
  const previewStair=await page.evaluate(()=>{

@@ -32,11 +32,15 @@ function clearInput() {
   updateButtons();
 }
 
+function canResumeFieldAt(x,y){
+  if(!world.walkable(x,y))return false;
+  const destination=contact(x,y);
+  return !destination||Object.hasOwn(FIELD_PLACE_ROUTES,destination);
+}
 function battleReturnPosition(){
   try{
     const point=JSON.parse(sessionStorage.getItem(FIELD_RETURN_KEY)||'null');
-    if(Number.isFinite(point?.x)&&Number.isFinite(point?.y)&&
-      world.walkable(point.x,point.y)&&!contact(point.x,point.y)){
+    if(Number.isFinite(point?.x)&&Number.isFinite(point?.y)&&canResumeFieldAt(point.x,point.y)){
       return [point.x,point.y];
     }
   }catch{}
@@ -54,9 +58,7 @@ async function start() {
   const [x,y]=fromLandmark?fieldExitPosition(from):
     from==='battle'?battleReturnPosition():villageArrival();
   const resumed=consumeRestorePosition('field');
-  const resumeContact=resumed&&contact(resumed.x,resumed.y);
-  const safeResume=resumed&&world.walkable(resumed.x,resumed.y)&&
-    (!resumeContact||Object.hasOwn(FIELD_PLACE_ROUTES,resumeContact));
+  const safeResume=resumed&&canResumeFieldAt(resumed.x,resumed.y);
   // Saves made before this gate can be on the far bank. Place those
   // checkpoints on the near side so the tool remains reachable.
   const gatedResume=resumed&&world.bridgeRockCell&&!world.mapData.bridgeRockCleared&&

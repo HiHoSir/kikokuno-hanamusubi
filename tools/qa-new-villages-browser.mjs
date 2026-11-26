@@ -74,6 +74,7 @@ try{
    assert.equal(initialPatrol.length,4);
    await page.waitForFunction(initial=>window.__VILLAGE_PREVIEW_QA.residents()
      .every((npc,i)=>Math.hypot(npc.x-initial[i].x,npc.y-initial[i].y)>6),initialPatrol,{timeout:4000});
+   if(map.id==='forest')await pressUntil('ArrowRight','x','min',940);
    await enter(map.north.room);
    assert.equal(await page.locator('#scene').getAttribute('data-building'),map.north.building);
    await leave(map.north.x,map.north.returnY);

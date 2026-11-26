@@ -8,12 +8,15 @@ import {SHIOMACHI_ARMORY_STOCK} from '../../../data/maps/shiomachi-village/armor
 
 import {createVillageShop} from '../interiors/shop.mjs?v=shared-shops-1-cave-quest-1-finds-1-guardian-1-inn-stay-1-inn-morning-1-armory-side-panel-1';
 
-export function createShiomachiInteriorPreview({ctx,images,viewport,clearInput,shopPanel,previewMode=true,trialArmoryStock=SHIOMACHI_ARMORY_STOCK}){
+export function createShiomachiInteriorPreview({
+ ctx,images,viewport,clearInput,shopPanel,previewMode=true,
+ trialArmoryStock=SHIOMACHI_ARMORY_STOCK,trialGold=250
+}){
  const furniture=images.furniture;
  const reduce=matchMedia('(prefers-reduced-motion: reduce)');
  let site=null,room=null,plan=null,walking=null,floor=null,hero=null;
  let lastRoom=null;
- let trial=normalizePlayer({...DEFAULT_PLAYER,gold:250,hp:7,mp:3,shells:{bag:{white:1}}});
+ let trial=normalizePlayer({...DEFAULT_PLAYER,gold:trialGold,hp:7,mp:3,shells:{bag:{white:1}}});
  const shop=createVillageShop({...shopPanel,clearInput,armoryStock:previewMode?trialArmoryStock:SHIOMACHI_ARMORY_STOCK,
    trial:previewMode?{read:()=>trial,save:player=>{trial=player;}}:undefined});
  function setRoom(nextSite){

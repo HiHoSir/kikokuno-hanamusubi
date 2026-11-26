@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-11-27-kozuene-south-exit",
+  "kind": "user-approved",
+  "scopes": ["progression"],
+  "affectedFiles": ["src/field/walk.mjs", "docs/MAP_ENEMY_EQUIPMENT_RECONCILIATION.md"],
+  "readBeforeEditing": [
+    "docs/MAP_ENEMY_EQUIPMENT_RECONCILIATION.md の梢音村入口と南側の帰還候補",
+    "src/field/walk.mjs と src/field/runtime.mjs の個別帰還位置、入村直前セル、南優先の探索"
+  ],
+  "previousDesign": "梢音村を出ると、先に入村した時のフィールド上のマスを復元していた。",
+  "intendedDifference": "梢音村の南口に対応する村マーカーの南側 (56,36) に南向きで出る。",
+  "impactAnalysis": "西・北から入村しても南口は同じセルへつながる。出たときに村マーカーの上に立たない。",
+  "preservedBoundaries": "梢音村の入口セル、他の地点の帰還方法、戦闘復帰、セーブからの通常復帰を維持する。",
+  "verification": "Chromium で西側と北側から入村し、南口から同じセルへ南向きで帰還することと、帰還セルに入口判定がないことを確認する。",
+  "userEvidence": {
+    "status": "explicit-user-instruction",
+    "date": "2026-11-27",
+    "quote": "フィールドに出た後の出現位置がおかしい",
+    "source": "本会話で、梢音村の建物を出た直後のカメラ修正に続き、村を出た後のフィールド位置を指摘したユーザーの発言。"
+  }
+}

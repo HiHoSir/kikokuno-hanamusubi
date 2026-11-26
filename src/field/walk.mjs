@@ -43,6 +43,8 @@ function battleReturnPosition(){
   return villageArrival();
 }
 function placeReturnPosition(placeId){
+  // Kozuene's south exit leads to the south side of the field marker.
+  if(placeId==='kozuene')return placeArrival(placeId);
   try{
     const prior=JSON.parse(sessionStorage.getItem(RETURN_KEY)||'null');
     if(prior?.place===placeId&&Number.isFinite(prior.x)&&Number.isFinite(prior.y)&&
@@ -81,7 +83,7 @@ async function start() {
   const nearBank=world.bridgeRockCell&&world.bridgeRockCell.map((cell,index)=>cell*32+16+index*32);
   const state = {x:gatedResume?nearBank[0]:safeResume?resumed.x:x,
     y:gatedResume?nearBank[1]:safeResume?resumed.y:y,
-    row:safeResume?(resumed.row??1):from==='village' ? 0 : 1,column:0};
+    row:safeResume?(resumed.row??1):['village','kozuene'].includes(from)?0:1,column:0};
   let walkedSteps=0;
   const encounterAfter=9+Math.floor(Math.random()*5);
   function startBattle(){

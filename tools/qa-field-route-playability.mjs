@@ -161,6 +161,17 @@ try{
        ': '+JSON.stringify(item.replay));
    assert.ok(item.relevantEncounterInterval.minimum<=item.relevantEncounterInterval.maximum);
  }
+ await page.goto(origin+'/previews/field-enemies/');
+ await page.locator('#zones button[aria-pressed="true"]').waitFor();
+ assert.match(await page.locator('#details').textContent(),/橋の北岸から梢音村.*木霊/s);
+ await page.getByRole('button',{name:'梢音村から忘れの森'}).click();
+ assert.match(await page.locator('#details').textContent(),/迷い蜘蛛/);
+ assert.equal(await page.locator('#map [data-zone="forest"]').getAttribute('opacity'),'1');
+ await page.locator('#details img').first().evaluate(img=>img.decode());
+ await page.setViewportSize({width:390,height:844});
+ assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),
+   'encounter map and region controls fit a phone viewport');
+ assert.deepEqual(errors,[],'encounter planning map loads the production terrain and enemy assets');
 }finally{
  if(page)await page.close();
  if(browser)await browser.close();

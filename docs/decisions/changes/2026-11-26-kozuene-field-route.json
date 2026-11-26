@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-11-26-kozuene-field-route",
+  "kind": "documentation-correction",
+  "scopes": ["progression"],
+  "affectedFiles": ["docs/MAP_ENEMY_EQUIPMENT_RECONCILIATION.md"],
+  "readBeforeEditing": [
+    "docs/MAP_ENEMY_EQUIPMENT_RECONCILIATION.md と docs/FOUR_VILLAGES_EQUIPMENT_PLAN.md の配置と導線の候補",
+    "data/maps/field/terrain.js と src/field/world.js の現行地形、通行判定と接触セル",
+    "docs/BALANCE_PROGRESSION_CONTRACT.md と docs/BATTLE_BALANCE.md の確定ティアと既存遭遇"
+  ],
+  "previousDesign": "梢音村は忘れの森の手前という方向性が文書にあり、地図案には各入口と迂回路の候補が示されていた。",
+  "intendedDifference": "候補セルと現行の通行判定による歩数、洞窟を迂回できる経路と塞ぐ候補、区間ごとの敵分布を同じ文書で参照できるようにする。",
+  "impactAnalysis": "橋の開閉で梢音村候補への到達可否が変化する。山越えの洞窟を必須にするには、北側二か所に加え南側の迂回路も塞ぐ必要がある。",
+  "preservedBoundaries": "記録する具体セル・敵分布は候補。現行フィールド、敵の能力・報酬、商品とティアは維持する。",
+  "verification": "現行ワールドの衝突判定と traceFieldRoute で、橋の開閉、入口までの歩数、三つの迂回路を同時に塞いだときの到達可否を比較する。",
+  "userEvidence": {
+    "status": "explicit-user-instruction",
+    "date": "2026-11-26",
+    "quote": "迂回路は山や高原で遮蔽してしまっていいよ。",
+    "source": "本会話の地形方針。梢音村の地図提示に対する「良さそう」と、その後の「進めて」は配置案を詰める根拠として扱う。"
+  }
+}

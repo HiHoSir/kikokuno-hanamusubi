@@ -637,7 +637,27 @@ try{
      f.YK_AREA_TRANSITIONS.contact(f.YK_WORLD,position.x,position.y)==='kozuene';
   });
   const returned=page.frames().find(frame=>new URL(frame.url()).searchParams.get('from')==='kozuene');
-  if(direction==='ArrowRight')await page.screenshot({path:'artifacts/kozuene-field-marker-exit.png'});
+  if(direction==='ArrowRight'){
+   const heroInFront=await returned.evaluate(()=>new Promise(resolve=>{
+    const ctx=document.querySelector('#scene').getContext('2d');
+    const draw=ctx.drawImage;
+    let markerPainted=false;
+    const timeout=setTimeout(()=>{
+     delete ctx.drawImage;
+     resolve(false);
+    },2000);
+    ctx.drawImage=function(image,...args){
+     draw.call(this,image,...args);
+     if(image.src?.includes('/assets/field/objects/village.png'))markerPainted=true;
+     if(image.src?.includes('/assets/characters/hizuki/walk-sd-32.png')){
+      clearTimeout(timeout);
+      delete ctx.drawImage;
+      resolve(markerPainted&&args[1]===0);
+     }
+    };
+   }));
+   assert.equal(heroInFront,true,'the front-facing hero is rendered over the village marker');
+  }
   await returned.locator('#action-a').click();
   await returned.evaluate(()=>{
    for(const type of ['keydown','keyup'])

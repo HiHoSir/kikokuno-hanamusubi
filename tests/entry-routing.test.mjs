@@ -15,6 +15,7 @@ const scenes=[
   ['src/game/tenyo/','src/game/tenyo/index.html'],
   ['src/game/cove/','src/game/cove/index.html'],
   ['src/game/shiomachi/','src/game/shiomachi/index.html'],
+  ['src/game/kozuene/','src/game/kozuene/index.html'],
   ['src/game/battle/','src/game/battle/index.html'],
 ];
 function enter(relativePath,entry,storage=new Map(),parent=null){

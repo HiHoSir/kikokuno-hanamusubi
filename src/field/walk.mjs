@@ -61,7 +61,7 @@ function enterFieldPlace(destination,fromPoint){
     }));
   }catch{}
   const scenePath={
-    shrine:'../game/tenyo/',cove:'../game/cove/',shiomachi:'../game/shiomachi/',cave:'../game/cave/'
+    shrine:'../game/tenyo/',cove:'../game/cove/',shiomachi:'../game/shiomachi/',kozuene:'../game/kozuene/',cave:'../game/cave/'
   }[destination];
   if(!scenePath)throw Error('未対応の地点: '+destination);
   window.KIKOKU_ROUTE.go(new URL(scenePath,import.meta.url));
@@ -70,7 +70,7 @@ async function start() {
   const art=await loadFieldArt();
   if(readPlayer().caveQuest?.bridgeCleared)world.setBridgeRockCleared?.(true);
   const from=new URLSearchParams(location.search).get('from');
-  const [x, y] = (['shrine','cove','shiomachi'].includes(from)||from==='cave')
+  const [x, y] = (['shrine','cove','shiomachi'].includes(from)||from==='cave'||from==='kozuene')
     ?placeReturnPosition(from) : from==='battle'?battleReturnPosition():villageArrival();
   const resumed=consumeRestorePosition('field');
   const safeResume=resumed&&world.walkable(resumed.x,resumed.y)&&!contact(resumed.x,resumed.y);
@@ -139,7 +139,7 @@ async function start() {
         window.KIKOKU_ROUTE.go(new URL('../game/village/?focus=field-exit', import.meta.url));
         return;
       }
-      if((['shrine','cove','shiomachi'].includes(destination)||destination==='cave')){
+      if((['shrine','cove','shiomachi'].includes(destination)||destination==='cave'||destination==='kozuene')){
         enterFieldPlace(destination,completed);
         return;
       }
@@ -199,7 +199,7 @@ async function start() {
     if(destination==='village'){
       clearInput();
       window.KIKOKU_ROUTE.go(new URL('../game/village/?focus=field-exit',location.href));
-    }else if((['shrine','cove','shiomachi'].includes(destination)||destination==='cave')){
+    }else if((['shrine','cove','shiomachi'].includes(destination)||destination==='cave'||destination==='kozuene')){
       enterFieldPlace(destination,state.motion??state);
     }
   });

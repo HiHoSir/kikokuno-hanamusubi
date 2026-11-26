@@ -11,7 +11,7 @@ else try{
 const resp=await fetch(area,{cache:"no-store"});
 if(!resp.ok)throw Error("フィールドのHTMLを取得できません: "+resp.status);
 let source=await resp.text();
-const gate='<script src="../game/navigation/entry.js" data-entry="game"></scr'+'ipt>';
+const gate='<script src="../game/navigation/entry.js?v=kozuene-1" data-entry="game"></scr'+'ipt>';
 const terrainScript=/<script src="\.\.\/\.\.\/data\/maps\/field\/terrain\.js(?:\?[^"]*)?"><\/script>/;
 if(!source.includes(gate)||!terrainScript.test(source))throw Error("本編フィールドの読み込み構成が変化しました");
 const tag=s=>'<scr'+'ipt>'+s+'</scr'+'ipt>';

@@ -4,7 +4,7 @@ window.YK_WORLD=(()=>{
  const tileSize=32,size=2560,viewSize=640,revision=120;
  const geography=window.YK_FIELD_TERRAIN.referenceComposition;
  // Left cell of each two-cell village marker added after Hozuki.
- const additionalVillages={shiomachi:[53,51]};
+ const additionalVillages={shiomachi:[53,51],kozuene:[56,35]};
  const caveCells=[[14,48],[15,48]];
  const bridgeRockCell=[48,43];
  const center=([x,y])=>[x*32+16,y*32+16];
@@ -14,6 +14,7 @@ window.YK_WORLD=(()=>{
   cave:['社西の洞窟','岩の奥から冷たい風が吹いている。'],
   cove:['海の入り江','川を渡り、北東の忘れの森へ。'],
   shiomachi:['潮待村','入り江の東、海風の吹く浜の集落。'],
+  kozuene:['梢音村','忘れの森の手前にある、炭焼きと木こりの村。'],
   forest:['忘れの森','森の北の山裾を辿り、龍神の滝へ。'],
   waterfall:['龍神の滝','山脈の南、湖畔の道を西へ進み月見の湯へ。'],
   hotspring:['月見の湯','北の森から山の参道へ進み、九尾の祠へ。'],

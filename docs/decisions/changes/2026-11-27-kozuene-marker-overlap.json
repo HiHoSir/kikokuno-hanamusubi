@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-11-27-kozuene-marker-overlap",
+  "kind": "user-approved",
+  "scopes": ["progression"],
+  "affectedFiles": ["src/field/walk.mjs", "docs/MAP_ENEMY_EQUIPMENT_RECONCILIATION.md"],
+  "readBeforeEditing": [
+    "docs/MAP_ENEMY_EQUIPMENT_RECONCILIATION.md の梢音村入口と帰還位置",
+    "src/field/walk.mjs、src/field/area-transitions.js と terrain-renderer.mjs の歩行完了・接触・描画順"
+  ],
+  "previousDesign": "梢音村のマーカーの接触セルへの移動完了時に切り替え、村を出るとマーカーの南隣に出ていた。",
+  "intendedDifference": "接触セルに着地して緋月がマーカーに重なった描画を出してから入村する。帰還時はマーカー上に立ち、カメラ側の南を向く。",
+  "impactAnalysis": "帰還後とマーカー上を横切る間は入村が再発しない。一度離れて歩いて重なると再入村でき、マーカー上のセーブも復元できる。",
+  "preservedBoundaries": "村マーカーの既存の位置と寸法、梢音村以外の地点への入退場、地形と戦闘の仕様を維持する。",
+  "verification": "Chromium で西・北から入村し、帰還後に接触セルで正面を向き、自動で再入村せず隣の接触セルへ歩けることを確認する。",
+  "userEvidence": {
+    "status": "explicit-user-instruction",
+    "date": "2026-11-27",
+    "quote": "入村はヒヅキが村オブジェクトに重なったタイミングにして。\nで、村から出たら村オブジェクトに重なった状態でカメラ方向を向いて。",
+    "source": "本会話で梢音村のフィールド出現位置を修正した後にユーザーが示した入退村の動作指定。"
+  }
+}

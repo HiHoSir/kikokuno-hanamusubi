@@ -633,9 +633,37 @@ try{
    const f=document.querySelector('#game-scene')?.contentWindow;
    if(f?.location.pathname!=='/src/field/'||!f.location.search.includes('from=kozuene'))return false;
    const position=f.KIKOKU_SAVE_SNAPSHOT?.()?.position;
-   return position?.x===56*32+16&&position.y===36*32+16&&position.row===0&&
-     !f.YK_AREA_TRANSITIONS.contact(f.YK_WORLD,position.x,position.y);
+   return position?.x===56*32+16&&position.y===35*32+16&&position.row===0&&
+     f.YK_AREA_TRANSITIONS.contact(f.YK_WORLD,position.x,position.y)==='kozuene';
   });
+  const returned=page.frames().find(frame=>new URL(frame.url()).searchParams.get('from')==='kozuene');
+  if(direction==='ArrowRight'){
+   const heroInFront=await returned.evaluate(()=>new Promise(resolve=>{
+    const ctx=document.querySelector('#scene').getContext('2d');
+    const draw=ctx.drawImage;
+    let markerPainted=false;
+    const timeout=setTimeout(()=>{
+     delete ctx.drawImage;
+     resolve(false);
+    },2000);
+    ctx.drawImage=function(image,...args){
+     draw.call(this,image,...args);
+     if(image.src?.includes('/assets/field/objects/village.png'))markerPainted=true;
+     if(image.src?.includes('/assets/characters/hizuki/walk-sd-32.png')){
+      clearTimeout(timeout);
+      delete ctx.drawImage;
+      resolve(markerPainted&&args[1]===0);
+     }
+    };
+   }));
+   assert.equal(heroInFront,true,'the front-facing hero is rendered over the village marker');
+  }
+  await returned.locator('#action-a').click();
+  await returned.evaluate(()=>{
+   for(const type of ['keydown','keyup'])
+    window.dispatchEvent(new KeyboardEvent(type,{key:'ArrowRight'}));
+  });
+  await returned.waitForFunction(()=>document.querySelector('#scene').dataset.x==='57');
  }
  await page.goto(origin+'/previews/cave-prototype/?v=stairs-side-2#downstairs');
  await page.waitForFunction(()=>window.__ready&&window.__caveWalkTest.status.includes('下り階段付近'));

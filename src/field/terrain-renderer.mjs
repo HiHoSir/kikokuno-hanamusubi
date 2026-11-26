@@ -57,6 +57,7 @@ export function createFieldTerrainRenderer(map,drawHero,art,hero){
   const level=o.supportHeight??elevation.height(map,center,foot-1);
   return {...o,foot,center,projectedFoot:terrainY(foot,level)};
  });
+ const kozueneMarker=objects.find(o=>o.destination==='kozuene');
  const overlapsHero=createTreeOcclusion(landscape,hero);
  let land=null, originY=0, terrainDepth, stripsWidth, stripsHeight, strips=[];
  const waterPatterns=new WeakMap();
@@ -164,11 +165,14 @@ export function createFieldTerrainRenderer(map,drawHero,art,hero){
   // can otherwise rise above the first row of the fog overlay.
   c.save();c.beginPath();c.rect(0,136,viewWidth,Math.max(0,height-136));c.clip();
   let player=false;
+  // On the marker, draw all same-depth props before the hero.
+  const onVillageMarker=kozueneMarker?.foot===playerFoot&&
+    actor.x>=kozueneMarker.x&&actor.x<kozueneMarker.x+kozueneMarker.width;
   for(let i=first;i<objects.length&&objects[i].foot<=maxFoot;i++){
    const o=objects[i];
    if(o.id==='bridge-rock'&&map.bridgeRockCleared)continue;
    const foot=o.foot;
-   if(!player&&playerFoot<=foot){drawPlayer();player=true;}
+   if(!player&&(playerFoot<foot||(playerFoot===foot&&!onVillageMarker))){drawPlayer();player=true;}
    const p=landscape.project(o.center,o.projectedFoot,cam,zoom);
    if(!p||!landscape.specs[o.kind])continue;
    const w=o.width*p.scale,h=o.height*p.scale,x=p.x-w/2,y=p.y-h;

@@ -247,7 +247,8 @@ test('battle is production scene, field encounter and safe return in persistent 
   assert.ok(code.includes('assets/audio/se/battle-encounter.ogg'));
   assert.ok(field.includes('startBattle()'));
   assert.ok(field.includes("from==='battle'"));
-  assert.ok(field.includes('world.walkable(point.x,point.y)'));
+  assert.ok(field.includes('canResumeFieldAt(point.x,point.y)'));
+  assert.match(field,/if\(!world\.walkable\(x,y\)\)return false/);
   assert.ok(field.includes('!destination'));
   assert.ok(field.includes('walkedSteps>=encounterAfter'));
   assert.ok(shell.includes("track:'battle'"));

@@ -8,6 +8,8 @@ import {
   STATUS_V2,ARMORY_STOCK,ENEMIES,nextLevelXp
 } from '../src/game/battle/rules.mjs';
 
+import {FIELD_PLACE_ROUTES} from '../src/field/landmarks.mjs';
+
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
 const read=path=>readFileSync(resolve(root,path),'utf8');
 const orderedPlaces=['village','shrine','cove','forest','waterfall','hotspring','fox'];
@@ -29,13 +31,6 @@ export function buildMapProgressionAudit(){
   const firstRouteOnly=battle.includes('const road=world?.roads?.[0];') &&
     battle.includes("if(closest>32*4)return 'village-outskirts';");
   if(!firstRouteOnly)throw Error('Region encounter routing changed; audit every region');
-  const sharedLandmarkEntrances=walk.includes("['shrine','cove','shiomachi'].includes(destination)")&&
-    walk.includes('enterFieldPlace(destination,completed)');
-  const linked={
-    village:walk.includes("destination==='village'"),
-    shrine:walk.includes("destination==='shrine'")||sharedLandmarkEntrances,
-    cove:walk.includes("destination==='cove'")||sharedLandmarkEntrances
-  };
   const legs=orderedPlaces.slice(1).map((id,i)=>{
     const prev=orderedPlaces[i],points=reference.roads[i];
     if(!points?.length||
@@ -44,7 +39,7 @@ export function buildMapProgressionAudit(){
       throw Error('Authored road endpoints differ from destination chain: '+prev+' > '+id);
     return {
       from:prev,to:id,routeIndex:i,referenceNodes:points.length,
-      metadataSteps:legLength(points),liveBothEnds:Boolean(linked[prev]&&linked[id])
+      metadataSteps:legLength(points),liveBothEnds:Object.hasOwn(FIELD_PLACE_ROUTES,prev)&&Object.hasOwn(FIELD_PLACE_ROUTES,id)
     };
   });
   const first=legs[0];
@@ -83,7 +78,7 @@ export function buildMapProgressionAudit(){
       caveDestinationPresent:guardNames.some(id=>/cave|cavern|tunnel|pass/.test(id)),
       restStopLocations:reference.restStops.map(s=>({id:s.id,name:s.name,cell:s.cell})),
       hasRestStopShopConnection:walk.includes('restStopAt('),
-      liveTransitionDestinations:orderedPlaces.filter(id=>Boolean(linked[id]))
+      liveTransitionDestinations:orderedPlaces.filter(id=>Object.hasOwn(FIELD_PLACE_ROUTES,id))
     },
     encounters:{minSteps:minInterval,maxSteps:maxInterval,firstRouteOnly,
       enemies:earlyEnemies},

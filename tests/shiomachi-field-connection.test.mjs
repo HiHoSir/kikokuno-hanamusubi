@@ -56,9 +56,9 @@ test('official village is protected by shell admission, uses original native-siz
  assert.ok(runtime.includes("consumeRestorePosition('shiomachi')"));
  assert.ok(runtime.includes("window.KIKOKU_SAVE_SNAPSHOT=()=>({scene:'shiomachi'"));
  assert.ok(runtime.includes("window.KIKOKU_ROUTE.go(new URL('../../field/?from=shiomachi'"));
- assert.match(walk,/\['shrine','cove','shiomachi'\]\.includes\(destination\)/);
- assert.match(walk,/placeReturnPosition\(from\)/);
- assert.match(walk,/sessionStorage\.setItem\(RETURN_KEY/);
+ assert.match(read('src/field/landmarks.mjs'),/shiomachi:'\.\.\/game\/shiomachi\/'/);
+ assert.match(walk,/FIELD_PLACE_ROUTES\[destination\]/);
+ assert.match(walk,/fieldExitPosition\(from\)/);
  assert.match(preview,/data-review-room="armory"/,'the original isolated preview is unchanged');
 });
 

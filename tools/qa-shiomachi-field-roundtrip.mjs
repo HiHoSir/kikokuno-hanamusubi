@@ -123,13 +123,18 @@ try{
    contact:window.YK_AREA_TRANSITIONS.contact(window.YK_WORLD,
       Number(scene.dataset.x)*32+16,Number(scene.dataset.y)*32+16)};
  });
- assert.deepEqual(after,{x:52,y:51,contact:null});
+ assert.deepEqual(after,{x:53,y:51,contact:'shiomachi'});
  // Verify the armory after the roundtrip so the shop test cannot move our exit spawn.
  await page.evaluate(async()=>{
    const {DEFAULT_PLAYER,savePlayer}=await import('./battle/rules.mjs');
    savePlayer({...DEFAULT_PLAYER,gold:208,shells:{bag:{white:2,spiral:1}}});
  });
  const returnedField=page.frames().find(f=>f.url().includes('/src/field/'));
+ await returnedField.evaluate(()=>{
+  for(const type of ['keydown','keyup'])
+   window.dispatchEvent(new KeyboardEvent(type,{key:'ArrowLeft'}));
+ });
+ await returnedField.waitForFunction(()=>document.querySelector('#scene').dataset.x==='52');
  await returnedField.evaluate(()=>window.dispatchEvent(new KeyboardEvent('keydown',
   {key:'ArrowRight',bubbles:true})));
  await page.waitForFunction(()=>{
@@ -340,7 +345,7 @@ try{
  assert.equal(await hozukiField.evaluate(()=>{
   const {x,y}=document.querySelector('#scene').dataset;
   return window.YK_AREA_TRANSITIONS.contact(window.YK_WORLD,Number(x)*32+16,Number(y)*32+16);
- }),null,'Hozuki field arrival does not immediately re-enter the village');
+ }),'village','Hozuki field arrival stays on the marker without re-entry');
 
  // Real movement from just south of each painted entrance tile.
  for(const [x,y,destination] of [[37,70,'village'],[38,70,'village'],[54,52,'shiomachi']]){

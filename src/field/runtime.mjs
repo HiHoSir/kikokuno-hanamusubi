@@ -1,5 +1,6 @@
 import {fieldViewportDimensions} from './viewport.mjs';
-import {createFieldTerrainRenderer} from './terrain-renderer.mjs?v=kozuene-marker-overlap-1';
+import {createFieldTerrainRenderer} from './terrain-renderer.mjs?v=shared-field-entrances-1';
+import {fieldMarkerPlace} from './landmarks.mjs?v=1';
 import {loadTerrainChips,placeShoreTrees} from './terrain-chips.mjs?v=authored-waterfall-1';
 const {YK_WORLD: world, YK_LANDSCAPE: landscape, YK_AUTOTILE: autotile,
   YK_ELEVATION: elevation, YK_CAMERA: camera, YK_MOVEMENT: movement,
@@ -7,6 +8,16 @@ const {YK_WORLD: world, YK_LANDSCAPE: landscape, YK_AUTOTILE: autotile,
 
 export {world};
 export const contact = (x, y) => transitions.contact(world, x, y);
+
+export function fieldExitPosition(placeId){
+  const marker=world.mapData.decorations.find(object=>fieldMarkerPlace(object)===placeId);
+  const cells=world.mapData.landmarkContactTiles[placeId]??marker?.contactTiles??[];
+  for(const cell of cells){
+    const [x,y]=cell.map(n=>(n+.5)*world.tileSize);
+    if(world.walkable(x,y)&&contact(x,y)===placeId)return [x,y];
+  }
+  throw Error('通行可能なフィールドの出入口がありません: '+placeId);
+}
 
 export function placeArrival(placeId) {
   const place=world.places[placeId];

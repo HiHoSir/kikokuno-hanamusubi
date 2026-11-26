@@ -19,7 +19,8 @@ test('game navigation and story entry are connected',()=>{
  assert.match(village,/\.\.\/interiors\/\?building=/);
  assert.match(village,/\.\.\/\.\.\/field\/\?from=village/);
  assert.match(interior,/new URL\('\.\.\/village\//);
- assert.match(field,/\.\.\/game\/village\/\?focus=field-exit/);
+ assert.match(field,/FIELD_PLACE_ROUTES\[destination\]/);
+ assert.match(readFileSync('src/field/landmarks.mjs','utf8'),/village:'\.\.\/game\/village\/\?focus=field-exit'/);
  assert.match(village,/completeStoryDialogue/);
 });
 test('all authored village art and NPC files exist',()=>{

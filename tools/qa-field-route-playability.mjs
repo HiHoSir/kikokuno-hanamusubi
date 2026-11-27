@@ -174,8 +174,11 @@ try{
  });
  const liveField=page.frameLocator('#game-scene');
  await liveField.locator('#load').waitFor({state:'hidden'});
+ await page.waitForFunction(()=>{
+   const field=document.querySelector('#game-scene')?.contentWindow;
+   return field?.location.pathname==='/src/field/'&&field.KIKOKU_SAVE_SNAPSHOT?.()?.position.x===1520;
+ });
  const coastFrame=page.frames().find(f=>f.url().includes('/src/field/?from=village'));
- await coastFrame.waitForFunction(()=>window.KIKOKU_SAVE_SNAPSHOT?.()?.position.x===1520);
  for(let step=0;step<9;step++){
    const right=step%2===0;
    await coastFrame.evaluate(key=>{

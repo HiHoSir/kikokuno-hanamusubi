@@ -1454,6 +1454,40 @@
       "usage": "battle-enemy"
     },
     {
+      "id": "enemy-kodama-autumn-512",
+      "type": "character",
+      "path": "assets/enemies/kodama-autumn-512.png",
+      "status": "approved",
+      "name": "紅葉木霊",
+      "origin": {
+        "kind": "part-colored-enemy-illustration",
+        "path": "assets/enemies/kodama.png"
+      },
+      "usage": "battle-enemy",
+      "dimensions": {
+        "width": 512,
+        "height": 512
+      },
+      "approvalNote": "ユーザー指示に基づく部位別の配色違い。元デザインを参照して描き直した別の戦闘用素材。"
+    },
+    {
+      "id": "enemy-mayoi-gumo-indigo-512",
+      "type": "character",
+      "path": "assets/enemies/mayoi-gumo-indigo-512.png",
+      "status": "approved",
+      "name": "藍糸蜘蛛",
+      "origin": {
+        "kind": "part-colored-enemy-illustration",
+        "path": "assets/enemies/mayoi-gumo.png"
+      },
+      "usage": "battle-enemy",
+      "dimensions": {
+        "width": 512,
+        "height": 512
+      },
+      "approvalNote": "ユーザー指示に基づく部位別の配色違い。元デザインを参照して描き直した別の戦闘用素材。"
+    },
+    {
       "id": "enemy-kodama",
       "type": "character",
       "path": "assets/enemies/kodama.png",

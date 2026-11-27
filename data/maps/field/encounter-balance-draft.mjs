@@ -1,6 +1,6 @@
-import {FIELD_ENCOUNTER_PLAN_ENEMIES} from './encounter-plan.mjs?v=7';
+import {FIELD_ENCOUNTER_PLAN_ENEMIES} from './encounter-plan.mjs?v=8';
 
-import {ENEMIES} from '../../../src/game/battle/rules.mjs?v=regional-1-promotion-pace-1-balance-1-pools-1';
+import {ENEMIES} from '../../../src/game/battle/rules.mjs?v=regional-1-promotion-pace-1-balance-1-pools-1-forest-palettes-1';
 
 // Design values for the field map review, with the six regional enemies reading their shared initial values.
 const stats=(enemy,hp,attack,defense,xp,gold)=>({

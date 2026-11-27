@@ -219,25 +219,28 @@ try{
  assert.deepEqual(await page.getByRole('row',{name:/^木霊/}).locator('th,td').allTextContents(),
    ['木霊','38','25','11','95','36']);
  await page.getByRole('button',{name:'梢音村から忘れの森'}).click();
- assert.match(await page.locator('#details').textContent(),/迷い蜘蛛.*紅葉木霊.*藍糸蜘蛛/s);
- const portraits=await page.locator('#details .enemy:has(img)').evaluateAll(cards=>cards.map(card=>({
-   name:card.textContent,
-   filter:getComputedStyle(card.querySelector('img')).filter
- })));
- assert.deepEqual(portraits.map(entry=>entry.name),['木霊','迷い蜘蛛','紅葉木霊','藍糸蜘蛛','落葉隠れ']);
- assert.deepEqual(portraits.slice(0,2).map(entry=>entry.filter),['none','none']);
- assert.match(portraits[2].filter,/hue-rotate\(-76deg\)/);
- assert.match(portraits[3].filter,/hue-rotate\(217deg\)/);
- assert.equal(await page.getByRole('row',{name:/^藍糸蜘蛛/}).count(),1);
+ const forestDetails=await page.locator('#details').textContent();
+ assert.match(forestDetails,/落葉隠れ 35%.*藍糸蜘蛛×2 10%/s);
+ const forestSprites=await page.locator('#details .enemy img').evaluateAll(
+   async images=>Promise.all(images.map(async img=>{
+     await img.decode();
+     return [new URL(img.src).pathname.split('/').at(-1),img.naturalWidth,getComputedStyle(img).filter];
+   }))
+ );
+ assert.deepEqual(forestSprites,[
+   ['kodama.png',512,'none'],['mayoi-gumo.png',512,'none'],
+   ['kodama-autumn-512.png',512,'none'],['mayoi-gumo-indigo-512.png',512,'none'],
+   ['leaf-tanuki-128.png',128,'none']
+ ]);
+
  assert.equal(await page.locator('#map [data-zone="forest"]').getAttribute('opacity'),'1');
- assert.match(await page.locator('#details').textContent(),/落葉隠れ 35%.*藍糸蜘蛛×2 10%/s);
  await page.locator('#details img').first().evaluate(img=>img.decode());
  await page.setViewportSize({width:390,height:844});
  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),
    'encounter map and region controls fit a phone viewport');
  assert.equal(await page.locator('[data-encounter-zone="forest"] [data-enemy="leafStalker"]').count(),1);
  const beforeTrial=await page.evaluate(()=>[JSON.stringify(localStorage),JSON.stringify(sessionStorage)]);
- await page.getByRole('group',{name:'藍糸蜘蛛',exact:true}).getByRole('button',{name:'2体と試しに戦う'}).click();
+ await page.getByRole('group',{name:'藍糸蜘蛛',exact:true}).getByRole('button',{name:'2体と試しに戦う',exact:true}).click();
  const trial=page.getByRole('dialog');
  assert.equal(await trial.getByRole('img',{name:'藍糸蜘蛛'}).count(),2);
  await trial.getByRole('button',{name:'攻撃',exact:true}).click();

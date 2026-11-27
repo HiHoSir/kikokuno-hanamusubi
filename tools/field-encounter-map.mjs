@@ -1,9 +1,11 @@
 import '../data/maps/field/terrain.js';
+import {ENCOUNTER_POOLS,encounterFormations,fieldRegionAt} from '../data/maps/field/encounter-pools.mjs';
+import {ENEMIES} from '../src/game/battle/rules.mjs?v=regional-1-promotion-pace-1-balance-1-pools-1';
 import {
  FIELD_ENCOUNTER_PLAN,FIELD_ENCOUNTER_PLAN_ENEMIES,
  FIELD_ENCOUNTER_PLAN_MARKERS,FIELD_ENCOUNTER_PLANNED_MARKERS
-} from '../data/maps/field/encounter-plan.mjs?v=6';
-import {FIELD_ENCOUNTER_BALANCE_DRAFT} from '../data/maps/field/encounter-balance-draft.mjs?v=8';
+} from '../data/maps/field/encounter-plan.mjs?v=7';
+import {FIELD_ENCOUNTER_BALANCE_DRAFT} from '../data/maps/field/encounter-balance-draft.mjs?v=9';
 import {addBattleTrial,HOZUKI_TRIAL_KIT,TIDE_TRIAL_KIT,REGIONAL_TRIAL_REFERENCES} from './field-encounter-trial.mjs?v=5';
 
 document.title='敵分布案｜鬼哭の花結び';
@@ -97,6 +99,19 @@ for(const [y,row] of tiles.entries()){
  }
 }
 
+const regions=shape(map,'g',{'pointer-events':'none','shape-rendering':'crispEdges'});
+for(const [id,region] of FIELD_ENCOUNTER_PLAN.map(zone=>[zone.id,zone])){
+ const pools=new Set(region.sections.flatMap(section=>section.pools));
+ for(let y=0;y<tiles.length;y++){
+  for(let x=0;x<tiles[y].length;x++){
+   const tile=tiles[y][x];
+   if(tile==='bridge'||!['grass','sand','forest','road'].includes(tile))continue;
+   if(!pools.has(fieldRegionAt(x,y))||(id==='bridge'&&fieldRegionAt(x,y)==='coast'))continue;
+   shape(regions,'rect',{x:x*10,y:y*10,width:10,height:10,fill:region.color,opacity:.22});
+  }
+ }
+}
+
 const paths=new Map();
 for(const zone of FIELD_ENCOUNTER_PLAN){
  const route=shape(map,'g',{'data-zone':zone.id,fill:'none','stroke-linecap':'round','stroke-linejoin':'round'});
@@ -154,16 +169,30 @@ const buttons=FIELD_ENCOUNTER_PLAN.map(zone=>{
  button.addEventListener('click',()=>select(zone));
  return button;
 });
-const tierReference=(lv,equipmentTier)=>({
- label:`${lv}段・${equipmentTier}相当の設計値`,player:{lv,equipmentTier}
-});
+const tideReference=lv=>({label:`${lv}段・潮待村の装備4点`,player:{...TIDE_TRIAL_KIT,lv}});
 const zoneReference={
- bridge:{label:'12段・潮待村の装備4点',player:{...TIDE_TRIAL_KIT,lv:12}},
- waterfall:tierReference(25,'T5'),tunnel:tierReference(26,'T5'),
- ridge:tierReference(28,'T5'),fox:tierReference(30,'T6')
+ bridge:tideReference(4),forest:tideReference(6),waterfall:tideReference(8),
+ tunnel:tideReference(9),ridge:tideReference(10),fox:tideReference(12)
 };
 const coastReference={label:'3段・鬼灯村の装備4点',player:{...HOZUKI_TRIAL_KIT,lv:3}};
 const pairs=new Set(['forest-spider','cove-jelly','tunnel-bat']);
+function showEncounterPool(section,article){
+ for(const key of section.pools){
+  const available=encounterFormations(key,ENEMIES);
+  const connected=key!=='mountain-cave';
+  const rows=connected?available:ENCOUNTER_POOLS[key];
+  const total=rows.reduce((sum,[,,weight])=>sum+weight,0);
+  const format=([id,count,weight])=>{
+   const name=ENEMIES[id]?.name??FIELD_ENCOUNTER_BALANCE_DRAFT[id].name;
+   return name+(count===2?'×2':'')+' '+Math.round(weight/total*100)+'%';
+  };
+  const prefix=key==='village-outskirts'?'鬼灯村周辺　':key==='shrine-approach'?'社への道　':'';
+  element('p',prefix+(connected?'本編　':'未接続の配分　')+rows.map(format).join('、'),article);
+  const planned=connected?ENCOUNTER_POOLS[key].filter(([id])=>!Object.hasOwn(ENEMIES,id)):[];
+  if(planned.length)element('p','画像未採用　'+planned.map(([id])=>FIELD_ENCOUNTER_BALANCE_DRAFT[id].name).join('、'),article);
+ }
+}
+
 function select(zone){
  for(const [index,button] of buttons.entries()){
   const id=FIELD_ENCOUNTER_PLAN[index].id;
@@ -177,6 +206,7 @@ function select(zone){
   const article=element('article',null,details);
   element('h3',section.name,article);
   element('p',section.detail,article);
+  showEncounterPool(section,article);
   if(!section.formations.length)continue;
   const list=element('div',null,article);
   list.className='enemies';

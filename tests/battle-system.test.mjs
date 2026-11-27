@@ -1,27 +1,39 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync,existsSync} from 'node:fs';
+import {ENCOUNTER_POOLS,encounterFormations} from '../data/maps/field/encounter-pools.mjs';
+import {FIELD_ENCOUNTER_BALANCE_DRAFT} from '../data/maps/field/encounter-balance-draft.mjs';
 import {SHIOMACHI_ARMORY_STOCK} from '../data/maps/shiomachi-village/armory.mjs';
 import {execFileSync} from 'node:child_process';
 import {BATTLE_REQUEST_KEY,FIELD_RETURN_KEY,PLAYER_KEY,ENEMIES,createBattle,
   chooseEnemy,readPlayer,savePlayer,normalizePlayer,DEFAULT_PLAYER,FOOD_ITEMS,ARMORY_STOCK,purchaseFood,purchaseArmory,
   STATUS_V2,levelStats,nextLevelXp,physicalDamage,fieldEncounterZone,chooseFieldEncounter} from '../src/game/battle/rules.mjs';
 
-test('regional field encounters select the marked habitats and keep other rolls on the original pool',()=>{
-  const world={tileSize:32,tileAt:()=> 'grass'};
-  const cases=[
-    ['cove-crab',48,52],['bridge-lantern',48,42],['forest-leaf',58,30],
-    ['falls-bird',67,21],['pass-deer',37,15]
+test('every regional field pool uses only local normal enemies and covers its formations',()=>{
+  const world={tileSize:32};
+  const zones=[
+    ['coast',48,52],['north-bank',48,42],['forest-edge',56,34],['forest-depths',58,30],
+    ['waterfall',67,21],['waterfall',57,22],['ridge',37,15],['ridge',42,18],['fox-approach',40,8]
   ];
-  for(const [id,x,y] of cases){
+  const forbidden=new Set(['field-oni','tanuki','onibi','cave-guardian','shrine-shadow-fox']);
+  for(const [zone,x,y] of zones){
     const point={x:x*32+16,y:y*32+16};
-    assert.deepEqual(chooseFieldEncounter(point,world,()=>.1),{enemyId:id,count:1,zone:id});
-    assert.notEqual(chooseFieldEncounter(point,world,()=>.5).enemyId,id);
-    assert.equal(createBattle(id).state.enemy.asset,ENEMIES[id].asset);
+    assert.equal(fieldEncounterZone(point,world),zone);
+    const expected=new Set(encounterFormations(zone,ENEMIES).map(([id,count])=>id+':'+count));
+    const seen=new Set();
+    for(let i=0;i<100;i++){
+      const encounter=chooseFieldEncounter(point,world,()=>(i+.5)/100);
+      assert.equal(encounter.zone,zone);
+      assert.ok(!forbidden.has(encounter.enemyId));
+      seen.add(encounter.enemyId+':'+encounter.count);
+    }
+    assert.deepEqual(seen,expected);
   }
-  assert.equal(chooseFieldEncounter({x:48*32+16,y:43*32+16},
-    {...world,tileAt:()=> 'bridge'},()=>.1).enemyId,'field-oni');
-  assert.equal(chooseFieldEncounter({x:42*32+16,y:18*32+16},world,()=>.1).enemyId,'field-oni');
+  const plannedIds=new Set(Object.values(ENCOUNTER_POOLS).flat().map(([id])=>id));
+  for(const id of Object.keys(FIELD_ENCOUNTER_BALANCE_DRAFT)){
+    if(id==='cave-guardian'||id==='shrine-shadow-fox')assert.ok(!plannedIds.has(id));
+    else assert.ok(plannedIds.has(id.replace(/^early-oni$/,'field-oni').replace(/^early-/,'')),id);
+  }
 });
 
 test('regional enemy balance is playable with equipment sold in the first two villages',()=>{

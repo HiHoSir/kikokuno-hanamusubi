@@ -25,41 +25,41 @@ export const FIELD_ENCOUNTER_PLAN_ENEMIES={
 // represented by its endpoints and never marks surface cells as encounters.
 export const FIELD_ENCOUNTER_PLAN=[
  {id:'south',title:'鬼灯村から潮待村',color:'#dec796',sections:[
-  {name:'南岸と社への道',roadIndices:[0,1],paths:[],
+  {name:'南岸と社への道',pools:['village-outskirts','shrine-approach'],roadIndices:[0,1],paths:[],
    formations:['oni','tanuki','onibi'],balance:['early-oni','early-tanuki','early-onibi'],detail:'鬼灯村外れと社への道の現行編成。'},
-  {name:'海の入り江から潮待村',paths:[[[49,53],[49,51],[53,51]]],
+  {name:'海の入り江から潮待村',pools:['coast'],paths:[[[49,53],[49,51],[53,51]]],
    formations:['shoreOni','bubbleJelly','tideCrab'],balance:['cove-oni','cove-jelly','cove-crab'],detail:'磯妖は単体、泡くらげは単体か2体。潮鋏は磯の岩場に単体。入り江のイベント地点では通常戦を避ける。'},
-  {name:'社西の洞窟',paths:[[[14,48],[20,48],[20,45]]],
-   formations:['oni','tanuki','caveGuardian'],balance:['early-oni','early-tanuki','cave-guardian'],
+  {name:'社西の洞窟',pools:['shrine-cave'],paths:[[[14,48],[20,48],[20,45]]],
+   formations:['oni','tanuki','onibi'],balance:['early-oni','early-tanuki','early-onibi'],
    detail:'現行の基準として、地下の通常戦には序盤敵を使い、岩守の鬼は地下3階の固定戦。'}
  ]},
  {id:'bridge',title:'潮待村から梢音村',color:'#f2a948',sections:[
-  {name:'潮待村から橋の南岸',paths:[[[53,51],[53,49],[51,47],[48,46],[48,44]]],
-   formations:['oni','tanuki'],balance:['early-oni','early-tanuki'],detail:'南岸は野の小鬼と化け狸を中心にする。'},
-  {name:'橋の北岸から梢音村',paths:[[[48,43],[48,35],[56,35]]],
-   formations:['oni','tanuki','kodama','bridgeLantern'],balance:['early-oni','early-tanuki','bridge-kodama','bridge-lantern'],detail:'渡った先で木霊を混ぜ、北岸の石畳に橋灯りを置く。梢音村に近づくほど木霊を増やす。橋上と入村マスは遭遇対象外。'}
+  {name:'潮待村から橋の南岸',pools:['coast'],paths:[[[53,51],[53,49],[51,47],[48,46],[48,44]]],
+   formations:['shoreOni','bubbleJelly','tideCrab'],balance:['cove-oni','cove-jelly','cove-crab'],detail:'海側の道は磯妖・泡くらげ・潮鋏。橋の上は安全。'},
+  {name:'橋の北岸から梢音村',pools:['north-bank'],paths:[[[48,43],[48,35],[56,35]]],
+   formations:['kodama','bridgeLantern'],balance:['bridge-kodama','bridge-lantern'],detail:'橋を渡った先には木霊と橋灯りが出る。橋上と入村マスは遭遇対象外。'}
  ]},
  {id:'forest',title:'梢音村から忘れの森',color:'#64db9d',sections:[
-  {name:'梢音村から森の入口',paths:[[[56,35],[56,33],[60,33],[60,32]]],
+  {name:'梢音村から森の入口',pools:['forest-edge'],paths:[[[56,35],[56,33],[60,33],[60,32]]],
    formations:['kodama','spider'],balance:['bridge-kodama','edge-spider'],detail:'入口付近は北岸と同じ木霊と、通常の迷い蜘蛛が単体で出る案。梢音村から最短7歩のため、直行時に戦闘を強制しない。'},
-  {name:'森の奥から滝へ',paths:[[[60,32],[60,29],[63,29],[63,23],[65,23]]],
+  {name:'森の奥から滝へ',pools:['forest-depths'],paths:[[[60,32],[60,29],[63,29],[63,23],[65,23]]],
    formations:['kodamaAutumn','spiderIndigo','leafStalker'],balance:['forest-kodama','forest-spider','forest-leaf'],detail:'紅葉木霊は赤橙の葉を持つ単体の強敵。藍糸蜘蛛は単体か2体、落葉隠れは落ち葉の多い森床に単体。'}
  ]},
  {id:'waterfall',title:'龍神の滝から洞窟東口',color:'#6ad7f0',sections:[
-  {name:'滝と水辺',paths:[[[65,23],[65,20],[67,20]],[[67,20],[67,22],[57,22]]],
+  {name:'滝と水辺',pools:['waterfall'],paths:[[[65,23],[65,20],[67,20]],[[67,20],[67,22],[57,22]]],
    formations:['snake','waterChild','sprayCormorant'],balance:['falls-snake','falls-child','falls-bird'],detail:'滝壺は水蛇と飛沫鵜、浅瀬は滝童が出る。水鏡のイベント地点は通常遭遇から外す。'}
  ]},
  {id:'tunnel',title:'山越えの洞窟',color:'#f294ae',tunnel:true,sections:[
-  {name:'洞窟の入口側と奥',paths:[[[57,22],[42,18]]],
+  {name:'洞窟の入口側と奥',pools:['mountain-cave'],paths:[[[57,22],[42,18]]],
    formations:['caveBat','caveCentipede','crystalHermit'],balance:['tunnel-bat','tunnel-centipede','tunnel-hermit'],detail:'鉱灯蝙蝠は湿った東口側で単体、奥では2体。岩骨ムカデは狭い岩棚、晶殻ヤドカリは晶洞に単体。'}
  ]},
  {id:'ridge',title:'洞窟西口から月嶺村',color:'#e7cc67',sections:[
-  {name:'西口と山道',paths:[[[42,18],[42,15],[30,15],[29,17],[26,17]]],
+  {name:'西口と山道',pools:['ridge'],paths:[[[42,18],[42,15],[30,15],[29,17],[26,17]]],
    formations:['mountainBoar','mountainCrow','mistDeer'],balance:['pass-boar','pass-crow','pass-deer'],detail:'峠荒らしは岩場の単体。風切り鴉は露出した尾根、霧角鹿は霧の鞍部に単体。洞窟西口と月嶺村の周囲は休息区間。'}
  ]},
  {id:'fox',title:'月嶺村から九尾の祠',color:'#c1a0ff',sections:[
-  {name:'北の参道',paths:[[[26,17],[26,13],[28,13],[28,11],[40,11],[40,5]]],
-   formations:['fox','shadowFox'],balance:['ridge-fox','shrine-shadow-fox'],detail:'参道は妖狐の単体。影九尾は祠前の固定戦候補。'}
+  {name:'北の参道',pools:['fox-approach'],paths:[[[26,17],[26,13],[28,13],[28,11],[40,11],[40,5]]],
+   formations:['fox'],balance:['ridge-fox'],detail:'参道は妖狐の単体。影九尾は固定戦候補。'}
  ]}
 ];
 

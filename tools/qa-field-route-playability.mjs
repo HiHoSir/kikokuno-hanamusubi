@@ -243,7 +243,7 @@ try{
  await page.getByRole('button',{name:'山越えの洞窟',exact:true}).click();
  assert.match(await page.locator('#details').textContent(),/鉱灯蝙蝠.*岩骨ムカデ.*晶殻ヤドカリ/s);
  assert.deepEqual(await page.getByRole('row',{name:/^晶殻ヤドカリ/}).locator('th,td').allTextContents(),
-   ['晶殻ヤドカリ','185','112','88','600','195']);
+   ['晶殻ヤドカリ','185','112','88','950','195']);
  assert.match(await page.locator('#details').textContent(),/技案（試戦では未使用）.*晶殻。/s);
  await page.getByRole('group',{name:'晶殻ヤドカリ',exact:true}).getByRole('button',{name:'試しに戦う',exact:true}).click();
  await trial.getByRole('img',{name:'晶殻ヤドカリ'}).evaluate(img=>img.decode());

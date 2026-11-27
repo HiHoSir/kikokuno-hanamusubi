@@ -2,9 +2,9 @@ import '../data/maps/field/terrain.js';
 import {
  FIELD_ENCOUNTER_PLAN,FIELD_ENCOUNTER_PLAN_ENEMIES,
  FIELD_ENCOUNTER_PLAN_MARKERS,FIELD_ENCOUNTER_PLANNED_MARKERS
-} from '../data/maps/field/encounter-plan.mjs?v=5';
-import {FIELD_ENCOUNTER_BALANCE_DRAFT} from '../data/maps/field/encounter-balance-draft.mjs?v=4';
-import {addBattleTrial,HOZUKI_TRIAL_KIT,TIDE_TRIAL_KIT} from './field-encounter-trial.mjs?v=2';
+} from '../data/maps/field/encounter-plan.mjs?v=6';
+import {FIELD_ENCOUNTER_BALANCE_DRAFT} from '../data/maps/field/encounter-balance-draft.mjs?v=5';
+import {addBattleTrial,HOZUKI_TRIAL_KIT,TIDE_TRIAL_KIT} from './field-encounter-trial.mjs?v=3';
 
 document.title='敵分布案｜鬼哭の花結び';
 const style=document.createElement('style');
@@ -28,7 +28,9 @@ article+article{border-top:1px solid #4c6363;margin-top:12px;padding-top:12px}
 .concept-enemy{display:flex;flex-direction:column-reverse;justify-content:start;width:140px;text-align:left}
 .concept-enemy span{font-weight:700}
 .concept-enemy p{margin:0}
-.concept-enemy small{display:block;margin-top:4px;color:#cbd4cc}
+.encounter-location{margin-top:8px}
+.encounter-location small{display:block;margin-top:4px;color:#cbd4cc}
+.enemy img[data-pixel-art],.trial-portraits img[data-pixel-art]{image-rendering:pixelated}
 .enemy img{width:100%;height:100%;object-fit:contain}
 table{width:100%;margin-top:12px;border-collapse:collapse;font-size:.8rem}
 caption{text-align:left;color:#d7d8b8}
@@ -53,7 +55,7 @@ document.body.innerHTML=`<main>
 <div class="layout">
  <section>
   <svg class="map" id="map" viewBox="0 0 800 800" role="img" aria-label="花霞野のフィールドに敵の分布区間を重ねた地図"></svg>
-  <p class="note">◆ 地上の入口案　破線 山越えの洞窟　× 塞ぐ迂回路</p>
+  <p class="note">● 追加敵の出現地　◆ 地上の入口案　破線 山越えの洞窟　× 塞ぐ迂回路</p>
  </section>
  <aside>
   <nav id="zones" aria-label="敵の分布区間"></nav>
@@ -129,6 +131,22 @@ for(const {name,point:[tx,ty],planned} of markers){
    'text-anchor':left?'end':'start',fill:'#fff5dc',stroke:'#172d32',
    'stroke-width':5,'paint-order':'stroke','font-weight':700,'font-size':20},name);
 }
+const encounterPins=new Map();
+const pinLayer=shape(map,'g',{'aria-hidden':'true'});
+for(const zone of FIELD_ENCOUNTER_PLAN){
+ const pins=shape(pinLayer,'g',{'data-encounter-zone':zone.id});
+ encounterPins.set(zone.id,pins);
+ for(const {formations} of zone.sections){
+  for(const id of formations){
+   const {name,distribution}=FIELD_ENCOUNTER_PLAN_ENEMIES[id];
+   if(!distribution?.point)continue;
+   const [x,y]=distribution.point;
+   const pin=shape(pins,'circle',{cx:center(x),cy:center(y),r:6,
+    fill:zone.color,stroke:'#fff3d8','stroke-width':2,'data-enemy':id});
+   shape(pin,'title',{},name+'　'+distribution.habitat);
+  }
+ }
+}
 const buttons=FIELD_ENCOUNTER_PLAN.map(zone=>{
  const button=element('button',zone.title,zones);
  button.type='button';
@@ -151,6 +169,7 @@ function select(zone){
   const id=FIELD_ENCOUNTER_PLAN[index].id;
   button.setAttribute('aria-pressed',String(id===zone.id));
   paths.get(id).setAttribute('opacity',id===zone.id?'1':'.42');
+  encounterPins.get(id).setAttribute('display',id===zone.id?'inline':'none');
  }
  details.replaceChildren();
  element('h2',zone.title,details);
@@ -169,13 +188,22 @@ function select(zone){
     const image=element('img',null,tile);
     image.src=new URL('../'+enemy.asset,import.meta.url);
     image.alt='';
+    if(enemy.pixelArt)image.dataset.pixelArt='';
     if(enemy.filter)image.style.filter=enemy.filter;
    }else{
     tile.classList.add('concept-enemy');
-    const description=element('p',enemy.concept,tile);
-    if(enemy.technique)element('small','技案（試戦では未使用）　'+enemy.technique,description);
+    element('p',enemy.concept,tile);
    }
    element('span',enemy.name,tile);
+  }
+  for(const id of section.formations){
+   const {name,distribution,technique}=FIELD_ENCOUNTER_PLAN_ENEMIES[id];
+   if(!distribution)continue;
+   const location=element('p',null,article);
+   location.className='encounter-location';
+   element('strong',name,location);
+   location.append('　'+distribution.habitat+'・'+distribution.count+'体');
+   if(technique)element('small','技案（試戦では未使用）　'+technique,location);
   }
   if(section.balance){
    for(const id of section.balance){
@@ -189,7 +217,7 @@ function select(zone){
     const trial={host,enemy,portrait:FIELD_ENCOUNTER_PLAN_ENEMIES[enemy.enemy],element,
      deep:id.startsWith('forest-'),reference};
     element('strong',enemy.name,host);
-    addBattleTrial(trial);
+    addBattleTrial({...trial,count:trial.portrait.distribution?.count??1});
     if(pairs.has(id))addBattleTrial({...trial,count:2});
    }
   }

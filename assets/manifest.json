@@ -1273,6 +1273,108 @@
       }
     },
     {
+      "id": "enemy-tidal-crab-128",
+      "type": "character",
+      "path": "assets/enemies/tidal-crab-128.png",
+      "status": "approved",
+      "name": "潮鋏",
+      "origin": {
+        "kind": "generated-enemy-sprite-sheet",
+        "source": "和風JRPGの六種モンスタースプライト.png"
+      },
+      "usage": "battle-enemy",
+      "dimensions": {
+        "width": 128,
+        "height": 128
+      },
+      "approvalNote": "ユーザー指示「オッケー。じゃあこれで分布設定して」。敵分布の試戦から参照。"
+    },
+    {
+      "id": "enemy-stone-lantern-128",
+      "type": "character",
+      "path": "assets/enemies/stone-lantern-128.png",
+      "status": "approved",
+      "name": "橋灯り",
+      "origin": {
+        "kind": "generated-enemy-sprite-sheet",
+        "source": "和風JRPGの六種モンスタースプライト.png"
+      },
+      "usage": "battle-enemy",
+      "dimensions": {
+        "width": 128,
+        "height": 128
+      },
+      "approvalNote": "ユーザー指示「オッケー。じゃあこれで分布設定して」。敵分布の試戦から参照。"
+    },
+    {
+      "id": "enemy-leaf-tanuki-128",
+      "type": "character",
+      "path": "assets/enemies/leaf-tanuki-128.png",
+      "status": "approved",
+      "name": "落葉隠れ",
+      "origin": {
+        "kind": "generated-enemy-sprite-sheet",
+        "source": "和風JRPGの六種モンスタースプライト.png"
+      },
+      "usage": "battle-enemy",
+      "dimensions": {
+        "width": 128,
+        "height": 128
+      },
+      "approvalNote": "ユーザー指示「オッケー。じゃあこれで分布設定して」。敵分布の試戦から参照。"
+    },
+    {
+      "id": "enemy-diving-cormorant-128",
+      "type": "character",
+      "path": "assets/enemies/diving-cormorant-128.png",
+      "status": "approved",
+      "name": "飛沫鵜",
+      "origin": {
+        "kind": "generated-enemy-sprite-sheet",
+        "source": "和風JRPGの六種モンスタースプライト.png"
+      },
+      "usage": "battle-enemy",
+      "dimensions": {
+        "width": 128,
+        "height": 128
+      },
+      "approvalNote": "ユーザー指示「オッケー。じゃあこれで分布設定して」。敵分布の試戦から参照。"
+    },
+    {
+      "id": "enemy-crystal-hermit-crab-128",
+      "type": "character",
+      "path": "assets/enemies/crystal-hermit-crab-128.png",
+      "status": "approved",
+      "name": "晶殻ヤドカリ",
+      "origin": {
+        "kind": "generated-enemy-sprite-sheet",
+        "source": "和風JRPGの六種モンスタースプライト.png"
+      },
+      "usage": "battle-enemy",
+      "dimensions": {
+        "width": 128,
+        "height": 128
+      },
+      "approvalNote": "ユーザー指示「オッケー。じゃあこれで分布設定して」。敵分布の試戦から参照。"
+    },
+    {
+      "id": "enemy-mist-antler-deer-128",
+      "type": "character",
+      "path": "assets/enemies/mist-antler-deer-128.png",
+      "status": "approved",
+      "name": "霧角鹿",
+      "origin": {
+        "kind": "generated-enemy-sprite-sheet",
+        "source": "和風JRPGの六種モンスタースプライト.png"
+      },
+      "usage": "battle-enemy",
+      "dimensions": {
+        "width": 128,
+        "height": 128
+      },
+      "approvalNote": "ユーザー指示「オッケー。じゃあこれで分布設定して」。敵分布の試戦から参照。"
+    },
+    {
       "id": "enemy-field-oni",
       "type": "character",
       "path": "assets/enemies/field-oni.png",

@@ -1,4 +1,4 @@
-import {FIELD_ENCOUNTER_PLAN_ENEMIES} from './encounter-plan.mjs?v=5';
+import {FIELD_ENCOUNTER_PLAN_ENEMIES} from './encounter-plan.mjs?v=6';
 
 import {ENEMIES} from '../../../src/game/battle/rules.mjs';
 

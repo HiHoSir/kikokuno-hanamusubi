@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-11-27-forest-enemy-variants",
+  "kind": "documentation-correction",
+  "scopes": ["progression"],
+  "affectedFiles": ["docs/MAP_ENEMY_EQUIPMENT_RECONCILIATION.md"],
+  "readBeforeEditing": [
+    "docs/MAP_ENEMY_EQUIPMENT_RECONCILIATION.md、分布マップ、能力・報酬の初稿",
+    "assets/manifest.json と木霊・迷い蜘蛛の既存の色・輪郭"
+  ],
+  "previousDesign": "入口と森奥の敵の能力が異なる一方で、同じ画像と名前を再利用していた。",
+  "intendedDifference": "森奥は赤橙の紅葉木霊、青藍の藍糸蜘蛛に変更し、敵画像と能力表の名前を同じ定義から表示する。",
+  "impactAnalysis": "プレイヤーは入口と森奥の敵を名前と色で区別できる。現行の本編に新しい敵を出現させる変更はない。",
+  "preservedBoundaries": "採用済みPNG、森奥の能力・報酬案、出現区間、本編の戦闘・遭遇を維持する。",
+  "verification": "Chromium で入口と森奥の名前・画像の配色・能力表の一致を検査し、戦闘試算で数値を再確認する。",
+  "userEvidence": {
+    "status": "explicit-user-instruction",
+    "date": "2026-11-27",
+    "quote": "いや、同じ姿で強化版は意味わからないって。\nせめて色と名前が違うとか見た目の差を出さないと。",
+    "source": "本会話で、敵分布マップの能力・報酬案を提示した直後のユーザー指示。"
+  }
+}

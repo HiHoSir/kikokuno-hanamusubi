@@ -2,8 +2,8 @@ import '../data/maps/field/terrain.js';
 import {
  FIELD_ENCOUNTER_PLAN,FIELD_ENCOUNTER_PLAN_ENEMIES,
  FIELD_ENCOUNTER_PLAN_MARKERS,FIELD_ENCOUNTER_PLANNED_MARKERS
-} from '../data/maps/field/encounter-plan.mjs?v=2';
-import {FIELD_ENCOUNTER_BALANCE_DRAFT} from '../data/maps/field/encounter-balance-draft.mjs?v=1';
+} from '../data/maps/field/encounter-plan.mjs?v=3';
+import {FIELD_ENCOUNTER_BALANCE_DRAFT} from '../data/maps/field/encounter-balance-draft.mjs?v=2';
 
 document.title='敵分布案｜鬼哭の花結び';
 const style=document.createElement('style');
@@ -143,6 +143,7 @@ function select(zone){
    const image=element('img',null,tile);
    image.src=new URL('../'+enemy.asset,import.meta.url);
    image.alt='';
+   if(enemy.filter)image.style.filter=enemy.filter;
    element('span',enemy.name,tile);
   }
   if(section.balance){

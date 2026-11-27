@@ -2,6 +2,8 @@ const enemy=(name,asset)=>({name,asset:`assets/enemies/${asset}.png`});
 export const FIELD_ENCOUNTER_PLAN_ENEMIES={
  oni:enemy('野の小鬼','field-oni'),tanuki:enemy('化け狸','tanuki'),onibi:enemy('鬼火','onibi'),
  kodama:enemy('木霊','kodama'),spider:enemy('迷い蜘蛛','mayoi-gumo'),
+ kodamaAutumn:{...enemy('紅葉木霊','kodama'),filter:'hue-rotate(-76deg) saturate(1.12)'},
+ spiderIndigo:{...enemy('藍糸蜘蛛','mayoi-gumo'),filter:'sepia(.8) hue-rotate(217deg) saturate(1.65)'},
  snake:enemy('水蛇','mizuhebi'),waterChild:enemy('滝童','takiwarashi'),
  fox:enemy('妖狐','youko')
 };
@@ -21,9 +23,9 @@ export const FIELD_ENCOUNTER_PLAN=[
  ]},
  {id:'forest',title:'梢音村から忘れの森',color:'#64db9d',sections:[
   {name:'梢音村から森の入口',paths:[[[56,35],[56,33],[60,33],[60,32]]],
-   formations:['kodama','spider'],balance:['bridge-kodama','edge-spider'],detail:'入口付近は北岸と同じ木霊と、小型の迷い蜘蛛が単体で出る案。梢音村から最短7歩のため、直行時に戦闘を強制しない。'},
+   formations:['kodama','spider'],balance:['bridge-kodama','edge-spider'],detail:'入口付近は北岸と同じ木霊と、通常の迷い蜘蛛が単体で出る案。梢音村から最短7歩のため、直行時に戦闘を強制しない。'},
   {name:'森の奥から滝へ',paths:[[[60,32],[60,29],[63,29],[63,23],[65,23]]],
-   formations:['kodama','spider'],balance:['forest-kodama','forest-spider'],detail:'森奥の木霊は単体の強敵。迷い蜘蛛は単体から2体編成へ移る。'}
+   formations:['kodamaAutumn','spiderIndigo'],balance:['forest-kodama','forest-spider'],detail:'紅葉木霊は赤橙の葉を持つ単体の強敵。青藍の藍糸蜘蛛は単体か2体で出る。'}
  ]},
  {id:'waterfall',title:'龍神の滝から洞窟東口',color:'#6ad7f0',sections:[
   {name:'滝と水辺',paths:[[[65,23],[65,20],[67,20]],[[67,20],[67,22],[57,22]]],

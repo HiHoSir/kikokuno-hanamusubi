@@ -1,10 +1,15 @@
+import {FIELD_ENCOUNTER_PLAN_ENEMIES} from './encounter-plan.mjs?v=3';
+
 // Design values for the field map review, separate from live ENEMIES.
+const stats=(enemy,hp,attack,defense,xp,gold)=>({
+ enemy,name:FIELD_ENCOUNTER_PLAN_ENEMIES[enemy].name,hp,attack,defense,xp,gold
+});
 export const FIELD_ENCOUNTER_BALANCE_DRAFT={
- 'bridge-kodama':{enemy:'kodama',name:'木霊（北岸）',hp:72,attack:49,defense:16,xp:250,gold:72},
- 'edge-spider':{enemy:'spider',name:'迷い蜘蛛（入口）',hp:70,attack:48,defense:14,xp:230,gold:64},
- 'forest-kodama':{enemy:'kodama',name:'木霊（森）',hp:138,attack:78,defense:26,xp:360,gold:110},
- 'forest-spider':{enemy:'spider',name:'迷い蜘蛛',hp:98,attack:67,defense:20,xp:290,gold:84},
- 'falls-snake':{enemy:'snake',name:'水蛇',hp:190,attack:124,defense:50,xp:620,gold:195},
- 'falls-child':{enemy:'waterChild',name:'滝童',hp:135,attack:103,defense:44,xp:490,gold:154},
- 'ridge-fox':{enemy:'fox',name:'妖狐',hp:300,attack:170,defense:40,xp:820,gold:260}
+ 'bridge-kodama':stats('kodama',72,49,16,250,72),
+ 'edge-spider':stats('spider',70,48,14,230,64),
+ 'forest-kodama':stats('kodamaAutumn',138,78,26,360,110),
+ 'forest-spider':stats('spiderIndigo',98,67,20,290,84),
+ 'falls-snake':stats('snake',190,124,50,620,195),
+ 'falls-child':stats('waterChild',135,103,44,490,154),
+ 'ridge-fox':stats('fox',300,170,40,820,260)
 };

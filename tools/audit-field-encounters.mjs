@@ -1,12 +1,8 @@
 // Replay battle rules with draft enemies on cloned battle instances.
-import {createBattle,nextLevelXp} from '../src/game/battle/rules.mjs';
-import {SHIOMACHI_ARMORY_STOCK} from '../data/maps/shiomachi-village/armory.mjs';
+import {nextLevelXp} from '../src/game/battle/rules.mjs';
+import {createTrialBattle,TIDE_TRIAL_KIT as tideKit} from './field-encounter-trial.mjs';
 import {FIELD_ENCOUNTER_BALANCE_DRAFT} from '../data/maps/field/encounter-balance-draft.mjs';
 
-const tideKit={
- equipment:Object.fromEntries(SHIOMACHI_ARMORY_STOCK.map(item=>[item.slot,item.id])),
- equipmentInventory:Object.fromEntries(SHIOMACHI_ARMORY_STOCK.map(item=>[item.id,1]))
-};
 const cases=[
  {id:'bridge-kodama',lv:5,kit:'潮待村の4点',player:tideKit},
  {id:'bridge-kodama',lv:12,kit:'潮待村の4点',player:tideKit},
@@ -22,9 +18,8 @@ const cases=[
  {id:'ridge-fox',lv:30,kit:'T6試算',player:{equipmentTier:'T6'}}
 ];
 function simulate(enemy,count,player,random){
- const fight=createBattle('field-oni',player,random,count);
- const {hero,enemies}=fight.state;
- for(const target of enemies)Object.assign(target,enemy);
+ const fight=createTrialBattle(enemy,count,player,random);
+ const {hero}=fight.state;
  const health=hero.hp;
  let attacks=0;
  let damage=0;

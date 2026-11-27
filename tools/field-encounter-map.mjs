@@ -4,6 +4,7 @@ import {
  FIELD_ENCOUNTER_PLAN_MARKERS,FIELD_ENCOUNTER_PLANNED_MARKERS
 } from '../data/maps/field/encounter-plan.mjs?v=3';
 import {FIELD_ENCOUNTER_BALANCE_DRAFT} from '../data/maps/field/encounter-balance-draft.mjs?v=2';
+import {addBattleTrial} from './field-encounter-trial.mjs?v=1';
 
 document.title='敵分布案｜鬼哭の花結び';
 const style=document.createElement('style');
@@ -30,6 +31,16 @@ caption{text-align:left;color:#d7d8b8}
 th,td{padding:3px 4px;border-bottom:1px solid #496067;text-align:right}
 th:first-child{text-align:left}
 .note{color:#cbd4cc;margin:0 0 14px}
+.trial-buttons,.trial-commands{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.trial-battle{background:#172e35;color:#fff3da;border:1px solid #7c9999;border-radius:8px;
+ width:min(520px,calc(100% - 24px));max-height:calc(100% - 24px);padding:16px}
+.trial-battle::backdrop{background:#07161be5}
+.trial-battle select{font:inherit;max-width:100%}
+.trial-portraits{display:flex;justify-content:center;gap:12px;text-align:center;margin-top:8px}
+.trial-portraits img{width:clamp(72px,24vw,144px);height:clamp(72px,24vw,144px);object-fit:contain}
+.trial-status{font-weight:700}
+.trial-log{padding-left:22px;background:#11242a;border-radius:4px;min-height:70px;padding-block:5px}
+.trial-battle button:disabled{opacity:.45}
 @media(max-width:620px){.layout{grid-template-columns:1fr}.map{max-height:55svh}}`;
 document.head.append(style);
 document.body.innerHTML=`<main>
@@ -145,6 +156,20 @@ function select(zone){
    image.alt='';
    if(enemy.filter)image.style.filter=enemy.filter;
    element('span',enemy.name,tile);
+  }
+  if(zone.id==='forest'&&section.balance){
+   for(const id of section.balance){
+    const enemy=FIELD_ENCOUNTER_BALANCE_DRAFT[id];
+    const host=element('div',null,article);
+    host.className='trial-buttons';
+    host.setAttribute('role','group');
+    host.setAttribute('aria-label',enemy.name);
+    const trial={host,enemy,portrait:FIELD_ENCOUNTER_PLAN_ENEMIES[enemy.enemy],element,
+     deep:id.startsWith('forest-')};
+    element('strong',enemy.name,host);
+    addBattleTrial(trial);
+    if(id==='forest-spider')addBattleTrial({...trial,count:2});
+   }
   }
   if(section.balance){
    const table=element('table',null,article);

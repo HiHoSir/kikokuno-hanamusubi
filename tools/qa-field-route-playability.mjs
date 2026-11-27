@@ -182,6 +182,22 @@ try{
  await page.setViewportSize({width:390,height:844});
  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),
    'encounter map and region controls fit a phone viewport');
+ const beforeTrial=await page.evaluate(()=>[JSON.stringify(localStorage),JSON.stringify(sessionStorage)]);
+ await page.getByRole('group',{name:'藍糸蜘蛛',exact:true}).getByRole('button',{name:'2体と試しに戦う'}).click();
+ const trial=page.getByRole('dialog');
+ assert.equal(await trial.getByRole('img',{name:'藍糸蜘蛛'}).count(),2);
+ await trial.getByRole('button',{name:'攻撃',exact:true}).click();
+ assert.match(await trial.locator('.trial-log').textContent(),/緋月は.*の傷/);
+ await trial.getByRole('button',{name:'つむぎ'}).click();
+ assert.match(await trial.locator('.trial-log').textContent(),/回復/);
+ for(let i=0;i<8&&await trial.getByRole('button',{name:'攻撃',exact:true}).isEnabled();i++)
+   await trial.getByRole('button',{name:'攻撃',exact:true}).click();
+ assert.match(await trial.locator('.trial-log').textContent(),/勝利　心580・168両/);
+ await trial.getByRole('button',{name:'やり直す'}).click();
+ assert.match(await trial.locator('.trial-status').textContent(),/1ターン/);
+ await trial.getByRole('button',{name:'閉じる'}).click();
+ await trial.waitFor({state:'hidden'});
+ assert.deepEqual(await page.evaluate(()=>[JSON.stringify(localStorage),JSON.stringify(sessionStorage)]),beforeTrial);
  assert.deepEqual(errors,[],'encounter planning map loads the production terrain and enemy assets');
 }finally{
  if(page)await page.close();

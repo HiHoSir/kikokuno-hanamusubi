@@ -179,6 +179,16 @@ try{
    return field?.location.pathname==='/src/field/'&&field.KIKOKU_SAVE_SNAPSHOT?.()?.position.x===1520;
  });
  const coastFrame=page.frames().find(f=>f.url().includes('/src/field/?from=village'));
+ const northEncounterIds=await coastFrame.evaluate(async()=>{
+   const field=window.YK_WORLD;
+   const {chooseFieldEncounter}=await import('/src/game/battle/rules.mjs');
+   return [[48,42],[56,34],[58,30],[67,21],[37,15],[40,8]].map(([tx,ty])=>
+     chooseFieldEncounter({x:tx*32+16,y:ty*32+16},field,()=>.95).enemyId);
+ });
+ assert.deepEqual(northEncounterIds,[
+   'bridge-kodama','edge-spider','forest-spider','falls-child','pass-deer','ridge-fox'
+ ]);
+
  for(let step=0;step<9;step++){
    const right=step%2===0;
    await coastFrame.evaluate(key=>{
@@ -207,7 +217,7 @@ try{
  await page.locator('#zones button[aria-pressed="true"]').waitFor();
  assert.match(await page.locator('#details').textContent(),/橋の北岸から梢音村.*木霊/s);
  assert.deepEqual(await page.getByRole('row',{name:/^木霊/}).locator('th,td').allTextContents(),
-   ['木霊','72','49','16','250','72']);
+   ['木霊','38','25','11','95','36']);
  await page.getByRole('button',{name:'梢音村から忘れの森'}).click();
  assert.match(await page.locator('#details').textContent(),/迷い蜘蛛.*紅葉木霊.*藍糸蜘蛛/s);
  const portraits=await page.locator('#details .enemy:has(img)').evaluateAll(cards=>cards.map(card=>({
@@ -220,6 +230,7 @@ try{
  assert.match(portraits[3].filter,/hue-rotate\(217deg\)/);
  assert.equal(await page.getByRole('row',{name:/^藍糸蜘蛛/}).count(),1);
  assert.equal(await page.locator('#map [data-zone="forest"]').getAttribute('opacity'),'1');
+ assert.match(await page.locator('#details').textContent(),/落葉隠れ 35%.*藍糸蜘蛛×2 10%/s);
  await page.locator('#details img').first().evaluate(img=>img.decode());
  await page.setViewportSize({width:390,height:844});
  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),
@@ -235,7 +246,7 @@ try{
  assert.match(await trial.locator('.trial-log').textContent(),/回復/);
  for(let i=0;i<8&&await trial.getByRole('button',{name:'攻撃',exact:true}).isEnabled();i++)
    await trial.getByRole('button',{name:'攻撃',exact:true}).click();
- assert.match(await trial.locator('.trial-log').textContent(),/勝利　心580・168両/);
+ assert.match(await trial.locator('.trial-log').textContent(),/勝利　心186・62両/);
  await trial.getByRole('button',{name:'やり直す'}).click();
  assert.match(await trial.locator('.trial-status').textContent(),/1ターン/);
  await trial.getByRole('button',{name:'閉じる'}).click();
@@ -255,7 +266,7 @@ try{
  await trial.waitFor({state:'hidden'});
  await page.getByRole('group',{name:'鉱灯蝙蝠',exact:true}).getByRole('button',{name:'2体と試しに戦う'}).click();
  assert.equal(await trial.locator('.trial-portraits strong').count(),2);
- assert.equal(await trial.getByLabel('緋月の装備').locator('option').textContent(),'26段・T5相当の設計値');
+ assert.equal(await trial.getByLabel('緋月の装備').locator('option').textContent(),'9段・潮待村の装備4点');
  await trial.getByRole('button',{name:'閉じる'}).click();
  await trial.waitFor({state:'hidden'});
  assert.deepEqual(await page.evaluate(()=>[JSON.stringify(localStorage),JSON.stringify(sessionStorage)]),beforeTrial);

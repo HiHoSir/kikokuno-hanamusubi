@@ -1,4 +1,5 @@
-import {REGIONAL_ENEMIES} from '../../../data/maps/field/regional-enemies.mjs?v=promotion-pace-1-balance-1';
+import {encounterFormations,fieldRegionAt} from '../../../data/maps/field/encounter-pools.mjs';
+import {REGIONAL_ENEMIES} from '../../../data/maps/field/regional-enemies.mjs?v=promotion-pace-1-balance-1-pools-1';
 // First-game one-hero B-formula v2 rules. Pure game logic: no DOM, timers, or assets.
 // Approved base/growth/T0–T6 values must match data/characters/hizuki-status.json.
 import {VILLAGE_FINDS} from '../../../data/maps/hozuki-village/finds.mjs';
@@ -251,8 +252,11 @@ export function changeEquipment(player,slot,id){
 export function chooseEnemy(steps=0){
   return ['field-oni','tanuki','onibi'][Math.floor(Math.max(0,steps)/8)%3];
 }
-// Preserve the existing south-field fallback outside the new habitats.
 export function fieldEncounterZone(point,world){
+  if(world?.tileSize>0&&Number.isFinite(point?.x)&&Number.isFinite(point?.y)){
+    const region=fieldRegionAt(Math.floor(point.x/world.tileSize),Math.floor(point.y/world.tileSize));
+    if(region)return region;
+  }
   const road=world?.roads?.[0];
   if(!road?.length||!Number.isFinite(point?.x)||!Number.isFinite(point?.y))
     return 'village-outskirts';
@@ -264,25 +268,22 @@ export function fieldEncounterZone(point,world){
   if(closest>32*4)return 'village-outskirts';
   return index>=Math.floor(road.length*.6)?'shrine-approach':'village-outskirts';
 }
-export function chooseFieldEncounter(point,world,random=Math.random){
-  const zone=fieldEncounterZone(point,world),r=roll(random);
-  if(r<.5&&world?.tileAt&&Number.isFinite(point?.x)&&Number.isFinite(point?.y)){
-    const size=world.tileSize;
-    const tx=Math.floor(point.x/size),ty=Math.floor(point.y/size);
-    const terrain=world.tileAt(point.x,point.y);
-    if(['grass','sand','forest','road'].includes(terrain)){
-      const enemy=Object.values(REGIONAL_ENEMIES).find(({distribution})=>{
-        if(!distribution.point)return false; // Interior habitat, outside the field pool.
-        const [x,y]=distribution.point;
-        return Math.abs(x-tx)+Math.abs(y-ty)<=2;
-      });
-      if(enemy)return {enemyId:enemy.id,count:enemy.distribution.count,zone:enemy.id};
-    }
+function chooseEncounter(zone,random){
+  const formations=encounterFormations(zone,ENEMIES);
+  let selection=roll(random)*formations.reduce((sum,[,,weight])=>sum+weight,0);
+  for(const [enemyId,count,weight] of formations){
+    selection-=weight;
+    if(selection<0)return {enemyId,count,zone};
   }
-  const [enemyId,count]=zone==='shrine-approach'
-    ?r<.20?['field-oni',1]:r<.65?['onibi',1]:['tanuki',2]
-    :r<.55?['field-oni',1]:['tanuki',2];
-  return {enemyId,count,zone};
+  throw Error('No normal encounter in '+zone);
+}
+
+export function chooseFieldEncounter(point,world,random=Math.random){
+  return chooseEncounter(fieldEncounterZone(point,world),random);
+}
+
+export function chooseCaveEncounter(random=Math.random){
+  return chooseEncounter('shrine-cave',random);
 }
 
 export function createBattle(enemyId='field-oni',player=DEFAULT_PLAYER,random=Math.random,count=1){

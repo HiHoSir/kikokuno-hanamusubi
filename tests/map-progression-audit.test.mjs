@@ -22,8 +22,8 @@ test('map-based progression audit tracks current authored 80x80 route and actual
 
 test('first-route actual encounters and level thresholds expose old tier timing mismatch',()=>{
  assert.deepEqual([audit.encounters.minSteps,audit.encounters.maxSteps],[9,13]);
- assert.equal(audit.encounters.firstRouteOnly,true,
-   'non-connected field regions still use the first route safe encounter fallback');
+ assert.equal(audit.encounters.regionalPools,true,
+   'each mapped region uses its authored pool');
  assert.deepEqual(audit.encounters.enemies.map(x=>[x.id,x.count,x.xp,x.gold]),[
    ['field-oni',1,24,8],['tanuki',2,24,8],['onibi',1,27,8]
  ]);

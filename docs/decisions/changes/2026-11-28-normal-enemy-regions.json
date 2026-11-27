@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-11-28-normal-enemy-regions",
+  "kind": "user-approved",
+  "scopes": ["balance", "progression"],
+  "affectedFiles": ["src/game/battle/rules.mjs", "src/field/walk.mjs", "docs/BATTLE_BALANCE.md", "docs/MAP_ENEMY_EQUIPMENT_RECONCILIATION.md"],
+  "readBeforeEditing": [
+    "docs/BALANCE_PROGRESSION_CONTRACT.md、docs/BATTLE_BALANCE.md、data/characters/hizuki-status.json の成長・装備の原本を確認",
+    "docs/MAP_ENEMY_EQUIPMENT_RECONCILIATION.md、docs/FOUR_VILLAGES_EQUIPMENT_PLAN.md と data/maps/field/terrain.js の進行と地形を照合"
+  ],
+  "previousDesign": "5か所の周囲以外のフィールド通常遭遇は序盤2編成に戻り、終盤にも野の小鬼や化け狸が出た。",
+  "intendedDifference": "全通常敵に地域別の編成と配分を設定。海側・北岸・森入口／奥・滝・尾根・参道は承認素材がある地域敵だけで抽選。社西の洞窟は専用の抽選にし、山越えの洞窟の編成は未接続として記録する。新たに出す9種は現行の村装備で段3〜12の試算に合わせる。",
+  "impactAnalysis": "北側は区域を歩くだけで地域敵に当たる。未採用の鉱灯蝙蝠、岩骨ムカデ、峠荒らし、風切り鴉は計画・試戦のみ。本編で尾根に出る敵は現時点で霧角鹿。",
+  "preservedBoundaries": "固定ボスは通常抽選から外す。橋上と入口、はしご中の安全判定、遭遇間隔、既存の成長と装備を維持する。",
+  "verification": "各区域で抽選値を変えて全編成を検証し、北側で序盤3種やボスが混ざらないこと、分布マップで編成比率と報酬が一致することを検査する。",
+  "userEvidence": {
+    "status": "explicit-user-instruction",
+    "date": "2026-11-28",
+    "quote": "いや、ボスを除いて全敵の分布作ってよ。終盤に序盤の雑魚敵が出てきて何が楽しいの？",
+    "source": "現チャット。地域敵の能力調整に対する追加指示。"
+  }
+}

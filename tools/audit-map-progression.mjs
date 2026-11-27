@@ -28,9 +28,7 @@ export function buildMapProgressionAudit(){
   if(!match)throw Error('Field encounter frequency expression changed; audit the new policy');
   const minInterval=Number(match[1]),maxInterval=minInterval+Number(match[2])-1;
   if(!walk.includes('chooseFieldEncounter('))throw Error('Actual encounter entry point changed');
-  const firstRouteOnly=battle.includes('const road=world?.roads?.[0];') &&
-    battle.includes("if(closest>32*4)return 'village-outskirts';");
-  if(!firstRouteOnly)throw Error('Region encounter routing changed; audit every region');
+  if(!battle.includes('chooseEncounter(fieldEncounterZone(point,world)'))throw Error('Region encounter routing changed');
   const legs=orderedPlaces.slice(1).map((id,i)=>{
     const prev=orderedPlaces[i],points=reference.roads[i];
     if(!points?.length||
@@ -80,7 +78,7 @@ export function buildMapProgressionAudit(){
       hasRestStopShopConnection:walk.includes('restStopAt('),
       liveTransitionDestinations:orderedPlaces.filter(id=>Object.hasOwn(FIELD_PLACE_ROUTES,id))
     },
-    encounters:{minSteps:minInterval,maxSteps:maxInterval,firstRouteOnly,
+    encounters:{minSteps:minInterval,maxSteps:maxInterval,regionalPools:true,
       enemies:earlyEnemies},
     growth:{approvedTierBonuses:STATUS_V2.equipment.map(t=>[t.id,t.attack,t.defense]),
       firstAreaExperience},

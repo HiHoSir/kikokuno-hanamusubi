@@ -197,6 +197,13 @@ try{
  assert.match(await trial.locator('.trial-status').textContent(),/1ターン/);
  await trial.getByRole('button',{name:'閉じる'}).click();
  await trial.waitFor({state:'hidden'});
+ await page.getByRole('button',{name:'山越えの洞窟',exact:true}).click();
+ assert.match(await page.locator('#details').textContent(),/鉱灯蝙蝠.*岩骨ムカデ/s);
+ await page.getByRole('group',{name:'鉱灯蝙蝠',exact:true}).getByRole('button',{name:'2体と試しに戦う'}).click();
+ assert.equal(await trial.locator('.trial-portraits strong').count(),2);
+ assert.equal(await trial.getByLabel('緋月の装備').locator('option').textContent(),'26段・T5相当の設計値');
+ await trial.getByRole('button',{name:'閉じる'}).click();
+ await trial.waitFor({state:'hidden'});
  assert.deepEqual(await page.evaluate(()=>[JSON.stringify(localStorage),JSON.stringify(sessionStorage)]),beforeTrial);
  assert.deepEqual(errors,[],'encounter planning map loads the production terrain and enemy assets');
 }finally{

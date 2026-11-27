@@ -2,9 +2,9 @@ import '../data/maps/field/terrain.js';
 import {
  FIELD_ENCOUNTER_PLAN,FIELD_ENCOUNTER_PLAN_ENEMIES,
  FIELD_ENCOUNTER_PLAN_MARKERS,FIELD_ENCOUNTER_PLANNED_MARKERS
-} from '../data/maps/field/encounter-plan.mjs?v=3';
-import {FIELD_ENCOUNTER_BALANCE_DRAFT} from '../data/maps/field/encounter-balance-draft.mjs?v=2';
-import {addBattleTrial} from './field-encounter-trial.mjs?v=1';
+} from '../data/maps/field/encounter-plan.mjs?v=4';
+import {FIELD_ENCOUNTER_BALANCE_DRAFT} from '../data/maps/field/encounter-balance-draft.mjs?v=3';
+import {addBattleTrial,HOZUKI_TRIAL_KIT} from './field-encounter-trial.mjs?v=2';
 
 document.title='敵分布案｜鬼哭の花結び';
 const style=document.createElement('style');
@@ -25,6 +25,9 @@ button[aria-pressed=true]{border-color:var(--zone);box-shadow:inset 0 -2px var(-
 article+article{border-top:1px solid #4c6363;margin-top:12px;padding-top:12px}
 .enemies{display:flex;gap:10px;flex-wrap:wrap}
 .enemy{display:grid;grid-template-rows:66px auto;width:70px;text-align:center;font-size:.75rem}
+.concept-enemy{display:flex;flex-direction:column-reverse;justify-content:start;width:140px;text-align:left}
+.concept-enemy span{font-weight:700}
+.concept-enemy p{margin:0}
 .enemy img{width:100%;height:100%;object-fit:contain}
 table{width:100%;margin-top:12px;border-collapse:collapse;font-size:.8rem}
 caption{text-align:left;color:#d7d8b8}
@@ -132,6 +135,15 @@ const buttons=FIELD_ENCOUNTER_PLAN.map(zone=>{
  button.addEventListener('click',()=>select(zone));
  return button;
 });
+const tierReference=(lv,equipmentTier)=>({
+ label:`${lv}段・${equipmentTier}相当の設計値`,player:{lv,equipmentTier}
+});
+const zoneReference={
+ waterfall:tierReference(25,'T5'),tunnel:tierReference(26,'T5'),
+ ridge:tierReference(28,'T5'),fox:tierReference(30,'T6')
+};
+const coastReference={label:'3段・鬼灯村の装備4点',player:{...HOZUKI_TRIAL_KIT,lv:3}};
+const pairs=new Set(['forest-spider','cove-jelly','tunnel-bat']);
 function select(zone){
  for(const [index,button] of buttons.entries()){
   const id=FIELD_ENCOUNTER_PLAN[index].id;
@@ -151,29 +163,36 @@ function select(zone){
    const enemy=FIELD_ENCOUNTER_PLAN_ENEMIES[id];
    const tile=element('div',null,list);
    tile.className='enemy';
-   const image=element('img',null,tile);
-   image.src=new URL('../'+enemy.asset,import.meta.url);
-   image.alt='';
-   if(enemy.filter)image.style.filter=enemy.filter;
+   if(enemy.asset){
+    const image=element('img',null,tile);
+    image.src=new URL('../'+enemy.asset,import.meta.url);
+    image.alt='';
+    if(enemy.filter)image.style.filter=enemy.filter;
+   }else{
+    tile.classList.add('concept-enemy');
+    element('p',enemy.concept,tile);
+   }
    element('span',enemy.name,tile);
   }
-  if(zone.id==='forest'&&section.balance){
+  if(section.balance){
    for(const id of section.balance){
+    const reference=id.startsWith('cove-')?coastReference:zoneReference[zone.id];
+    if(zone.id!=='forest'&&!reference)continue;
     const enemy=FIELD_ENCOUNTER_BALANCE_DRAFT[id];
     const host=element('div',null,article);
     host.className='trial-buttons';
     host.setAttribute('role','group');
     host.setAttribute('aria-label',enemy.name);
     const trial={host,enemy,portrait:FIELD_ENCOUNTER_PLAN_ENEMIES[enemy.enemy],element,
-     deep:id.startsWith('forest-')};
+     deep:id.startsWith('forest-'),reference};
     element('strong',enemy.name,host);
     addBattleTrial(trial);
-    if(id==='forest-spider')addBattleTrial({...trial,count:2});
+    if(pairs.has(id))addBattleTrial({...trial,count:2});
    }
   }
   if(section.balance){
    const table=element('table',null,article);
-   element('caption','暫定値・敵1体あたり',table);
+   element('caption','敵1体あたり（序盤と社西の洞窟は現行値、ほかは候補値）',table);
    const header=element('tr',null,element('thead',null,table));
    for(const label of ['敵','体力','攻','守','心','両'])element('th',label,header).scope='col';
    const body=element('tbody',null,table);

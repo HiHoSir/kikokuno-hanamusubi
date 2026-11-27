@@ -1,10 +1,12 @@
-import {createBattle} from '../src/game/battle/rules.mjs';
+import {ARMORY_STOCK,createBattle} from '../src/game/battle/rules.mjs';
 import {SHIOMACHI_ARMORY_STOCK} from '../data/maps/shiomachi-village/armory.mjs';
 
-export const TIDE_TRIAL_KIT={
- equipment:Object.fromEntries(SHIOMACHI_ARMORY_STOCK.map(item=>[item.slot,item.id])),
- equipmentInventory:Object.fromEntries(SHIOMACHI_ARMORY_STOCK.map(item=>[item.id,1]))
-};
+const stockKit=stock=>({
+ equipment:Object.fromEntries(stock.map(item=>[item.slot,item.id])),
+ equipmentInventory:Object.fromEntries(stock.map(item=>[item.id,1]))
+});
+export const TIDE_TRIAL_KIT=stockKit(SHIOMACHI_ARMORY_STOCK);
+export const HOZUKI_TRIAL_KIT=stockKit(ARMORY_STOCK);
 
 export function createTrialBattle(enemy,count,player,random=Math.random){
  const fight=createBattle('field-oni',player,random,count);
@@ -12,7 +14,7 @@ export function createTrialBattle(enemy,count,player,random=Math.random){
  return fight;
 }
 
-export function addBattleTrial({host,enemy,portrait,element,count=1,deep=false}){
+export function addBattleTrial({host,enemy,portrait,element,count=1,deep=false,reference}){
  const launch=element('button',count===2?'2体と試しに戦う':'試しに戦う',host);
  launch.type='button';
  launch.addEventListener('click',()=>{
@@ -22,17 +24,22 @@ export function addBattleTrial({host,enemy,portrait,element,count=1,deep=false})
   element('h2',enemy.name+(count===2?' ×2':''),panel);
   const label=element('label','緋月の装備 ',panel);
   const kit=element('select',null,label);
-  element('option','15段・潮待村の装備4点',kit).value='tide';
-  element('option','18段・T3相当の設計値',kit).value='tier';
-  kit.value=deep?'tier':'tide';
+  const presets=reference?[reference]:[
+   {label:'15段・潮待村の装備4点',player:{...TIDE_TRIAL_KIT,lv:15}},
+   {label:'18段・T3相当の設計値',player:{lv:18,equipmentTier:'T3'}}
+  ];
+  for(const [index,preset] of presets.entries())element('option',preset.label,kit).value=index;
+  kit.value=deep?'1':'0';
   const portraits=element('div',null,panel);
   portraits.className='trial-portraits';
   const cards=Array.from({length:count},()=>{
    const card=element('div',null,portraits);
-   const img=element('img',null,card);
-   img.src=new URL('../'+portrait.asset,import.meta.url);
-   img.alt=portrait.name;
-   if(portrait.filter)img.style.filter=portrait.filter;
+   if(portrait.asset){
+    const img=element('img',null,card);
+    img.src=new URL('../'+portrait.asset,import.meta.url);
+    img.alt=portrait.name;
+    if(portrait.filter)img.style.filter=portrait.filter;
+   }else element('strong',portrait.name,card);
    return element('p',null,card);
   });
   const status=element('p',null,panel);
@@ -63,7 +70,7 @@ export function addBattleTrial({host,enemy,portrait,element,count=1,deep=false})
    for(const button of actionButtons)button.disabled=Boolean(outcome);
   }
   function reset(){
-   const player=kit.value==='tide'?{...TIDE_TRIAL_KIT,lv:15}:{lv:18,equipmentTier:'T3'};
+   const {player}=presets[Number(kit.value)];
    fight=createTrialBattle(enemy,count,{...player,potions:2});
    log.replaceChildren();
    element('li','戦闘開始。攻撃は一番手前の敵を狙います。',log);

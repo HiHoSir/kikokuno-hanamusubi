@@ -11,6 +11,13 @@ export const FIELD_ENCOUNTER_PLAN_ENEMIES={
  caveCentipede:{name:'岩骨ムカデ',concept:'石灰岩色の節と橙の大顎。低くうねる横長の姿。'},
  mountainBoar:{name:'峠荒らし',concept:'黄土色の剛毛と木枠を背負った猪。肩と牙が大きい。'},
  mountainCrow:{name:'風切り鴉',concept:'尖った黒翼と足元の水色の布。斜めに飛び込む姿。'},
+
+ tideCrab:{name:'潮鋏',concept:'珊瑚色の大鋏と青緑の甲羅。干潮の磯に踏ん張る。',technique:'潮受け。鋏を閉じた次の通常攻撃を軽減する。'},
+ bridgeLantern:{name:'橋灯り',concept:'苔むした石灯籠に黄色の火と麻の房。橋を渡った先の石畳に浮かぶ。',technique:'灯継ぎ。灯が明滅した次の手番で、残っていれば小回復。'},
+ leafStalker:{name:'落葉隠れ',concept:'赤褐色の落葉の束から、目と太い尾だけがのぞく。',technique:'落ち葉払い。初手は隠れ、飛び出すときに強打する。'},
+ sprayCormorant:{name:'飛沫鵜',concept:'鉛色の長い首と嘴。飛沫を散らして滝壺へ斜めに潜る。',technique:'水くぐり。潜った手番は攻撃せず、浮上時に鋭い一撃。'},
+ crystalHermit:{name:'晶殻ヤドカリ',concept:'白い小脚の上に、三角形の紫水晶の殻。',technique:'晶殻。高い守備を持ち、固定ダメージの糸遊が通りやすい。'},
+ mistDeer:{name:'霧角鹿',concept:'白い枝角と青灰色の細い体。足元に尾根の霧をまとう。',technique:'角の予告。角を低く下げた次の一撃が強く、防御で受けやすい。'},
  fox:enemy('妖狐','youko'),shadowFox:enemy('影九尾','kagekyubi')
 };
 
@@ -21,7 +28,7 @@ export const FIELD_ENCOUNTER_PLAN=[
   {name:'南岸と社への道',roadIndices:[0,1],paths:[],
    formations:['oni','tanuki','onibi'],balance:['early-oni','early-tanuki','early-onibi'],detail:'鬼灯村外れと社への道の現行編成。'},
   {name:'海の入り江から潮待村',paths:[[[49,53],[49,51],[53,51]]],
-   formations:['shoreOni','bubbleJelly'],balance:['cove-oni','cove-jelly'],detail:'磯妖は単体、泡くらげは単体か2体。入り江のイベント地点では通常戦を避ける。'},
+   formations:['shoreOni','bubbleJelly','tideCrab'],balance:['cove-oni','cove-jelly','cove-crab'],detail:'磯妖は単体、泡くらげは単体か2体。潮鋏は磯の岩場に単体。入り江のイベント地点では通常戦を避ける。'},
   {name:'社西の洞窟',paths:[[[14,48],[20,48],[20,45]]],
    formations:['oni','tanuki','caveGuardian'],balance:['early-oni','early-tanuki','cave-guardian'],
    detail:'現行の基準として、地下の通常戦には序盤敵を使い、岩守の鬼は地下3階の固定戦。'}
@@ -30,25 +37,25 @@ export const FIELD_ENCOUNTER_PLAN=[
   {name:'潮待村から橋の南岸',paths:[[[53,51],[53,49],[51,47],[48,46],[48,44]]],
    formations:['oni','tanuki'],balance:['early-oni','early-tanuki'],detail:'南岸は野の小鬼と化け狸を中心にする。'},
   {name:'橋の北岸から梢音村',paths:[[[48,43],[48,35],[56,35]]],
-   formations:['oni','tanuki','kodama'],balance:['early-oni','early-tanuki','bridge-kodama'],detail:'渡った先で木霊の単体を混ぜ、梢音村に近づくほど森の敵を増やす。橋上と入村マスは遭遇対象外。'}
+   formations:['oni','tanuki','kodama','bridgeLantern'],balance:['early-oni','early-tanuki','bridge-kodama','bridge-lantern'],detail:'渡った先で木霊を混ぜ、北岸の石畳に橋灯りを置く。梢音村に近づくほど木霊を増やす。橋上と入村マスは遭遇対象外。'}
  ]},
  {id:'forest',title:'梢音村から忘れの森',color:'#64db9d',sections:[
   {name:'梢音村から森の入口',paths:[[[56,35],[56,33],[60,33],[60,32]]],
    formations:['kodama','spider'],balance:['bridge-kodama','edge-spider'],detail:'入口付近は北岸と同じ木霊と、通常の迷い蜘蛛が単体で出る案。梢音村から最短7歩のため、直行時に戦闘を強制しない。'},
   {name:'森の奥から滝へ',paths:[[[60,32],[60,29],[63,29],[63,23],[65,23]]],
-   formations:['kodamaAutumn','spiderIndigo'],balance:['forest-kodama','forest-spider'],detail:'紅葉木霊は赤橙の葉を持つ単体の強敵。青藍の藍糸蜘蛛は単体か2体で出る。'}
+   formations:['kodamaAutumn','spiderIndigo','leafStalker'],balance:['forest-kodama','forest-spider','forest-leaf'],detail:'紅葉木霊は赤橙の葉を持つ単体の強敵。藍糸蜘蛛は単体か2体、落葉隠れは落ち葉の多い森床に単体。'}
  ]},
  {id:'waterfall',title:'龍神の滝から洞窟東口',color:'#6ad7f0',sections:[
   {name:'滝と水辺',paths:[[[65,23],[65,20],[67,20]],[[67,20],[67,22],[57,22]]],
-   formations:['snake','waterChild'],balance:['falls-snake','falls-child'],detail:'水辺の敵に切り替える。水鏡のイベント地点は通常遭遇から外す。'}
+   formations:['snake','waterChild','sprayCormorant'],balance:['falls-snake','falls-child','falls-bird'],detail:'滝壺は水蛇と飛沫鵜、浅瀬は滝童が出る。水鏡のイベント地点は通常遭遇から外す。'}
  ]},
  {id:'tunnel',title:'山越えの洞窟',color:'#f294ae',tunnel:true,sections:[
   {name:'洞窟の入口側と奥',paths:[[[57,22],[42,18]]],
-   formations:['caveBat','caveCentipede'],balance:['tunnel-bat','tunnel-centipede'],detail:'鉱灯蝙蝠は湿った東口側で単体、奥では2体。岩骨ムカデは狭い岩棚の単体。'}
+   formations:['caveBat','caveCentipede','crystalHermit'],balance:['tunnel-bat','tunnel-centipede','tunnel-hermit'],detail:'鉱灯蝙蝠は湿った東口側で単体、奥では2体。岩骨ムカデは狭い岩棚、晶殻ヤドカリは晶洞に単体。'}
  ]},
  {id:'ridge',title:'洞窟西口から月嶺村',color:'#e7cc67',sections:[
   {name:'西口と山道',paths:[[[42,18],[42,15],[30,15],[29,17],[26,17]]],
-   formations:['mountainBoar','mountainCrow'],balance:['pass-boar','pass-crow'],detail:'峠荒らしは岩場の単体。風切り鴉は露出した尾根に単体で出る。洞窟西口と月嶺村の周囲は休息区間。'}
+   formations:['mountainBoar','mountainCrow','mistDeer'],balance:['pass-boar','pass-crow','pass-deer'],detail:'峠荒らしは岩場の単体。風切り鴉は露出した尾根、霧角鹿は霧の鞍部に単体。洞窟西口と月嶺村の周囲は休息区間。'}
  ]},
  {id:'fox',title:'月嶺村から九尾の祠',color:'#c1a0ff',sections:[
   {name:'北の参道',paths:[[[26,17],[26,13],[28,13],[28,11],[40,11],[40,5]]],

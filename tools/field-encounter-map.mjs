@@ -3,8 +3,8 @@ import {
  FIELD_ENCOUNTER_PLAN,FIELD_ENCOUNTER_PLAN_ENEMIES,
  FIELD_ENCOUNTER_PLAN_MARKERS,FIELD_ENCOUNTER_PLANNED_MARKERS
 } from '../data/maps/field/encounter-plan.mjs?v=6';
-import {FIELD_ENCOUNTER_BALANCE_DRAFT} from '../data/maps/field/encounter-balance-draft.mjs?v=7';
-import {addBattleTrial,HOZUKI_TRIAL_KIT,TIDE_TRIAL_KIT} from './field-encounter-trial.mjs?v=4';
+import {FIELD_ENCOUNTER_BALANCE_DRAFT} from '../data/maps/field/encounter-balance-draft.mjs?v=8';
+import {addBattleTrial,HOZUKI_TRIAL_KIT,TIDE_TRIAL_KIT,REGIONAL_TRIAL_REFERENCES} from './field-encounter-trial.mjs?v=5';
 
 document.title='敵分布案｜鬼哭の花結び';
 const style=document.createElement('style');
@@ -207,7 +207,7 @@ function select(zone){
   }
   if(section.balance){
    for(const id of section.balance){
-    const reference=id.startsWith('cove-')?coastReference:zoneReference[zone.id];
+    const reference=REGIONAL_TRIAL_REFERENCES[id]??(id.startsWith('cove-')?coastReference:zoneReference[zone.id]);
     if(id.startsWith('early-')||(zone.id!=='forest'&&!reference))continue;
     const enemy=FIELD_ENCOUNTER_BALANCE_DRAFT[id];
     const host=element('div',null,article);
@@ -223,7 +223,7 @@ function select(zone){
   }
   if(section.balance){
    const table=element('table',null,article);
-   element('caption','敵1体あたり（序盤と社西の洞窟は現行値、ほかは候補値）',table);
+   element('caption','敵1体あたり（本編未登場の敵は試算値）',table);
    const header=element('tr',null,element('thead',null,table));
    for(const label of ['敵','体力','攻','守','心','両'])element('th',label,header).scope='col';
    const body=element('tbody',null,table);

@@ -243,10 +243,12 @@ try{
  await page.getByRole('button',{name:'山越えの洞窟',exact:true}).click();
  assert.match(await page.locator('#details').textContent(),/鉱灯蝙蝠.*岩骨ムカデ.*晶殻ヤドカリ/s);
  assert.deepEqual(await page.getByRole('row',{name:/^晶殻ヤドカリ/}).locator('th,td').allTextContents(),
-   ['晶殻ヤドカリ','185','112','88','950','195']);
+   ['晶殻ヤドカリ','68','35','40','325','100']);
  assert.match(await page.locator('#details').textContent(),/技案（試戦では未使用）.*晶殻。/s);
  await page.getByRole('group',{name:'晶殻ヤドカリ',exact:true}).getByRole('button',{name:'試しに戦う',exact:true}).click();
  await trial.getByRole('img',{name:'晶殻ヤドカリ'}).evaluate(img=>img.decode());
+ assert.equal(await trial.getByLabel('緋月の装備').inputValue(),'0');
+ assert.equal(await trial.getByLabel('緋月の装備').locator('option').textContent(),'9段・潮待村の装備4点');
  await trial.getByRole('button',{name:'糸遊'}).click();
  assert.match(await trial.locator('.trial-log').textContent(),/晶殻ヤドカリ.*30の傷/);
  await trial.getByRole('button',{name:'閉じる'}).click();

@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync,existsSync} from 'node:fs';
+import {SHIOMACHI_ARMORY_STOCK} from '../data/maps/shiomachi-village/armory.mjs';
 import {execFileSync} from 'node:child_process';
 import {BATTLE_REQUEST_KEY,FIELD_RETURN_KEY,PLAYER_KEY,ENEMIES,createBattle,
   chooseEnemy,readPlayer,savePlayer,normalizePlayer,DEFAULT_PLAYER,FOOD_ITEMS,ARMORY_STOCK,purchaseFood,purchaseArmory,
@@ -21,6 +22,25 @@ test('regional field encounters select the marked habitats and keep other rolls 
   assert.equal(chooseFieldEncounter({x:48*32+16,y:43*32+16},
     {...world,tileAt:()=> 'bridge'},()=>.1).enemyId,'field-oni');
   assert.equal(chooseFieldEncounter({x:42*32+16,y:18*32+16},world,()=>.1).enemyId,'field-oni');
+});
+
+test('regional enemy balance is playable with equipment sold in the first two villages',()=>{
+  const cases=[
+    ['cove-crab',2,[],7,26],
+    ['bridge-lantern',4,ARMORY_STOCK,6,35],
+    ['forest-leaf',6,SHIOMACHI_ARMORY_STOCK,5,28],
+    ['falls-bird',8,SHIOMACHI_ARMORY_STOCK,5,40],
+    ['pass-deer',10,SHIOMACHI_ARMORY_STOCK,6,60]
+  ];
+  for(const [id,lv,stock,turns,damage] of cases){
+    const equipment=Object.fromEntries(stock.map(item=>[item.slot,item.id]));
+    const equipmentInventory=Object.fromEntries(stock.map(item=>[item.id,1]));
+    const battle=createBattle(id,{lv,equipment,equipmentInventory},()=>.5);
+    const startHp=battle.state.hero.hp;
+    for(let turn=0;turn<turns&&!battle.state.outcome;turn++)battle.act('attack');
+    assert.equal(battle.state.outcome,'victory',id);
+    assert.ok(startHp-battle.state.hero.hp<=damage,id);
+  }
 });
 
 test('wild battle enemies use approved sprites with verified individual provenance',()=>{

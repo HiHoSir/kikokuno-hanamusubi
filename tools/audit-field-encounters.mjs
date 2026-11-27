@@ -1,15 +1,14 @@
 // Replay battle rules with draft enemies on cloned battle instances.
 import {nextLevelXp} from '../src/game/battle/rules.mjs';
-import {createTrialBattle,TIDE_TRIAL_KIT as tideKit,HOZUKI_TRIAL_KIT as hozukiKit} from './field-encounter-trial.mjs';
+import {createTrialBattle,TIDE_TRIAL_KIT as tideKit,HOZUKI_TRIAL_KIT as hozukiKit,REGIONAL_TRIAL_REFERENCES} from './field-encounter-trial.mjs';
 import {FIELD_ENCOUNTER_BALANCE_DRAFT} from '../data/maps/field/encounter-balance-draft.mjs';
 
 const cases=[
- {id:'cove-crab',lv:3,kit:'鬼灯村の4点',player:hozukiKit},
- {id:'bridge-lantern',lv:12,kit:'潮待村の4点',player:tideKit},
- {id:'forest-leaf',lv:18,kit:'T3試算',player:{equipmentTier:'T3'}},
- {id:'falls-bird',lv:25,kit:'T5試算',player:{equipmentTier:'T5'}},
- {id:'tunnel-hermit',lv:26,kit:'T5試算',player:{equipmentTier:'T5'}},
- {id:'pass-deer',lv:28,kit:'T5試算',player:{equipmentTier:'T5'}},
+ ...Object.entries(REGIONAL_TRIAL_REFERENCES).map(([id,{label,player}])=>({
+  id,lv:player.lv,kit:label,player
+ })),
+ {id:'cove-crab',lv:2,kit:'旅立ちの装備',player:{}},
+ {id:'bridge-lantern',lv:4,kit:'鬼灯村の装備4点',player:hozukiKit},
  {id:'cove-oni',lv:3,kit:'鬼灯村の4点',player:hozukiKit},
  {id:'cove-jelly',lv:3,kit:'鬼灯村の4点',player:hozukiKit,count:2},
  {id:'bridge-kodama',lv:5,kit:'潮待村の4点',player:tideKit},

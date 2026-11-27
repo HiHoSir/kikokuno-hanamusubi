@@ -1,3 +1,4 @@
+import {REGIONAL_ENEMIES} from '../../../data/maps/field/regional-enemies.mjs';
 // First-game one-hero B-formula v2 rules. Pure game logic: no DOM, timers, or assets.
 // Approved base/growth/T0–T6 values must match data/characters/hizuki-status.json.
 import {VILLAGE_FINDS} from '../../../data/maps/hozuki-village/finds.mjs';
@@ -89,6 +90,7 @@ export function equipmentPreview(player,slot,id){
 }
 export const HERB=Object.freeze({name:'薬草',heal:26});
 export const ENEMIES=Object.freeze({
+  ...REGIONAL_ENEMIES,
   // Initial field only. These are provisional first-area numbers, not the planned late regions.
   'field-oni':Object.freeze({id:'field-oni',name:'野の小鬼',asset:'assets/enemies/field-oni.png',hp:12,attack:7,defense:2,xp:8,gold:8}),
   // Scripted chamber guardian. This encounter never enters the field pool.
@@ -242,9 +244,7 @@ export function changeEquipment(player,slot,id){
 export function chooseEnemy(steps=0){
   return ['field-oni','tanuki','onibi'][Math.floor(Math.max(0,steps)/8)%3];
 }
-// The first authored field route is Village -> Tenyo Shrine. Do not use the
-// unreleased destinations or the archived game's area IDs as encounter zones.
-// The live field remains safe against inventing enemies when walking off-route.
+// Preserve the existing south-field fallback outside the new habitats.
 export function fieldEncounterZone(point,world){
   const road=world?.roads?.[0];
   if(!road?.length||!Number.isFinite(point?.x)||!Number.isFinite(point?.y))
@@ -259,6 +259,19 @@ export function fieldEncounterZone(point,world){
 }
 export function chooseFieldEncounter(point,world,random=Math.random){
   const zone=fieldEncounterZone(point,world),r=roll(random);
+  if(r<.5&&world?.tileAt&&Number.isFinite(point?.x)&&Number.isFinite(point?.y)){
+    const size=world.tileSize;
+    const tx=Math.floor(point.x/size),ty=Math.floor(point.y/size);
+    const terrain=world.tileAt(point.x,point.y);
+    if(['grass','sand','forest','road'].includes(terrain)){
+      const enemy=Object.values(REGIONAL_ENEMIES).find(({distribution})=>{
+        if(!distribution.point)return false; // Interior habitat, outside the field pool.
+        const [x,y]=distribution.point;
+        return Math.abs(x-tx)+Math.abs(y-ty)<=2;
+      });
+      if(enemy)return {enemyId:enemy.id,count:enemy.distribution.count,zone:enemy.id};
+    }
+  }
   const [enemyId,count]=zone==='shrine-approach'
     ?r<.20?['field-oni',1]:r<.65?['onibi',1]:['tanuki',2]
     :r<.55?['field-oni',1]:['tanuki',2];

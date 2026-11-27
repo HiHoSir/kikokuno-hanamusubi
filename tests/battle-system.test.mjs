@@ -6,6 +6,23 @@ import {BATTLE_REQUEST_KEY,FIELD_RETURN_KEY,PLAYER_KEY,ENEMIES,createBattle,
   chooseEnemy,readPlayer,savePlayer,normalizePlayer,DEFAULT_PLAYER,FOOD_ITEMS,ARMORY_STOCK,purchaseFood,purchaseArmory,
   STATUS_V2,levelStats,nextLevelXp,physicalDamage,fieldEncounterZone,chooseFieldEncounter} from '../src/game/battle/rules.mjs';
 
+test('regional field encounters select the marked habitats and keep other rolls on the original pool',()=>{
+  const world={tileSize:32,tileAt:()=> 'grass'};
+  const cases=[
+    ['cove-crab',48,52],['bridge-lantern',48,42],['forest-leaf',58,30],
+    ['falls-bird',67,21],['pass-deer',37,15]
+  ];
+  for(const [id,x,y] of cases){
+    const point={x:x*32+16,y:y*32+16};
+    assert.deepEqual(chooseFieldEncounter(point,world,()=>.1),{enemyId:id,count:1,zone:id});
+    assert.notEqual(chooseFieldEncounter(point,world,()=>.5).enemyId,id);
+    assert.equal(createBattle(id).state.enemy.asset,ENEMIES[id].asset);
+  }
+  assert.equal(chooseFieldEncounter({x:48*32+16,y:43*32+16},
+    {...world,tileAt:()=> 'bridge'},()=>.1).enemyId,'field-oni');
+  assert.equal(chooseFieldEncounter({x:42*32+16,y:18*32+16},world,()=>.1).enemyId,'field-oni');
+});
+
 test('wild battle enemies use approved sprites with verified individual provenance',()=>{
   const manifest=JSON.parse(readFileSync('assets/manifest.json','utf8'));
   for(const [key,enemy] of Object.entries(ENEMIES)){
@@ -377,7 +394,7 @@ test('all three approved battle sprites retain original 128px PNGs without runti
   assert.ok(!runtime.includes('coarseEnemyImage'));
   assert.ok(!runtime.includes('ENEMY_PIXEL_MAX_SIDE'));
   assert.ok(!runtime.includes("canvas.toDataURL('image/png')"));
-  assert.ok(runtime.includes("image.dataset.pixelArt=['tanuki','field-oni','onibi',CAVE_BOSS_ID].includes(e.id)?'true':'false'"));
+  assert.ok(runtime.includes("image.dataset.pixelArt=String(e.pixelArt||['tanuki','field-oni','onibi',CAVE_BOSS_ID].includes(e.id))"));
   assert.match(runtime,/source\.searchParams\.set\('v','77a93691'\)/);
   assert.match(runtime,/source\.searchParams\.set\('v','651fcddc'\)/);
   assert.match(runtime,/source\.searchParams\.set\('v','4efa9446'\)/);

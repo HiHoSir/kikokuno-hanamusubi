@@ -161,6 +161,48 @@ try{
        ': '+JSON.stringify(item.replay));
    assert.ok(item.relevantEncounterInterval.minimum<=item.relevantEncounterInterval.maximum);
  }
+ // A real field encounter starts through the game shell and returns to the
+ // same shoreline cell. Control randomness only inside this test.
+ await page.addInitScript(()=>{
+   if(location.pathname==='/src/field/'||location.pathname==='/src/game/battle/')Math.random=()=>.05;
+ });
+ await page.evaluate(()=>{
+   sessionStorage.setItem('kikokuno-hanamusubi-restore-position',JSON.stringify({
+     scene:'field',position:{x:1520,y:1648,row:1}
+   }));
+   window.KIKOKU_GAME.navigate(new URL('/src/field/?from=village',location.href));
+ });
+ const liveField=page.frameLocator('#game-scene');
+ await liveField.locator('#load').waitFor({state:'hidden'});
+ await page.waitForFunction(()=>{
+   const field=document.querySelector('#game-scene')?.contentWindow;
+   return field?.location.pathname==='/src/field/'&&field.KIKOKU_SAVE_SNAPSHOT?.()?.position.x===1520;
+ });
+ const coastFrame=page.frames().find(f=>f.url().includes('/src/field/?from=village'));
+ for(let step=0;step<9;step++){
+   const right=step%2===0;
+   await coastFrame.evaluate(key=>{
+     dispatchEvent(new KeyboardEvent('keydown',{key}));
+     dispatchEvent(new KeyboardEvent('keyup',{key}));
+   },right?'ArrowRight':'ArrowLeft');
+   if(step<8)await coastFrame.waitForFunction(x=>window.KIKOKU_SAVE_SNAPSHOT?.()?.position.x===x,
+     right?1552:1520);
+ }
+ await liveField.getByRole('img',{name:'潮鋏'}).evaluate(img=>img.decode());
+ await liveField.locator('#encounter').waitFor({state:'hidden'});
+ await liveField.getByRole('button',{name:'にげる',exact:true}).click();
+ await page.waitForFunction(()=>{
+   const battle=document.querySelector('#game-scene')?.contentDocument;
+   return battle?.querySelector('#command-title')?.textContent==='退却';
+ },null,{timeout:5000}).catch(async error=>{
+   throw new Error('潮鋏から退却できない: '+await liveField.locator('#battle-message').textContent(),{cause:error});
+ });
+ await liveField.locator('#command-list button[data-command=return]').click();
+ await page.waitForFunction(()=>{
+   const field=document.querySelector('#game-scene')?.contentWindow;
+   const position=field?.KIKOKU_SAVE_SNAPSHOT?.()?.position;
+   return field?.location.pathname==='/src/field/'&&position?.x===1552&&position.y===1648;
+ });
  await page.goto(origin+'/previews/field-exploration/?view=enemies');
  await page.locator('#zones button[aria-pressed="true"]').waitFor();
  assert.match(await page.locator('#details').textContent(),/橋の北岸から梢音村.*木霊/s);

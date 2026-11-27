@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-11-27-live-regional-encounters",
+  "kind": "user-approved",
+  "scopes": ["balance", "progression"],
+  "affectedFiles": ["src/game/battle/rules.mjs", "src/field/walk.mjs"],
+  "readBeforeEditing": [
+    "data/characters/hizuki-status.json と docs/BALANCE_PROGRESSION_CONTRACT.md の成長・装備の確定値を確認",
+    "docs/BATTLE_BALANCE.md の現行敵の分布と遭遇方式を確認",
+    "docs/MAP_ENEMY_EQUIPMENT_RECONCILIATION.md と data/maps/field/terrain.js の接続範囲と地形を照合",
+    "docs/FOUR_VILLAGES_EQUIPMENT_PLAN.md の装備補給の配置方針を確認"
+  ],
+  "previousDesign": "6体は敵分布マップの試戦のみ。フィールド本編は野の小鬼、化け狸、鬼火の初期編成。",
+  "intendedDifference": "地上5体は地図の出現地点から縦横2歩以内の地上で、通常遭遇候補の半数を単体の地域敵に置換する。試戦案と同じ数値を使い、本編で判断するための初期設定とする。晶殻ヤドカリは山越えの洞窟用に定義し、接続まで地上では出さない。",
+  "impactAnalysis": "範囲内で新規敵に当たった場合の心と両は共有試算値。北側には現行段と装備によっては強い敵がいる。既存セーブのデータ構造に変更なし。",
+  "preservedBoundaries": "発生までの通常歩数、既存敵の能力と報酬、成長式、装備、既存地形を維持する。橋の上とイベント入口を対象外にする。",
+  "verification": "地区・橋・洞窟予定地の抽選をテストし、本編の移動で潮鋏に遭遇して逃げた後に元の位置へ戻ることをChromiumで検査する。",
+  "userEvidence": {
+    "status": "explicit-user-instruction",
+    "date": "2026-11-27",
+    "quote": "本編に反映してくれないと何も判断できないよ",
+    "source": "現チャット。直前に同じ6体の分布と試戦を案内した後の指示。"
+  }
+}

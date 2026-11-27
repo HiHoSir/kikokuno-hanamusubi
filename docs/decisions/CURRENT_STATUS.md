@@ -8,7 +8,7 @@
 | テーマ | 承認・実装状態 | 正本／照合先 | 次の変更前に解消すること |
 | --- | --- | --- | --- |
 | **B式v2・T0〜T6** | **確定。T1攻+20／守+14、T2攻+42／守+30、以降も原本維持** | `data/characters/hizuki-status.json`、`docs/BALANCE_PROGRESSION_CONTRACT.md`、`tests/approved-progression-contract.test.mjs` | 新品の値を村の距離で独断調整しない。部位別配分・二重適用を検証 |
-| **序盤の必要心** | **段1→2は80、段2→3は180**。段3以降は一般式。上限99、ラスボス想定40 | `data/characters/hizuki-status.json`、`src/game/battle/rules.mjs`、`docs/BATTLE_BALANCE.md` | 序盤3編成で段2まで3〜4勝、段3まで通算10〜11勝 |
+| **序盤の必要心** | **段1→2は80、段2→3は180**。段40への到達までは必要心の表を使用し、段40以降の昇段は一般式。上限99、ラスボス想定40 | `data/characters/hizuki-status.json`、`src/game/battle/rules.mjs`、`docs/BATTLE_BALANCE.md` | 序盤3編成で段2まで3〜4勝、段3まで通算10〜11勝 |
 | **鬼灯村の個別装備** | **販売実装済み：4部位・合計攻+4／守+7**。T1確定値との**不一致が未解決** | `src/game/battle/rules.mjs`、`tests/approved-progression-contract.test.mjs`、[現行装備台帳](../EQUIPMENT_CURRENT_PLAYABLE.md) | 承認済み個別販売を勝手に書き換えない。T1との合算規則を明示的に整理 |
 | **4村体制** | **ユーザー決定：鬼灯村を含め合計4村**。3つの新村の名前・フィールド座標は試作・未承認 | `docs/FOUR_VILLAGES_EQUIPMENT_PLAN.md`、[PR #64](https://github.com/HiHoSir/kikokuno-hanamusubi/pull/64) | 村を増やすためにティア数を変更しない |
 | **潮待村フィールド配置** | **本編フィールドの村の絵が占めるセル (53,51)・(54,51) から入場**。従来の42×54村マップと4室内を共用し、南口で元のフィールドセルへ帰還。独立プレビューも維持 | [配置と検査](../SHIOMACHI_FIELD_CONNECTION.md)、`src/field/world.js`、`src/field/walk.mjs`、`src/game/shiomachi/walk.mjs` | iPhone Safariで実際の出入り・見た目を確認。現在の位置は試行配置 |

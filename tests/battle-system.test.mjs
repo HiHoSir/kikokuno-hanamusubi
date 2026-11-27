@@ -70,7 +70,10 @@ test('approved v2 core values match the restored status JSON and battle formula'
   assert.equal(levelStats(30,'T6',2).attack,232);
   assert.equal(physicalDamage(141,30,()=>.5),63);
   assert.equal(physicalDamage(149,30,()=>.5),67);
-  assert.equal(nextLevelXp(30),7892);
+  const thresholds=Array.from({length:40},(_,i)=>nextLevelXp(i+1));
+  assert.ok(thresholds.slice(1).every((value,i)=>value>thresholds[i]));
+  assert.equal(thresholds.slice(0,39).reduce((sum,value)=>sum+value,0),176570);
+  assert.equal(nextLevelXp(30),7350);
   assert.equal(nextLevelXp(40),11638);
 });
 
@@ -192,7 +195,7 @@ test('T0 early encounters are winnable without an immediate heal every battle',(
   assert.equal(ENEMIES.onibi.xp,27);
   assert.equal(nextLevelXp(1),80);
   assert.equal(nextLevelXp(2),180);
-  assert.equal(nextLevelXp(3),353);
+  assert.equal(nextLevelXp(3),360);
 
 });
 

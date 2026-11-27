@@ -4,7 +4,7 @@ import {
  FIELD_ENCOUNTER_PLAN_MARKERS,FIELD_ENCOUNTER_PLANNED_MARKERS
 } from '../data/maps/field/encounter-plan.mjs?v=6';
 import {FIELD_ENCOUNTER_BALANCE_DRAFT} from '../data/maps/field/encounter-balance-draft.mjs?v=7';
-import {addBattleTrial,HOZUKI_TRIAL_KIT,TIDE_TRIAL_KIT} from './field-encounter-trial.mjs?v=3';
+import {addBattleTrial,HOZUKI_TRIAL_KIT,TIDE_TRIAL_KIT} from './field-encounter-trial.mjs?v=4';
 
 document.title='敵分布案｜鬼哭の花結び';
 const style=document.createElement('style');

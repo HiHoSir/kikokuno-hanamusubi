@@ -1,4 +1,4 @@
-import {ARMORY_STOCK,createBattle} from '../src/game/battle/rules.mjs?v=promotion-table-1';
+import {ARMORY_STOCK,createBattle} from '../src/game/battle/rules.mjs?v=promotion-table-1-regional-balance-1';
 import {SHIOMACHI_ARMORY_STOCK} from '../data/maps/shiomachi-village/armory.mjs';
 
 const stockKit=stock=>({
@@ -7,6 +7,19 @@ const stockKit=stock=>({
 });
 export const TIDE_TRIAL_KIT=stockKit(SHIOMACHI_ARMORY_STOCK);
 export const HOZUKI_TRIAL_KIT=stockKit(ARMORY_STOCK);
+
+const villageReference=(lv,village,kit)=>({
+ label:`${lv}段・${village}の装備4点`,player:{...kit,lv}
+});
+const tideReference=lv=>villageReference(lv,'潮待村',TIDE_TRIAL_KIT);
+export const REGIONAL_TRIAL_REFERENCES={
+ 'cove-crab':villageReference(3,'鬼灯村',HOZUKI_TRIAL_KIT),
+ 'bridge-lantern':tideReference(4),
+ 'forest-leaf':tideReference(6),
+ 'falls-bird':tideReference(8),
+ 'tunnel-hermit':tideReference(9),
+ 'pass-deer':tideReference(10)
+};
 
 export function createTrialBattle(enemy,count,player,random=Math.random){
  const fight=createBattle('field-oni',player,random,count);
@@ -29,7 +42,7 @@ export function addBattleTrial({host,enemy,portrait,element,count=1,deep=false,r
    {label:'18段・T3相当の設計値',player:{lv:18,equipmentTier:'T3'}}
   ];
   for(const [index,preset] of presets.entries())element('option',preset.label,kit).value=index;
-  kit.value=deep?'1':'0';
+  kit.value=deep&&!reference?'1':'0';
   const portraits=element('div',null,panel);
   portraits.className='trial-portraits';
   const cards=Array.from({length:count},()=>{

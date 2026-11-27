@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-11-28-regional-enemy-progress",
+  "kind": "user-approved",
+  "scopes": ["balance"],
+  "affectedFiles": ["src/game/battle/rules.mjs", "docs/BATTLE_BALANCE.md"],
+  "readBeforeEditing": [
+    "docs/BALANCE_PROGRESSION_CONTRACT.md、docs/BATTLE_BALANCE.md、data/characters/hizuki-status.json の成長・装備の原本を確認",
+    "docs/MAP_ENEMY_EQUIPMENT_RECONCILIATION.md、docs/FOUR_VILLAGES_EQUIPMENT_PLAN.md と現行装備カタログを照合"
+  ],
+  "previousDesign": "地上5体と洞窟候補の能力・報酬は主に段12〜28と試算用ティアを基準としていた。",
+  "intendedDifference": "潮鋏と橋灯り以北を、現行販売装備・段3〜10で戦う基準に変更。体力・攻守・心・両の新しい値は地域敵定義に置き、試戦と本編で共有する。地上の対象は潮鋏、橋灯り、落葉隠れ、飛沫鵜、霧角鹿。晶殻ヤドカリは洞窟の試戦のみ。",
+  "impactAnalysis": "上位の仮装備がない状態でも戦える難度にし、通常敵も出る地域の平均報酬に合うよう報酬を調整する。既存の経験・所持品を引き継ぐ。",
+  "preservedBoundaries": "昇段表、戦闘式、敵の出現地と抽選率、既定の序盤敵と岩守の鬼、装備性能・価格は維持。",
+  "verification": "旅立ち装備で潮鋏、鬼灯村の装備で橋灯り、潮待村の装備で北側の敵を戦闘ルールに通す。地域の試算は攻撃回数と被ダメージを比較し、ブラウザで試戦の装備と報酬データを確認。",
+  "userEvidence": {
+    "status": "explicit-user-instruction",
+    "date": "2026-11-28",
+    "quote": "そこだけじゃなくって敵のパラメータも調整して",
+    "source": "現チャット。40段までの昇段テーブルを調整した報告の直後。"
+  }
+}

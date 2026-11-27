@@ -6,10 +6,10 @@ const regionalEnemy=(id,key,hp,attack,defense,xp,gold)=>{
  return Object.freeze({id,name,asset,pixelArt,distribution,hp,attack,defense,xp,gold});
 };
 export const REGIONAL_ENEMIES=Object.freeze({
- 'cove-crab':regionalEnemy('cove-crab','tideCrab',32,16,12,65,27),
- 'bridge-lantern':regionalEnemy('bridge-lantern','bridgeLantern',63,43,20,350,67),
- 'forest-leaf':regionalEnemy('forest-leaf','leafStalker',110,74,18,525,98),
- 'falls-bird':regionalEnemy('falls-bird','sprayCormorant',146,111,42,875,176),
- 'tunnel-hermit':regionalEnemy('tunnel-hermit','crystalHermit',185,112,88,950,195),
- 'pass-deer':regionalEnemy('pass-deer','mistDeer',190,136,50,1050,208),
+ 'cove-crab':regionalEnemy('cove-crab','tideCrab',26,13,8,65,23),
+ 'bridge-lantern':regionalEnemy('bridge-lantern','bridgeLantern',36,24,12,100,36),
+ 'forest-leaf':regionalEnemy('forest-leaf','leafStalker',58,32,16,165,56),
+ 'falls-bird':regionalEnemy('falls-bird','sprayCormorant',70,38,17,255,82),
+ 'tunnel-hermit':regionalEnemy('tunnel-hermit','crystalHermit',68,35,40,325,100),
+ 'pass-deer':regionalEnemy('pass-deer','mistDeer',90,44,20,400,115),
 });

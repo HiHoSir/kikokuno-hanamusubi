@@ -168,7 +168,7 @@ try{
    ['木霊','72','49','16','250','72']);
  await page.getByRole('button',{name:'梢音村から忘れの森'}).click();
  assert.match(await page.locator('#details').textContent(),/迷い蜘蛛.*紅葉木霊.*藍糸蜘蛛/s);
- const portraits=await page.locator('#details .enemy').evaluateAll(cards=>cards.map(card=>({
+ const portraits=await page.locator('#details .enemy:has(img)').evaluateAll(cards=>cards.map(card=>({
    name:card.textContent,
    filter:getComputedStyle(card.querySelector('img')).filter
  })));
@@ -198,7 +198,15 @@ try{
  await trial.getByRole('button',{name:'閉じる'}).click();
  await trial.waitFor({state:'hidden'});
  await page.getByRole('button',{name:'山越えの洞窟',exact:true}).click();
- assert.match(await page.locator('#details').textContent(),/鉱灯蝙蝠.*岩骨ムカデ/s);
+ assert.match(await page.locator('#details').textContent(),/鉱灯蝙蝠.*岩骨ムカデ.*晶殻ヤドカリ/s);
+ assert.deepEqual(await page.getByRole('row',{name:/^晶殻ヤドカリ/}).locator('th,td').allTextContents(),
+   ['晶殻ヤドカリ','185','112','88','600','195']);
+ assert.match(await page.locator('#details').textContent(),/技案（試戦では未使用）.*晶殻。/s);
+ await page.getByRole('group',{name:'晶殻ヤドカリ',exact:true}).getByRole('button',{name:'試しに戦う',exact:true}).click();
+ await trial.getByRole('button',{name:'糸遊'}).click();
+ assert.match(await trial.locator('.trial-log').textContent(),/晶殻ヤドカリ.*30の傷/);
+ await trial.getByRole('button',{name:'閉じる'}).click();
+ await trial.waitFor({state:'hidden'});
  await page.getByRole('group',{name:'鉱灯蝙蝠',exact:true}).getByRole('button',{name:'2体と試しに戦う'}).click();
  assert.equal(await trial.locator('.trial-portraits strong').count(),2);
  assert.equal(await trial.getByLabel('緋月の装備').locator('option').textContent(),'26段・T5相当の設計値');

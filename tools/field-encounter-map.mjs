@@ -2,9 +2,9 @@ import '../data/maps/field/terrain.js';
 import {
  FIELD_ENCOUNTER_PLAN,FIELD_ENCOUNTER_PLAN_ENEMIES,
  FIELD_ENCOUNTER_PLAN_MARKERS,FIELD_ENCOUNTER_PLANNED_MARKERS
-} from '../data/maps/field/encounter-plan.mjs?v=4';
-import {FIELD_ENCOUNTER_BALANCE_DRAFT} from '../data/maps/field/encounter-balance-draft.mjs?v=3';
-import {addBattleTrial,HOZUKI_TRIAL_KIT} from './field-encounter-trial.mjs?v=2';
+} from '../data/maps/field/encounter-plan.mjs?v=5';
+import {FIELD_ENCOUNTER_BALANCE_DRAFT} from '../data/maps/field/encounter-balance-draft.mjs?v=4';
+import {addBattleTrial,HOZUKI_TRIAL_KIT,TIDE_TRIAL_KIT} from './field-encounter-trial.mjs?v=2';
 
 document.title='敵分布案｜鬼哭の花結び';
 const style=document.createElement('style');
@@ -28,6 +28,7 @@ article+article{border-top:1px solid #4c6363;margin-top:12px;padding-top:12px}
 .concept-enemy{display:flex;flex-direction:column-reverse;justify-content:start;width:140px;text-align:left}
 .concept-enemy span{font-weight:700}
 .concept-enemy p{margin:0}
+.concept-enemy small{display:block;margin-top:4px;color:#cbd4cc}
 .enemy img{width:100%;height:100%;object-fit:contain}
 table{width:100%;margin-top:12px;border-collapse:collapse;font-size:.8rem}
 caption{text-align:left;color:#d7d8b8}
@@ -139,6 +140,7 @@ const tierReference=(lv,equipmentTier)=>({
  label:`${lv}段・${equipmentTier}相当の設計値`,player:{lv,equipmentTier}
 });
 const zoneReference={
+ bridge:{label:'12段・潮待村の装備4点',player:{...TIDE_TRIAL_KIT,lv:12}},
  waterfall:tierReference(25,'T5'),tunnel:tierReference(26,'T5'),
  ridge:tierReference(28,'T5'),fox:tierReference(30,'T6')
 };
@@ -170,14 +172,15 @@ function select(zone){
     if(enemy.filter)image.style.filter=enemy.filter;
    }else{
     tile.classList.add('concept-enemy');
-    element('p',enemy.concept,tile);
+    const description=element('p',enemy.concept,tile);
+    if(enemy.technique)element('small','技案（試戦では未使用）　'+enemy.technique,description);
    }
    element('span',enemy.name,tile);
   }
   if(section.balance){
    for(const id of section.balance){
     const reference=id.startsWith('cove-')?coastReference:zoneReference[zone.id];
-    if(zone.id!=='forest'&&!reference)continue;
+    if(id.startsWith('early-')||(zone.id!=='forest'&&!reference))continue;
     const enemy=FIELD_ENCOUNTER_BALANCE_DRAFT[id];
     const host=element('div',null,article);
     host.className='trial-buttons';

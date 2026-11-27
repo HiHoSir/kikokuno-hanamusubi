@@ -189,7 +189,14 @@ try{
      right?1552:1520);
  }
  await liveField.getByRole('img',{name:'潮鋏'}).evaluate(img=>img.decode());
+ await liveField.locator('#encounter').waitFor({state:'hidden'});
  await liveField.getByRole('button',{name:'にげる',exact:true}).click();
+ await page.waitForFunction(()=>{
+   const battle=document.querySelector('#game-scene')?.contentDocument;
+   return battle?.querySelector('#command-title')?.textContent==='退却';
+ },null,{timeout:5000}).catch(async error=>{
+   throw new Error('潮鋏から退却できない: '+await liveField.locator('#battle-message').textContent(),{cause:error});
+ });
  await liveField.getByRole('button',{name:'フィールドへ戻る',exact:true}).click();
  await page.waitForFunction(()=>{
    const field=document.querySelector('#game-scene')?.contentWindow;

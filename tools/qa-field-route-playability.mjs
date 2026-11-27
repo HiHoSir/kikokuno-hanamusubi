@@ -172,7 +172,7 @@ try{
    name:card.textContent,
    filter:getComputedStyle(card.querySelector('img')).filter
  })));
- assert.deepEqual(portraits.map(entry=>entry.name),['木霊','迷い蜘蛛','紅葉木霊','藍糸蜘蛛']);
+ assert.deepEqual(portraits.map(entry=>entry.name),['木霊','迷い蜘蛛','紅葉木霊','藍糸蜘蛛','落葉隠れ']);
  assert.deepEqual(portraits.slice(0,2).map(entry=>entry.filter),['none','none']);
  assert.match(portraits[2].filter,/hue-rotate\(-76deg\)/);
  assert.match(portraits[3].filter,/hue-rotate\(217deg\)/);
@@ -182,6 +182,7 @@ try{
  await page.setViewportSize({width:390,height:844});
  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),
    'encounter map and region controls fit a phone viewport');
+ assert.equal(await page.locator('[data-encounter-zone="forest"] [data-enemy="leafStalker"]').count(),1);
  const beforeTrial=await page.evaluate(()=>[JSON.stringify(localStorage),JSON.stringify(sessionStorage)]);
  await page.getByRole('group',{name:'藍糸蜘蛛',exact:true}).getByRole('button',{name:'2体と試しに戦う'}).click();
  const trial=page.getByRole('dialog');
@@ -203,6 +204,7 @@ try{
    ['晶殻ヤドカリ','185','112','88','600','195']);
  assert.match(await page.locator('#details').textContent(),/技案（試戦では未使用）.*晶殻。/s);
  await page.getByRole('group',{name:'晶殻ヤドカリ',exact:true}).getByRole('button',{name:'試しに戦う',exact:true}).click();
+ await trial.getByRole('img',{name:'晶殻ヤドカリ'}).evaluate(img=>img.decode());
  await trial.getByRole('button',{name:'糸遊'}).click();
  assert.match(await trial.locator('.trial-log').textContent(),/晶殻ヤドカリ.*30の傷/);
  await trial.getByRole('button',{name:'閉じる'}).click();

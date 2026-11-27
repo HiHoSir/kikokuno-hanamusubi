@@ -12,12 +12,12 @@ export const FIELD_ENCOUNTER_PLAN_ENEMIES={
  mountainBoar:{name:'峠荒らし',concept:'黄土色の剛毛と木枠を背負った猪。肩と牙が大きい。'},
  mountainCrow:{name:'風切り鴉',concept:'尖った黒翼と足元の水色の布。斜めに飛び込む姿。'},
 
- tideCrab:{name:'潮鋏',concept:'珊瑚色の大鋏と青緑の甲羅。干潮の磯に踏ん張る。',technique:'潮受け。鋏を閉じた次の通常攻撃を軽減する。'},
- bridgeLantern:{name:'橋灯り',concept:'苔むした石灯籠に黄色の火と麻の房。橋を渡った先の石畳に浮かぶ。',technique:'灯継ぎ。灯が明滅した次の手番で、残っていれば小回復。'},
- leafStalker:{name:'落葉隠れ',concept:'赤褐色の落葉の束から、目と太い尾だけがのぞく。',technique:'落ち葉払い。初手は隠れ、飛び出すときに強打する。'},
- sprayCormorant:{name:'飛沫鵜',concept:'鉛色の長い首と嘴。飛沫を散らして滝壺へ斜めに潜る。',technique:'水くぐり。潜った手番は攻撃せず、浮上時に鋭い一撃。'},
- crystalHermit:{name:'晶殻ヤドカリ',concept:'白い小脚の上に、三角形の紫水晶の殻。',technique:'晶殻。高い守備を持ち、固定ダメージの糸遊が通りやすい。'},
- mistDeer:{name:'霧角鹿',concept:'白い枝角と青灰色の細い体。足元に尾根の霧をまとう。',technique:'角の予告。角を低く下げた次の一撃が強く、防御で受けやすい。'},
+ tideCrab:{...enemy('潮鋏','tidal-crab-128'),pixelArt:true,distribution:{habitat:'入り江の磯・潮だまり',count:1,point:[48,52]},concept:'珊瑚色の大鋏と青緑の甲羅。干潮の磯に踏ん張る。',technique:'潮受け。鋏を閉じた次の通常攻撃を軽減する。'},
+ bridgeLantern:{...enemy('橋灯り','stone-lantern-128'),pixelArt:true,distribution:{habitat:'橋の北側の石畳',count:1,point:[48,42]},concept:'苔むした石灯籠に黄色の火。橋を渡った先の石畳に浮かぶ。',technique:'灯継ぎ。灯が明滅した次の手番で、残っていれば小回復。'},
+ leafStalker:{...enemy('落葉隠れ','leaf-tanuki-128'),pixelArt:true,distribution:{habitat:'忘れの森奥の落ち葉が積もる林床',count:1,point:[58,30]},concept:'赤褐色の落葉の束から、目と太い尾だけがのぞく。',technique:'落ち葉払い。初手は隠れ、飛び出すときに強打する。'},
+ sprayCormorant:{...enemy('飛沫鵜','diving-cormorant-128'),pixelArt:true,distribution:{habitat:'龍神の滝の滝壺沿い',count:1,point:[67,21]},concept:'鉛色の長い首と嘴。翼をすぼめて滝壺へ斜めに潜る。',technique:'水くぐり。潜った手番は攻撃せず、浮上時に鋭い一撃。'},
+ crystalHermit:{...enemy('晶殻ヤドカリ','crystal-hermit-crab-128'),pixelArt:true,distribution:{habitat:'山越えの洞窟内の結晶帯',count:1},concept:'白い小脚の上に、三角形の紫水晶の殻。',technique:'晶殻。高い守備を持ち、固定ダメージの糸遊が通りやすい。'},
+ mistDeer:{...enemy('霧角鹿','mist-antler-deer-128'),pixelArt:true,distribution:{habitat:'洞窟西口と月嶺村の間にある尾根の鞍部',count:1,point:[37,15]},concept:'白い枝角と青灰色の細い体。足元に尾根の霧をまとう。',technique:'角の予告。角を低く下げた次の一撃が強く、防御で受けやすい。'},
  fox:enemy('妖狐','youko'),shadowFox:enemy('影九尾','kagekyubi')
 };
 

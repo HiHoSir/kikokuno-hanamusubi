@@ -38,6 +38,7 @@ export function addBattleTrial({host,enemy,portrait,element,count=1,deep=false,r
     const img=element('img',null,card);
     img.src=new URL('../'+portrait.asset,import.meta.url);
     img.alt=portrait.name;
+    if(portrait.pixelArt)img.dataset.pixelArt='';
     if(portrait.filter)img.style.filter=portrait.filter;
    }else element('strong',portrait.name,card);
    return element('p',null,card);

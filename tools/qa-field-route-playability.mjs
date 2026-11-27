@@ -197,7 +197,7 @@ try{
  },null,{timeout:5000}).catch(async error=>{
    throw new Error('潮鋏から退却できない: '+await liveField.locator('#battle-message').textContent(),{cause:error});
  });
- await liveField.getByRole('button',{name:'フィールドへ戻る',exact:true}).click();
+ await liveField.locator('#command-list button[data-command=return]').click();
  await page.waitForFunction(()=>{
    const field=document.querySelector('#game-scene')?.contentWindow;
    const position=field?.KIKOKU_SAVE_SNAPSHOT?.()?.position;

@@ -1,9 +1,11 @@
 // Replay battle rules with draft enemies on cloned battle instances.
 import {nextLevelXp} from '../src/game/battle/rules.mjs';
-import {createTrialBattle,TIDE_TRIAL_KIT as tideKit} from './field-encounter-trial.mjs';
+import {createTrialBattle,TIDE_TRIAL_KIT as tideKit,HOZUKI_TRIAL_KIT as hozukiKit} from './field-encounter-trial.mjs';
 import {FIELD_ENCOUNTER_BALANCE_DRAFT} from '../data/maps/field/encounter-balance-draft.mjs';
 
 const cases=[
+ {id:'cove-oni',lv:3,kit:'鬼灯村の4点',player:hozukiKit},
+ {id:'cove-jelly',lv:3,kit:'鬼灯村の4点',player:hozukiKit,count:2},
  {id:'bridge-kodama',lv:5,kit:'潮待村の4点',player:tideKit},
  {id:'bridge-kodama',lv:12,kit:'潮待村の4点',player:tideKit},
  {id:'bridge-kodama',lv:15,kit:'潮待村の4点',player:tideKit},
@@ -15,7 +17,12 @@ const cases=[
  {id:'forest-spider',lv:18,kit:'潮待村の4点',player:tideKit,count:2},
  {id:'falls-snake',lv:25,kit:'T5試算',player:{equipmentTier:'T5'}},
  {id:'falls-child',lv:25,kit:'T5試算',player:{equipmentTier:'T5'}},
- {id:'ridge-fox',lv:30,kit:'T6試算',player:{equipmentTier:'T6'}}
+ {id:'tunnel-bat',lv:26,kit:'T5試算',player:{equipmentTier:'T5'},count:2},
+ {id:'tunnel-centipede',lv:26,kit:'T5試算',player:{equipmentTier:'T5'}},
+ {id:'pass-boar',lv:28,kit:'T5試算',player:{equipmentTier:'T5'}},
+ {id:'pass-crow',lv:28,kit:'T5試算',player:{equipmentTier:'T5'}},
+ {id:'ridge-fox',lv:30,kit:'T6試算',player:{equipmentTier:'T6'}},
+ {id:'shrine-shadow-fox',lv:30,kit:'T6試算',player:{equipmentTier:'T6'}}
 ];
 function simulate(enemy,count,player,random){
  const fight=createTrialBattle(enemy,count,player,random);

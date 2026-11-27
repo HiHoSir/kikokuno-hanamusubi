@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-11-28-early-promotion-curve",
+  "kind": "user-approved",
+  "scopes": ["balance", "progression"],
+  "affectedFiles": ["data/characters/hizuki-status.json", "src/game/battle/rules.mjs", "docs/BATTLE_BALANCE.md", "docs/MAP_ENEMY_EQUIPMENT_RECONCILIATION.md"],
+  "readBeforeEditing": [
+    "data/characters/hizuki-status.json、docs/BATTLE_BALANCE.md、docs/BALANCE_PROGRESSION_CONTRACT.md の段と成長式を確認",
+    "docs/MAP_ENEMY_EQUIPMENT_RECONCILIATION.md と docs/FOUR_VILLAGES_EQUIPMENT_PLAN.md の序盤の進行を確認"
+  ],
+  "previousDesign": "初期の通常戦で心24〜27を獲得。段1→2は32、段2→3は204が必要で、最初の昇段まで2勝だった。",
+  "intendedDifference": "段1→2は80、段2→3は180に調整。新桃太郎伝説の参照調査で提案した段2まで3〜4勝、段3まで通算10〜12勝を目安とする。具体的な必要心80・180は実装上の調整値。",
+  "impactAnalysis": "初期3編成のみの換算で段2まで3〜4勝、段3まで通算10〜11勝。既存の段と心は保存値を読み込み、次回勝利で新しい必要心を参照する。",
+  "preservedBoundaries": "段3以降の一般式、戦闘の報酬、緋月の能力成長、装備、敵の数値を維持する。",
+  "verification": "序盤11戦の回帰テストで4勝目と11勝目の昇段、残りの心、全回復を検証し、戦闘とメニューが同じ必要心を参照する。",
+  "userEvidence": {
+    "status": "explicit-user-instruction",
+    "date": "2026-11-28",
+    "quote": "いや、それは早すぎ。新桃太郎伝説の昇段のテーブルとか探せないかな？\n見直して",
+    "source": "現チャット。「いや、それは早すぎ。新桃太郎伝説の昇段のテーブルとか探せないかな？」への調査結果と、序盤の戦闘数目安の提案に続く指示。"
+  }
+}

@@ -32,7 +32,8 @@ const halfUp=n=>Math.floor(n+.5);
 const roll=random=>clamp(Number(random()),0,.999999999);
 export function nextLevelXp(lv){
   const level=clamp(Math.floor(lv),1,99);
-  return level===1?32:Math.round(80*Math.pow(level,1.35));
+  if(level===2)return 180;
+  return Math.round(80*Math.pow(level,1.35));
 }
 export function levelStats(lv=1,equipmentTier='T0',awakening=0){
   lv=clamp(nonNegative(lv,1),1,99);

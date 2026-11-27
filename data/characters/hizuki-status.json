@@ -36,6 +36,7 @@
   },
   "xp": {
     "nextLevel": "round(80 * level^1.35)",
+    "nextLevelOverrides": { "2": 180 },
     "healsOnLevelUp": true
   },
   "tiers": [

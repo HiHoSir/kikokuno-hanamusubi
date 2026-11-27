@@ -190,8 +190,9 @@ test('T0 early encounters are winnable without an immediate heal every battle',(
   assert.equal(ENEMIES['field-oni'].xp,24);
   assert.equal(ENEMIES.tanuki.xp*2,24);
   assert.equal(ENEMIES.onibi.xp,27);
-  assert.equal(nextLevelXp(1),32);
-  assert.equal(nextLevelXp(2),204);
+  assert.equal(nextLevelXp(1),80);
+  assert.equal(nextLevelXp(2),180);
+  assert.equal(nextLevelXp(3),353);
 
 });
 
@@ -215,10 +216,10 @@ test('first-route encounter weights stay deterministic for every 0.1% percentile
   }
 });
 
-test('first-route fights reach levels two and three in ten wins without extra equipment',()=>{
+test('first-route fights reach levels two and three in eleven wins without extra equipment',()=>{
   const plan=[
     ['field-oni',1],['tanuki',2],['field-oni',1],['tanuki',2],['onibi',1],
-    ['field-oni',1],['tanuki',2],['onibi',1],['field-oni',1],['tanuki',2]
+    ['field-oni',1],['tanuki',2],['onibi',1],['field-oni',1],['tanuki',2],['field-oni',1]
   ];
   let hero={...DEFAULT_PLAYER},herbsUsed=0;
   for(const [id,count] of plan){
@@ -232,14 +233,14 @@ test('first-route fights reach levels two and three in ten wins without extra eq
       assert.equal(battle.act('attack').accepted,true);
     assert.equal(battle.state.outcome,'victory','first-route playthrough defeated by '+id);
     hero=battle.state.hero;
-    assert.equal(hero.lv,hero.wins<2?1:hero.wins<10?2:3);
-    if(hero.wins===2||hero.wins===10)assert.equal(hero.hp,hero.maxhp,'level-up restores full HP');
+    assert.equal(hero.lv,hero.wins<4?1:hero.wins<11?2:3);
+    if(hero.wins===4||hero.wins===11)assert.equal(hero.hp,hero.maxhp,'level-up restores full HP');
   }
-  assert.equal(hero.wins,10);
+  assert.equal(hero.wins,11);
   assert.ok(herbsUsed<=2);
   assert.equal(hero.potions,DEFAULT_PLAYER.potions-herbsUsed);
   assert.equal(hero.xp,10);
-  assert.equal(hero.gold,80);
+  assert.equal(hero.gold,88);
   assert.equal(hero.equipmentTier,'T0','no unapproved equipment is introduced');
 });
 

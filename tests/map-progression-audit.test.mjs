@@ -28,9 +28,9 @@ test('first-route actual encounters and level thresholds expose old tier timing 
    ['field-oni',1,24,8],['tanuki',2,24,8],['onibi',1,27,8]
  ]);
  assert.deepEqual(audit.growth.firstAreaExperience,{
-   toLevel2:32,toLevel5:1109,toLevel10:6697,
+   toLevel2:80,toLevel5:1133,toLevel10:6721,
    firstLegRoughBattles:{min:3,max:4},
-   level5BattleCountAtCurrentFirstRouteRewards:{min:42,max:47}
+   level5BattleCountAtCurrentFirstRouteRewards:{min:42,max:48}
  });
  assert.deepEqual(audit.growth.approvedTierBonuses,[
    ['T0',0,0],['T1',20,14],['T2',42,30],['T3',64,46],

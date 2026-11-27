@@ -175,7 +175,7 @@ try{
  assert.deepEqual(portraits.map(entry=>entry.name),['木霊','迷い蜘蛛','紅葉木霊','藍糸蜘蛛']);
  assert.deepEqual(portraits.slice(0,2).map(entry=>entry.filter),['none','none']);
  assert.match(portraits[2].filter,/hue-rotate\(-76deg\)/);
- assert.match(portraits[3].filter,/hue-rotate\(167deg\)/);
+ assert.match(portraits[3].filter,/hue-rotate\(217deg\)/);
  assert.equal(await page.getByRole('row',{name:/^藍糸蜘蛛/}).count(),1);
  assert.equal(await page.locator('#map [data-zone="forest"]').getAttribute('opacity'),'1');
  await page.locator('#details img').first().evaluate(img=>img.decode());

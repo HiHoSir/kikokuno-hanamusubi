@@ -3,7 +3,7 @@ export const FIELD_ENCOUNTER_PLAN_ENEMIES={
  oni:enemy('野の小鬼','field-oni'),tanuki:enemy('化け狸','tanuki'),onibi:enemy('鬼火','onibi'),
  kodama:enemy('木霊','kodama'),spider:enemy('迷い蜘蛛','mayoi-gumo'),
  kodamaAutumn:{...enemy('紅葉木霊','kodama'),filter:'hue-rotate(-76deg) saturate(1.12)'},
- spiderIndigo:{...enemy('藍糸蜘蛛','mayoi-gumo'),filter:'sepia(.8) hue-rotate(167deg) saturate(1.65)'},
+ spiderIndigo:{...enemy('藍糸蜘蛛','mayoi-gumo'),filter:'sepia(.8) hue-rotate(217deg) saturate(1.65)'},
  snake:enemy('水蛇','mizuhebi'),waterChild:enemy('滝童','takiwarashi'),
  fox:enemy('妖狐','youko')
 };

@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-11-27-faster-promotion",
+  "kind": "user-approved",
+  "scopes": ["balance", "progression"],
+  "affectedFiles": ["src/game/battle/rules.mjs", "docs/BATTLE_BALANCE.md", "docs/MAP_ENEMY_EQUIPMENT_RECONCILIATION.md"],
+  "readBeforeEditing": [
+    "docs/BALANCE_PROGRESSION_CONTRACT.md、docs/BATTLE_BALANCE.md、data/characters/hizuki-status.json で必要心と成長の既存仕様を確認",
+    "docs/MAP_ENEMY_EQUIPMENT_RECONCILIATION.md と data/maps/field/terrain.js の序盤の移動距離と地域分布を確認",
+    "docs/FOUR_VILLAGES_EQUIPMENT_PLAN.md の装備入手計画と現行の戦闘報酬を照合"
+  ],
+  "previousDesign": "序盤の通常戦1勝あたり心8〜9、岩守の鬼は心16。地上の追加5体のみを基準段で倒す試算では次の段まで9〜12勝必要だった。",
+  "intendedDifference": "昇段を早めるため、序盤の1勝を心24〜27、岩守の鬼を48に調整する。地域敵の心を潮鋏65、橋灯り350、落葉隠れ525、飛沫鵜875、晶殻ヤドカリ950、霧角鹿1050に設定し、地域の試戦と本編は共通の値を参照する。具体的な報酬値は調整用の設定値。",
+  "impactAnalysis": "序盤は2勝で段2、地上の追加敵は基準段で同じ敵に勝ち続けると6〜8勝が目安。既存の段と蓄積心はそのまま読み込む。",
+  "preservedBoundaries": "昇段必要心、段ごとの能力成長、戦闘式、敵の攻守と体力、両、販売価格、出現範囲と確率は維持する。",
+  "verification": "初期3編成の連戦で2勝目で段2・10勝目で段3を検証し、地域戦は分布試戦と監査で報酬を照合する。",
+  "userEvidence": {
+    "status": "explicit-user-instruction",
+    "date": "2026-11-27",
+    "quote": "ちょっと昇段まで長すぎる",
+    "source": "現チャット。本編に地上の地域敵を追加した報告への指摘。"
+  }
+}

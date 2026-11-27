@@ -25,12 +25,12 @@ test('first-route actual encounters and level thresholds expose old tier timing 
  assert.equal(audit.encounters.firstRouteOnly,true,
    'non-connected field regions still use the first route safe encounter fallback');
  assert.deepEqual(audit.encounters.enemies.map(x=>[x.id,x.count,x.xp,x.gold]),[
-   ['field-oni',1,8,8],['tanuki',2,8,8],['onibi',1,9,8]
+   ['field-oni',1,24,8],['tanuki',2,24,8],['onibi',1,27,8]
  ]);
  assert.deepEqual(audit.growth.firstAreaExperience,{
    toLevel2:32,toLevel5:1109,toLevel10:6697,
    firstLegRoughBattles:{min:3,max:4},
-   level5BattleCountAtCurrentFirstRouteRewards:{min:124,max:139}
+   level5BattleCountAtCurrentFirstRouteRewards:{min:42,max:47}
  });
  assert.deepEqual(audit.growth.approvedTierBonuses,[
    ['T0',0,0],['T1',20,14],['T2',42,30],['T3',64,46],

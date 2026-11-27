@@ -1,4 +1,4 @@
-import {REGIONAL_ENEMIES} from '../../../data/maps/field/regional-enemies.mjs';
+import {REGIONAL_ENEMIES} from '../../../data/maps/field/regional-enemies.mjs?v=promotion-pace-1';
 // First-game one-hero B-formula v2 rules. Pure game logic: no DOM, timers, or assets.
 // Approved base/growth/T0–T6 values must match data/characters/hizuki-status.json.
 import {VILLAGE_FINDS} from '../../../data/maps/hozuki-village/finds.mjs';
@@ -92,11 +92,11 @@ export const HERB=Object.freeze({name:'薬草',heal:26});
 export const ENEMIES=Object.freeze({
   ...REGIONAL_ENEMIES,
   // Initial field only. These are provisional first-area numbers, not the planned late regions.
-  'field-oni':Object.freeze({id:'field-oni',name:'野の小鬼',asset:'assets/enemies/field-oni.png',hp:12,attack:7,defense:2,xp:8,gold:8}),
+  'field-oni':Object.freeze({id:'field-oni',name:'野の小鬼',asset:'assets/enemies/field-oni.png',hp:12,attack:7,defense:2,xp:24,gold:8}),
   // Scripted chamber guardian. This encounter never enters the field pool.
-  [CAVE_BOSS_ID]:Object.freeze({id:CAVE_BOSS_ID,name:'岩守の鬼',asset:'assets/enemies/cave-guardian.png',hp:68,attack:18,defense:4,xp:16,gold:16}),
-  'tanuki':Object.freeze({id:'tanuki',name:'化け狸',asset:'assets/enemies/tanuki.png',hp:6,attack:6,defense:2,xp:4,gold:4}),
-  'onibi':Object.freeze({id:'onibi',name:'鬼火',asset:'assets/enemies/onibi.png',hp:16,attack:8,defense:2,xp:9,gold:8})
+  [CAVE_BOSS_ID]:Object.freeze({id:CAVE_BOSS_ID,name:'岩守の鬼',asset:'assets/enemies/cave-guardian.png',hp:68,attack:18,defense:4,xp:48,gold:16}),
+  'tanuki':Object.freeze({id:'tanuki',name:'化け狸',asset:'assets/enemies/tanuki.png',hp:6,attack:6,defense:2,xp:12,gold:4}),
+  'onibi':Object.freeze({id:'onibi',name:'鬼火',asset:'assets/enemies/onibi.png',hp:16,attack:8,defense:2,xp:27,gold:8})
 });
 export const ACTIONS=Object.freeze(['attack','bloom','heal','herb','food','guard','flee']);
 export const DEFAULT_PLAYER=Object.freeze({

@@ -1,6 +1,6 @@
 import {FIELD_ENCOUNTER_PLAN_ENEMIES} from './encounter-plan.mjs?v=8';
 
-import {ENEMIES} from '../../../src/game/battle/rules.mjs?v=regional-1-promotion-pace-1-balance-1-pools-1-recolor-withdrawal-1';
+import {ENEMIES} from '../../../src/game/battle/rules.mjs?v=regional-1-promotion-pace-1-balance-1-pools-1-forest-palettes-1';
 
 // Design values for the field map review, with the six regional enemies reading their shared initial values.
 const stats=(enemy,hp,attack,defense,xp,gold)=>({
@@ -21,6 +21,8 @@ export const FIELD_ENCOUNTER_BALANCE_DRAFT={
  'bridge-kodama':live('kodama','bridge-kodama'),
  'bridge-lantern':live('bridgeLantern','bridge-lantern'),
  'edge-spider':live('spider','edge-spider'),
+ 'forest-kodama':live('kodamaAutumn','forest-kodama'),
+ 'forest-spider':live('spiderIndigo','forest-spider'),
  'forest-leaf':live('leafStalker','forest-leaf'),
  'falls-snake':live('snake','falls-snake'),
  'falls-child':live('waterChild','falls-child'),

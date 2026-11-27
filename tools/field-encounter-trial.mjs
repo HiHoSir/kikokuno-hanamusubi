@@ -1,4 +1,4 @@
-import {ARMORY_STOCK,createBattle} from '../src/game/battle/rules.mjs?v=promotion-table-1-regional-balance-1-recolor-withdrawal-1';
+import {ARMORY_STOCK,createBattle} from '../src/game/battle/rules.mjs?v=promotion-table-1-regional-balance-1-forest-palettes-1';
 import {SHIOMACHI_ARMORY_STOCK} from '../data/maps/shiomachi-village/armory.mjs';
 
 const stockKit=stock=>({

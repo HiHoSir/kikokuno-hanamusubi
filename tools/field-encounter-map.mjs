@@ -1,6 +1,6 @@
 import '../data/maps/field/terrain.js';
-import {ENCOUNTER_POOLS,encounterFormations,fieldRegionAt} from '../data/maps/field/encounter-pools.mjs?v=recolor-withdrawal-1';
-import {ENEMIES} from '../src/game/battle/rules.mjs?v=regional-1-promotion-pace-1-balance-1-pools-1-recolor-withdrawal-1';
+import {ENCOUNTER_POOLS,encounterFormations,fieldRegionAt} from '../data/maps/field/encounter-pools.mjs?v=forest-palettes-1';
+import {ENEMIES} from '../src/game/battle/rules.mjs?v=regional-1-promotion-pace-1-balance-1-pools-1-forest-palettes-1';
 import {
  FIELD_ENCOUNTER_PLAN,FIELD_ENCOUNTER_PLAN_ENEMIES,
  FIELD_ENCOUNTER_PLAN_MARKERS,FIELD_ENCOUNTER_PLANNED_MARKERS
@@ -175,7 +175,7 @@ const zoneReference={
  tunnel:tideReference(9),ridge:tideReference(10),fox:tideReference(12)
 };
 const coastReference={label:'3段・鬼灯村の装備4点',player:{...HOZUKI_TRIAL_KIT,lv:3}};
-const pairs=new Set(['cove-jelly','tunnel-bat']);
+const pairs=new Set(['forest-spider','cove-jelly','tunnel-bat']);
 function showEncounterPool(section,article){
  for(const key of section.pools){
   const available=encounterFormations(key,ENEMIES);

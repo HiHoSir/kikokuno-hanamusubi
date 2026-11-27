@@ -15,7 +15,7 @@ test('every regional field pool uses only local normal enemies and covers its fo
     ['coast',48,52],['north-bank',48,42],['forest-edge',56,34],['forest-depths',58,30],
     ['waterfall',67,21],['waterfall',57,22],['ridge',37,15],['ridge',42,18],['fox-approach',40,8]
   ];
-  const forbidden=new Set(['field-oni','tanuki','onibi','cave-guardian','shrine-shadow-fox','forest-kodama','forest-spider']);
+  const forbidden=new Set(['field-oni','tanuki','onibi','cave-guardian','shrine-shadow-fox']);
   for(const [zone,x,y] of zones){
     const point={x:x*32+16,y:y*32+16};
     assert.equal(fieldEncounterZone(point,world),zone);

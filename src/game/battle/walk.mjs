@@ -1,4 +1,4 @@
-import {BATTLE_REQUEST_KEY,ENEMIES,carriedConsumables,createBattle,readPlayer,savePlayer} from './rules.mjs?v=equipment-4slots-2-cove-shells-1-shiomachi-gear-1-cave-quest-1-finds-1-guardian-1-regional-1-promotion-pace-1-early-curve-1-table-1-regional-balance-1-pools-1-recolor-withdrawal-1';
+import {BATTLE_REQUEST_KEY,ENEMIES,carriedConsumables,createBattle,readPlayer,savePlayer} from './rules.mjs?v=equipment-4slots-2-cove-shells-1-shiomachi-gear-1-cave-quest-1-finds-1-guardian-1-regional-1-promotion-pace-1-early-curve-1-table-1-regional-balance-1-pools-1-forest-palettes-1';
 import {CAVE_BOSS_ID,CAVE_FLOORS,CAVE_TOOL_NAME,caveCellCenter} from '../../../data/maps/cave/floors.mjs?v=cave-maps-1-stair-links-1-exploration-1-guardian-1-stairs-2-rise-1-topdown-1';
 import {saveAutoGame,RESTORE_POSITION_KEY} from '../save/save-game.mjs?v=save-slots-1-shiomachi-gear-1-cave-quest-1-ushiohei-hammer-1-finds-1-guardian-1';
 

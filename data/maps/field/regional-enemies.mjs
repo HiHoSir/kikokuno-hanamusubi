@@ -10,6 +10,8 @@ export const REGIONAL_ENEMIES=Object.freeze({
  'cove-jelly':regionalEnemy('cove-jelly','bubbleJelly',12,10,3,28,11),
  'bridge-kodama':regionalEnemy('bridge-kodama','kodama',38,25,11,95,36),
  'edge-spider':regionalEnemy('edge-spider','spider',40,28,11,108,40),
+ 'forest-kodama':regionalEnemy('forest-kodama','kodamaAutumn',63,31,18,170,57),
+ 'forest-spider':regionalEnemy('forest-spider','spiderIndigo',33,28,12,93,31),
  'falls-snake':regionalEnemy('falls-snake','snake',77,40,19,275,90),
  'falls-child':regionalEnemy('falls-child','waterChild',62,35,15,230,76),
  'ridge-fox':regionalEnemy('ridge-fox','fox',105,48,25,455,125),

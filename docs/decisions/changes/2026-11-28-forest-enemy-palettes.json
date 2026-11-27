@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-11-28-forest-enemy-palettes",
+  "kind": "user-approved",
+  "scopes": [
+    "balance",
+    "progression"
+  ],
+  "affectedFiles": [
+    "src/game/battle/rules.mjs",
+    "src/field/walk.mjs"
+  ],
+  "readBeforeEditing": [
+    "docs/BATTLE_BALANCE.md と docs/BALANCE_PROGRESSION_CONTRACT.md の戦闘・成長仕様を確認",
+    "docs/MAP_ENEMY_EQUIPMENT_RECONCILIATION.md と data/maps/field/terrain.js の既存分布を確認"
+  ],
+  "previousDesign": "既存画像の色フィルターで作った紅葉木霊と藍糸蜘蛛が森奥の通常抽選と分布試戦に含まれていた。",
+  "intendedDifference": "色フィルターによる表示を取りやめ、元の構図を参考に葉・樹皮・火や、外殻・関節・布を別々に配色した512px透過画像を2体分使う。",
+  "impactAnalysis": "本編と試戦が別ファイルの画像を読み込む。森奥の編成と確率・能力値は変更しない。",
+  "preservedBoundaries": "森入口の木霊・迷い蜘蛛の元画像、地域分布、装備、昇段条件、ボスは維持。",
+  "verification": "両方の画像の透過・寸法を検査し、分布マップで元画像と別のURLを読み込みフィルターなしで表示することをブラウザで確認。",
+  "userEvidence": {
+    "status": "explicit-user-instruction",
+    "date": "2026-11-28",
+    "quote": "色フィルターだけではダメって言ってるの。\nデザイン一緒でもいいけどカラーリングを変えたのを採用したいっていう意味。\nもし難しければ生成し直してもオッケー",
+    "source": "現チャット。色フィルターへの指摘に続く配色素材の採用指示。"
+  }
+}

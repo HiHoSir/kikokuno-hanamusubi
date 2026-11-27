@@ -186,7 +186,7 @@ try{
      chooseFieldEncounter({x:tx*32+16,y:ty*32+16},field,()=>.95).enemyId);
  });
  assert.deepEqual(northEncounterIds,[
-   'bridge-kodama','edge-spider','forest-leaf','falls-child','pass-deer','ridge-fox'
+   'bridge-kodama','edge-spider','forest-spider','falls-child','pass-deer','ridge-fox'
  ]);
 
  for(let step=0;step<9;step++){
@@ -220,10 +220,19 @@ try{
    ['木霊','38','25','11','95','36']);
  await page.getByRole('button',{name:'梢音村から忘れの森'}).click();
  const forestDetails=await page.locator('#details').textContent();
- assert.doesNotMatch(forestDetails,/紅葉木霊|藍糸蜘蛛/);
- assert.match(forestDetails,/落葉隠れ 100%/);
- assert.deepEqual(await page.locator('#details .enemy:has(img)').allTextContents(),
-   ['木霊','迷い蜘蛛','落葉隠れ']);
+ assert.match(forestDetails,/落葉隠れ 35%.*藍糸蜘蛛×2 10%/s);
+ const forestSprites=await page.locator('#details .enemy img').evaluateAll(
+   async images=>Promise.all(images.map(async img=>{
+     await img.decode();
+     return [new URL(img.src).pathname.split('/').at(-1),img.naturalWidth,getComputedStyle(img).filter];
+   }))
+ );
+ assert.deepEqual(forestSprites,[
+   ['kodama.png',512,'none'],['mayoi-gumo.png',512,'none'],
+   ['kodama-autumn-512.png',512,'none'],['mayoi-gumo-indigo-512.png',512,'none'],
+   ['leaf-tanuki-128.png',128,'none']
+ ]);
+
  assert.equal(await page.locator('#map [data-zone="forest"]').getAttribute('opacity'),'1');
  await page.locator('#details img').first().evaluate(img=>img.decode());
  await page.setViewportSize({width:390,height:844});
@@ -231,16 +240,16 @@ try{
    'encounter map and region controls fit a phone viewport');
  assert.equal(await page.locator('[data-encounter-zone="forest"] [data-enemy="leafStalker"]').count(),1);
  const beforeTrial=await page.evaluate(()=>[JSON.stringify(localStorage),JSON.stringify(sessionStorage)]);
- await page.getByRole('group',{name:'落葉隠れ',exact:true}).getByRole('button',{name:'試しに戦う',exact:true}).click();
+ await page.getByRole('group',{name:'藍糸蜘蛛',exact:true}).getByRole('button',{name:'2体と試しに戦う',exact:true}).click();
  const trial=page.getByRole('dialog');
- assert.equal(await trial.getByRole('img',{name:'落葉隠れ'}).count(),1);
+ assert.equal(await trial.getByRole('img',{name:'藍糸蜘蛛'}).count(),2);
  await trial.getByRole('button',{name:'攻撃',exact:true}).click();
  assert.match(await trial.locator('.trial-log').textContent(),/緋月は.*の傷/);
  await trial.getByRole('button',{name:'つむぎ'}).click();
  assert.match(await trial.locator('.trial-log').textContent(),/回復/);
  for(let i=0;i<8&&await trial.getByRole('button',{name:'攻撃',exact:true}).isEnabled();i++)
    await trial.getByRole('button',{name:'攻撃',exact:true}).click();
- assert.match(await trial.locator('.trial-log').textContent(),/勝利　心165・56両/);
+ assert.match(await trial.locator('.trial-log').textContent(),/勝利　心186・62両/);
  await trial.getByRole('button',{name:'やり直す'}).click();
  assert.match(await trial.locator('.trial-status').textContent(),/1ターン/);
  await trial.getByRole('button',{name:'閉じる'}).click();

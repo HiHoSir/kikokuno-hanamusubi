@@ -164,10 +164,19 @@ try{
  await page.goto(origin+'/previews/field-exploration/?view=enemies');
  await page.locator('#zones button[aria-pressed="true"]').waitFor();
  assert.match(await page.locator('#details').textContent(),/橋の北岸から梢音村.*木霊/s);
- assert.deepEqual(await page.getByRole('row',{name:/木霊（北岸）/}).locator('th,td').allTextContents(),
-   ['木霊（北岸）','72','49','16','250','72']);
+ assert.deepEqual(await page.getByRole('row',{name:/^木霊/}).locator('th,td').allTextContents(),
+   ['木霊','72','49','16','250','72']);
  await page.getByRole('button',{name:'梢音村から忘れの森'}).click();
- assert.match(await page.locator('#details').textContent(),/迷い蜘蛛/);
+ assert.match(await page.locator('#details').textContent(),/迷い蜘蛛.*紅葉木霊.*藍糸蜘蛛/s);
+ const portraits=await page.locator('#details .enemy').evaluateAll(cards=>cards.map(card=>({
+   name:card.textContent,
+   filter:getComputedStyle(card.querySelector('img')).filter
+ })));
+ assert.deepEqual(portraits.map(entry=>entry.name),['木霊','迷い蜘蛛','紅葉木霊','藍糸蜘蛛']);
+ assert.deepEqual(portraits.slice(0,2).map(entry=>entry.filter),['none','none']);
+ assert.match(portraits[2].filter,/hue-rotate\(-76deg\)/);
+ assert.match(portraits[3].filter,/hue-rotate\(167deg\)/);
+ assert.equal(await page.getByRole('row',{name:/^藍糸蜘蛛/}).count(),1);
  assert.equal(await page.locator('#map [data-zone="forest"]').getAttribute('opacity'),'1');
  await page.locator('#details img').first().evaluate(img=>img.decode());
  await page.setViewportSize({width:390,height:844});

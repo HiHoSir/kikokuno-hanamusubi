@@ -1,12 +1,12 @@
 import '../data/maps/field/terrain.js';
-import {ENCOUNTER_POOLS,encounterFormations,fieldRegionAt} from '../data/maps/field/encounter-pools.mjs';
-import {ENEMIES} from '../src/game/battle/rules.mjs?v=regional-1-promotion-pace-1-balance-1-pools-1';
+import {ENCOUNTER_POOLS,encounterFormations,fieldRegionAt} from '../data/maps/field/encounter-pools.mjs?v=recolor-withdrawal-1';
+import {ENEMIES} from '../src/game/battle/rules.mjs?v=regional-1-promotion-pace-1-balance-1-pools-1-recolor-withdrawal-1';
 import {
  FIELD_ENCOUNTER_PLAN,FIELD_ENCOUNTER_PLAN_ENEMIES,
  FIELD_ENCOUNTER_PLAN_MARKERS,FIELD_ENCOUNTER_PLANNED_MARKERS
-} from '../data/maps/field/encounter-plan.mjs?v=7';
-import {FIELD_ENCOUNTER_BALANCE_DRAFT} from '../data/maps/field/encounter-balance-draft.mjs?v=9';
-import {addBattleTrial,HOZUKI_TRIAL_KIT,TIDE_TRIAL_KIT,REGIONAL_TRIAL_REFERENCES} from './field-encounter-trial.mjs?v=5';
+} from '../data/maps/field/encounter-plan.mjs?v=8';
+import {FIELD_ENCOUNTER_BALANCE_DRAFT} from '../data/maps/field/encounter-balance-draft.mjs?v=10';
+import {addBattleTrial,HOZUKI_TRIAL_KIT,TIDE_TRIAL_KIT,REGIONAL_TRIAL_REFERENCES} from './field-encounter-trial.mjs?v=6';
 
 document.title='敵分布案｜鬼哭の花結び';
 const style=document.createElement('style');
@@ -175,7 +175,7 @@ const zoneReference={
  tunnel:tideReference(9),ridge:tideReference(10),fox:tideReference(12)
 };
 const coastReference={label:'3段・鬼灯村の装備4点',player:{...HOZUKI_TRIAL_KIT,lv:3}};
-const pairs=new Set(['forest-spider','cove-jelly','tunnel-bat']);
+const pairs=new Set(['cove-jelly','tunnel-bat']);
 function showEncounterPool(section,article){
  for(const key of section.pools){
   const available=encounterFormations(key,ENEMIES);
@@ -219,7 +219,6 @@ function select(zone){
     image.src=new URL('../'+enemy.asset,import.meta.url);
     image.alt='';
     if(enemy.pixelArt)image.dataset.pixelArt='';
-    if(enemy.filter)image.style.filter=enemy.filter;
    }else{
     tile.classList.add('concept-enemy');
     element('p',enemy.concept,tile);

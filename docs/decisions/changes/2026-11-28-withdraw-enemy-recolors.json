@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-11-28-withdraw-enemy-recolors",
+  "kind": "user-approved",
+  "scopes": ["balance", "progression"],
+  "affectedFiles": ["src/game/battle/rules.mjs", "src/field/walk.mjs"],
+  "readBeforeEditing": [
+    "docs/BATTLE_BALANCE.md と docs/BALANCE_PROGRESSION_CONTRACT.md の戦闘・成長仕様を確認",
+    "docs/MAP_ENEMY_EQUIPMENT_RECONCILIATION.md と data/maps/field/terrain.js の既存分布を確認"
+  ],
+  "previousDesign": "既存画像の色フィルターで作った紅葉木霊と藍糸蜘蛛が森奥の通常抽選と分布試戦に含まれていた。",
+  "intendedDifference": "指摘を受けて2体の色違いを本編、分布マップ、試戦から取り下げる。森奥の通常戦は既存の落葉隠れ単体を維持する。",
+  "impactAnalysis": "森奥での紅葉木霊・藍糸蜘蛛の出現がなくなり、通常遭遇で落葉隠れが出る。セーブ形式への影響はない。",
+  "preservedBoundaries": "元の木霊と迷い蜘蛛は森の入口に出る。他地域の配置、装備、昇段条件、ボスを変更しない。",
+  "verification": "抽選テストで両個体が出ないことと、分布マップに色を変えた画像や試戦が出ないことを確認する。",
+  "userEvidence": {
+    "status": "explicit-user-instruction",
+    "date": "2026-11-28",
+    "quote": "色違いの敵、単色で雑に作りすぎ。勝手な判断が多すぎる。",
+    "source": "現チャット。紅葉木霊・藍糸蜘蛛を通常フィールドに出した報告への指摘。取り下げは是正措置であり、新しいデザインの承認は含まない。"
+  }
+}

@@ -1,17 +1,15 @@
-import {FIELD_ENCOUNTER_PLAN_ENEMIES} from './encounter-plan.mjs?v=7';
+import {FIELD_ENCOUNTER_PLAN_ENEMIES} from './encounter-plan.mjs?v=8';
 
 // Initial values shared by the distribution trial and the actual battle.
 const regionalEnemy=(id,key,hp,attack,defense,xp,gold)=>{
- const {name,asset,pixelArt,filter,distribution}=FIELD_ENCOUNTER_PLAN_ENEMIES[key];
- return Object.freeze({id,name,asset,pixelArt,filter,distribution,hp,attack,defense,xp,gold});
+ const {name,asset,pixelArt,distribution}=FIELD_ENCOUNTER_PLAN_ENEMIES[key];
+ return Object.freeze({id,name,asset,pixelArt,distribution,hp,attack,defense,xp,gold});
 };
 export const REGIONAL_ENEMIES=Object.freeze({
  'cove-oni':regionalEnemy('cove-oni','shoreOni',26,15,5,52,24),
  'cove-jelly':regionalEnemy('cove-jelly','bubbleJelly',12,10,3,28,11),
  'bridge-kodama':regionalEnemy('bridge-kodama','kodama',38,25,11,95,36),
  'edge-spider':regionalEnemy('edge-spider','spider',40,28,11,108,40),
- 'forest-kodama':regionalEnemy('forest-kodama','kodamaAutumn',63,31,18,170,57),
- 'forest-spider':regionalEnemy('forest-spider','spiderIndigo',33,28,12,93,31),
  'falls-snake':regionalEnemy('falls-snake','snake',77,40,19,275,90),
  'falls-child':regionalEnemy('falls-child','waterChild',62,35,15,230,76),
  'ridge-fox':regionalEnemy('ridge-fox','fox',105,48,25,455,125),

@@ -1,5 +1,5 @@
-import {encounterFormations,fieldRegionAt} from '../../../data/maps/field/encounter-pools.mjs';
-import {REGIONAL_ENEMIES} from '../../../data/maps/field/regional-enemies.mjs?v=promotion-pace-1-balance-1-pools-1';
+import {encounterFormations,fieldRegionAt} from '../../../data/maps/field/encounter-pools.mjs?v=recolor-withdrawal-1';
+import {REGIONAL_ENEMIES} from '../../../data/maps/field/regional-enemies.mjs?v=promotion-pace-1-balance-1-pools-1-recolor-withdrawal-1';
 // First-game one-hero B-formula v2 rules. Pure game logic: no DOM, timers, or assets.
 // Approved base/growth/T0–T6 values must match data/characters/hizuki-status.json.
 import {VILLAGE_FINDS} from '../../../data/maps/hozuki-village/finds.mjs';

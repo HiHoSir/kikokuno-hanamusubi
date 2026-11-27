@@ -30,10 +30,16 @@ const clamp=(x,min,max)=>Math.max(min,Math.min(max,x));
 const nonNegative=(n,defaultValue)=>Number.isFinite(n)?Math.max(0,Math.floor(n)):defaultValue;
 const halfUp=n=>Math.floor(n+.5);
 const roll=random=>clamp(Number(random()),0,.999999999);
+// Each entry is the heart required to advance from the current level (1–39).
+const REQUIRED_HEART_BY_LEVEL=Object.freeze([
+  80, 180, 360, 440, 540, 660, 810, 1000, 1230, 1490,
+  1770, 2100, 2290, 2490, 2700, 2910, 3130, 3360, 3650, 3950,
+  4270, 4600, 4950, 5270, 5600, 5940, 6290, 6650, 6990, 7350,
+  7720, 8090, 8470, 8850, 9250, 9660, 10070, 10490, 10920,
+]);
 export function nextLevelXp(lv){
   const level=clamp(Math.floor(lv),1,99);
-  if(level===2)return 180;
-  return Math.round(80*Math.pow(level,1.35));
+  return REQUIRED_HEART_BY_LEVEL[level-1]??Math.round(80*Math.pow(level,1.35));
 }
 export function levelStats(lv=1,equipmentTier='T0',awakening=0){
   lv=clamp(nonNegative(lv,1),1,99);

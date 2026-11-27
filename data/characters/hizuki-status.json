@@ -35,8 +35,7 @@
     "rounding": "half-up-per-displayed-total"
   },
   "xp": {
-    "nextLevel": "round(80 * level^1.35)",
-    "nextLevelOverrides": { "2": 180 },
+    "nextLevel": "levels 1–39: REQUIRED_HEART_BY_LEVEL in src/game/battle/rules.mjs; levels 40–99: round(80 * level^1.35)",
     "healsOnLevelUp": true
   },
   "tiers": [

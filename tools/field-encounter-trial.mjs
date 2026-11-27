@@ -1,4 +1,4 @@
-import {ARMORY_STOCK,createBattle} from '../src/game/battle/rules.mjs';
+import {ARMORY_STOCK,createBattle} from '../src/game/battle/rules.mjs?v=promotion-table-1';
 import {SHIOMACHI_ARMORY_STOCK} from '../data/maps/shiomachi-village/armory.mjs';
 
 const stockKit=stock=>({

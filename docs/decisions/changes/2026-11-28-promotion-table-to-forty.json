@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-11-28-promotion-table-to-forty",
+  "kind": "user-approved",
+  "scopes": ["balance", "progression"],
+  "affectedFiles": ["data/characters/hizuki-status.json", "src/game/battle/rules.mjs", "docs/BATTLE_BALANCE.md", "docs/MAP_ENEMY_EQUIPMENT_RECONCILIATION.md"],
+  "readBeforeEditing": [
+    "data/characters/hizuki-status.json、docs/BATTLE_BALANCE.md と docs/BALANCE_PROGRESSION_CONTRACT.md で必要心・能力成長・段40の位置付けを確認",
+    "docs/MAP_ENEMY_EQUIPMENT_RECONCILIATION.md、docs/FOUR_VILLAGES_EQUIPMENT_PLAN.md と data/maps/field/terrain.js で序盤の道順と装備計画を確認"
+  ],
+  "previousDesign": "段1→2は80、段2→3は180、段3から先は一般式。段40までに累計192277の心が必要だった。",
+  "intendedDifference": "段40への到達までの必要心を表にして、現行敵の心と地域の試戦基準段を照合し段ごとに調整。段40到達の累計は176570。具体値は参照作品の成長の変化を参考にした本作向けの調整。",
+  "impactAnalysis": "段2・段3への序盤の戦闘数目安を維持。地域の基準段では追加敵の単体戦6〜7勝が目安。後半の自然到達段は実走検証待ち。既存セーブの段と蓄積心を引き継ぐ。",
+  "preservedBoundaries": "段40以降の昇段式、ラスボス想定段、段上限、敵報酬・強さ・出現率および緋月の成長と装備を維持する。",
+  "verification": "必要心の単調増加と段40の累計、序盤11戦の回帰検査、地域敵の昇段に必要な勝数を確認する。",
+  "userEvidence": {
+    "status": "explicit-user-instruction",
+    "date": "2026-11-28",
+    "quote": "40段までのテーブル作ってよ\nうん。調整して。",
+    "source": "現チャット。現行の40段までの表とSFC版新桃太郎伝説の参照値を並べた後の指示。"
+  }
+}

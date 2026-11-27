@@ -4,7 +4,7 @@ import {
   EQUIPMENT_ITEMS, EQUIPMENT_SLOTS, carriedConsumables,
   changeEquipment, equipmentPreview, nextLevelXp, readPlayer, savePlayer,
   useExplorationResource
-} from '../battle/rules.mjs?v=equipment-4slots-2-cove-shells-1-shiomachi-gear-1-cave-quest-1-finds-1-guardian-1-early-curve-1';
+} from '../battle/rules.mjs?v=equipment-4slots-2-cove-shells-1-shiomachi-gear-1-cave-quest-1-finds-1-guardian-1-early-curve-1-table-1';
 import {SHELL_KINDS} from '../items/shells.mjs';
 import {readStoryStage} from '../story/chapter-one.mjs';
 import {readManualGame,readAutoGame,manualSaveLabel} from '../save/save-game.mjs?v=save-slots-1-shiomachi-gear-1-cave-quest-1-finds-1-guardian-1';

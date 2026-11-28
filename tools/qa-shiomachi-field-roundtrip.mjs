@@ -709,16 +709,16 @@ try{
     position?.x===x*32+16&&position.y===y*32+16&&position.row===0;
   },{place,x,y});
  };
- await enterTunnel('tunnel-east',[57,22]);
- await exitTunnel('tunnel-east',[57,22]);
- await enterTunnel('tunnel-east',[57,22]);
+ await enterTunnel('tunnel-east',[59,21]);
+ await exitTunnel('tunnel-east',[59,21]);
+ await enterTunnel('tunnel-east',[59,21]);
  const beforeTunnel=caveEncounters;
  await walkCave([[24,9],[21,9],[21,7],[16,7],[16,3],[11,3],[11,5],[6,5],[6,8],[2,8],[2,11]],'晶殻ヤドカリ');
  assert.ok(caveEncounters>beforeTunnel,'the tunnel produced its own battle and restored the walk');
- await exitTunnel('tunnel-west',[42,18]);
+ await exitTunnel('tunnel-west',[46,14]);
  await page.screenshot({path:'artifacts/mountain-tunnel-west.png'});
- await enterTunnel('tunnel-west',[42,18]);
- await exitTunnel('tunnel-west',[42,18]);
+ await enterTunnel('tunnel-west',[46,14]);
+ await exitTunnel('tunnel-west',[46,14]);
 
  await page.goto(origin+'/previews/cave-prototype/?v=stairs-side-2#downstairs');
  await page.waitForFunction(()=>window.__ready&&window.__caveWalkTest.status.includes('下り階段付近'));

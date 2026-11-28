@@ -27,7 +27,7 @@ test('coastal field marker is on free grass by the cove, not a replaced location
  assert.ok(!terrain.referenceComposition.places.shiomachi,
    'new village is a separate authored world marker, not a replacement cove');
  const elevation={prepare(map){map.ramps=map.map(row=>row.map(()=>null));},refreshCollision(){}};
- const window={YK_FIELD_TERRAIN:terrain,YK_FIELD_ELEVATION:elevation,YK_ELEVATION:{prepare(){}}};
+ const window={YK_FIELD_TERRAIN:terrain,YK_FIELD_ELEVATION:elevation};
  runInNewContext(field,{window,YK_FIELD_ELEVATION:elevation});
  const {decorations,landmarkContactTiles}=window.YK_WORLD.mapData;
  const hozuki=decorations.find(item=>item.destination==='village');

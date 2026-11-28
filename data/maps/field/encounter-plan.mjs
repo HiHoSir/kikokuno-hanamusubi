@@ -46,15 +46,15 @@ export const FIELD_ENCOUNTER_PLAN=[
    formations:['kodamaAutumn','spiderIndigo','leafStalker'],balance:['forest-kodama','forest-spider','forest-leaf'],detail:'森奥では紅葉木霊と落葉隠れが単体、藍糸蜘蛛は単体か2体で出る。'}
  ]},
  {id:'waterfall',title:'龍神の滝から洞窟東口',color:'#6ad7f0',sections:[
-  {name:'滝と水辺',pools:['waterfall'],paths:[[[65,23],[65,20],[67,20]],[[67,20],[67,22],[57,22]]],
+  {name:'滝と水辺',pools:['waterfall'],paths:[[[65,23],[65,20],[67,20]],[[67,20],[67,21],[59,21]]],
    formations:['snake','waterChild','sprayCormorant'],balance:['falls-snake','falls-child','falls-bird'],detail:'滝壺は水蛇と飛沫鵜、浅瀬は滝童が出る。水鏡のイベント地点は通常遭遇から外す。'}
  ]},
  {id:'tunnel',title:'山越えの洞窟',color:'#f294ae',tunnel:true,sections:[
-  {name:'洞窟の入口側と奥',pools:['mountain-cave'],paths:[[[57,22],[42,18]]],
+  {name:'洞窟の入口側と奥',pools:['mountain-cave'],paths:[[[59,21],[46,14]]],
    formations:['caveBat','caveCentipede','crystalHermit'],balance:['tunnel-bat','tunnel-centipede','tunnel-hermit'],detail:'鉱灯蝙蝠は湿った東口側で単体、奥では2体。岩骨ムカデは狭い岩棚、晶殻ヤドカリは晶洞に単体。'}
  ]},
  {id:'ridge',title:'洞窟西口から月嶺村',color:'#e7cc67',sections:[
-  {name:'西口と山道',pools:['ridge'],paths:[[[42,18],[42,15],[30,15],[29,17],[26,17]]],
+  {name:'西口と山道',pools:['ridge'],paths:[[[46,14],[42,15],[30,15],[29,17],[26,17]]],
    formations:['mountainBoar','mountainCrow','mistDeer'],balance:['pass-boar','pass-crow','pass-deer'],detail:'峠荒らしは岩場の単体。風切り鴉は露出した尾根、霧角鹿は霧の鞍部に単体。洞窟西口と月嶺村の周囲は休息区間。'}
  ]},
  {id:'fox',title:'月嶺村から九尾の祠',color:'#c1a0ff',sections:[

@@ -4,7 +4,7 @@ import {ENEMIES} from '../src/game/battle/rules.mjs?v=regional-1-promotion-pace-
 import {
  FIELD_ENCOUNTER_PLAN,FIELD_ENCOUNTER_PLAN_ENEMIES,
  FIELD_ENCOUNTER_PLAN_MARKERS,FIELD_ENCOUNTER_PLANNED_MARKERS
-} from '../data/maps/field/encounter-plan.mjs?v=10';
+} from '../data/maps/field/encounter-plan.mjs?v=11';
 import {FIELD_ENCOUNTER_BALANCE_DRAFT} from '../data/maps/field/encounter-balance-draft.mjs?v=10';
 import {addBattleTrial,HOZUKI_TRIAL_KIT,TIDE_TRIAL_KIT,REGIONAL_TRIAL_REFERENCES} from './field-encounter-trial.mjs?v=7';
 

@@ -6,7 +6,7 @@ window.YK_WORLD=(()=>{
  // Left cell of each two-cell village marker added after Hozuki.
  const additionalVillages={shiomachi:[53,51],kozuene:[56,35]};
  const caveCells=[[14,48],[15,48]];
- const tunnelMouths={'tunnel-east':[57,22],'tunnel-west':[42,18]};
+ const tunnelMouths={'tunnel-east':[59,21],'tunnel-west':[46,14]};
  const bridgeRockCell=[48,43];
  const center=([x,y])=>[x*32+16,y*32+16];
  const descriptions={
@@ -92,17 +92,7 @@ window.YK_WORLD=(()=>{
  // its previously converted tree sprites. Keep unrelated objects intact.
  const clearMountainCluster=o=>['newMountainLarge','newMountainSmall'].includes(o.kind)
   &&o.contactTiles.some(([x,y])=>x>=23&&x<=32&&y>=31&&y<=39);
- // Recess the north lip of the foreground terrace so it does not hide
- // the tunnel mouth or the hero on the approach from the east.
- const atTunnelTerraceLip=([x,y])=>y===24&&x>=57&&x<=60;
- for(let x=57;x<=60;x++)mapData.heights[24][x]=0;
- mapData.decorations=mapData.decorations.filter(o=>!clearMountainCluster(o)&&!(
-  o.kind==='newTrees'&&o.occupiedTiles.length===0&&o.contactTiles.some(atTunnelTerraceLip)
- ));
- for(const o of mapData.decorations){
-  if(o.contactTiles.length===1&&o.contactTiles.some(atTunnelTerraceLip))o.supportHeight=0;
- }
- window.YK_ELEVATION.prepare(mapData);
+ mapData.decorations=mapData.decorations.filter(o=>!clearMountainCluster(o));
  mapData.decorations=mapData.decorations.flatMap(o=>{
   if(!['newMountainLarge','newMountainSmall'].includes(o.kind))return [o];
   const elevated=o.contactTiles.some(([x,y])=>(mapData.heights[y]?.[x]||0)>=2);

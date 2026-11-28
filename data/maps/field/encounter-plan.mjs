@@ -2,8 +2,8 @@ const enemy=(name,asset)=>({name,asset:`assets/enemies/${asset}.png`});
 export const FIELD_ENCOUNTER_PLAN_ENEMIES={
  oni:enemy('野の小鬼','field-oni'),tanuki:enemy('化け狸','tanuki'),onibi:enemy('鬼火','onibi'),
  kodama:enemy('木霊','kodama'),spider:enemy('迷い蜘蛛','mayoi-gumo'),
- kodamaAutumn:enemy('紅葉木霊','kodama-autumn-512'),
- spiderIndigo:enemy('藍糸蜘蛛','mayoi-gumo-indigo-512'),
+ kodamaAutumn:{...enemy('紅葉木霊','kodama-autumn-512'),mirrorX:true},
+ spiderIndigo:{...enemy('藍糸蜘蛛','mayoi-gumo-indigo-512'),mirrorX:true},
  snake:enemy('水蛇','mizuhebi'),waterChild:enemy('滝童','takiwarashi'),
  shoreOni:enemy('磯妖','isoy'),bubbleJelly:enemy('泡くらげ','awakurage'),
  caveGuardian:enemy('岩守の鬼','cave-guardian'),

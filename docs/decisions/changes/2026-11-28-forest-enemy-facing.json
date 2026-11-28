@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-11-28-forest-enemy-facing",
+  "kind": "user-approved",
+  "scopes": ["balance"],
+  "affectedFiles": ["src/game/battle/rules.mjs"],
+  "readBeforeEditing": [
+    "docs/BATTLE_BALANCE.md と本編戦闘・試戦の描画処理を照合"
+  ],
+  "previousDesign": "新配色2体は元のイラストの向きで表示していた。",
+  "intendedDifference": "紅葉木霊と藍糸蜘蛛の画像を本編・分布マップ・試戦で左右反転表示する。戦闘ルールは画像の向きだけを受け渡す。",
+  "impactAnalysis": "2体の画像だけが反転する。戦闘時のラベル、描画サイズ、透過と立ち位置は維持する。",
+  "preservedBoundaries": "通常版の木霊と迷い蜘蛛の向き、全ての戦闘数値、編成率に変更はない。",
+  "verification": "本編の2体編成と単体戦、試戦と分布マップで反転行列を検査する。",
+  "userEvidence": {
+    "status": "explicit-user-instruction",
+    "date": "2026-11-28",
+    "quote": "両方左右反転しないと多分使えないよ",
+    "source": "現チャット。紅葉木霊と藍糸蜘蛛の配色差分を採用した報告への指摘。"
+  }
+}

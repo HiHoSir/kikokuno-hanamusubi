@@ -388,7 +388,9 @@ test('the mountain tunnel connects two otherwise separate field routes',()=>{
     world,from:center(...start),destination,contact:checkContact
   });
   assert.equal(trace([48,44],'tunnel-east').reachable,false);
+  assert.equal(world.mapData.travelReachable.has('42,18'),false);
   world.setBridgeRockCleared(true);
+  assert.equal(world.mapData.travelReachable.has('42,18'),true);
   assert.equal(trace([67,20],'tunnel-east').steps,12);
   const [villageX,villageY]=center(26,17);
   const villageCandidate=(x,y)=>x===villageX&&y===villageY?'village-candidate':null;

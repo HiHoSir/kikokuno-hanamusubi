@@ -72,6 +72,7 @@ window.YK_WORLD=(()=>{
  mapData.decorations.push(bridgeRock);
  function setBridgeRockCleared(cleared){
   mapData.bridgeRockCleared=cleared;
+  mapData.travelArrivals=cleared?[tunnelMouths['tunnel-west']]:[];
   bridgeRock.occupiedTiles=cleared?[]:[bridgeRockCell];
   YK_FIELD_ELEVATION.refreshCollision(mapData);
  }

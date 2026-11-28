@@ -113,6 +113,11 @@ try{
       return {
         sourceCount:objects.length,
         runtimeCount:map.decorations.filter(o=>o.kind==='newMountainLarge'||o.kind==='newMountainSmall').length,
+        tunnelBarriers:[[49,18],[39,23],[36,35]].map(([x,y])=>({
+          terrain:map[y][x],
+          visible:map.decorations.some(o=>o.kind==='newMountainSmall'&&o.contactTiles.some(([tx,ty])=>tx===x&&ty===y)),
+          blocked:!window.YK_WORLD.walkable(x*32+16,y*32+16)
+        })),
         removed:removed.map(([x,y])=>({
           x,y,
           stillPresent:objects.some(o=>o.contactTiles[0][0]===x&&o.contactTiles[0][1]===y),
@@ -185,8 +190,10 @@ try{
   assert.equal(info.waterfallBasin.retired.length,16,'only verified waterfall mountain cells are cleaned');
   assert.equal(info.mountainThinning.sourceCount,168,'keep mountain sprites everywhere except the waterfall corridor');
   assert.equal(info.mountainThinning.runtimeCount,
-    info.mountainThinning.sourceCount-71,
-    'only waterfall-adjacent mountains change; all unrelated runtime scenery is retained');
+    info.mountainThinning.sourceCount-71+info.mountainThinning.tunnelBarriers.length,
+    'preserve the existing mountain layout and include the new tunnel barriers');
+  assert.ok(info.mountainThinning.tunnelBarriers.every(o=>o.terrain==='mountain'&&o.visible&&o.blocked),
+    'the three surface shortcuts are visibly blocked by mountains');
   assert.ok(info.mountainThinning.removed.every(o=>
     o.terrain==='mountain'?o.stillPresent&&!o.walkable:!o.stillPresent),
     'solid mountain ground stays visible, while water and grass have no phantom mountain');

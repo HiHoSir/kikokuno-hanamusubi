@@ -6,7 +6,7 @@ window.YK_WORLD=(()=>{
  // Left cell of each two-cell village marker added after Hozuki.
  const additionalVillages={shiomachi:[53,51],kozuene:[56,35]};
  const caveCells=[[14,48],[15,48]];
- const tunnelMouths={'tunnel-east':[57,22],'tunnel-west':[42,18]};
+ const tunnelMouths={'tunnel-east':[59,21],'tunnel-west':[46,14]};
  const bridgeRockCell=[48,43];
  const center=([x,y])=>[x*32+16,y*32+16];
  const descriptions={

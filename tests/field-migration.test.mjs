@@ -388,16 +388,18 @@ test('the mountain tunnel connects two otherwise separate field routes',()=>{
     world,from:center(...start),destination,contact:checkContact
   });
   assert.equal(trace([48,44],'tunnel-east').reachable,false);
-  assert.equal(world.mapData.travelReachable.has('42,18'),false);
+  assert.equal(world.mapData.travelReachable.has('46,14'),false);
   world.setBridgeRockCleared(true);
-  assert.equal(world.mapData.travelReachable.has('42,18'),true);
-  assert.equal(trace([67,20],'tunnel-east').steps,12);
+  assert.equal(world.mapData.travelReachable.has('46,14'),true);
+  assert.equal(trace([67,20],'tunnel-east').steps,9);
   const [villageX,villageY]=center(26,17);
   const villageCandidate=(x,y)=>x===villageX&&y===villageY?'village-candidate':null;
-  assert.equal(trace([42,18],'village-candidate',villageCandidate).steps,21);
+  assert.equal(trace([46,14],'village-candidate',villageCandidate).steps,23);
   assert.equal(trace([67,20],'village-candidate',villageCandidate).reachable,false);
   assert.equal(trace([67,20],'tunnel-west',(x,y)=>contact(x,y)==='tunnel-west'?'tunnel-west':null).reachable,false);
-  for(const [place,cell] of [['tunnel-east',[57,22]],['tunnel-west',[42,18]]]){
+  for(const [place,cell] of [['tunnel-east',[59,21]],['tunnel-west',[46,14]]]){
+    const [x,y]=cell;
+    assert.ok(world.mapData.heights[y-1][x]>world.mapData.heights[y][x],place+' backs onto a cliff');
     assert.equal(contact(...center(...cell)),place);
     assert.ok(world.walkable(...center(...cell)));
   }

@@ -103,14 +103,6 @@ window.YK_WORLD=(()=>{
    walkThrough:o.walkThrough,biome:'forest',supportHeight:mapData.heights[y][x]
   }));
  });
- // Close the three surveyed surface routes after elevation has laid out its ramps.
- for(const [x,y] of [[49,18],[39,23],[36,35]]){
-  mapData[y][x]='mountain';
-  mapData.ramps[y][x]=null;
-  mapData.decorations.push({kind:'newMountainSmall',x:x*32,y:y*32,width:32,height:32,
-   foot:(y+1)*32,contactTiles:[[x,y]],occupiedTiles:[[x,y]]});
- }
-
  setBridgeRockCleared(false);
  const passable=new Set(['grass','forest','sand','snow','barren','road','bridge']);
  const cellOpen=(x,y)=>x>0&&y>0&&x<79&&y<79&&passable.has(mapData[y]?.[x])&&!mapData.occupiedTiles.has(x+','+y)&&mapData.travelReachable.has(x+','+y)&&YK_ELEVATION.pointWalkable(mapData,x*32+16,y*32+16);

@@ -93,14 +93,21 @@ test('the field entry loads the approved exploration map and elevation data', ()
     assert.equal(terrain.tiles[y][x],to,'waterfall basin '+x+','+y);
     restoredTiles[y][x]=from;
   }
+  for(const [x,y] of [[38,23],[35,35],[48,18]]){
+    assert.equal(terrain.tiles[y][x],'river');
+    assert.equal(world.walkable(x*32+16,y*32+16),false);
+    assert.equal(terrain.referenceComposition.decorations.some(o=>
+      o.kind==='bridge'&&o.contactTiles.some(([tx,ty])=>tx===x&&ty===y)),false);
+    for(let dx=-1;dx<=1;dx++)restoredTiles[y][x+dx]='bridge';
+  }
   // The basin replaces only one originally raised grass cell with flat water.
   assert.equal(terrain.heights[21][68],0,'waterline is zero at the lower pool');
   restoredHeights[21][68]=1;
   assert.equal(digest(restoredTiles),'de21dabdd8125fe4be430cb1dc4714d1a7e797c5cec361384817e3778f512999',
-    'terrain outside the waterfall basin remains unmodified');
+    'terrain outside the waterfall basin and the removed bridges remains unmodified');
   assert.equal(digest(restoredHeights),'a2281bea3735928cb1197099852b7b1a89dcdb678a51cbb840dc54fe2581c16e',
     'heights outside the waterfall basin remain unmodified');
-  assert.equal(terrain.referenceComposition.decorations.length,1019);
+  assert.equal(terrain.referenceComposition.decorations.length,1016);
   assert.equal(terrain.referenceComposition.waterfallChipLayer.tiles.length,16);
   assert.equal(terrain.referenceComposition.decorations.some(o=>o.kind==='waterfall'),false);
   assert.equal(world.walkable(...world.start), true);

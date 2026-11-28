@@ -282,8 +282,8 @@ export function chooseFieldEncounter(point,world,random=Math.random){
   return chooseEncounter(fieldEncounterZone(point,world),random);
 }
 
-export function chooseCaveEncounter(random=Math.random){
-  return chooseEncounter('shrine-cave',random);
+export function chooseCaveEncounter(random=Math.random,zone='shrine-cave'){
+  return chooseEncounter(zone,random);
 }
 
 export function createBattle(enemyId='field-oni',player=DEFAULT_PLAYER,random=Math.random,count=1){

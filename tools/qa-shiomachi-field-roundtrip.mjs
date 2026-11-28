@@ -412,11 +412,13 @@ try{
   try{await cave.locator('#scene[data-floor="'+floor+'"]').waitFor({timeout:3500});}
   finally{await page.mouse.up();}
  };
- const caveBattleReturn=async()=>{
+ const caveBattleReturn=async(expectedEnemy)=>{
   const battle=page.frameLocator('#game-scene');
   await battle.locator('#encounter[hidden]').waitFor({state:'attached',timeout:5000});
   assert.equal(await battle.locator('main').getAttribute('data-battle-terrain'),'cave');
-  assert.notEqual(await battle.locator('#enemy-label').textContent(),'岩守の鬼');
+  const enemy=await battle.locator('#enemy-label').textContent();
+  if(expectedEnemy)assert.equal(enemy,expectedEnemy);
+  else assert.notEqual(enemy,'岩守の鬼');
   for(let turn=0;turn<8&&!await battle.locator('[data-command="return"]').count();turn++){
    await battle.locator('[data-command="attack"]').click();
    const target=battle.locator('[data-command="target-0"]:enabled,[data-command="target-1"]:enabled').first();
@@ -434,7 +436,7 @@ try{
   });
  };
  let caveEncounters=0;
- const walkCave=async waypoints=>{
+ const walkCave=async(waypoints,expectedEnemy)=>{
   for(const [col,row] of waypoints){
    const target=[col*48+24,row*48+24];
    let reached=false;
@@ -463,7 +465,7 @@ try{
      }),target);
     }catch(error){
      if(!/context was destroyed|frame was detached/i.test(String(error)))throw error;
-     await caveBattleReturn();
+     await caveBattleReturn(expectedEnemy);
      caveEncounters++;
     }
     if(reached!==false)break;
@@ -670,6 +672,54 @@ try{
   });
   await returned.waitForFunction(()=>document.querySelector('#scene').dataset.x==='57');
  }
+ // Enter each tunnel mouth from a legal adjacent field tile, then cross
+ // the actual cave and use the west exit after a normal battle.
+ await page.evaluate(async()=>{
+  const {readPlayer,savePlayer}=await import('./battle/rules.mjs');
+  savePlayer({...readPlayer(),lv:20,hp:178});
+ });
+ const enterTunnel=async(place,cell)=>{
+  const approach=await page.evaluate(({cell,place})=>{
+   const field=document.querySelector('#game-scene').contentWindow;
+   const world=field.YK_WORLD;
+   const point=cell.map(n=>n*32+16);
+   for(const [dx,dy,key] of [[0,1,'ArrowDown'],[-1,0,'ArrowLeft'],[1,0,'ArrowRight'],[0,-1,'ArrowUp']]){
+    const from=[point[0]-dx*32,point[1]-dy*32];
+    if(world.walkable(...from)&&world.canMove(...from,...point))
+     return {x:cell[0]-dx,y:cell[1]-dy,key};
+   }
+   throw Error('No field approach to '+place);
+  },{cell,place});
+  const field=await fieldCheckpoint(approach.x,approach.y,0,place);
+  await field.evaluate(key=>window.dispatchEvent(new KeyboardEvent('keydown',{key})),approach.key);
+  await page.waitForFunction(place=>{
+   const f=document.querySelector('#game-scene').contentWindow;
+   return new URL(f.location.href).searchParams.get('from')===place&&
+    f.KIKOKU_SAVE_SNAPSHOT?.()?.scene==='cave'&&f.document.querySelector('#load').hidden;
+  },place);
+  assert.equal(await cave.locator('main').getAttribute('aria-label'),'山越えの洞窟');
+ };
+ const exitTunnel=async(place,[x,y])=>{
+  const frame=page.frames().find(f=>new URL(f.url()).pathname==='/src/game/cave/');
+  await frame.evaluate(()=>window.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowDown'})));
+  await page.waitForFunction(({place,x,y})=>{
+   const f=document.querySelector('#game-scene').contentWindow;
+   const position=f.KIKOKU_SAVE_SNAPSHOT?.()?.position;
+   return f.location.pathname==='/src/field/'&&new URL(f.location.href).searchParams.get('from')===place&&
+    position?.x===x*32+16&&position.y===y*32+16&&position.row===0;
+  },{place,x,y});
+ };
+ await enterTunnel('tunnel-east',[57,22]);
+ await exitTunnel('tunnel-east',[57,22]);
+ await enterTunnel('tunnel-east',[57,22]);
+ const beforeTunnel=caveEncounters;
+ await walkCave([[24,9],[21,9],[21,7],[16,7],[16,3],[11,3],[11,5],[6,5],[6,8],[2,8],[2,11]],'晶殻ヤドカリ');
+ assert.ok(caveEncounters>beforeTunnel,'the tunnel produced its own battle and restored the walk');
+ await exitTunnel('tunnel-west',[42,18]);
+ await page.screenshot({path:'artifacts/mountain-tunnel-west.png'});
+ await enterTunnel('tunnel-west',[42,18]);
+ await exitTunnel('tunnel-west',[42,18]);
+
  await page.goto(origin+'/previews/cave-prototype/?v=stairs-side-2#downstairs');
  await page.waitForFunction(()=>window.__ready&&window.__caveWalkTest.status.includes('下り階段付近'));
  const previewStair=await page.evaluate(()=>{

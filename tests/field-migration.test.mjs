@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import { createContext, runInContext } from 'node:vm';
+import {traceFieldRoute} from '../tools/field-route-pathfinder.mjs';
 
 const root = new URL('../', import.meta.url);
 const entry = new URL('src/field/index.html', root);
@@ -377,4 +378,25 @@ test('landscape field draws directly into a wider viewport without a portrait cr
      assert.equal(args[7],32*projected.scale);
    }
  }finally{delete globalThis.window;delete globalThis.document;delete globalThis.ImageData;}
+});
+
+test('the mountain tunnel connects two otherwise separate field routes',()=>{
+  const loaded=loadField(),world=loaded.YK_WORLD;
+  const center=(x,y)=>[x*32+16,y*32+16];
+  const contact=(x,y)=>loaded.YK_AREA_TRANSITIONS.contact(world,x,y);
+  const trace=(start,destination,checkContact=contact)=>traceFieldRoute({
+    world,from:center(...start),destination,contact:checkContact
+  });
+  assert.equal(trace([48,44],'tunnel-east').reachable,false);
+  world.setBridgeRockCleared(true);
+  assert.equal(trace([67,20],'tunnel-east').steps,12);
+  const [villageX,villageY]=center(26,17);
+  const villageCandidate=(x,y)=>x===villageX&&y===villageY?'village-candidate':null;
+  assert.equal(trace([42,18],'village-candidate',villageCandidate).steps,21);
+  assert.equal(trace([67,20],'village-candidate',villageCandidate).reachable,false);
+  assert.equal(trace([67,20],'tunnel-west',(x,y)=>contact(x,y)==='tunnel-west'?'tunnel-west':null).reachable,false);
+  for(const [place,cell] of [['tunnel-east',[57,22]],['tunnel-west',[42,18]]]){
+    assert.equal(contact(...center(...cell)),place);
+    assert.ok(world.walkable(...center(...cell)));
+  }
 });

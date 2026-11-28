@@ -1,11 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {CAVE_FLOORS,CAVE_TILE,CAVE_BOSS_ID,caveCellOpen,caveCellCenter,caveFeatureBlocks,caveStairAt,caveEncounterTerrain,caveLayout} from '../data/maps/cave/floors.mjs';
-import {DEFAULT_PLAYER,createBattle,collectFind,normalizePlayer,readPlayer,savePlayer} from '../src/game/battle/rules.mjs';
+import {CAVE_FLOORS,CAVE_TILE,CAVE_BOSS_ID,MOUNTAIN_TUNNEL_FLOOR,caveExitPlace,caveCellOpen,caveCellCenter,caveFeatureBlocks,caveStairAt,caveEncounterTerrain,caveLayout} from '../data/maps/cave/floors.mjs';
+import {DEFAULT_PLAYER,createBattle,collectFind,chooseCaveEncounter,normalizePlayer,readPlayer,savePlayer} from '../src/game/battle/rules.mjs';
 import {makeWalk} from '../src/game/village/movement.mjs';
-import {saveManualGame,restoreSavedGame} from '../src/game/save/save-game.mjs';
+import {saveManualGame,restoreSavedGame,manualSaveLabel} from '../src/game/save/save-game.mjs';
 
-test('all three cave floors have walkable routes between their portals',()=>{
+test('all cave floors have walkable routes between their portals',()=>{
  for(const [floor,layout] of CAVE_FLOORS.entries()){
    assert.ok(layout.grid.every(row=>row.length===layout.grid[0].length));
    const cells=[layout.entry],visited=new Set(cells.map(cell=>cell.join(',')));
@@ -22,6 +22,13 @@ test('all three cave floors have walkable routes between their portals',()=>{
      const solid=caveCellCenter(feature.origin);
      assert.equal(caveFeatureBlocks(feature,...solid),true);
      assert.equal(caveStairAt(floor,...solid),undefined);
+   }
+   for(const {place,entry,exit} of layout.portals??[]){
+    assert.ok(visited.has(entry.join(',')));
+    assert.ok(visited.has(exit.join(',')));
+    assert.equal(caveExitPlace(layout,...caveCellCenter(exit)),place);
+    assert.equal(caveExitPlace(layout,...caveCellCenter(entry)),undefined);
+    assert.equal(caveEncounterTerrain(floor,...caveCellCenter(exit)),false);
    }
    for(const key of ['exit','up','down','boss']){
      const cell=layout[key]?.approach??layout[key];
@@ -87,7 +94,7 @@ test('the lower passage has encounters, and caches use the saved one-time pickup
  assert.equal(caveEncounterTerrain(1,...caveCellCenter([15,14])),true);
  assert.equal(caveEncounterTerrain(1,...caveCellCenter([15,3])),false);
  assert.equal(caveEncounterTerrain(1,...caveCellCenter([6,14])),false);
- for(const floor of CAVE_FLOORS){
+ for(const floor of CAVE_FLOORS.slice(0,MOUNTAIN_TUNNEL_FLOOR)){
   const cache=floor.features.find(feature=>feature.kind==='cache');
   const find=collectFind(DEFAULT_PLAYER,cache.id);
   assert.equal(find.accepted,true);
@@ -146,4 +153,23 @@ test('the guardian grants the tool only on victory; both gate flags survive a ca
  savePlayer(DEFAULT_PLAYER,storage);
  assert.deepEqual(restoreSavedGame('manual',storage,session).save.location,location);
  assert.deepEqual(readPlayer(storage).caveQuest,{rockBreaker:true,bridgeCleared:true});
+});
+
+test('the mountain tunnel rolls only its adopted enemies',()=>{
+ for(const random of [0,.25,.75,.99])
+  assert.deepEqual(chooseCaveEncounter(()=>random,'mountain-cave'),
+   {zone:'mountain-cave',enemyId:'tunnel-hermit',count:1});
+ assert.equal(chooseCaveEncounter(()=>0).zone,'shrine-cave');
+});
+
+test('a mountain tunnel checkpoint keeps its location and dungeon name',()=>{
+ const data=new Map();
+ const storage={getItem:key=>data.get(key)??null,setItem:(key,value)=>data.set(key,value),removeItem:key=>data.delete(key)};
+ const floor=MOUNTAIN_TUNNEL_FLOOR;
+ const [x,y]=caveCellCenter(CAVE_FLOORS[floor].entry);
+ const location={scene:'cave',position:{floor,x,y,face:1}};
+ const result=saveManualGame(location,storage);
+ assert.ok(result.accepted);
+ assert.match(manualSaveLabel(result.save),/^山越えの洞窟/);
+ assert.deepEqual(restoreSavedGame('manual',storage,storage).save.location,location);
 });

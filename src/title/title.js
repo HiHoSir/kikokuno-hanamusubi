@@ -1,6 +1,6 @@
 import {
   readManualGame,readAutoGame,restoreSavedGame,startNewGame,manualSaveLabel
-} from '../game/save/save-game.mjs?v=save-slots-1-shiomachi-gear-1-cave-quest-1-ushiohei-hammer-1-finds-1-guardian-1-rematch-1-kozuene-1';
+} from '../game/save/save-game.mjs?v=save-slots-1-shiomachi-gear-1-cave-quest-1-ushiohei-hammer-1-finds-1-guardian-1-rematch-1-kozuene-1-mountain-tunnel-1';
 
 const scenes = [
   { name: '鬼灯村', url: new URL('../../assets/ui/title/village.webp', import.meta.url) },

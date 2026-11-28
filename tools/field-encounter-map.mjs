@@ -4,7 +4,7 @@ import {ENEMIES} from '../src/game/battle/rules.mjs?v=regional-1-promotion-pace-
 import {
  FIELD_ENCOUNTER_PLAN,FIELD_ENCOUNTER_PLAN_ENEMIES,
  FIELD_ENCOUNTER_PLAN_MARKERS,FIELD_ENCOUNTER_PLANNED_MARKERS
-} from '../data/maps/field/encounter-plan.mjs?v=9';
+} from '../data/maps/field/encounter-plan.mjs?v=10';
 import {FIELD_ENCOUNTER_BALANCE_DRAFT} from '../data/maps/field/encounter-balance-draft.mjs?v=10';
 import {addBattleTrial,HOZUKI_TRIAL_KIT,TIDE_TRIAL_KIT,REGIONAL_TRIAL_REFERENCES} from './field-encounter-trial.mjs?v=7';
 
@@ -57,7 +57,7 @@ document.body.innerHTML=`<main>
 <div class="layout">
  <section>
   <svg class="map" id="map" viewBox="0 0 800 800" role="img" aria-label="花霞野のフィールドに敵の分布区間を重ねた地図"></svg>
-  <p class="note">● 追加敵の出現地　◆ 地上の入口案　破線 山越えの洞窟　× 塞ぐ迂回路</p>
+  <p class="note">● 追加敵の出現地　◆ 地上の入口案　破線 山越えの洞窟　× 山で塞いだ迂回路</p>
  </section>
  <aside>
   <nav id="zones" aria-label="敵の分布区間"></nav>
@@ -132,7 +132,9 @@ for(const [x,y] of [[36,35],[39,23],[49,18]]){
  shape(map,'text',{x:center(x),y:center(y)+7,'text-anchor':'middle',
    fill:'#ffae9d',stroke:'#263838','stroke-width':3,'paint-order':'stroke','font-size':26},'×');
 }
+const [eastMouth,westMouth]=FIELD_ENCOUNTER_PLAN.find(zone=>zone.tunnel).sections[0].paths[0];
 const markers=[
+ {name:'洞窟 東口',point:eastMouth},{name:'洞窟 西口',point:westMouth},
  ...Object.entries(FIELD_ENCOUNTER_PLAN_MARKERS).map(([id,name])=>({name,point:places[id]})),
  ...FIELD_ENCOUNTER_PLANNED_MARKERS.map(marker=>({...marker,planned:true}))
 ];
@@ -178,17 +180,15 @@ const coastReference={label:'3段・鬼灯村の装備4点',player:{...HOZUKI_TR
 const pairs=new Set(['forest-spider','cove-jelly','tunnel-bat']);
 function showEncounterPool(section,article){
  for(const key of section.pools){
-  const available=encounterFormations(key,ENEMIES);
-  const connected=key!=='mountain-cave';
-  const rows=connected?available:ENCOUNTER_POOLS[key];
+  const rows=encounterFormations(key,ENEMIES);
   const total=rows.reduce((sum,[,,weight])=>sum+weight,0);
   const format=([id,count,weight])=>{
    const name=ENEMIES[id]?.name??FIELD_ENCOUNTER_BALANCE_DRAFT[id].name;
    return name+(count===2?'×2':'')+' '+Math.round(weight/total*100)+'%';
   };
   const prefix=key==='village-outskirts'?'鬼灯村周辺　':key==='shrine-approach'?'社への道　':'';
-  element('p',prefix+(connected?'本編　':'未接続の配分　')+rows.map(format).join('、'),article);
-  const planned=connected?ENCOUNTER_POOLS[key].filter(([id])=>!Object.hasOwn(ENEMIES,id)):[];
+  element('p',prefix+'本編　'+rows.map(format).join('、'),article);
+  const planned=ENCOUNTER_POOLS[key].filter(([id])=>!Object.hasOwn(ENEMIES,id));
   if(planned.length)element('p','画像未採用　'+planned.map(([id])=>FIELD_ENCOUNTER_BALANCE_DRAFT[id].name).join('、'),article);
  }
 }

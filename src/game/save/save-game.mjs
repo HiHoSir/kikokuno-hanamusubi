@@ -1,7 +1,7 @@
 // Two independent checkpoints: a user-written slot and a rotating autosave.
 // Existing live player/story keys remain unchanged.
 // Save data is not uploaded; Safari may erase site storage when website data is cleared.
-import {CAVE_FLOORS,caveCellCenter} from '../../../data/maps/cave/floors.mjs?v=maze-2';
+import {CAVE_FLOORS,MOUNTAIN_TUNNEL_FLOOR,MOUNTAIN_TUNNEL_NAME,caveCellCenter} from '../../../data/maps/cave/floors.mjs?v=maze-2-mountain-tunnel-1';
 import {PLAYER_KEY,DEFAULT_PLAYER,normalizePlayer,readPlayer,FIELD_RETURN_KEY,BATTLE_REQUEST_KEY} from '../battle/rules.mjs?v=shiomachi-gear-1-cave-quest-1-finds-1-guardian-1';
 import {CHAPTER_ONE_KEY,CHAPTER_ONE_STAGES,normalizeStage,readStoryStage,
   USHIOHEI_HAMMER_KEY,hasUshioheiCelebratedHammer
@@ -28,7 +28,7 @@ function normalizeLocation(source){
   if(Number.isInteger(point.face)&&point.face>=0&&point.face<=3)position.face=point.face;
   if(Number.isInteger(point.row)&&point.row>=0&&point.row<=3)position.row=point.row;
   if(source.scene==='cave'){
-    if(!Number.isInteger(point.floor)||point.floor<0||point.floor>2)return null;
+    if(!Number.isInteger(point.floor)||point.floor<0||point.floor>=CAVE_FLOORS.length)return null;
     position.floor=point.floor;
   }
   if(source.scene==='interiors'){
@@ -148,6 +148,7 @@ export function startNewGame(storage=globalThis.localStorage,session=globalThis.
 }
 export function manualSaveLabel(save){
   if(!save)return '記録なし';
-  const area=SCENES[save.location.scene];
+  const area=save.location.scene==='cave'&&save.location.position.floor===MOUNTAIN_TUNNEL_FLOOR
+    ?MOUNTAIN_TUNNEL_NAME:SCENES[save.location.scene];
   return area+'　'+save.player.lv+'段　'+save.player.gold+'両';
 }

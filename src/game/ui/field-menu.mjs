@@ -7,7 +7,7 @@ import {
 } from '../battle/rules.mjs?v=equipment-4slots-2-cove-shells-1-shiomachi-gear-1-cave-quest-1-finds-1-guardian-1-early-curve-1-table-1';
 import {SHELL_KINDS} from '../items/shells.mjs';
 import {readStoryStage} from '../story/chapter-one.mjs';
-import {readManualGame,readAutoGame,manualSaveLabel} from '../save/save-game.mjs?v=save-slots-1-shiomachi-gear-1-cave-quest-1-finds-1-guardian-1';
+import {readManualGame,readAutoGame,manualSaveLabel} from '../save/save-game.mjs?v=save-slots-1-shiomachi-gear-1-cave-quest-1-finds-1-guardian-1-mountain-tunnel-1';
 
 const frame=document.querySelector('#game-scene');
 const opener=document.querySelector('#field-menu-toggle');

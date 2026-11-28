@@ -126,7 +126,7 @@ try{
    browserErrors:errors};
  console.log('FIELD_REAL_WALK_AUDIT '+JSON.stringify(summary));
  assert.deepEqual(report.mapSize,[80,80]);
- assert.deepEqual(report.liveTransitions,['village','shrine','cove','shiomachi','kozuene','cave']);
+ assert.deepEqual(report.liveTransitions,['village','shrine','cove','shiomachi','kozuene','cave','tunnel-east','tunnel-west']);
  assert.deepEqual(errors,[],'production field assets/scripts must load');
  for(const id of report.liveTransitions){
    await page.evaluate(id=>window.KIKOKU_GAME.navigate(

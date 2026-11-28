@@ -1,9 +1,9 @@
-import {FIELD_ENCOUNTER_PLAN_ENEMIES} from './encounter-plan.mjs?v=8';
+import {FIELD_ENCOUNTER_PLAN_ENEMIES} from './encounter-plan.mjs?v=9';
 
 // Initial values shared by the distribution trial and the actual battle.
 const regionalEnemy=(id,key,hp,attack,defense,xp,gold)=>{
- const {name,asset,pixelArt,distribution}=FIELD_ENCOUNTER_PLAN_ENEMIES[key];
- return Object.freeze({id,name,asset,pixelArt,distribution,hp,attack,defense,xp,gold});
+ const {name,asset,pixelArt,mirrorX,distribution}=FIELD_ENCOUNTER_PLAN_ENEMIES[key];
+ return Object.freeze({id,name,asset,pixelArt,mirrorX,distribution,hp,attack,defense,xp,gold});
 };
 export const REGIONAL_ENEMIES=Object.freeze({
  'cove-oni':regionalEnemy('cove-oni','shoreOni',26,15,5,52,24),

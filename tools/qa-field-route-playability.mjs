@@ -224,13 +224,15 @@ try{
  const forestSprites=await page.locator('#details .enemy img').evaluateAll(
    async images=>Promise.all(images.map(async img=>{
      await img.decode();
-     return [new URL(img.src).pathname.split('/').at(-1),img.naturalWidth,getComputedStyle(img).filter];
+     const {filter,transform}=getComputedStyle(img);
+     return [new URL(img.src).pathname.split('/').at(-1),img.naturalWidth,filter,transform];
    }))
  );
  assert.deepEqual(forestSprites,[
-   ['kodama.png',512,'none'],['mayoi-gumo.png',512,'none'],
-   ['kodama-autumn-512.png',512,'none'],['mayoi-gumo-indigo-512.png',512,'none'],
-   ['leaf-tanuki-128.png',128,'none']
+   ['kodama.png',512,'none','none'],['mayoi-gumo.png',512,'none','none'],
+   ['kodama-autumn-512.png',512,'none','matrix(-1, 0, 0, 1, 0, 0)'],
+   ['mayoi-gumo-indigo-512.png',512,'none','matrix(-1, 0, 0, 1, 0, 0)'],
+   ['leaf-tanuki-128.png',128,'none','none']
  ]);
 
  assert.equal(await page.locator('#map [data-zone="forest"]').getAttribute('opacity'),'1');
@@ -242,7 +244,9 @@ try{
  const beforeTrial=await page.evaluate(()=>[JSON.stringify(localStorage),JSON.stringify(sessionStorage)]);
  await page.getByRole('group',{name:'藍糸蜘蛛',exact:true}).getByRole('button',{name:'2体と試しに戦う',exact:true}).click();
  const trial=page.getByRole('dialog');
- assert.equal(await trial.getByRole('img',{name:'藍糸蜘蛛'}).count(),2);
+ assert.deepEqual(await trial.getByRole('img',{name:'藍糸蜘蛛'}).evaluateAll(
+   images=>images.map(img=>getComputedStyle(img).transform)),
+   ['matrix(-1, 0, 0, 1, 0, 0)','matrix(-1, 0, 0, 1, 0, 0)']);
  await trial.getByRole('button',{name:'攻撃',exact:true}).click();
  assert.match(await trial.locator('.trial-log').textContent(),/緋月は.*の傷/);
  await trial.getByRole('button',{name:'つむぎ'}).click();

@@ -31,6 +31,7 @@ try{
  for(const [width,height,enemyId,count] of [
   [900,390,'tanuki',2],[1536,706,'tanuki',2],
   [900,390,'field-oni',1],[900,390,'onibi',1],
+  [900,390,'forest-kodama',1],[900,390,'forest-spider',2],
   [1536,706,'cave-guardian',1],[900,390,'cave-guardian',1]
  ]){
   const page=await chromiumBrowser.newPage({viewport:{width,height},deviceScaleFactor:1,hasTouch:true,isMobile:true});
@@ -116,13 +117,15 @@ try{
       source:img.currentSrc,
       pixelArt:img.dataset.pixelArt,
       interpolation:d.defaultView.getComputedStyle(img).imageRendering,
-      animation:d.defaultView.getComputedStyle(img).animationName
+      animation:d.defaultView.getComputedStyle(img).animationName,
+      transform:d.defaultView.getComputedStyle(img).transform
     }));
    });
    const spriteFit=Math.min(data.rects.enemy1.w,data.rects.enemy1.h);
    battleScales.push({width,height,large,enemyId,heroHeight:data.rects.hero.h,
     enemyScale:spriteFit/enemyArt[0].dimensions[0]});
    const expectsPixelArt=['tanuki','field-oni','onibi'].includes(enemyId);
+   const mirroredAsset=({'forest-kodama':'kodama-autumn-512','forest-spider':'mayoi-gumo-indigo-512'})[enemyId];
    const version=({tanuki:'77a93691','field-oni':'651fcddc',onibi:'4efa9446'})[enemyId];
    if(enemyId==='onibi'&&enemyArt.some(item=>item.animation!=='battle-onibi-float'))
      issues.push(width+'x'+height+' onibi idle float missing: '+JSON.stringify(enemyArt));
@@ -132,7 +135,8 @@ try{
        item.interpolation!=='pixelated'||!item.source.includes('/cave-guardian.png')):
       expectsPixelArt?(item.pixelArt!=='true'||item.dimensions[0]!==128||item.dimensions[1]!==128||
        item.interpolation!=='pixelated'||!item.source.includes('/'+enemyId+'.png?v='+version)):
-      (item.pixelArt!=='false'||!item.source.includes('/'+enemyId+'.png'))))){
+      (item.pixelArt!=='false'||!item.source.includes('/'+(mirroredAsset||enemyId)+'.png')||
+       (mirroredAsset&&item.transform!=='matrix(-1, 0, 0, 1, 0, 0)'))))){
      issues.push(width+'x'+height+' approved enemy PNG failed to load: '+JSON.stringify(enemyArt));
    }
    if(enemyId==='onibi'){

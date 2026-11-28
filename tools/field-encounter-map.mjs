@@ -4,9 +4,9 @@ import {ENEMIES} from '../src/game/battle/rules.mjs?v=regional-1-promotion-pace-
 import {
  FIELD_ENCOUNTER_PLAN,FIELD_ENCOUNTER_PLAN_ENEMIES,
  FIELD_ENCOUNTER_PLAN_MARKERS,FIELD_ENCOUNTER_PLANNED_MARKERS
-} from '../data/maps/field/encounter-plan.mjs?v=8';
+} from '../data/maps/field/encounter-plan.mjs?v=9';
 import {FIELD_ENCOUNTER_BALANCE_DRAFT} from '../data/maps/field/encounter-balance-draft.mjs?v=10';
-import {addBattleTrial,HOZUKI_TRIAL_KIT,TIDE_TRIAL_KIT,REGIONAL_TRIAL_REFERENCES} from './field-encounter-trial.mjs?v=6';
+import {addBattleTrial,HOZUKI_TRIAL_KIT,TIDE_TRIAL_KIT,REGIONAL_TRIAL_REFERENCES} from './field-encounter-trial.mjs?v=7';
 
 document.title='敵分布案｜鬼哭の花結び';
 const style=document.createElement('style');
@@ -218,6 +218,7 @@ function select(zone){
     const image=element('img',null,tile);
     image.src=new URL('../'+enemy.asset,import.meta.url);
     image.alt='';
+    if(enemy.mirrorX)image.style.transform='scaleX(-1)';
     if(enemy.pixelArt)image.dataset.pixelArt='';
    }else{
     tile.classList.add('concept-enemy');

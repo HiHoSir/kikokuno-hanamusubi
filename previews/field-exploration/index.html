@@ -6,7 +6,7 @@
 const area=new URL("../../src/field/index.html",location.href);
 const query=new URLSearchParams(location.search);
 if(query.get("view")==="enemies"){
- await import("../../tools/field-encounter-map.mjs?v=17");
+ await import("../../tools/field-encounter-map.mjs?v=18");
 }else{
 const playUrl=new URL(location.href);
 if(query.get("from")!=="battle"){playUrl.searchParams.set("from","battle");location.replace(playUrl.href);}

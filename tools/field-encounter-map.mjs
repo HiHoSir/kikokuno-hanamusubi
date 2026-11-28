@@ -1,4 +1,4 @@
-import '../data/maps/field/terrain.js';
+import '../data/maps/field/terrain.js?v=remove-bypass';
 import {ENCOUNTER_POOLS,encounterFormations,fieldRegionAt} from '../data/maps/field/encounter-pools.mjs?v=forest-palettes-1';
 import {ENEMIES} from '../src/game/battle/rules.mjs?v=regional-1-promotion-pace-1-balance-1-pools-1-forest-palettes-1';
 import {
@@ -57,7 +57,7 @@ document.body.innerHTML=`<main>
 <div class="layout">
  <section>
   <svg class="map" id="map" viewBox="0 0 800 800" role="img" aria-label="花霞野のフィールドに敵の分布区間を重ねた地図"></svg>
-  <p class="note">● 追加敵の出現地　◆ 地上の入口案　破線 山越えの洞窟　× 山で塞いだ迂回路</p>
+  <p class="note">● 追加敵の出現地　◆ 地上の入口案　破線 山越えの洞窟　× 撤去した橋</p>
  </section>
  <aside>
   <nav id="zones" aria-label="敵の分布区間"></nav>
@@ -128,7 +128,7 @@ for(const zone of FIELD_ENCOUNTER_PLAN){
  }
 }
 
-for(const [x,y] of [[36,35],[39,23],[49,18]]){
+for(const [x,y] of [[35,35],[38,23],[48,18]]){
  shape(map,'text',{x:center(x),y:center(y)+7,'text-anchor':'middle',
    fill:'#ffae9d',stroke:'#263838','stroke-width':3,'paint-order':'stroke','font-size':26},'×');
 }

@@ -68,5 +68,5 @@ export const FIELD_ENCOUNTER_PLAN_MARKERS={
  kozuene:'梢音村',forest:'忘れの森',waterfall:'龍神の滝',fox:'九尾の祠'
 };
 export const FIELD_ENCOUNTER_PLANNED_MARKERS=[
- {name:'洞窟 西口',point:[42,18]},{name:'洞窟 東口',point:[57,22]},{name:'月嶺村',point:[26,17]}
+ {name:'月嶺村',point:[26,17]}
 ];

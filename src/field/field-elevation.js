@@ -211,7 +211,9 @@ window.YK_FIELD_ELEVATION=(()=>{
  // Rebuild derived data after the final object replacement/removal pass.
  // Never keep contact cells from sprites that no longer exist.
  function reachable(m){
-  const queue=[[37,71]],seen=new Set(['37,71']);
+  // A connected interior can lead to a second component of the field.
+  const queue=[[37,71],...(m.travelArrivals??[])];
+  const seen=new Set(queue.map(cell=>cell.join(',')));
   for(let i=0;i<queue.length;i++){const [x,y]=queue[i];for(const [dx,dy] of Object.values(E.dirs)){
    const nx=x+dx,ny=y+dy,k=nx+','+ny;
    if(!seen.has(k)&&E.canMove(m,x*32+16,y*32+16,nx*32+16,ny*32+16)){seen.add(k);queue.push([nx,ny]);}

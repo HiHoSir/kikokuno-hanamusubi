@@ -1,6 +1,12 @@
 import {CAVE_WHITE_SEAL,CAVE_BLACK_SEAL} from './finds.mjs?v=guardian-1';
 
 export const CAVE_TILE=48;
+export const MOUNTAIN_TUNNEL_NAME='山越えの洞窟';
+
+const tunnelPortals=[
+ {place:'tunnel-west',entry:[2,11],exit:[2,12]},
+ {place:'tunnel-east',entry:[24,11],exit:[24,12]}
+];
 export const CAVE_BOSS_ID='cave-guardian';
 export const CAVE_TOOL_NAME='岩砕きの槌';
 
@@ -86,6 +92,22 @@ const floors=[
  }
 ];
 
+export const MOUNTAIN_TUNNEL_FLOOR=floors.length;
+floors.push({
+ grid:gallery(27,13,[
+  [[2,12],[2,8],[6,8],[6,5],[11,5],[11,3],[16,3],[16,7],[21,7],[21,9],[24,9],[24,12]],
+  [[11,5],[11,8],[15,8],[15,7],[16,7]],
+  [[17,7],[17,10],[19,10]]
+ ],[[4,7,7,9],[10,2,16,4],[14,6,19,8],[21,8,24,10]]),
+ name:MOUNTAIN_TUNNEL_NAME,entry:tunnelPortals[1].entry,
+ portals:tunnelPortals,visibilityRadius:345,
+ danger:(x,y)=>x>=6&&x<=20&&y<=9,
+ scenery:[
+  {kind:'inscription',origin:[4,7],text:'西口は南へ。東口へは、岩棚の先の広間を抜けて進め。'},
+  {kind:'inscription',origin:[23,8],text:'東口は南へ。西口へは、岩棚の広間を抜けて進め。'}
+ ]
+});
+
 export const CAVE_FLOORS=floors.map(floor=>({
  ...floor,entry:floor.up?.approach??floor.entry,
  features:[floor.up,floor.down,...floor.scenery].filter(Boolean)
@@ -140,4 +162,14 @@ export function caveLayout(floor,foundItems){
  for(const [row,left,right] of base.shortcut)
   grid[row]=grid[row].slice(0,left)+'.'.repeat(right-left+1)+grid[row].slice(right+1);
  return {...base,grid,features:[...base.features,base.hiddenCache]};
+}
+
+export function caveExitPlace(layout,x,y){
+ if(layout.portals){
+  const col=Math.floor(x/CAVE_TILE);
+  const row=Math.floor(y/CAVE_TILE);
+  return layout.portals.find(({exit:[tx,ty]})=>tx===col&&ty===row&&y>=ty*CAVE_TILE+17)?.place;
+ }
+ if(layout.exit&&Math.abs(x-caveCellCenter(layout.exit)[0])<1.5*CAVE_TILE&&y>=layout.exit[1]*CAVE_TILE+17)
+  return 'cave';
 }

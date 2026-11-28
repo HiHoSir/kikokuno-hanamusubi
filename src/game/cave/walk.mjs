@@ -1,14 +1,14 @@
 import {CAVE_WHITE_SEAL,CAVE_BLACK_SEAL} from '../../../data/maps/cave/finds.mjs?v=guardian-1';
-import {CAVE_TILE,CAVE_FLOORS,CAVE_BOSS_ID,caveCellCenter,caveFeatureBlocks,caveStairAt,caveEncounterTerrain,caveLayout}
- from '../../../data/maps/cave/floors.mjs?v=cave-maps-1-stair-links-1-exploration-1-maze-2-stairs-2-rise-1-topdown-1-side-2';
+import {CAVE_TILE,CAVE_FLOORS,CAVE_BOSS_ID,MOUNTAIN_TUNNEL_FLOOR,caveExitPlace,caveCellCenter,caveFeatureBlocks,caveStairAt,caveEncounterTerrain,caveLayout}
+ from '../../../data/maps/cave/floors.mjs?v=cave-maps-1-stair-links-1-exploration-1-maze-2-stairs-2-rise-1-topdown-1-side-2-mountain-tunnel-1';
 import {hizukiWalkDistance,makeWalk} from '../village/movement.mjs?v=shared-walk-1';
 import {bindDialogue} from '../village/dialogue.mjs';
 import {drawCharacter} from '../village/residents.mjs';
 import {WORLD_SCENE_ZOOM} from '../ui/world-scale.mjs';
-import {BATTLE_REQUEST_KEY,readPlayer,savePlayer,collectFind,chooseCaveEncounter} from '../battle/rules.mjs?v=cave-quest-1-finds-1-guardian-1-pools-1';
-import {consumeRestorePosition} from '../save/save-game.mjs?v=save-slots-1-shiomachi-gear-1-cave-quest-1-finds-1-guardian-1';
-import {CAVE_DARK} from './terrain-art.mjs?v=cave-visual-1-guardian-1';
-import {createCaveMap} from './map-parts.mjs?v=cave-maps-1-stair-links-1-exploration-1-maze-2-stairs-2-rise-1-topdown-1-stone-1-side-2';
+import {BATTLE_REQUEST_KEY,readPlayer,savePlayer,collectFind,chooseCaveEncounter} from '../battle/rules.mjs?v=cave-quest-1-finds-1-guardian-1-pools-1-mountain-tunnel-1';
+import {consumeRestorePosition} from '../save/save-game.mjs?v=save-slots-1-shiomachi-gear-1-cave-quest-1-finds-1-guardian-1-mountain-tunnel-1';
+import {CAVE_DARK} from './terrain-art.mjs?v=cave-visual-1-guardian-1-mountain-tunnel-1';
+import {createCaveMap} from './map-parts.mjs?v=cave-maps-1-stair-links-1-exploration-1-maze-2-stairs-2-rise-1-topdown-1-stone-1-side-2-mountain-tunnel-1';
 
 const root=new URL('../../../',import.meta.url);
 const scene=document.querySelector('#scene'),load=document.querySelector('#load');
@@ -67,7 +67,11 @@ async function start(){
   [x,y]=point&&walk.canStand(point.x,point.y)&&!occupied(point.x,point.y)?[point.x,point.y]:caveCellCenter(cell);
   face=point?.face??1;distance=0;
   scene.dataset.floor=String(floor+1);
-  tell('地下'+(floor+1)+'階');
+  const title=layout.name??'社西の洞窟';
+  document.title=title+'｜鬼哭の花結び';
+  if(window.frameElement)window.frameElement.title='鬼哭の花結び '+title;
+  document.querySelector('main').setAttribute('aria-label',title);
+  tell(layout.name??'地下'+(floor+1)+'階');
   window.parent?.KIKOKU_GAME?.autosave?.(window);
  }
  const snapshot=()=>({scene:'cave',position:{x,y,face,floor}});
@@ -78,9 +82,11 @@ async function start(){
   return Math.hypot(px-bx,py-by)<34;
  }
  window.KIKOKU_SAVE_SNAPSHOT=snapshot;
- const returning=new URLSearchParams(location.search).get('from')==='guardian';
- const initial=restored?.floor??(returning?2:0);
- enter(initial,CAVE_FLOORS[initial].entry,restored);
+ const from=new URLSearchParams(location.search).get('from');
+ const returning=from==='guardian';
+ const portal=CAVE_FLOORS[MOUNTAIN_TUNNEL_FLOOR].portals.find(({place})=>place===from);
+ const initial=restored?.floor??(portal?MOUNTAIN_TUNNEL_FLOOR:returning?2:0);
+ enter(initial,portal?.entry??CAVE_FLOORS[initial].entry,restored);
  if(returning&&bossDefeated)tell('岩砕きの槌を手に入れた。');
  load.hidden=true;
 
@@ -206,13 +212,14 @@ async function start(){
    }
    const travel=Math.hypot(nx-x,ny-y);
    distance+=travel;moving=travel>0;x=nx;y=ny;face=row;
-   if(layout.exit&&dy>0&&Math.abs(x-caveCellCenter(layout.exit)[0])<1.5*tile&&y>=layout.exit[1]*tile+17){
-    leaving=true;window.KIKOKU_ROUTE.go(new URL('../../field/?from=cave',import.meta.url));return;
+   const exit=dy>0&&caveExitPlace(layout,x,y);
+   if(exit){
+    leaving=true;window.KIKOKU_ROUTE.go(new URL('../../field/?from='+exit,import.meta.url));return;
    }
    if(moving&&caveEncounterTerrain(floor,x,y)&&!caveStairAt(floor,x,y)){
     encounterRemaining-=travel;
     if(encounterRemaining<=0){
-     const encounter=chooseCaveEncounter();
+     const encounter=chooseCaveEncounter(Math.random,floor===MOUNTAIN_TUNNEL_FLOOR?'mountain-cave':'shrine-cave');
      if(startBattle(encounter))return;
      encounterRemaining=tile*9;
     }

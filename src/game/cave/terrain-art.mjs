@@ -18,15 +18,16 @@ function pixels(art){
 
 // The exploration preview's directed cliff faces use the same logical grid
 // as collision. A separate translucent layer carries the foreground rim.
-export function createCaveTerrain({grid,exit},floorArt,wallArt){
+export function createCaveTerrain({grid,exit,portals},floorArt,wallArt){
  const columns=grid[0].length,rows=grid.length;
  const width=columns*TILE,height=rows*TILE;
  const ground=canvas(width,height),rim=canvas(width,height);
  const groundCtx=ground.getContext('2d'),rimCtx=rim.getContext('2d');
  const surface=groundCtx.createImageData(width,height),contact=rimCtx.createImageData(width,height);
  const floor=pixels(floorArt),wall=pixels(wallArt);
- const tileOpen=(x,y)=>Number(grid[y]?.[x]==='.'||
-   Boolean(exit&&y>=rows&&Math.abs(x-exit[0])<=1));
+ const southMouths=portals?portals.map(({exit})=>exit[0]):
+   exit?[exit[0]-1,exit[0],exit[0]+1]:[];
+ const tileOpen=(x,y)=>Number(grid[y]?.[x]==='.'||(y>=rows&&southMouths.includes(x)));
  for(let row=0;row<height;row++)for(let col=0;col<width;col++){
    const x=col+.5,y=row+.5;
    const u=x/TILE-.5,v=y/TILE-.5;

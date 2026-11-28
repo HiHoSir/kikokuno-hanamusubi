@@ -6,21 +6,24 @@ window.YK_WORLD=(()=>{
  // Left cell of each two-cell village marker added after Hozuki.
  const additionalVillages={shiomachi:[53,51],kozuene:[56,35]};
  const caveCells=[[14,48],[15,48]];
+ const tunnelMouths={'tunnel-east':[57,22],'tunnel-west':[42,18]};
  const bridgeRockCell=[48,43];
  const center=([x,y])=>[x*32+16,y*32+16];
  const descriptions={
   village:['鬼灯村','南の半島から林と花の道を抜け、天妖の社へ。'],
   shrine:['天妖の社','西の山裾から川沿いを東へ進み、海の入り江へ。'],
   cave:['社西の洞窟','岩の奥から冷たい風が吹いている。'],
+  'tunnel-east':['山越えの洞窟 東口','洞窟を抜けると月嶺村へ続く尾根道に出る。'],
+  'tunnel-west':['山越えの洞窟 西口','洞窟を抜けると龍神の滝のそばに出る。'],
   cove:['海の入り江','川を渡り、北東の忘れの森へ。'],
   shiomachi:['潮待村','入り江の東、海風の吹く浜の集落。'],
   kozuene:['梢音村','忘れの森の手前にある、炭焼きと木こりの村。'],
   forest:['忘れの森','森の北の山裾を辿り、龍神の滝へ。'],
-  waterfall:['龍神の滝','山脈の南、湖畔の道を西へ進み月見の湯へ。'],
+  waterfall:['龍神の滝','山脈の南、湖畔の道を西へ進み山越えの洞窟の東口へ。'],
   hotspring:['月見の湯','北の森から山の参道へ進み、九尾の祠へ。'],
   fox:['九尾の祠','北の山に囲まれた旅路の終点。']
  };
- const places=Object.fromEntries(Object.entries({...geography.places,...additionalVillages,cave:caveCells[0]})
+ const places=Object.fromEntries(Object.entries({...geography.places,...additionalVillages,...tunnelMouths,cave:caveCells[0]})
   .map(([id,cell])=>[id,{point:center(cell),name:descriptions[id][0],note:descriptions[id][1]}]));
  const start=center([37,71]),hub=start;
  // Roads are navigation metadata only. The historical wilderness has no
@@ -58,11 +61,18 @@ window.YK_WORLD=(()=>{
  mapData.landmarkContactTiles.cave=caveCells;
  mapData.decorations.push({kind:'newCaveLarge',x:14*32,y:48*32,width:64,height:32,
    foot:49*32,contactTiles:caveCells,occupiedTiles:[],walkThrough:true,destination:'cave'});
+ for(const [destination,[tx,ty]] of Object.entries(tunnelMouths)){
+  const contactTiles=[[tx,ty]];
+  mapData.landmarkContactTiles[destination]=contactTiles;
+  mapData.decorations.push({kind:'newCaveLarge',x:tx*32-16,y:ty*32,width:64,height:32,
+   foot:(ty+1)*32,contactTiles,occupiedTiles:[],walkThrough:true,destination});
+ }
  const bridgeRock={id:'bridge-rock',kind:'bridgeRock',x:48*32-14,y:44*32-40,
    width:60,height:40,foot:44*32,contactTiles:[bridgeRockCell],occupiedTiles:[]};
  mapData.decorations.push(bridgeRock);
  function setBridgeRockCleared(cleared){
   mapData.bridgeRockCleared=cleared;
+  mapData.travelArrivals=cleared?[tunnelMouths['tunnel-west']]:[];
   bridgeRock.occupiedTiles=cleared?[]:[bridgeRockCell];
   YK_FIELD_ELEVATION.refreshCollision(mapData);
  }
@@ -93,7 +103,14 @@ window.YK_WORLD=(()=>{
    walkThrough:o.walkThrough,biome:'forest',supportHeight:mapData.heights[y][x]
   }));
  });
- // Establish the original elevation routes before closing the quest gate.
+ // Close the three surveyed surface routes after elevation has laid out its ramps.
+ for(const [x,y] of [[49,18],[39,23],[36,35]]){
+  mapData[y][x]='mountain';
+  mapData.ramps[y][x]=null;
+  mapData.decorations.push({kind:'newMountainSmall',x:x*32,y:y*32,width:32,height:32,
+   foot:(y+1)*32,contactTiles:[[x,y]],occupiedTiles:[[x,y]]});
+ }
+
  setBridgeRockCleared(false);
  const passable=new Set(['grass','forest','sand','snow','barren','road','bridge']);
  const cellOpen=(x,y)=>x>0&&y>0&&x<79&&y<79&&passable.has(mapData[y]?.[x])&&!mapData.occupiedTiles.has(x+','+y)&&mapData.travelReachable.has(x+','+y)&&YK_ELEVATION.pointWalkable(mapData,x*32+16,y*32+16);

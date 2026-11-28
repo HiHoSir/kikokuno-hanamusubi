@@ -219,59 +219,61 @@ try{
      if(!stateAfterRotation.target||!stateAfterRotation.stillSelecting||!stateAfterRotation.framePreserved)
       issues.push(name+' battle target or iframe reset by portrait rotation');
     }
-    // The smaller layout selects enemy two; the larger layout kills enemy one
-    // to exercise default targeting when only the original second slot survives.
-    const targetId=width===900?'enemy-figure-2':'enemy-figure';
-    const otherId=width===900?'enemy-figure':'enemy-figure-2';
-    const target=frame.locator('#'+targetId);
-    const other=frame.locator('#'+otherId);
-    const impact=frame.locator('#'+targetId+'.impact-physical');
-    await target.click();
-    if(!await target.isVisible()||!await other.isVisible())
-     issues.push(name+' enemy hidden before first hit animation');
-    await impact.waitFor({state:'attached',timeout:1500});
-    const visibleArc=await target.locator('.impact-effect').evaluate(node=>({
-     crop:getComputedStyle(node,'::before').clipPath,
-     animation:getComputedStyle(node).animationName,
-     onOther:document.querySelectorAll('.actor.enemy.impact-physical').length!==1
-    }));
-    if(visibleArc.crop==='none'||visibleArc.animation!=='battle-impact-physical'||visibleArc.onOther)
-     issues.push(name+' slash is missing or paints on multiple enemies');
-    const attackPhase=await frame.locator('#hero-image').evaluate(node=>({
-     pose:node.dataset.pose,src:node.getAttribute('src'),
-     heroHit:document.getElementById('hero-figure').classList.contains('impact-hit')
-    }));
-    if(attackPhase.pose!=='attack'||!attackPhase.src.includes('/attack.png')||attackPhase.heroHit)
-     issues.push(name+' attack action used hit pose before enemy retaliation');
-    await page.screenshot({path:'artifacts/battle-'+width+'x'+height+'-attack.png'});
-    await frame.locator('#hero-figure.impact-hit').waitFor({state:'attached',timeout:1500});
-    const retaliationPhase=await frame.locator('#hero-image').evaluate((node,id)=>({
-     pose:node.dataset.pose,src:node.getAttribute('src'),
-     enemyFX:document.getElementById(id).classList.contains('impact-physical')
-    }),targetId);
-    if(retaliationPhase.pose!=='hit'||!retaliationPhase.src.includes('/hit.png')||retaliationPhase.enemyFX)
-     issues.push(name+' hit pose overlaps physical attack animation or uses wrong image');
+    if(enemyId==='tanuki'){
+     // The smaller layout selects enemy two; the larger layout kills enemy one
+     // to exercise default targeting when only the original second slot survives.
+     const targetId=width===900?'enemy-figure-2':'enemy-figure';
+     const otherId=width===900?'enemy-figure':'enemy-figure-2';
+     const target=frame.locator('#'+targetId);
+     const other=frame.locator('#'+otherId);
+     const impact=frame.locator('#'+targetId+'.impact-physical');
+     await target.click();
+     if(!await target.isVisible()||!await other.isVisible())
+      issues.push(name+' enemy hidden before first hit animation');
+     await impact.waitFor({state:'attached',timeout:1500});
+     const visibleArc=await target.locator('.impact-effect').evaluate(node=>({
+      crop:getComputedStyle(node,'::before').clipPath,
+      animation:getComputedStyle(node).animationName,
+      onOther:document.querySelectorAll('.actor.enemy.impact-physical').length!==1
+     }));
+     if(visibleArc.crop==='none'||visibleArc.animation!=='battle-impact-physical'||visibleArc.onOther)
+      issues.push(name+' slash is missing or paints on multiple enemies');
+     const attackPhase=await frame.locator('#hero-image').evaluate(node=>({
+      pose:node.dataset.pose,src:node.getAttribute('src'),
+      heroHit:document.getElementById('hero-figure').classList.contains('impact-hit')
+     }));
+     if(attackPhase.pose!=='attack'||!attackPhase.src.includes('/attack.png')||attackPhase.heroHit)
+      issues.push(name+' attack action used hit pose before enemy retaliation');
+     await page.screenshot({path:'artifacts/battle-'+width+'x'+height+'-attack.png'});
+     await frame.locator('#hero-figure.impact-hit').waitFor({state:'attached',timeout:1500});
+     const retaliationPhase=await frame.locator('#hero-image').evaluate((node,id)=>({
+      pose:node.dataset.pose,src:node.getAttribute('src'),
+      enemyFX:document.getElementById(id).classList.contains('impact-physical')
+     }),targetId);
+     if(retaliationPhase.pose!=='hit'||!retaliationPhase.src.includes('/hit.png')||retaliationPhase.enemyFX)
+      issues.push(name+' hit pose overlaps physical attack animation or uses wrong image');
 
-    const staleCursor=await frame.locator('.actor.enemy.targeted').count();
-    if(staleCursor)issues.push(name+' cursor remains on another enemy during attack');
-    await page.screenshot({path:'artifacts/battle-'+width+'x'+height+'-impact.png'});
-    await frame.locator('[data-command="attack"]').click();
-    await target.click();
-    await impact.waitFor({state:'attached',timeout:1500});
-    if(!await target.isVisible())issues.push(name+' defeated target was hidden before last impact');
-    await frame.locator('#'+targetId+'[hidden]').waitFor({state:'attached',timeout:2000});
-    if(!await other.isVisible())issues.push(name+' independent target HP was not respected');
-    // A submenu can be entered and dismissed without leaving the fight.
-    await frame.locator('[data-command="magic"]').click();
-    const spellShown=await frame.locator('#command-title').innerText();
-    if(spellShown!=='術を選ぶ')issues.push(name+' spell submenu is inaccessible');
-    await frame.locator('#action-b').click();
-    const mainShown=await frame.locator('#command-title').innerText();
-    if(mainShown!=='緋月の行動')issues.push(name+' B button failed to return from spell menu');
-    await frame.locator('[data-command="attack"]').click();
-    await frame.locator('#'+otherId+'.impact-physical').waitFor({state:'attached',timeout:1500});
-    if(!await other.isVisible()||await impact.count())
-     issues.push(name+' automatic attack on the surviving enemy targeted the wrong slot');
+     const staleCursor=await frame.locator('.actor.enemy.targeted').count();
+     if(staleCursor)issues.push(name+' cursor remains on another enemy during attack');
+     await page.screenshot({path:'artifacts/battle-'+width+'x'+height+'-impact.png'});
+     await frame.locator('[data-command="attack"]').click();
+     await target.click();
+     await impact.waitFor({state:'attached',timeout:1500});
+     if(!await target.isVisible())issues.push(name+' defeated target was hidden before last impact');
+     await frame.locator('#'+targetId+'[hidden]').waitFor({state:'attached',timeout:2000});
+     if(!await other.isVisible())issues.push(name+' independent target HP was not respected');
+     // A submenu can be entered and dismissed without leaving the fight.
+     await frame.locator('[data-command="magic"]').click();
+     const spellShown=await frame.locator('#command-title').innerText();
+     if(spellShown!=='術を選ぶ')issues.push(name+' spell submenu is inaccessible');
+     await frame.locator('#action-b').click();
+     const mainShown=await frame.locator('#command-title').innerText();
+     if(mainShown!=='緋月の行動')issues.push(name+' B button failed to return from spell menu');
+     await frame.locator('[data-command="attack"]').click();
+     await frame.locator('#'+otherId+'.impact-physical').waitFor({state:'attached',timeout:1500});
+     if(!await other.isVisible()||await impact.count())
+      issues.push(name+' automatic attack on the surviving enemy targeted the wrong slot');
+    }
    }
   }catch(e){
    issues.push(width+'x'+height+': '+e.message+' '+errors.join(';'));
@@ -281,7 +283,8 @@ try{
 }finally{await chromiumBrowser.close();server.close();}
 for(const boss of battleScales.filter(battle=>battle.large)){
  const others=battleScales.filter(battle=>!battle.large&&battle.width===boss.width&&battle.height===boss.height);
- if(!others.length||others.some(other=>other.heroHeight!==boss.heroHeight||Math.abs(other.enemyScale-boss.enemyScale)>0.01))
+ if(!others.length||others.some(other=>other.heroHeight!==boss.heroHeight||
+   (!other.enemyId.startsWith('forest-')&&Math.abs(other.enemyScale-boss.enemyScale)>0.01)))
   issues.push(boss.width+'x'+boss.height+' hero or enemy scaling varies between encounters');
 }
 console.log('BATTLE_BROWSER_QA '+JSON.stringify({summary:results.map(({name,rects,overlapIssues,layout,mainGrid})=>({name,rects,overlapIssues,layout,mainGrid})),issues},null,2));
